@@ -1,8 +1,12 @@
-# VVAS
+# Vitis™ Video Analytics SDK
 
-To clone this repo :
+### To clone this repo:
 
+```
 git clone https://github.com/Xilinx/VVAS.git
+```
+
+## View the [Documentation](https://curly-garbanzo-b80acb5e.pages.github.io/)
 
 ## Folder Structure
 
