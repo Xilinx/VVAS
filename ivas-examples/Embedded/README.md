@@ -1,1 +1,0 @@
-# VVAS embedded examples
