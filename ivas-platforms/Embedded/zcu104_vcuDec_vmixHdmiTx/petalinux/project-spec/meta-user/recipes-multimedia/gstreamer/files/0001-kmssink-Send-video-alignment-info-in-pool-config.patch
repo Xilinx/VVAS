@@ -1,0 +1,154 @@
+From 3df398d2270a675fea97f43ba3d093cd894087e8 Mon Sep 17 00:00:00 2001
+From: Bala Sai Kosuri <balasaik@xilinx.com>
+Date: Tue, 20 Jul 2021 03:03:22 +0530
+Subject: [PATCH] kmssink: Send video alignment info in pool config
+
+Signed-off-by: Bala Sai Kosuri <balasaik@xilinx.com>
+---
+ sys/kms/gstkmssink.c | 97 ++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 93 insertions(+), 4 deletions(-)
+
+diff --git a/sys/kms/gstkmssink.c b/sys/kms/gstkmssink.c
+index 3ebdb003c..827d31c50 100644
+--- a/sys/kms/gstkmssink.c
++++ b/sys/kms/gstkmssink.c
+@@ -1576,6 +1576,61 @@ modesetting_failed:
+ 
+ }
+ 
++static guint
++get_padding_right (GstKMSSink * self, GstVideoInfo * info, guint pitch)
++{
++  guint padding_pixels = -1;
++  guint plane_stride = GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
++  guint padding_bytes = pitch - plane_stride;
++
++  switch (GST_VIDEO_INFO_FORMAT (info)) {
++    case GST_VIDEO_FORMAT_NV12:
++      padding_pixels = padding_bytes;
++      break;
++    case GST_VIDEO_FORMAT_RGBx:
++    case GST_VIDEO_FORMAT_r210:
++    case GST_VIDEO_FORMAT_Y410:
++    case GST_VIDEO_FORMAT_BGRx:
++    case GST_VIDEO_FORMAT_BGRA:
++    case GST_VIDEO_FORMAT_RGBA:
++      padding_pixels = padding_bytes / 4;
++      break;
++    case GST_VIDEO_FORMAT_YUY2:
++    case GST_VIDEO_FORMAT_UYVY:
++      padding_pixels = padding_bytes / 2;
++      break;
++    case GST_VIDEO_FORMAT_NV16:
++      padding_pixels = padding_bytes;
++      break;
++    case GST_VIDEO_FORMAT_RGB:
++    case GST_VIDEO_FORMAT_v308:
++    case GST_VIDEO_FORMAT_BGR:
++      padding_pixels = padding_bytes / 3;
++      break;
++    case GST_VIDEO_FORMAT_I422_10LE:
++      padding_pixels = padding_bytes / 2;
++      break;
++    case GST_VIDEO_FORMAT_NV12_10LE32:
++      padding_pixels = (padding_bytes * 3) / 4;
++      break;
++    case GST_VIDEO_FORMAT_GRAY8:
++      padding_pixels = padding_bytes;
++      break;
++    case GST_VIDEO_FORMAT_GRAY10_LE32:
++      padding_pixels = (padding_bytes * 3) / 4;
++      break;
++    case GST_VIDEO_FORMAT_I420:
++      padding_pixels = padding_bytes;
++      break;
++    case GST_VIDEO_FORMAT_I420_10LE:
++      padding_pixels = padding_bytes / 2;
++      break;
++    default:
++      padding_pixels = -1;
++  }
++  return padding_pixels;
++}
++
+ static gboolean
+ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+ {
+@@ -1585,9 +1640,11 @@ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+   GstVideoInfo vinfo;
+   GstBufferPool *pool;
+   gsize size;
++  gint ret, w, h, i;
++  struct drm_mode_create_dumb arg = { 0, };
++  guint32 fmt;
+   drmModeConnector *conn;
+-  GstVideoAlignment align;
+-  guint i;
++  GstVideoAlignment align = {0, };
+ 
+   self = GST_KMS_SINK (bsink);
+ 
+@@ -1599,19 +1656,48 @@ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+   if (!gst_video_info_from_caps (&vinfo, caps))
+     goto invalid_caps;
+ 
++  size = GST_VIDEO_INFO_SIZE (&vinfo);
++
+   conn = drmModeGetConnector (self->fd, self->conn_id);
+   if (((self->devname ? !strcmp (self->devname, "xlnx") : 0)
+           && conn->connector_type == DRM_MODE_CONNECTOR_DisplayPort)
+       || (self->bus_id ? strstr (self->bus_id, "zynqmp-display") : 0)) {
+         is_dp = TRUE;
++        fmt = gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (&vinfo));
++        arg.bpp = gst_drm_bpp_from_drm (fmt);
++        w = GST_VIDEO_INFO_WIDTH (&vinfo);
++        arg.width = gst_drm_width_from_drm (fmt, w);
++        h = GST_VIDEO_INFO_FIELD_HEIGHT (&vinfo);
++        arg.height = gst_drm_height_from_drm (fmt, h);
++
++        ret = drmIoctl (self->fd, DRM_IOCTL_MODE_CREATE_DUMB, &arg);
++        if (ret)
++          goto no_pool;
++
++        if (!arg.pitch)
++          goto done;
++
+         gst_video_alignment_reset (&align);
+-        for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); i++)
+-          align.stride_align[i] = 255;  /* 256-byte alignment */
++        align.padding_top = 0;
++        align.padding_left = 0;
++        align.padding_right = get_padding_right (self, &vinfo, arg.pitch);
++        if (align.padding_right == -1) {
++          for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); i++)
++            align.stride_align[i] = 255;  /* 256-byte alignment */
++        }
++        align.padding_bottom = 0;
+         gst_video_info_align (&vinfo, &align);
++
++        GST_INFO_OBJECT (self, "padding_left %u, padding_right %u", align.padding_left, align.padding_right);
+   }
+ 
++done:
++
++  /* Update with the size use for display */
+   size = GST_VIDEO_INFO_SIZE (&vinfo);
+ 
++  GST_INFO_OBJECT (self, "size %lu", size);
++
+   pool = NULL;
+   if (need_pool) {
+     pool = gst_kms_sink_create_pool (self, caps, size, 0);
+@@ -1623,6 +1709,9 @@ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+       GstStructure *config = gst_buffer_pool_get_config (pool);
+       gst_buffer_pool_config_add_option (config,
+           GST_BUFFER_POOL_OPTION_KMS_PRIME_EXPORT);
++      gst_buffer_pool_config_add_option (config,
++          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
++      gst_buffer_pool_config_set_video_alignment (config, &align);
+       gst_buffer_pool_set_config (pool, config);
+     }
+   }
+-- 
+2.17.1
+

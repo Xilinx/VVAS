@@ -1,0 +1,16 @@
+{
+  "model-name": "ssd_mobilenet_v2",
+  "num-labels": 2,
+  "labels" :[
+    {
+      "name": "none_of_the_above",
+      "label": 0,
+      "display_name" : "background"
+    },
+    {
+      "name": "person",
+      "label": 1,
+      "display_name" : "person"
+    }
+  ]
+}

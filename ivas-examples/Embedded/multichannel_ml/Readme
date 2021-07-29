@@ -1,0 +1,24 @@
+This example adds 2 DPU instances and 1 Multiscaler instance to the 'zcu104_hdmiTx' platform.
+
+##############
+Building steps
+##############
+
+1. Source 2021.1 Vitis build and petalinux build
+
+2. Build 'zcu104_hdmiTx' platform 
+    git clone https://gitenterprise.xilinx.com/IPS-SSW/ivas-platforms.git
+    cd Embedded/zcu104_hdmiTx
+    make
+
+3. Download the DPU TRD 
+    git clone https://gitenterprise.xilinx.com/aisw/DPU_TRD.git
+
+4. Download the multiscaler kernel 
+    git clone https://gitenterprise.xilinx.com/IPS-SSW/ivas-accel-hw.git
+
+5. Compile the example design
+    make PLATFORM=<Path_to_xpfm_file> DPU_TRD_PATH=<Path_to_DPU_TRD> HW_ACCEL_PATH=<Path_to_multiscaler>
+
+6. Once build is completed, the SD card image, binary_container_1/sd_card.img, can be flashed on SD card using balenaEtcher tool
+

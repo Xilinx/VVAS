@@ -1,0 +1,61 @@
+{
+  "model-name": "ssd_mobilenet_v2",
+  "num-labels": 11,
+  "labels" :[
+    {
+      "name": "none_of_the_above",
+      "label": 0,
+      "display_name" : "background"
+    },
+    {
+      "name": "person",
+      "label": 1,
+      "display_name" : "person"
+    },
+    {
+      "name": "rider",
+      "label": 2,
+      "display_name" : "rider"
+    },
+    {
+      "name": "car",
+      "label": 3,
+      "display_name" : "car"
+    },
+    {
+      "name": "truck",
+      "label": 4,
+      "display_name" : "truck"
+    },
+    {
+      "name": "bus",
+      "label": 5,
+      "display_name" : "bus"
+    },
+    {
+      "name": "train",
+      "label": 6,
+      "display_name" : "train"
+    },
+    {
+      "name": "motor",
+      "label": 7,
+      "display_name" : "motor"
+    },
+    {
+      "name": "bike",
+      "label": 8,
+      "display_name" : "bike"
+    },
+    {
+      "name": "sign",
+      "label": 9,
+      "display_name" : "sign"
+    },
+    {
+      "name": "light",
+      "label": 10,
+      "display_name" : "light"
+    }
+  ]
+}

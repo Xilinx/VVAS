@@ -1,0 +1,120 @@
+From c97887a640f5c3529dad3f9d31ca63f1e5b50cfe Mon Sep 17 00:00:00 2001
+From: Jixiang Liu <jixiang.liu@xilinx.com>
+Date: Mon, 21 Jun 2021 20:02:02 +0800
+Subject: [PATCH] irps5401:fix driver issue for 2021.1.
+
+---
+ drivers/hwmon/pmbus/irps5401.c | 90 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 89 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/hwmon/pmbus/irps5401.c b/drivers/hwmon/pmbus/irps5401.c
+index 44aeafcbd56c..1ffccd3d925e 100644
+--- a/drivers/hwmon/pmbus/irps5401.c
++++ b/drivers/hwmon/pmbus/irps5401.c
+@@ -13,6 +13,7 @@
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/pmbus.h>
+ #include "pmbus.h"
+ 
+ #define IRPS5401_SW_FUNC (PMBUS_HAVE_VIN | PMBUS_HAVE_IIN | \
+@@ -40,7 +41,94 @@ static struct pmbus_driver_info irps5401_info = {
+ 
+ static int irps5401_probe(struct i2c_client *client)
+ {
+-	return pmbus_do_probe(client, &irps5401_info);
++	struct pmbus_driver_info *info;
++	struct pmbus_platform_data *pdata = NULL;
++	u8 buf[I2C_SMBUS_BLOCK_MAX];
++	int ret;
++	struct device *dev = &client->dev;
++	if (!i2c_check_functionality(client->adapter,
++		I2C_FUNC_SMBUS_READ_BYTE_DATA
++		| I2C_FUNC_SMBUS_READ_WORD_DATA
++		| I2C_FUNC_SMBUS_READ_BLOCK_DATA))
++		return -ENODEV;
++
++	ret = i2c_smbus_read_block_data(client, PMBUS_MFR_ID, buf);
++	if (ret < 0) {
++		dev_err(&client->dev, "Failed to read PMBUS_MFR_ID\n");
++		return ret;
++	}
++	if (ret != 3 || strncmp(buf, "RI", strlen("RI"))) {
++		dev_err(&client->dev, "MFR_ID unrecognised\n");
++		return -ENODEV;
++	}
++	ret = i2c_smbus_read_block_data(client, PMBUS_MFR_MODEL, buf);
++	if (ret < 0) {
++		dev_err(&client->dev, "Failed to read PMBUS_MFR_MODEL\n");
++		return ret;
++	}
++	if (ret != 4 || !(buf[0] == 0x52 && buf[1] == 0x00)) {
++		dev_err(&client->dev, "MFR_MODEL unrecognised\n");
++		return -ENODEV;
++	}
++	ret = i2c_smbus_read_block_data(client, PMBUS_MFR_REVISION, buf);
++	if (ret < 0) {
++		dev_err(&client->dev, "Failed to read PMBUS_MFR_REVISION\n");
++		return ret;
++	}
++	if (ret != 4 || !(buf[0] == 0x02 && buf[1] == 0x00)) {
++		dev_err(&client->dev, "MFR_REVISION unrecognised\n");
++		return -ENODEV;
++	}
++	info = devm_kzalloc(&client->dev, sizeof(struct pmbus_driver_info),
++							GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	pdata = devm_kzalloc(dev, sizeof(struct pmbus_platform_data),
++							GFP_KERNEL);
++
++	if (!pdata)
++		return -ENOMEM;
++
++	pdata->flags = PMBUS_SKIP_STATUS_CHECK;
++
++	info->pages = 4;
++	info->format[PSC_VOLTAGE_IN] = linear;
++	info->format[PSC_VOLTAGE_OUT] = linear;
++	info->format[PSC_CURRENT_IN] = linear;
++	info->format[PSC_CURRENT_OUT] = linear;
++	info->format[PSC_POWER] = linear;
++	info->format[PSC_TEMPERATURE] = linear;
++
++	info->func[0] = PMBUS_HAVE_VIN
++			| PMBUS_HAVE_VOUT | PMBUS_HAVE_IIN
++			| PMBUS_HAVE_IOUT | PMBUS_HAVE_PIN
++			| PMBUS_HAVE_POUT | PMBUS_HAVE_TEMP
++			| PMBUS_HAVE_STATUS_VOUT | PMBUS_HAVE_STATUS_IOUT
++			| PMBUS_HAVE_STATUS_INPUT | PMBUS_HAVE_STATUS_TEMP;
++
++	info->func[1] = info->func[0];
++	info->func[2] = info->func[0];
++	info->func[3] = info->func[0];
++	
++	dev->platform_data = pdata;
++
++	ret = pmbus_do_probe(client, info);
++	if (ret)
++		return ret;
++	
++	if (pmbus_read_word_data(client, 0, 0, PMBUS_IOUT_OC_FAULT_LIMIT) == 0xF094) {
++			return ret;
++	}
++	else {
++		pmbus_write_word_data(client, 0, PMBUS_IOUT_OC_FAULT_LIMIT, 0xF094);
++		if (pmbus_read_word_data(client, 0, 0, PMBUS_IOUT_OC_FAULT_LIMIT) != 0xF094) {
++		dev_err(&client->dev, "overcurrent fault current is not 37A\n");
++		return -ENOENT;
++	}
++								}
++
++	return ret;
+ }
+ 
+ static const struct i2c_device_id irps5401_id[] = {
+-- 
+2.17.1
+

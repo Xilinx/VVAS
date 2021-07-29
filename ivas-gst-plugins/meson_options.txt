@@ -1,0 +1,13 @@
+# Feature options for plugins without external deps
+option('enable_xrm', type : 'boolean', value : 'false')
+option('metaaffixer', type : 'feature', value : 'auto')
+option('roigen', type : 'feature', value : 'auto')
+option('filter', type : 'feature', value : 'auto')
+option('multisrc', type : 'feature', value : 'auto')
+option('vcudec', type : 'feature', value : 'auto')
+option('vcuenc', type : 'feature', value : 'auto')
+option('abrscaler', type : 'feature', value : 'auto')
+option('lookahead', type : 'feature', value : 'auto')
+
+# Common feature options
+option('examples', type : 'feature', value : 'auto', yield : true)

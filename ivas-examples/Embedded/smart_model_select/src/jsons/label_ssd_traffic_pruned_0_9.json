@@ -1,0 +1,26 @@
+{
+  "model-name": "ssd_adas_pruned_0_95",
+  "num-labels": 4,
+  "labels" :[
+    {
+      "name": "none_of_the_above",
+      "label": 0,
+      "display_name" : "background"
+    },
+    {
+      "name": "car",
+      "label": 1,
+      "display_name" : "car"
+    },
+    {
+      "name": "cycle",
+      "label": 2,
+      "display_name" : "cycle"
+    },
+    {
+      "name": "person",
+      "label": 3,
+      "display_name" : "person"
+    }
+  ]
+} 
