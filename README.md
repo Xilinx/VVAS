@@ -6,7 +6,7 @@
 git clone https://github.com/Xilinx/VVAS.git
 ```
 
-## View the [Documentation](https://xilinx.github.io/VVAS//)
+## View the [Documentation](https://xilinx.github.io/VVAS/)
 
 ## Folder Structure
 
