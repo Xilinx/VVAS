@@ -348,14 +348,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption"><span class="caption-text">White Papers</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Training</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
 <p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
@@ -453,19 +445,23 @@
 <div class="section" id="gstinferenceprediction">
 <h2>GstInferencePrediction<a class="headerlink" href="#gstinferenceprediction" title="Permalink to this headline">¶</a></h2>
 <p>This structure represents the inference data generated from the ML operation. BBox represents the bounding box around the detected object from detection model. The classification parameter of this structure stores a list of classification information associated with the detected object. This structure also stores the results of the next level of ML operation performed (typically in cascaded network based ML operation).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
-<span class="o">*</span> <span class="n">Basic</span> <span class="n">bounding</span> <span class="n">box</span> <span class="n">structure</span> <span class="k">for</span> <span class="n">detection</span>
-<span class="o">*/</span>
-<span class="n">typedef</span> <span class="n">struct</span> <span class="n">_BBox</span> <span class="n">BBox</span><span class="p">;</span>
-<span class="n">struct</span> <span class="n">_BBox</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">_IvasColorMetadata</span> <span class="p">{</span>
+  <span class="n">uint8_t</span> <span class="n">red</span><span class="p">;</span>
+  <span class="n">uint8_t</span> <span class="n">green</span><span class="p">;</span>
+  <span class="n">uint8_t</span> <span class="n">blue</span><span class="p">;</span>
+  <span class="n">uint8_t</span> <span class="n">alpha</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">IvasColorMetadata</span><span class="p">;</span>
+
+<span class="n">struct</span> <span class="n">_BoundingBox</span>
 <span class="p">{</span>
-<span class="n">gint</span> <span class="n">label</span><span class="p">;</span>
-<span class="n">gdouble</span> <span class="n">prob</span><span class="p">;</span>
-<span class="n">gdouble</span> <span class="n">x</span><span class="p">;</span>
-<span class="n">gdouble</span> <span class="n">y</span><span class="p">;</span>
-<span class="n">gdouble</span> <span class="n">width</span><span class="p">;</span>
-<span class="n">gdouble</span> <span class="n">height</span><span class="p">;</span>
+  <span class="n">gint</span> <span class="n">x</span><span class="p">;</span>
+  <span class="n">gint</span> <span class="n">y</span><span class="p">;</span>
+  <span class="n">guint</span> <span class="n">width</span><span class="p">;</span>
+  <span class="n">guint</span> <span class="n">height</span><span class="p">;</span>
+  <span class="n">IvasColorMetadata</span> <span class="n">box_color</span><span class="p">;</span>
 <span class="p">};</span>
+
+<span class="n">typedef</span> <span class="n">struct</span> <span class="n">_BoundingBox</span> <span class="n">BoundingBox</span><span class="p">;</span>
 
 <span class="o">/**</span>
 <span class="o">*</span> <span class="n">GstInferencePrediction</span><span class="p">:</span>
@@ -562,7 +558,7 @@ struct _GstInferenceClassification
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on July 29, 2021.
+        Last updated on August 2, 2021.
       </span>
 
     </p>

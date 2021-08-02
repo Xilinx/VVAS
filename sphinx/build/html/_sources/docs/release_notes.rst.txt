@@ -6,10 +6,9 @@ Vitis Video Analytics SDK Release V1.0
 Summary
 *********
 
-* Based on Vitis 2021.1
+* Based on Vivado 2021.1, Vitis 2021.1, Petalinux 2021.1
 * Based on Vitis AI 1.4 for Machine Learning
-* Supports Zynq Ultrascale+ MPSoc based devices like ZCU104 Development Board and SOM Embedded Platforms
-* Supports Alveo U30 Card for Data Center Solution
+* Supports Zynq Ultrascale+ MPSoc based devices like ``ZCU104`` Development Board and ``KV260`` SOM Embedded Platforms
 
 
 ****************
@@ -37,17 +36,16 @@ Features
    - densebox_320_320
    - densebox_640_360
 * Hardware accelerated Resize and colorspace conversion
-* Region Of Interest
+* Region Of Interest based encoding
 * On-screen displaying bounding box around objects and text overly
 * HDMI Tx and Display Port interface for displaying the contents
 
 ******************
 Known Limitations
 ******************
+For known limitations, refer to the example/application design for specific limitations, if any.
 
 *************
 Known Issues
 *************
-#. Multiscaler kernel in the example designs in this release supports NV12, RGB and BGR color formats only. If any other color format is configured on multiscaler, then kernel hangs. You will see "timeout.." error message. If this condition occurs, then you need to reboot the board.
-
-
+For known issues, refer to the example/application design for specific issues, if any.

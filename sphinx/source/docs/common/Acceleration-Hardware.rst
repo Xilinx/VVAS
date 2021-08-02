@@ -45,8 +45,8 @@ VVAS releases the full HLS source code of the Multiscaler 2.0 IP, it is based on
 Kernel Configuration
 ~~~~~~~~~~~~~~~~~~~~                    
 
-The multiscaler kernel configuration can be edited by changing the multiscaler/ v_multi_scaler_config.h file. The parameters in the following table can be changed as required.
-
+The multiscaler kernel configuration can be edited by changing the `<VVAS_SOURCES>/ivas-accel-hw/multiscaler/v_multi_scaler_config.h` file. The parameters in the following table can be changed as required.
+i
 Table 14: Multiscaler Kernel Configuration
 
 +----------------------+----------------------+----------------------+

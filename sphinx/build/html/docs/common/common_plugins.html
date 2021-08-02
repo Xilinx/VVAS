@@ -363,12 +363,12 @@
 <li class="toctree-l4"><a class="reference internal" href="#id8">Example Pipelines</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#bounding-box-using-the-ivas-xboundingbox-acceleration-software-library">Bounding Box Using the ivas_xboundingbox Acceleration Software Library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bounding-box-example">Bounding Box Example</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#json-file-for-ivas-xboundingbox">JSON File for ivas_xboundingbox</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#machine-learning-using-the-ivas-xdpuinfer-plug-in">Machine Learning Using the ivas_xdpuinfer Plug-in</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#machine-learning-example">Machine Learning Example</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id9">Prerequisites</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#model-information">Model Information</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#xclbin-location">xclbin Location</a></li>
@@ -404,14 +404,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
-</ul>
-<p class="caption"><span class="caption-text">White Papers</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Training</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
 </ul>
 <p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
@@ -489,7 +481,7 @@
             
   <div class="section" id="plug-ins">
 <h1>Plug-ins<a class="headerlink" href="#plug-ins" title="Permalink to this headline">¶</a></h1>
-<p>VVAS is based on the GStreamer framework. TThe two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins.This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the <code class="docutils literal notranslate"><span class="pre">ivas-gst-plugins</span></code> folder of the VVAS source tree. This section covers the plug-is that are common for Edge as well as cloud solutions. There are few plug-ins that are pecific to Edge/Embedded platforms and are covered in <a class="reference internal" href="../Embedded/6-embedded-plugins.html"><span class="doc">Plugins for Embedded platforms</span></a>. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in <a class="reference internal" href="../DC/6-DC-plugins.html"><span class="doc">Plugins for Data Center Platform</span></a>. The following table lists the GStreamer plug-ins.</p>
+<p>VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins.This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the <code class="docutils literal notranslate"><span class="pre">ivas-gst-plugins</span></code> folder of the VVAS source tree. This section covers the plug-is that are common for Edge as well as cloud solutions. There are few plug-ins that are pecific to Edge/Embedded platforms and are covered in <a class="reference internal" href="../Embedded/6-embedded-plugins.html"><span class="doc">Plugins for Embedded platforms</span></a>. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in <a class="reference internal" href="../DC/6-DC-plugins.html"><span class="doc">Plugins for Data Center Platform</span></a>. The following table lists the VVAS GStreamer plug-ins.</p>
 <p>Table 1: GStreamer Plug-ins</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
@@ -521,7 +513,7 @@
 <p>There are specific functions, like video decoder, encoder, and meta affixer where the requirements are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.</p>
 <div class="section" id="metaaffixer">
 <span id="ivas-xmetaaffixer"></span><h3>MetaAffixer<a class="headerlink" href="#metaaffixer" title="Permalink to this headline">¶</a></h3>
-<p>The metaaffixer plug-in is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request, the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required.</p>
+<p>The metaaffixer plug-in, <code class="docutils literal notranslate"><span class="pre">ivas_xmetaaffixer</span></code>, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request, the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/metaaffixer">ivas_xmetaaffixer source code</a></p>
 <div class="figure align-default">
 <img alt="../../_images/image5.png" src="../../_images/image5.png" />
 </div>
@@ -556,9 +548,9 @@
 <td><p>This property is to enable the synchronization
 between master and slave pads buffers.
 If sync=true is set, then the metadata is scaled
-and attached to only those buffers on slave pads
-that have matching PTS with the buffer on the
-master sink pad.
+and attached to buffers on slave pads that have
+matching PTS or PTS falls within frame duration of the
+buffer on the master sink pad.
 If sync=false is set on the element, then the
 metadata is scaled and attached to all the
 buffers on the slave pads. If this option is used,
@@ -607,7 +599,8 @@ pad.</p></td>
 </div>
 <div class="section" id="ivas-xabrscaler">
 <span id="id1"></span><h3>ivas_xabrscaler<a class="headerlink" href="#ivas-xabrscaler" title="Permalink to this headline">¶</a></h3>
-<p>In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. ivas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ivas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. This plug-in supports:</p>
+<p>In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. ivas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ivas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. For more implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/abrscaler">ivas_xabrscaler source code</a>.</p>
+<p>This plug-in supports:</p>
 <ul class="simple">
 <li><p>Single input, multiple output pads</p></li>
 <li><p>Color space conversion</p></li>
@@ -616,8 +609,13 @@ pad.</p></td>
 </ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p><em>The ivas_xabrscaler plug-in controls the multiscaler kernel, it must be included in your hardware design. See the `Multiscaler Kernel &lt;#multiscaler-kernel&gt;`__section</em>.</p>
+<p>The <cite>ivas_xabrscaler</cite> plug-in controls the multiscaler kernel. If your application uses this plug-in, then make sure that multi-scaler kernel is included in your hardware design.</p>
 </div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application.</p>
+</div>
+<p>As a reference, maximum resolution supported by multi-scaler kernel in <code class="docutils literal notranslate"><span class="pre">Smart</span> <span class="pre">Model</span> <span class="pre">Select</span></code> example design can be can be found in  <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33">multi-scaler kernel config</a></p>
 <div class="section" id="prerequisite">
 <h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this headline">¶</a></h4>
 <p>This plug-in requires the multiscaler kernel to be available in the hardware design. See <a class="reference internal" href="Acceleration-Hardware.html#multiscaler-kernel"><span class="std std-ref">Multiscaler Kernel</span></a></p>
@@ -647,8 +645,9 @@ pad.</p></td>
 </ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p><em>Make sure that the color formats provided to this plug-in are supported by the multi-scaler hardware kernel.</em></p>
+<p>Make sure that the color formats needed for your application are supported by the multi-scaler hardware kernel.</p>
 </div>
+<p>As a reference, multi-scaler configurtion for <code class="docutils literal notranslate"><span class="pre">smart</span> <span class="pre">model</span> <span class="pre">select</span></code> exampl design can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h">multi-scaler configuration</a></p>
 </div>
 <div class="section" id="id3">
 <h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
@@ -656,11 +655,11 @@ pad.</p></td>
 <p>Table 3: ivas_xabrscaler Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 27%" />
-<col style="width: 17%" />
-<col style="width: 15%" />
-<col style="width: 17%" />
-<col style="width: 24%" />
+<col style="width: 25%" />
+<col style="width: 16%" />
+<col style="width: 19%" />
+<col style="width: 16%" />
+<col style="width: 23%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
@@ -738,13 +737,10 @@ generated</p></td>
 </tr>
 <tr class="row-even"><td><p>num-taps</p></td>
 <td><p>integer</p></td>
-<td><blockquote>
-<div><p>6=&gt;6 taps
-8=&gt;8 taps</p>
-</div></blockquote>
-<p>10=&gt;10 taps
-12=&gt;12 taps</p>
-</td>
+<td><p>6=&gt;6 taps
+8=&gt;8 taps
+10=&gt;10 taps
+12=&gt;12 taps</p></td>
 <td><p>1</p></td>
 <td><p>Number of filter
 taps to be ussed
@@ -757,8 +753,7 @@ for scaling</p></td>
 <h4>Example Pipelines<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
 <div class="section" id="one-input-one-output">
 <h5>One input one output<a class="headerlink" href="#one-input-one-output" title="Permalink to this headline">¶</a></h5>
-<p>The following example configures ivas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed
-from NV12 to BGR.</p>
+<p>The following example configures ivas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed from NV12 to BGR.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc num-buffers=100 \
 ! &quot;video/x-raw, width=1280, height=720, format=NV12&quot; \
 ! ivas_xabrscaler xclbin-location=&quot;/usr/lib/dpu.xclbin&quot; kernel-name=v_multi_scaler:v_multi_scaler_1 \
@@ -819,7 +814,11 @@ Support transform operation</p></td>
 </tr>
 </tbody>
 </table>
-<p>Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this chapter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend to use ivas_xfilter plugin for one input and one output kernels.</p>
+</div>
+<p>Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.</p>
 <p>Table 6: Acceleration Software Libraries</p>
 <table class="docutils align-default">
 <colgroup>
@@ -1245,6 +1244,7 @@ embedded platforms.</p></td>
 </tr>
 </tbody>
 </table>
+<p>For <code class="docutils literal notranslate"><span class="pre">ivas_xfilter</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/filter">ivas_xfilter source code</a></p>
 </div>
 <div class="section" id="example-json-configuration-files">
 <h4>Example JSON Configuration Files<a class="headerlink" href="#example-json-configuration-files" title="Permalink to this headline">¶</a></h4>
@@ -1297,16 +1297,17 @@ embedded platforms.</p></td>
 </div>
 <div class="section" id="id8">
 <h4>Example Pipelines<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h4>
-<p>This section covers the GStreamer example pipelines using the ivas_xfilter infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the ivas_xfilter plug-in.</p>
+<p>This section covers the GStreamer example pipelines using the <code class="docutils literal notranslate"><span class="pre">ivas_xfilter</span></code> infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the ivas_xfilter plug-in.</p>
 <ul class="simple">
-<li><p>The bounding box functionality is implemented in the ivas_xboundingbox acceleration software library that is controlled by the ivas_xfilter plug-in.</p></li>
-<li><p>Machine learning using the DPU is implemented by the ivas_xdpuinfer acceleration software library that is called by the ivas_xfilter plug-in.</p></li>
+<li><p>The bounding box functionality is implemented in the <code class="docutils literal notranslate"><span class="pre">ivas_xboundingbox</span></code> acceleration software library that is controlled by the <code class="docutils literal notranslate"><span class="pre">ivas_xfilter</span></code> plug-in.</p></li>
+<li><p>Machine learning using the DPU is implemented by the <code class="docutils literal notranslate"><span class="pre">ivas_xdpuinfer</span></code> acceleration software library that is called by the <code class="docutils literal notranslate"><span class="pre">ivas_xfilter</span></code> plug-in.</p></li>
 </ul>
 </div>
 </div>
-<div class="section" id="bounding-box-using-the-ivas-xboundingbox-acceleration-software-library">
-<span id="ivas-xboundingbox"></span><h3>Bounding Box Using the ivas_xboundingbox Acceleration Software Library<a class="headerlink" href="#bounding-box-using-the-ivas-xboundingbox-acceleration-software-library" title="Permalink to this headline">¶</a></h3>
-<p>This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in ivas_xfilter and the ivas_xboundingbox acceleration software library. The ivas_xboundingbox interprets machine learning inference results from the ivas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.</p>
+<div class="section" id="bounding-box-example">
+<span id="ivas-xboundingbox"></span><h3>Bounding Box Example<a class="headerlink" href="#bounding-box-example" title="Permalink to this headline">¶</a></h3>
+<p>This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in <code class="docutils literal notranslate"><span class="pre">ivas_xfilter</span></code> and the <code class="docutils literal notranslate"><span class="pre">ivas_xboundingbox</span></code> acceleration software library. The ivas_xboundingbox interprets machine learning inference results from the ivas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">ivas_xboundingbox</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xboundingbox">ivas_xboundingbox source code</a></p>
 <div class="figure align-default">
 <img alt="../../_images/X24998-ivas-xboundingbox.png" src="../../_images/X24998-ivas-xboundingbox.png" />
 </div>
@@ -1516,13 +1517,14 @@ array empty.</p>
 <p>An example of using a bounding box along with the machine learnin plug-in is shown in the <a class="reference internal" href="../Embedded/Tutorials/MultiChannelML.html"><span class="doc">Multi Channel ML</span></a> Tutoial.</p>
 </div>
 </div>
-<div class="section" id="machine-learning-using-the-ivas-xdpuinfer-plug-in">
-<span id="ivas-xdpuinfer"></span><h3>Machine Learning Using the ivas_xdpuinfer Plug-in<a class="headerlink" href="#machine-learning-using-the-ivas-xdpuinfer-plug-in" title="Permalink to this headline">¶</a></h3>
-<p>This section discusses how machine learning can be implemented using the VVAS infrastructure ivas_xfilter plug-in and the ivas_xdpuinfer acceleration software library. Details about the ivas_xfilter plug-in and ivas_xdpuinfer acceleration software library are beyond the scope of this section.</p>
+<div class="section" id="machine-learning-example">
+<span id="ivas-xdpuinfer"></span><h3>Machine Learning Example<a class="headerlink" href="#machine-learning-example" title="Permalink to this headline">¶</a></h3>
+<p>This section discusses how machine learning solutions can be implemented using the VVAS infrastructure <code class="docutils literal notranslate"><span class="pre">ivas_xfilter</span></code> plug-in and the <code class="docutils literal notranslate"><span class="pre">ivas_xdpuinfer</span></code> acceleration software library.</p>
 <div class="figure align-default">
 <img alt="../../_images/image11.png" src="../../_images/image11.png" />
 </div>
 <p>The ivas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The ivas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS metameta structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">ivas_xdpuinfer</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xdpuinfer">ivas_xdpuinfer source code</a></p>
 <div class="section" id="id9">
 <h4>Prerequisites<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h4>
 <p>There are a few requirements to be met before you can start running the machine learning examples.</p>
@@ -1534,7 +1536,7 @@ array empty.</p>
 <li><p>model-name.elf/model-name.xmodel and model-name.prototxt file.</p></li>
 <li><p>label.json file containing the label information, if the models generate labels.</p></li>
 </ul>
-<p>The following is an example of the model directory (yolov3_voc_tf), which contains the yolov3_voc_tf.elf/yolov3_voc_tf.xmodel and yolov3_voc_tf.prototxt files along with the label.json file.</p>
+<p>The following is an example of the model directory (yolov2_voc), which contains the yolov2_voc.xmodel and yolov2_voc.prototxt files along with the label.json file.</p>
 <div class="figure align-default">
 <img alt="../../_images/model-directory.png" src="../../_images/model-directory.png" />
 </div>
@@ -1667,13 +1669,10 @@ the JSON file.</p></td>
 <div><blockquote>
 <div><p>YOLOV3</p>
 </div></blockquote>
-<dl class="simple">
-<dt>FACEDETECT</dt><dd><p>CLA</p>
-</dd>
-</dl>
+<p>FACEDETECT</p>
 </div></blockquote>
 <dl>
-<dt>SSIFICATION</dt><dd><blockquote>
+<dt>CLASSIFICATION</dt><dd><blockquote>
 <div><p>SSD</p>
 </div></blockquote>
 <dl class="simple">
@@ -1845,6 +1844,7 @@ performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer othereise r
 <div class="section" id="ivas-xmultisrc">
 <span id="id10"></span><h3>ivas_xmultisrc<a class="headerlink" href="#ivas-xmultisrc" title="Permalink to this headline">¶</a></h3>
 <p>The GStreamer ivas_xmultisrc plug-in can have one input pad and multiple-output pads. This single plug-in supports multiple acceleration kernels, each controlled by a separate acceleration software library.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">ivas_xmultisrc</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/multisrc">ivas_xmultisrc source code</a></p>
 <div class="figure align-default">
 <img alt="../../_images/ivas_xmultisrc.png" src="../../_images/ivas_xmultisrc.png" />
 </div>
@@ -1902,7 +1902,7 @@ refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span clas
 <p>This section covers the format of JSON file/string to be passed to the ivas_xmultisrc plug-in.</p>
 <div class="section" id="example-json-file">
 <h5>Example JSON File<a class="headerlink" href="#example-json-file" title="Permalink to this headline">¶</a></h5>
-<p>The following example file describes how to specify two kernels that are being controlled by the single instance of the ivas_xmultisrc plug-in. The next section describes each field in this example file.</p>
+<p>The following example file describes how to specify two kernels that are being controlled by the single instance of the ivas_xmultisrc plug-in. Modify this json file as per your kernels and acceleration software library. The next section describes each field in this example file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/binary_1.xclbin&quot;</span><span class="p">,</span>
    <span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
@@ -2013,7 +2013,7 @@ acceleration software library.</p></td>
 ! fakesink -v
 </pre></div>
 </div>
-<p>The following is an example kernel.json file having <cite>mean_value</cite> and <cite>use_mean</cite> as kernel configuration parameters:</p>
+<p>The following is an example kernel.json file having <cite>mean_value</cite> and <cite>use_mean</cite> as kernel configuration parameters. Modify this as per your kernel requirements.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
    <span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/ivas&quot;</span><span class="p">,</span>
@@ -2027,7 +2027,6 @@ acceleration software library.</p></td>
          <span class="p">}</span>
       <span class="p">}</span>
    <span class="p">]</span>
-   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -2162,7 +2161,7 @@ acceleration software library.</p></td>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on July 29, 2021.
+        Last updated on August 2, 2021.
       </span>
 
     </p>

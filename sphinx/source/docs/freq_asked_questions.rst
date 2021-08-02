@@ -82,14 +82,6 @@ VVAS is tested on PetaLinux for embedded platforms. For more information about s
 
 .. raw:: html
 
-   <details>
-   <summary><a>What type of licensing options are available for VVAS source code (package)?</a></summary>
-
-VVAS is tested on PetaLinux for embedded platforms.
-
-
-.. raw:: html
-
    </details>
    </br>
 
@@ -159,21 +151,6 @@ This VVAS release supports Vitis AI V1.4.
 .. raw:: html
 
    <details>
-   <summary><a>What is the version of Vitis AI tool used for VVAS?</a></summary>
-
-This VVAS release supports Vitis AI V1.4.
-
-
-.. raw:: html
-
-   </details>
-   </br>
-
-
-
-.. raw:: html
-
-   <details>
    <summary><a>Is VVAS compatible with lower versions of Vitis AI tools, such as VAI 1.3?</a></summary>
 
 No, it has dependencies on Vitis AI 1.4.
@@ -188,7 +165,7 @@ No, it has dependencies on Vitis AI 1.4.
 .. raw:: html
 
    <details>
-   <summary><a>Can change the model in the pipeline be changed?</a></summary>
+   <summary><a>How can I change the model in the pipeline?</a></summary>
 
 The model name to be used for inferencing has to be provided in the JSON file for dpuinfer. For more details, see :ref:`DPU Infer <json-ivas-dpuinfer>`.
 
@@ -204,7 +181,7 @@ The model name to be used for inferencing has to be provided in the JSON file fo
    <details>
    <summary><a>Can the model be changed dynamically?</a></summary>
 
-while a pipeline is running, the details cannot change. To change the model's details, stop the running pipeline, and then update the JSON file. Re-start the pipeline.
+while a pipeline is running, the model details cannot change. To change the model's details, stop the running pipeline, and then update the JSON file. Re-start the pipeline.
 
 
 .. raw:: html
@@ -246,38 +223,9 @@ Receiving RTSP stream is supported by an open source plugin.
 .. raw:: html
 
    <details>
-   <summary><a>Is the zero-copy feature supported?</a></summary>
-
-Need more info exactly what is meaning of zero copy (Over PCIe or something else?)
-
-
-.. raw:: html
-
-   </details>
-   </br>
-
-
-
-.. raw:: html
-
-   <details>
    <summary><a>Is multi-stream processing supported (such as muletiple decode and detections)?</a></summary>
 
 Yes, VVAS suports simultaneous execution of multiple instances of plugins to realize multistream decode and ML operations.
-
-.. raw:: html
-
-   </details>
-   </br>
-
-
-
-.. raw:: html
-
-   <details>
-   <summary><a>How do I develop kernel libraries</a></summary>
-
-Refer to :doc:`Acceleration s/w development guide <common/6-common-Acceleration-Software-Library-Development>`.
 
 .. raw:: html
 
@@ -330,7 +278,7 @@ Yes. The :ref:`ROI Plug-in <roi-plugin>` that generates ROI data required for en
    <details>
    <summary><a>Can I generate multiple outputs for a single input?</a></summary>
 
-Yes. Ther ``ivas_xabrscaler`` plug-in controls the ``multiscaler`` kernel to generate up to 8 different resolutions for one input frame. This plugin, along with multiscaler, can also do colorspace conversion.
+Yes. The ``ivas_xabrscaler`` plug-in controls the ``multiscaler`` kernel to generate up to 8 different resolutions for one input frame. This plugin, along with resize, can also do colorspace conversion.
 
 .. raw:: html
 
@@ -372,7 +320,7 @@ Yes. There are sample accelerated platforms and applications provided that you c
    <details>
    <summary><a>Is there support for multi-stage (cascading) network?</a></summary>
 
-If it is the question that there will be single meta data generated after all ML operations, then this is not supported as on today. But one can connect multipe instances of dpuinfer one after another and each will generate its own ML data separately, then this is supported.
+One can connect multipe instances of ``ivas_xdpuinfer`` one after another to implement multi-stage cascading network and each ML instance will generate its own inference data separately. This is already supported in this release. However accumulation of inference data from several ML instances in a pipeline into a single meta data structure is not yet supported by plug-ins and this has to be done by the application.
 
 .. raw:: html
 
@@ -380,13 +328,12 @@ If it is the question that there will be single meta data generated after all ML
    </br>
 
 
-
 .. raw:: html
 
    <details>
    <summary><a>How to debug VVAS application if there are any issues?</a></summary>
 
-Description.
+VVAS is based on GStreamer framework. It relies of debugging tools supported by GStreamer framework. For more details, you may refer to `GStreamer Debugging Tools <https://gstreamer.freedesktop.org/documentation/tutorials/basic/debugging-tools.html?gi-language=c>`_.
 
 .. raw:: html
 

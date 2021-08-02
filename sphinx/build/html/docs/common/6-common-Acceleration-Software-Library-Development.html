@@ -56,8 +56,8 @@
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Frequently Asked Questions" href="../freq_asked_questions.html" />
-    <link rel="prev" title="VVAS GStreamer Plug-ins for Data Center Platforms" href="../DC/6-DC-plugins.html" /> 
+    <link rel="next" title="Acceleration Hardware" href="Acceleration-Hardware.html" />
+    <link rel="prev" title="Development Guide" href="for_developers.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -335,9 +335,51 @@
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Base Infrastructure</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">For Advanced Developers</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration s/w Library Developement Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#types-of-kernels">Types of Kernels</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hard-kernel">Hard Kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#softkernel">Softkernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#software-kernel">Software Kernel</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#interfaces-for-acceleration-software-libraries">Interfaces for Acceleration Software Libraries</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ivas-utils">ivas-utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-datastructures">VVAS Datastructures</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ivaskernel">IVASKernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ivasvideoformat">IVASVideoFormat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ivasframe">IVASFrame</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#other-vvas-declarations">Other VVAS Declarations</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#core-api">Core API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initialization-api">Initialization API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#process-api">Process API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#de-initialization-api">De-Initialization API</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#utility-apis">Utility APIs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#memory-management-api">Memory Management API</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#register-access-apis">Register Access APIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution-apis">Execution APIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#acceleration-software-library-for-hard-kernels">Acceleration Software Library for Hard Kernels</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#memory-allocation">Memory Allocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#controlling-kernel">Controlling Kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#acceleration-software-library-for-the-software-kernel">Acceleration Software Library for the Software Kernel</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#capability-negotiation-support-in-the-acceleration-software-library">Capability Negotiation Support in the Acceleration Software Library</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Acceleration-Hardware.html">Acceleration H/W Kernels</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Embedded</span></p>
 <ul>
@@ -349,98 +391,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
-</ul>
-<p class="caption"><span class="caption-text">White Papers</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">TBD</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#types-of-kernels">Types of Kernels</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#hard-kernel">Hard Kernel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#softkernel">Softkernel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#software-kernel">Software Kernel</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#interfaces-for-acceleration-software-libraries">Interfaces for Acceleration Software Libraries</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ivas-utils">ivas-utils</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#vvas-datastructures">VVAS Datastructures</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ivaskernel">IVASKernel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ivasvideoformat">IVASVideoFormat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ivasframe">IVASFrame</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#other-vvas-declarations">Other VVAS Declarations</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#core-api">Core API</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#initialization-api">Initialization API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#process-api">Process API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#de-initialization-api">De-Initialization API</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#utility-apis">Utility APIs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#memory-management-api">Memory Management API</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#register-access-apis">Register Access APIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#execution-apis">Execution APIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#acceleration-software-library-for-hard-kernels">Acceleration Software Library for Hard Kernels</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#memory-allocation">Memory Allocation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#controlling-kernel">Controlling Kernel</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#automatic-control-mode">Automatic Control Mode</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#manual-control-mode">Manual Control Mode</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#acceleration-software-library-for-the-software-kernel">Acceleration Software Library for the Software Kernel</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#capability-negotiation-support-in-the-acceleration-software-library">Capability Negotiation Support in the Acceleration Software Library</a></li>
-</ul>
-</li>
-</ul>
-<p class="caption"><span class="caption-text">Training</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">TBD</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#types-of-kernels">Types of Kernels</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#hard-kernel">Hard Kernel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#softkernel">Softkernel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#software-kernel">Software Kernel</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#interfaces-for-acceleration-software-libraries">Interfaces for Acceleration Software Libraries</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ivas-utils">ivas-utils</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#vvas-datastructures">VVAS Datastructures</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ivaskernel">IVASKernel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ivasvideoformat">IVASVideoFormat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ivasframe">IVASFrame</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#other-vvas-declarations">Other VVAS Declarations</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#core-api">Core API</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#initialization-api">Initialization API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#process-api">Process API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#de-initialization-api">De-Initialization API</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#utility-apis">Utility APIs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#memory-management-api">Memory Management API</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#register-access-apis">Register Access APIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#execution-apis">Execution APIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#acceleration-software-library-for-hard-kernels">Acceleration Software Library for Hard Kernels</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#memory-allocation">Memory Allocation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#controlling-kernel">Controlling Kernel</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#automatic-control-mode">Automatic Control Mode</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#manual-control-mode">Manual Control Mode</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#acceleration-software-library-for-the-software-kernel">Acceleration Software Library for the Software Kernel</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#capability-negotiation-support-in-the-acceleration-software-library">Capability Negotiation Support in the Acceleration Software Library</a></li>
-</ul>
-</li>
 </ul>
 <p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
@@ -497,6 +447,8 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
+          <li><a href="for_developers.html">Development Guide</a> &raquo;</li>
+        
       <li>Acceleration Software Library Development Guide</li>
     
     
@@ -519,7 +471,7 @@
   <div class="section" id="acceleration-software-library-development-guide">
 <h1>Acceleration Software Library Development Guide<a class="headerlink" href="#acceleration-software-library-development-guide" title="Permalink to this headline">¶</a></h1>
 <p>One of the objectives of VVAS is to define a methodology for advanced developers to develop their own kernel and integrate it into GStreamer-based applications. This section defines the steps required to develop an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application. There are three types of kernels.</p>
-<div class="figure align-default">
+<div class="figure align-center">
 <img alt="../../_images/image15.png" src="../../_images/image15.png" />
 </div>
 <div class="section" id="types-of-kernels">
@@ -941,42 +893,40 @@ Return:
 <span class="n">uint8_t</span> <span class="n">nu_caps</span><span class="p">;</span> <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">different</span> <span class="n">caps</span> <span class="n">supported</span> <span class="o">*/</span>
 <span class="n">kernelcaps</span> <span class="o">**</span><span class="n">kcaps</span><span class="p">;</span> <span class="o">/*</span> <span class="n">lsit</span> <span class="n">of</span> <span class="n">caps</span> <span class="o">*/</span>
 <span class="p">}</span> <span class="n">kernelpads</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Below mentioned user friendly APIs are provided for kernel to set the above mentioned capabilities.</p>
+<p>API to create new caps with input parameters</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ivas_caps_new</span><span class="p">()</span> <span class="o">-</span> <span class="n">Create</span> <span class="n">new</span> <span class="n">caps</span> <span class="k">with</span> <span class="nb">input</span> <span class="n">parameters</span>
+<span class="n">range_height</span>
+     <span class="o">-</span> <span class="n">true</span>  <span class="p">:</span> <span class="k">if</span> <span class="n">kernel</span> <span class="n">support</span> <span class="nb">range</span> <span class="n">of</span> <span class="n">height</span>
+     <span class="o">-</span> <span class="n">false</span> <span class="p">:</span> <span class="k">if</span> <span class="n">kernel</span> <span class="n">support</span> <span class="n">fixed</span> <span class="n">height</span>
+<span class="n">lower_height</span> <span class="p">:</span> <span class="n">lower</span> <span class="n">value</span> <span class="n">of</span> <span class="n">height</span> <span class="n">supported</span> <span class="n">by</span> <span class="n">kernel</span>
+               <span class="k">if</span> <span class="n">range_height</span> <span class="ow">is</span> <span class="n">false</span><span class="p">,</span> <span class="n">this</span> <span class="n">holds</span> <span class="n">the</span> <span class="n">fixed</span> <span class="n">value</span>
+<span class="n">upper_height</span> <span class="p">:</span> <span class="n">higher</span> <span class="n">value</span> <span class="n">of</span> <span class="n">hight</span> <span class="n">supported</span> <span class="n">by</span> <span class="n">kernel</span>
+               <span class="k">if</span> <span class="n">range_height</span> <span class="ow">is</span> <span class="n">false</span><span class="p">,</span> <span class="n">this</span> <span class="n">should</span> <span class="n">be</span> <span class="mi">0</span>
+<span class="n">range_width</span> <span class="p">:</span> <span class="n">same</span> <span class="k">as</span> <span class="n">above</span>
+<span class="n">lower_width</span> <span class="p">:</span>
+<span class="n">upper_width</span> <span class="p">:</span>
 
-<span class="o">/*</span> <span class="n">Create</span> <span class="n">memory</span> <span class="n">of</span> <span class="nb">all</span> <span class="n">sink</span> <span class="n">pad</span> <span class="o">*/</span>
-<span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">padinfo</span><span class="o">-&gt;</span><span class="n">nu_sinkpad</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">kernelpads</span> <span class="o">*</span><span class="p">)</span> <span class="n">calloc</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sizeof</span> <span class="p">(</span><span class="n">kernelpads</span><span class="p">));</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">nu_caps</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span> <span class="o">=</span> <span class="p">(</span><span class="n">kernelcaps</span> <span class="o">**</span><span class="p">)</span> <span class="n">calloc</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sizeof</span> <span class="p">(</span><span class="n">kernelcaps</span> <span class="o">*</span><span class="p">));</span>
-<span class="o">/*</span> <span class="n">Create</span> <span class="n">memory</span> <span class="k">for</span> <span class="nb">all</span> <span class="n">caps</span> <span class="o">*/</span>
-<span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">nu_caps</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">kernelcaps</span> <span class="o">*</span><span class="p">)</span> <span class="n">calloc</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sizeof</span>
-<span class="p">(</span><span class="n">kernelcaps</span><span class="p">));</span>
-<span class="p">}</span> <span class="o">//</span><span class="n">sinkpad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">nu_caps</span>
-<span class="o">/*</span><span class="n">Fill</span> <span class="nb">all</span> <span class="n">caps</span> <span class="o">*/</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">range_height</span> <span class="o">=</span> <span class="n">false</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">lower_height</span> <span class="o">=</span> <span class="mi">224</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">lower_width</span> <span class="o">=</span> <span class="mi">224</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">num_fmt</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">fmt</span> <span class="o">=</span>
-<span class="p">(</span><span class="n">IVASVideoFormat</span> <span class="o">*</span><span class="p">)</span> <span class="n">calloc</span> <span class="p">(</span><span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">num_fmt</span><span class="p">,</span>
-<span class="n">sizeof</span> <span class="p">(</span><span class="n">IVASVideoFormat</span><span class="p">));</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">fmt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">IVAS_VFMT_BGR8</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">range_height</span> <span class="o">=</span> <span class="n">true</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">lower_height</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">upper_height</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">range_width</span> <span class="o">=</span> <span class="n">true</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">lower_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">upper_width</span> <span class="o">=</span> <span class="mi">1920</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">num_fmt</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">fmt</span> <span class="o">=</span>
-<span class="p">(</span><span class="n">IVASVideoFormat</span> <span class="o">*</span><span class="p">)</span> <span class="n">calloc</span> <span class="p">(</span><span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">num_fmt</span><span class="p">,</span>
-<span class="n">sizeof</span> <span class="p">(</span><span class="n">IVASVideoFormat</span><span class="p">));</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">fmt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">IVAS_VFMT_BGR8</span><span class="p">;</span>
-<span class="n">sinkpads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">kcaps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">fmt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">IVAS_VFMT_RGB8</span><span class="p">;</span>
+            <span class="p">:</span> <span class="n">variable</span> <span class="nb">range</span> <span class="n">of</span> <span class="nb">format</span> <span class="n">supported</span> <span class="n">terminated</span> <span class="n">by</span> <span class="mi">0</span>
+              <span class="n">make</span> <span class="n">sure</span> <span class="n">to</span> <span class="n">add</span> <span class="mi">0</span> <span class="n">at</span> <span class="n">end</span> <span class="n">otherwise</span> <span class="n">it</span>
+              <span class="n">code</span> <span class="n">will</span> <span class="n">take</span> <span class="nb">format</span> <span class="n">till</span> <span class="n">it</span> <span class="n">get</span> <span class="mi">0</span>
 
-<span class="n">video</span><span class="o">/</span><span class="n">x</span><span class="o">-</span><span class="n">raw</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="mi">224</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="mi">224</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="p">(</span><span class="n">string</span><span class="p">){</span> <span class="n">BGR</span> <span class="p">};</span>
-<span class="n">video</span><span class="o">/</span><span class="n">x</span><span class="o">-</span><span class="n">raw</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">)[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span> <span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">)[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1920</span> <span class="p">],</span>
-<span class="nb">format</span><span class="o">=</span><span class="p">(</span><span class="n">string</span><span class="p">){</span> <span class="n">BGR</span><span class="p">,</span> <span class="n">RGB</span> <span class="p">}</span>
+<span class="n">kernelcaps</span> <span class="o">*</span> <span class="n">ivas_caps_new</span> <span class="p">(</span><span class="n">uint8_t</span> <span class="n">range_height</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">lower_height</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">upper_height</span><span class="p">,</span>
+                            <span class="n">uint8_t</span> <span class="n">range_width</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">lower_width</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">upper_width</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>API to  add new caps to sink pad. Only one pad is supported in this release.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">bool</span> <span class="n">ivas_caps_add_to_sink</span> <span class="p">(</span><span class="n">IVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">kernelcaps</span> <span class="o">*</span> <span class="n">kcaps</span><span class="p">,</span> <span class="nb">int</span> <span class="n">sinkpad_num</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>API to add new caps to src pad. Only one pad is supported as on today.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">bool</span> <span class="n">ivas_caps_add_to_src</span> <span class="p">(</span><span class="n">IVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">kernelcaps</span> <span class="o">*</span> <span class="n">kcaps</span><span class="p">,</span> <span class="nb">int</span> <span class="n">sinkpad_num</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -998,10 +948,10 @@ Return:
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../freq_asked_questions.html" class="btn btn-neutral float-right" title="Frequently Asked Questions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Acceleration-Hardware.html" class="btn btn-neutral float-right" title="Acceleration Hardware" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../DC/6-DC-plugins.html" class="btn btn-neutral float-left" title="VVAS GStreamer Plug-ins for Data Center Platforms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="for_developers.html" class="btn btn-neutral float-left" title="Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1011,7 +961,7 @@ Return:
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on July 29, 2021.
+        Last updated on August 2, 2021.
       </span>
 
     </p>

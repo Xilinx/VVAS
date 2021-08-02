@@ -2,7 +2,7 @@
 Plug-ins
 ###################
 
-VVAS is based on the GStreamer framework. TThe two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins.This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``ivas-gst-plugins`` folder of the VVAS source tree. This section covers the plug-is that are common for Edge as well as cloud solutions. There are few plug-ins that are pecific to Edge/Embedded platforms and are covered in :doc:`Plugins for Embedded platforms <../Embedded/6-embedded-plugins>`. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in :doc:`Plugins for Data Center Platform <../DC/6-DC-plugins>`. The following table lists the GStreamer plug-ins.
+VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins.This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``ivas-gst-plugins`` folder of the VVAS source tree. This section covers the plug-is that are common for Edge as well as cloud solutions. There are few plug-ins that are pecific to Edge/Embedded platforms and are covered in :doc:`Plugins for Embedded platforms <../Embedded/6-embedded-plugins>`. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in :doc:`Plugins for Data Center Platform <../DC/6-DC-plugins>`. The following table lists the VVAS GStreamer plug-ins.
 
 Table 1: GStreamer Plug-ins
 
@@ -40,7 +40,7 @@ There are specific functions, like video decoder, encoder, and meta affixer wher
 MetaAffixer
 ==========================
 
-The metaaffixer plug-in is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request, the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required.
+The metaaffixer plug-in, ``ivas_xmetaaffixer``, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request, the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to `ivas_xmetaaffixer source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/metaaffixer>`_
 
 .. figure:: ../images/image5.png
 
@@ -64,9 +64,9 @@ Table 2: ivas_xmetaaffixer Plug-in Properties
 |    sync            |    Boolean  |  True/False |    True     | This property is to enable the synchronization         |
 |                    |             |             |             | between master and slave pads buffers.                 |
 |                    |             |             |             | If sync=true is set, then the metadata is scaled       |
-|                    |             |             |             | and attached to only those buffers on slave pads       |
-|                    |             |             |             | that have matching PTS with the buffer on the          |
-|                    |             |             |             | master sink pad.                                       |
+|                    |             |             |             | and attached to buffers on slave pads that have        |
+|                    |             |             |             | matching PTS or PTS falls within frame duration of the |
+|                    |             |             |             | buffer on the master sink pad.                         |
 |                    |             |             |             | If sync=false is set on the element, then the          |
 |                    |             |             |             | metadata is scaled and attached to all the             |
 |                    |             |             |             | buffers on the slave pads. If this option is used,     |
@@ -121,7 +121,9 @@ This section covers the example pipelines using the metaaffixer plug-in.
 ivas_xabrscaler
 ================
 
-In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. ivas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ivas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. This plug-in supports:
+In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. ivas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ivas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. For more implementation details, refer to `ivas_xabrscaler source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/abrscaler>`_.
+
+This plug-in supports:
 
 * Single input, multiple output pads
 
@@ -131,14 +133,16 @@ In adaptive bit rate (ABR) use cases, one video is encoded at different bit rate
 
 * Each output pad has independent resolution and color space conversion capability.
 
-.. important:: *The ivas_xabrscaler plug-in controls the multiscaler kernel, it must be included in your hardware design. See the `Multiscaler Kernel <#multiscaler-kernel>`__section*.
+.. important:: The `ivas_xabrscaler` plug-in controls the multiscaler kernel. If your application uses this plug-in, then make sure that multi-scaler kernel is included in your hardware design.
 
+.. important:: Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application. 
+
+As a reference, maximum resolution supported by multi-scaler kernel in ``Smart Model Select`` example design can be can be found in  `multi-scaler kernel config <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33>`_
 
 Prerequisite
 ----------------
 
 This plug-in requires the multiscaler kernel to be available in the hardware design. See :ref:`Multiscaler Kernel <multiscaler-kernel>`
-
 
 Input and Output
 ------------------------
@@ -164,7 +168,10 @@ This plug-in accepts buffers with the following color format standards:
 * RGBA
 * BGRA
 
-.. important:: *Make sure that the color formats provided to this plug-in are supported by the multi-scaler hardware kernel.*
+.. important:: Make sure that the color formats needed for your application are supported by the multi-scaler hardware kernel. 
+
+
+As a reference, multi-scaler configurtion for ``smart model select`` exampl design can be found in `multi-scaler configuration <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h>`_
 
 
 Control Parameters and Plug-in Properties
@@ -174,51 +181,51 @@ The following table lists the GStreamer plug-in properties supported by the ivas
 
 Table 3: ivas_xabrscaler Plug-in Properties
 
-+--------------------+-------------+-----------+-------------+------------------+
-|                    |             |           |             |                  |
-|  **Property Name** |   **Type**  | **Range** | **Default** | **Description**  |
-|                    |             |           |             |                  |
-+====================+=============+===========+=============+==================+
-|                    |    string   |    N/A    | ./binary    | The              |
-|  xclbin-location   |             |           | _contain    | location of      |
-|                    |             |           | er_1.xclbin | xclbin.          |
-+--------------------+-------------+-----------+-------------+------------------+
-|                    |    string   |    N/A    |             | Kernel name      |
-| kernel-name        |             |           | v_multi_    | and              |
-|                    |             |           | scaler:     | instance         |
-|                    |             |           | multi_      | separated        |
-|                    |             |           | scaler_1    | by a colon.      |
-+--------------------+-------------+-----------+-------------+------------------+
-|    dev-idx         |    integer  | 0 to 31   |    0        | Device index     |
-|                    |             |           |             | This is valid    |
-|                    |             |           |             | only in PCIe/    |
-|                    |             |           |             | Data Center      |
-|                    |             |           |             | platforms.       |
-+--------------------+-------------+-----------+-------------+------------------+
-|    ppc             |    integer  | 1, 2, 4   |    2        | Pixel per        |
-|                    |             |           |             | clock            |
-|                    |             |           |             | supported        |
-|                    |             |           |             | by a multi-      |
-|                    |             |           |             | scaler           |
-|                    |             |           |             | kernel           |
-+--------------------+-------------+-----------+-------------+------------------+
-|   scale-mode       |    integer  | 0, 1, 2   |    0        | Scale algorithm  |
-|                    |             |           |             | to use:          |
-|                    |             |           |             | 0:BILINEAR       |
-|                    |             |           |             | 1:BICUBIC        |
-|                    |             |           |             | 2:POLYPHASE      |
-+--------------------+-------------+-----------+-------------+------------------+
-|    coef-load-type  |  integer    | 0 => Fixed|    1        | Type of filter   |
-|                    |             | 1 => Auto |             | Coefficients to  |
-|                    |             |           |             | be used: Fixed   |
-|                    |             |           |             | or Auto          |
-|                    |             |           |             | generated        |
-+--------------------+-------------+-----------+-------------+------------------+
-|    num-taps        |  integer    | 6=>6 taps |    1        | Number of filter |
-|                    |             | 8=>8 taps |             | taps to be ussed |
-|                    |             |10=>10 taps|             | for scaling      |
-|                    |             |12=>12 taps|             |                  |
-+--------------------+-------------+-----------+-------------+------------------+
++--------------------+-------------+---------------+-------------+------------------+
+|                    |             |               |             |                  |
+|  **Property Name** |   **Type**  | **Range**     | **Default** | **Description**  |
+|                    |             |               |             |                  |
++====================+=============+===============+=============+==================+
+|                    |    string   |    N/A        | ./binary    | The              |
+|  xclbin-location   |             |               | _contain    | location of      |
+|                    |             |               | er_1.xclbin | xclbin.          |
++--------------------+-------------+---------------+-------------+------------------+
+|                    |    string   |    N/A        |             | Kernel name      |
+| kernel-name        |             |               | v_multi_    | and              |
+|                    |             |               | scaler:     | instance         |
+|                    |             |               | multi_      | separated        |
+|                    |             |               | scaler_1    | by a colon.      |
++--------------------+-------------+---------------+-------------+------------------+
+|    dev-idx         |    integer  | 0 to 31       |    0        | Device index     |
+|                    |             |               |             | This is valid    |
+|                    |             |               |             | only in PCIe/    |
+|                    |             |               |             | Data Center      |
+|                    |             |               |             | platforms.       |
++--------------------+-------------+---------------+-------------+------------------+
+|    ppc             |    integer  | 1, 2, 4       |    2        | Pixel per        |
+|                    |             |               |             | clock            |
+|                    |             |               |             | supported        |
+|                    |             |               |             | by a multi-      |
+|                    |             |               |             | scaler           |
+|                    |             |               |             | kernel           |
++--------------------+-------------+---------------+-------------+------------------+
+|   scale-mode       |    integer  | 0, 1, 2       |    0        | Scale algorithm  |
+|                    |             |               |             | to use:          |
+|                    |             |               |             | 0:BILINEAR       |
+|                    |             |               |             | 1:BICUBIC        |
+|                    |             |               |             | 2:POLYPHASE      |
++--------------------+-------------+---------------+-------------+------------------+
+|    coef-load-type  |  integer    | 0 => Fixed    |    1        | Type of filter   |
+|                    |             | 1 => Auto     |             | Coefficients to  |
+|                    |             |               |             | be used: Fixed   |
+|                    |             |               |             | or Auto          |
+|                    |             |               |             | generated        |
++--------------------+-------------+---------------+-------------+------------------+
+|    num-taps        |  integer    | 6=>6 taps     |    1        | Number of filter |
+|                    |             | 8=>8 taps     |             | taps to be ussed |
+|                    |             | 10=>10 taps   |             | for scaling      |
+|                    |             | 12=>12 taps   |             |                  |
++--------------------+-------------+---------------+-------------+------------------+
 
 
 Example Pipelines
@@ -228,8 +235,7 @@ Example Pipelines
 One input one output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following example configures ivas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed
-from NV12 to BGR.
+The following example configures ivas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed from NV12 to BGR.
 
 .. code-block::
 
@@ -289,7 +295,12 @@ Table 5: Acceleration Software Libraries
 |                                        | Support transform operation      |
 +----------------------------------------+----------------------------------+
 
-Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this chapter.
+.. note::
+
+        Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend to use ivas_xfilter plugin for one input and one output kernels.
+
+
+Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.
 
 Table 6: Acceleration Software Libraries
 
@@ -608,6 +619,7 @@ Table 8: Kernel JSON Object Members
 |                      |                      | embedded platforms.      |
 +----------------------+----------------------+--------------------------+
 
+For ``ivas_xfilter`` implementation details, refer to `ivas_xfilter source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/filter>`_
 
 
 Example JSON Configuration Files
@@ -669,18 +681,20 @@ The following JSON file uses ivas_xfilter to control multi-scaler IP (hard-kerne
 Example Pipelines
 --------------------------
 
-This section covers the GStreamer example pipelines using the ivas_xfilter infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the ivas_xfilter plug-in.
+This section covers the GStreamer example pipelines using the ``ivas_xfilter`` infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the ivas_xfilter plug-in.
 
-* The bounding box functionality is implemented in the ivas_xboundingbox acceleration software library that is controlled by the ivas_xfilter plug-in.
+* The bounding box functionality is implemented in the ``ivas_xboundingbox`` acceleration software library that is controlled by the ``ivas_xfilter`` plug-in.
 
-* Machine learning using the DPU is implemented by the ivas_xdpuinfer acceleration software library that is called by the ivas_xfilter plug-in.
+* Machine learning using the DPU is implemented by the ``ivas_xdpuinfer`` acceleration software library that is called by the ``ivas_xfilter`` plug-in.
 
 .. _ivas_xboundingbox:
 
-Bounding Box Using the ivas_xboundingbox Acceleration Software Library
-================================================================================
+Bounding Box Example
+============================
 
-This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in ivas_xfilter and the ivas_xboundingbox acceleration software library. The ivas_xboundingbox interprets machine learning inference results from the ivas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.
+This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in ``ivas_xfilter`` and the ``ivas_xboundingbox`` acceleration software library. The ivas_xboundingbox interprets machine learning inference results from the ivas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.
+
+For ``ivas_xboundingbox`` implementation details, refer to `ivas_xboundingbox source code <https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xboundingbox>`_
 
 .. figure:: ../images/X24998-ivas-xboundingbox.png
 
@@ -875,14 +889,16 @@ An example of using a bounding box along with the machine learnin plug-in is sho
 
 .. _ivas_xdpuinfer:
 
-Machine Learning Using the ivas_xdpuinfer Plug-in
-===============================================================================
+Machine Learning Example
+===================================
 
-This section discusses how machine learning can be implemented using the VVAS infrastructure ivas_xfilter plug-in and the ivas_xdpuinfer acceleration software library. Details about the ivas_xfilter plug-in and ivas_xdpuinfer acceleration software library are beyond the scope of this section.
+This section discusses how machine learning solutions can be implemented using the VVAS infrastructure ``ivas_xfilter`` plug-in and the ``ivas_xdpuinfer`` acceleration software library.
 
 .. figure:: ../images/image11.png
 
 The ivas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The ivas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS metameta structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.
+
+For ``ivas_xdpuinfer`` implementation details, refer to `ivas_xdpuinfer source code <https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xdpuinfer>`_
 
 
 Prerequisites
@@ -900,7 +916,7 @@ The model directory name must match with the ELF and prototxt files inside the m
 
 * label.json file containing the label information, if the models generate labels.
 
-The following is an example of the model directory (yolov3_voc_tf), which contains the yolov3_voc_tf.elf/yolov3_voc_tf.xmodel and yolov3_voc_tf.prototxt files along with the label.json file.
+The following is an example of the model directory (yolov2_voc), which contains the yolov2_voc.xmodel and yolov2_voc.prototxt files along with the label.json file.
 
 .. figure:: ../images/model-directory.png
 
@@ -982,8 +998,8 @@ Table 10: JSON File for ivas_xdpuinfer
 | model-class    |    string   |    YOLOV3          |    N/A      | Class of model corresponding to model. Some of|
 |                |             |                    |             | the examples are shown here:                  |
 |                |             |  FACEDETECT        |             |                                               |
-|                |             |    CLA             |             | * YOLOV3: yolov3_adas_pruned_0_9,             |
-|                |             | SSIFICATION        |             |           yolov3_voc, yolov3_voc_tf           |
+|                |             |                    |             | * YOLOV3: yolov3_adas_pruned_0_9,             |
+|                |             | CLASSIFICATION     |             |           yolov3_voc, yolov3_voc_tf           |
 |                |             |    SSD             |             | * FACEDETECT: densebox_320_320,               |
 |                |             |  REFINEDET         |             |               densebox_640_360                |                                         
 |                |             |    TFSSD           |             | * CLASSIFICATION: resnet18, resnet50,         |
@@ -1021,7 +1037,7 @@ Table 10: JSON File for ivas_xdpuinfer
 |                |             |                    |             | frame to ivas_xdpuinfer. The Vitis AI library |
 |                |             |                    |             | does not perform these operations.            |
 +----------------+-------------+--------------------+-------------+-----------------------------------------------+
-|    perfo       |    Boolean  |                    |    False    | Enable performance test and corresponding     |
+|   perfo        |    Boolean  |                    |    False    | Enable performance test and corresponding     |
 | rmance_test    |             |  True/False        |             | flops per second (f/s) display logs.          |
 |                |             |                    |             | Calculates and displays the f/s of the        |
 |                |             |                    |             | standalone DPU after every second.            |
@@ -1121,6 +1137,8 @@ ivas_xmultisrc
 
 The GStreamer ivas_xmultisrc plug-in can have one input pad and multiple-output pads. This single plug-in supports multiple acceleration kernels, each controlled by a separate acceleration software library.
 
+For ``ivas_xmultisrc`` implementation details, refer to `ivas_xmultisrc source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/multisrc>`_
+
 .. figure:: ../images/ivas_xmultisrc.png
 
 
@@ -1179,7 +1197,7 @@ This section covers the format of JSON file/string to be passed to the ivas_xmul
 Example JSON File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following example file describes how to specify two kernels that are being controlled by the single instance of the ivas_xmultisrc plug-in. The next section describes each field in this example file.
+The following example file describes how to specify two kernels that are being controlled by the single instance of the ivas_xmultisrc plug-in. Modify this json file as per your kernels and acceleration software library. The next section describes each field in this example file.
 
 .. code-block::
 
@@ -1264,7 +1282,7 @@ The following example demonstrates the ivas_xmultisrc plug-in configured for one
       ! "video/x-raw, width=640, height=360, format=BGR" 
       ! fakesink -v
 
-The following is an example kernel.json file having `mean_value` and `use_mean` as kernel configuration parameters:
+The following is an example kernel.json file having `mean_value` and `use_mean` as kernel configuration parameters. Modify this as per your kernel requirements.
 
 .. code-block::
 
@@ -1281,10 +1299,7 @@ The following is an example kernel.json file having `mean_value` and `use_mean` 
                }
             }
          ]
-         }
       }
-
-
 
 GstIvasBufferPool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

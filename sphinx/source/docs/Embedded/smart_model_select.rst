@@ -2,7 +2,8 @@
 Smart Model Select
 #########################################
 
-Smart Model Select is an example application to demonstrate inferencing using 16 Machine Learning (ML) models supported by VVAS. 
+Smart Model Select is an example application to demonstrate inferencing using 16 Machine Learning (ML) models supported by VVAS. User can select the input source, ML model to be used and the output option, like display on monitor or dump the results to file.
+
 Smart Model Select application design is built on ``zcu104`` development board which, along with VVAS, 
 provides a complete framework for building and customizing video platforms with different pipelines stages. 
 ``zcu104`` development board can support below mentioned pipeline stages:
@@ -101,9 +102,9 @@ Ready to use Prebuilt binaries are provided with this VVAS release. You can down
 
 Create a folder, say `PREBUILT_BINARIES`, where pre-built binaries are to be downloaded.
 
-Click on ``Download Prebuilt Binaries``. This will take you to the page where prebuilt binaries for all supported platforms are stored. 
+Click on `Smart Model Select Prebuilt Binaries <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2021.1_zcu104.zip>`_. This will ask for few credentials and then start downloading. 
 
-Download pre-built binaries package `vvas_smart_model_select_2021.1_zcu104.zip` and unzip it.
+Unzip the downloaded package `vvas_smart_model_select_2021.1_zcu104.zip`.
 
 .. code-block::
    
@@ -142,7 +143,7 @@ One time setup
   If you have built the platform yourself, then sd_card.img would be located at
   ::
   
-     <VVAS_SOURCES>/ivas/ivas-examples/Embedded/smart_model_select/binary_container_1/sd_card.img
+     <VVAS_SOURCES>/VVAS/ivas-examples/Embedded/smart_model_select/binary_container_1/sd_card.img
 
 
 * Insert this SD card in the SD card slot on the zcu104 board and boot the board.
@@ -158,6 +159,18 @@ One time setup
   .. code-block::
 
      scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2021.1_zcu104/app root@<board ip>:~/
+
+* After copying, ``chmod`` `~/app/setup.sh` and `~/app/smart_model_select` to make them executable on the board.
+  .. code-block::
+
+     chmod 777 ~/app/smart_model_select
+     chmod 777 ~/app/setup.sh
+
+* Create `/usr/share/vitis_ai_library/models` folder on the board and copy the Vitis-AI models into it
+::
+
+  mkdir -p /usr/share/vitis_ai_library/models
+  scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2021.1_zcu104/models/* root@<board ip>/usr/share/vitis_ai_library/models/
 
 
 **********************************
@@ -303,7 +316,7 @@ Follow the steps mentioned below to compile the platform.
 
 2.  Clone VVAS repo
 ::
-       git clone https://gitenterprise.xilinx.com/IPS-SSW/ivas
+       git clone https://github.com/Xilinx/VVAS.git
          
 3.  Setup tool chain environment:
 ::
@@ -315,7 +328,7 @@ Follow the steps mentioned below to compile the platform.
 4.  Navigate to ``zcu104_vcuDec_DP`` platform folder
 ::
 
-       cd <VVAS_SOURCES>/ivas/ivas-platforms/Embedded/zcu104_vcuDec_DP
+       cd <VVAS_SOURCES>/VVAS/ivas-platforms/Embedded/zcu104_vcuDec_DP
 
 5.  Compile the platform
 ::
@@ -323,7 +336,7 @@ Follow the steps mentioned below to compile the platform.
 
 .. _platform_path:
 
-After build is finished, platform will be available `<VVAS_SOURCES>/ivas/ivas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202110_1/export/xilinx_zcu104_vcuDec_DP_202110_1/` location.
+After build is finished, platform will be available `<VVAS_SOURCES>/VVAS/ivas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202110_1/export/xilinx_zcu104_vcuDec_DP_202110_1/` location.
 
 Hardware Accelerators (Kernels)
 =========================================
@@ -354,7 +367,7 @@ The sources for hardware accelerators required for ``Smart Model Select`` applic
 3. Multiscaler kernel sources are part of VVAS source tree and are located at
 ::
 
-  <VVAS_SOURCES>/ivas/ivas-accel-hw/multiscaler
+  <VVAS_SOURCES>/VVAS/ivas-accel-hw/multiscaler
 
 Kernels may have different configurations for different application requirements.
 Hence it is recommended to build the Kernels from the application design workspace with the required Kernel configuration for that application. 
@@ -367,12 +380,12 @@ Hence kernel compilatioin steps are not covered separtely here.
 * Configuration of DPU
   ::
     
-    <VVAS_SOURCES>/ivas/ivas-examples/Embedded/smart_model_select/dpu_conf.vh
+    <VVAS_SOURCES>/VVAS/ivas-examples/Embedded/smart_model_select/dpu_conf.vh
 
 * Configuion of Multiscaler
   ::
        
-    <VVAS_SOURCES>/ivas/ivas-examples/Embedded/smart_model_select/v_multi_scaler_config.h
+    <VVAS_SOURCES>/VVAS/ivas-examples/Embedded/smart_model_select/v_multi_scaler_config.h
 
 You may modify the kernel configuration as per your requirements in these files.
 
@@ -386,12 +399,12 @@ VVAS sources already has ready to build example Vitis workspace for ``smart_mode
 
 .. code-block::
 
-      cd <VVAS_SOURCES>/ivas/ivas-examples/Embedded/smart_model_select
+      cd <VVAS_SOURCES>/VVAS/ivas-examples/Embedded/smart_model_select
       make PLATFORM=<PLATFORM_PATH > DPU_TRD_PATH=<DPU_PATH> HW_ACCEL_PATH=<MULTISCALER_PATH>
       
-      PLATFORM_PATH = <VVAS_SOURCES>/ivas/ivas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202110_1/export/xilinx_zcu104_vcuDec_DP_202110_1/xilinx_zcu104_vcuDec_DP_202110_1.xpfm
+      PLATFORM_PATH = <VVAS_SOURCES>/VVAS/ivas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202110_1/export/xilinx_zcu104_vcuDec_DP_202110_1/xilinx_zcu104_vcuDec_DP_202110_1.xpfm
       DPU_PATH = <VVAS_SOURCES>/Vitis-AI/dsa/DPU-TRD/
-      MULTISCALER_PATH = <VVAS_SOURCES>/ivas/ivas-accel-hw
+      MULTISCALER_PATH = <VVAS_SOURCES>/VVAS/ivas-accel-hw
 
 Once above build is done, final sdcard image is available at ``./binary_container_1/sd_card.img`` location.
 
@@ -420,7 +433,7 @@ If you have built the platform yourself, then Sysroot installer is available at
 
 :: 
 
-        <VVAS_SOURCES>/ivas/ivas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/tmp/sw_components/sdk.sh
+        <VVAS_SOURCES>/VVAS/ivas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/tmp/sw_components/sdk.sh
 
 
 One need to install the sysroot. Create a folder, say **sysroot** in `VVAS_SOURCES`. Command for sysroot generation is
@@ -439,7 +452,7 @@ Get the VVAS Sources if not done already. Follow the steps mentioned below.
 
 * Clone VVAS repo
   ::
-        git clone https://gitenterprise.xilinx.com/IPS-SSW/ivas
+        git clone https://github.com/Xilinx/VVAS.git
 
 
   VVAS Source tree structure is described below:
@@ -460,7 +473,7 @@ Get the VVAS Sources if not done already. Follow the steps mentioned below.
   * **ivas-platforms:** This folder contains the reference platforms for different applications.
 
 
-* Navigate to ``VVAS_SOURCES/ivas`` folder
+* Navigate to ``VVAS_SOURCES/VVAS`` folder
 
 * Unset the LD library path environment variable.
   ::
@@ -488,7 +501,7 @@ Build Smart Model Select Application
 
 The example application (smart_model_select) is available in the “ivas-example” section of VVAS repository. Follow below steps to compile the application.
 ::
-   cd <VVAS_SOURCES>/ivas/ivas-examples/Embedded/smart_model_select/src
+   cd <VVAS_SOURCES>/VVAS/ivas-examples/Embedded/smart_model_select/src
    unset LD_LIBRARY_PATH
    source <sysroot path>/environment-setup-cortexa72-cortexa53-xilinx-linux
    make SYSROOT= <sysroot path>/sysroots/cortexa72-cortexa53-xilinx-linux

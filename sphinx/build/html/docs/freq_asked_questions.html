@@ -56,7 +56,7 @@
   <link rel="stylesheet" href="../_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Acceleration Software Library Development Guide" href="common/6-common-Acceleration-Software-Library-Development.html" /> 
+    <link rel="prev" title="VVAS GStreamer Plug-ins for Data Center Platforms" href="DC/6-DC-plugins.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -349,14 +349,6 @@
 <li class="toctree-l1"><a class="reference internal" href="DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption"><span class="caption-text">White Papers</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="common/6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Training</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="common/6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
 <p class="caption"><span class="caption-text">FAQ</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently Asked Questions</a></li>
@@ -449,9 +441,7 @@
 </br><details>
 <summary><a>What platform and OS are compatible with VVAS?</a></summary><p>VVAS is tested on PetaLinux for embedded platforms. For more information about supported platforms, refer to <a class="reference internal" href="Embedded/platforms_and_applications.html"><span class="doc">Platforms And Applications</span></a>.</p>
 </details>
-</br><details>
-<summary><a>What type of licensing options are available for VVAS source code (package)?</a></summary><p>VVAS is tested on PetaLinux for embedded platforms.</p>
-</details>
+</br></details>
 </br><details>
 <summary><a>Which AI models are supported with VVAS?</a></summary><p>Below mentioned 16 models are supported.</p>
 <ul class="simple">
@@ -480,16 +470,13 @@
 <summary><a>What is the version of Vitis AI tool used for VVAS?</a></summary><p>This VVAS release supports Vitis AI V1.4.</p>
 </details>
 </br><details>
-<summary><a>What is the version of Vitis AI tool used for VVAS?</a></summary><p>This VVAS release supports Vitis AI V1.4.</p>
-</details>
-</br><details>
 <summary><a>Is VVAS compatible with lower versions of Vitis AI tools, such as VAI 1.3?</a></summary><p>No, it has dependencies on Vitis AI 1.4.</p>
 </details>
 </br><details>
-<summary><a>Can change the model in the pipeline be changed?</a></summary><p>The model name to be used for inferencing has to be provided in the JSON file for dpuinfer. For more details, see <a class="reference internal" href="common/common_plugins.html#json-ivas-dpuinfer"><span class="std std-ref">DPU Infer</span></a>.</p>
+<summary><a>How can I change the model in the pipeline?</a></summary><p>The model name to be used for inferencing has to be provided in the JSON file for dpuinfer. For more details, see <a class="reference internal" href="common/common_plugins.html#json-ivas-dpuinfer"><span class="std std-ref">DPU Infer</span></a>.</p>
 </details>
 </br><details>
-<summary><a>Can the model be changed dynamically?</a></summary><p>while a pipeline is running, the details cannot change. To change the model’s details, stop the running pipeline, and then update the JSON file. Re-start the pipeline.</p>
+<summary><a>Can the model be changed dynamically?</a></summary><p>while a pipeline is running, the model details cannot change. To change the model’s details, stop the running pipeline, and then update the JSON file. Re-start the pipeline.</p>
 </details>
 </br><details>
 <summary><a>What types of input streams are supported?</a></summary><ul class="simple">
@@ -501,13 +488,7 @@
 <summary><a>Is receiving RTSP stream supported?</a></summary><p>Receiving RTSP stream is supported by an open source plugin.</p>
 </details>
 </br><details>
-<summary><a>Is the zero-copy feature supported?</a></summary><p>Need more info exactly what is meaning of zero copy (Over PCIe or something else?)</p>
-</details>
-</br><details>
 <summary><a>Is multi-stream processing supported (such as muletiple decode and detections)?</a></summary><p>Yes, VVAS suports simultaneous execution of multiple instances of plugins to realize multistream decode and ML operations.</p>
-</details>
-</br><details>
-<summary><a>How do I develop kernel libraries</a></summary><p>Refer to <a class="reference internal" href="common/6-common-Acceleration-Software-Library-Development.html"><span class="doc">Acceleration s/w development guide</span></a>.</p>
 </details>
 </br><details>
 <summary><a>How do I develop kernel libraries</a></summary><p>Refer to <a class="reference internal" href="common/6-common-Acceleration-Software-Library-Development.html"><span class="doc">Acceleration s/w development guide</span></a>.</p>
@@ -519,7 +500,7 @@
 <summary><a>Is ROI-based encoding supported?</a></summary><p>Yes. The <a class="reference internal" href="Embedded/6-embedded-plugins.html#roi-plugin"><span class="std std-ref">ROI Plug-in</span></a> that generates ROI data required for encoders.</p>
 </details>
 </br><details>
-<summary><a>Can I generate multiple outputs for a single input?</a></summary><p>Yes. Ther <code class="docutils literal notranslate"><span class="pre">ivas_xabrscaler</span></code> plug-in controls the <code class="docutils literal notranslate"><span class="pre">multiscaler</span></code> kernel to generate up to 8 different resolutions for one input frame. This plugin, along with multiscaler, can also do colorspace conversion.</p>
+<summary><a>Can I generate multiple outputs for a single input?</a></summary><p>Yes. The <code class="docutils literal notranslate"><span class="pre">ivas_xabrscaler</span></code> plug-in controls the <code class="docutils literal notranslate"><span class="pre">multiscaler</span></code> kernel to generate up to 8 different resolutions for one input frame. This plugin, along with resize, can also do colorspace conversion.</p>
 </details>
 </br><details>
 <summary><a>Is audio analytics supported?</a></summary><p>No.</p>
@@ -528,10 +509,10 @@
 <summary><a>Are there sample accelerated applications developed using VVAS?</a></summary><p>Yes. There are sample accelerated platforms and applications provided that you can execute by following a few steps. Start at <a class="reference internal" href="Embedded/platforms_and_applications.html"><span class="doc">Platforms And Applications</span></a>.</p>
 </details>
 </br><details>
-<summary><a>Is there support for multi-stage (cascading) network?</a></summary><p>If it is the question that there will be single meta data generated after all ML operations, then this is not supported as on today. But one can connect multipe instances of dpuinfer one after another and each will generate its own ML data separately, then this is supported.</p>
+<summary><a>Is there support for multi-stage (cascading) network?</a></summary><p>One can connect multipe instances of <code class="docutils literal notranslate"><span class="pre">ivas_xdpuinfer</span></code> one after another to implement multi-stage cascading network and each ML instance will generate its own inference data separately. This is already supported in this release. However accumulation of inference data from several ML instances in a pipeline into a single meta data structure is not yet supported by plug-ins and this has to be done by the application.</p>
 </details>
 </br><details>
-<summary><a>How to debug VVAS application if there are any issues?</a></summary><p>Description.</p>
+<summary><a>How to debug VVAS application if there are any issues?</a></summary><p>VVAS is based on GStreamer framework. It relies of debugging tools supported by GStreamer framework. For more details, you may refer to <a class="reference external" href="https://gstreamer.freedesktop.org/documentation/tutorials/basic/debugging-tools.html?gi-language=c">GStreamer Debugging Tools</a>.</p>
 </details>
 </br><details>
 <summary><a>How do I check the throughput of VVAS application/pipeline?</a></summary><p>Using GStreamer’s native fps display mechanism.</p>
@@ -564,7 +545,7 @@
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="common/6-common-Acceleration-Software-Library-Development.html" class="btn btn-neutral float-left" title="Acceleration Software Library Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="DC/6-DC-plugins.html" class="btn btn-neutral float-left" title="VVAS GStreamer Plug-ins for Data Center Platforms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -574,7 +555,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on July 29, 2021.
+        Last updated on August 2, 2021.
       </span>
 
     </p>

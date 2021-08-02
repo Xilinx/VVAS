@@ -361,14 +361,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption"><span class="caption-text">White Papers</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../common/6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Training</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../common/6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
 <p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
@@ -458,12 +450,12 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>omxh264dnc/omxh265dec</p></td>
+<tr class="row-even"><td><p>omxh264dec/omxh265dec</p></td>
 <td><p>GStreamer plug-in to perform
 hardware accelerated h264/h265
 video decoding.</p></td>
 </tr>
-<tr class="row-odd"><td><p>omxh264dnc/omxh265dec</p></td>
+<tr class="row-odd"><td><p>omxh264enc/omxh265enc</p></td>
 <td><p>GStreamer plug-in to perform
 hardware accelerated h264/h265
 video encoding.</p></td>
@@ -482,9 +474,10 @@ For more details about these plugins, refer to the <a class="reference external"
 <div class="section" id="region-of-interest-plug-in">
 <span id="roi-plugin"></span><h2>Region of Interest Plug-in<a class="headerlink" href="#region-of-interest-plug-in" title="Permalink to this headline">¶</a></h2>
 <p>The region of interest (ROI) GStreamer ivas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The ivas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an IVAS supported list of metadata objects (GstInferenceMeta).</p>
+<p>For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/roigen">ivas_xroigen source code</a>.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p><em>This plug-in is only useful with embedded platforms because its main job is to generate metadata required for the GStreamer OMX encoder plug-in that exists on embedded platforms.</em></p>
+<p>This plug-in is only useful with embedded platforms because its main job is to generate metadata required for the GStreamer OMX encoder plug-in that exists on embedded platforms.</p>
 </div>
 <p>GStreamer ROI metadata information is attached with each outgoing buffer based on the following plug-in properties.</p>
 <div class="section" id="input-and-output">
@@ -720,7 +713,7 @@ range=&quot;&lt;0,0,500,300&gt;&quot; \
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on July 29, 2021.
+        Last updated on August 2, 2021.
       </span>
 
     </p>

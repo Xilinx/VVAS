@@ -55,7 +55,9 @@
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Platforms And Applications" href="../Embedded/platforms_and_applications.html" />
+    <link rel="prev" title="Acceleration Software Library Development Guide" href="6-common-Acceleration-Software-Library-Development.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -333,9 +335,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Base Infrastructure</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">For Advanced Developers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">Acceleration s/w Library Developement Guide</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration H/W Kernels</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kernel-build-steps">Kernel Build Steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiscaler-kernel">Multiscaler Kernel</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kernel-configuration">Kernel Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#steps-to-build-kernel">Steps to Build Kernel</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Embedded</span></p>
 <ul>
@@ -347,14 +361,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
-</ul>
-<p class="caption"><span class="caption-text">White Papers</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Training</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">TBD</a></li>
 </ul>
 <p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
@@ -411,6 +417,8 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
+          <li><a href="for_developers.html">Development Guide</a> &raquo;</li>
+        
       <li>Acceleration Hardware</li>
     
     
@@ -448,8 +456,9 @@
 <p>VVAS releases the full HLS source code of the Multiscaler 2.0 IP, it is based on the descriptor approach for programming. This kernel produces a multiscaler kernel xo/v_multi_scaler.xo.</p>
 <div class="section" id="kernel-configuration">
 <h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this headline">¶</a></h3>
-<p>The multiscaler kernel configuration can be edited by changing the multiscaler/ v_multi_scaler_config.h file. The parameters in the following table can be changed as required.</p>
-<p>Table 14: Multiscaler Kernel Configuration</p>
+<p>The multiscaler kernel configuration can be edited by changing the <cite>&lt;VVAS_SOURCES&gt;/ivas-accel-hw/multiscaler/v_multi_scaler_config.h</cite> file. The parameters in the following table can be changed as required.
+i
+Table 14: Multiscaler Kernel Configuration</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 33%" />
@@ -627,13 +636,22 @@ format support</p></td>
 
 	  <!-- Sphinx Page Footer block -->
   
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Embedded/platforms_and_applications.html" class="btn btn-neutral float-right" title="Platforms And Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="6-common-Acceleration-Software-Library-Development.html" class="btn btn-neutral float-left" title="Acceleration Software Library Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
   <hr/>
 
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on July 29, 2021.
+        Last updated on August 2, 2021.
       </span>
 
     </p>

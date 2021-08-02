@@ -48,19 +48,23 @@ This structure represents the inference data generated from the ML operation. BB
 
 .. code-block::
 
-      /**
-      * Basic bounding box structure for detection
-      */
-      typedef struct _BBox BBox;
-      struct _BBox
+      typedef struct _IvasColorMetadata {
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+        uint8_t alpha;
+      } IvasColorMetadata;
+
+      struct _BoundingBox
       {
-      gint label;
-      gdouble prob;
-      gdouble x;
-      gdouble y;
-      gdouble width;
-      gdouble height;
+        gint x;
+        gint y;
+        guint width;
+        guint height;
+        IvasColorMetadata box_color;
       };
+
+      typedef struct _BoundingBox BoundingBox;
 
       /**
       * GstInferencePrediction:

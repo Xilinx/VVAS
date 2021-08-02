@@ -5,6 +5,7 @@ Acceleration Software Library Development Guide
 One of the objectives of VVAS is to define a methodology for advanced developers to develop their own kernel and integrate it into GStreamer-based applications. This section defines the steps required to develop an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application. There are three types of kernels.
 
 .. figure:: ../images/image15.png
+   :align: center
 
 **********************************************************
 Types of Kernels
@@ -490,38 +491,45 @@ The following section explains the data structures exchange between acceleration
         kernelcaps **kcaps; /* lsit of caps */
         } kernelpads;
 
-        /* Create memory of all sink pad */
-        for (int i = 0; i < padinfo->nu_sinkpad; i++) {
-        sinkpads[i] = (kernelpads *) calloc (1, sizeof (kernelpads));
-        sinkpads[i]->nu_caps = 2;
-        sinkpads[i]->kcaps = (kernelcaps **) calloc (1, sizeof (kernelcaps *));
-        /* Create memory for all caps */
-        for (int j = 0; j < sinkpads[i]->nu_caps; j++) {
-        sinkpads[i]->kcaps[j] = (kernelcaps *) calloc (1, sizeof
-        (kernelcaps));
-        } //sinkpad[i]->nu_caps
-        /*Fill all caps */
-        sinkpads[i]->kcaps[0]->range_height = false;
-        sinkpads[i]->kcaps[0]->lower_height = 224;
-        sinkpads[i]->kcaps[0]->lower_width = 224;
-        sinkpads[i]->kcaps[0]->num_fmt = 1;
-        sinkpads[i]->kcaps[0]->fmt =
-        (IVASVideoFormat *) calloc (sinkpads[i]->kcaps[0]->num_fmt,
-        sizeof (IVASVideoFormat));
-        sinkpads[i]->kcaps[0]->fmt[0] = IVAS_VFMT_BGR8;
-        sinkpads[i]->kcaps[1]->range_height = true;
-        sinkpads[i]->kcaps[1]->lower_height = 1;
-        sinkpads[i]->kcaps[1]->upper_height = 1024;
-        sinkpads[i]->kcaps[1]->range_width = true;
-        sinkpads[i]->kcaps[1]->lower_width = 1;
-        sinkpads[i]->kcaps[1]->upper_width = 1920;
-        sinkpads[i]->kcaps[1]->num_fmt = 2;
-        sinkpads[i]->kcaps[1]->fmt =
-        (IVASVideoFormat *) calloc (sinkpads[i]->kcaps[1]->num_fmt,
-        sizeof (IVASVideoFormat));
-        sinkpads[i]->kcaps[1]->fmt[0] = IVAS_VFMT_BGR8;
-        sinkpads[i]->kcaps[1]->fmt[1] = IVAS_VFMT_RGB8;
+Below mentioned user friendly APIs are provided for kernel to set the above mentioned capabilities.
 
-        video/x-raw, height=(int)224, width=(int)224, format=(string){ BGR };
-        video/x-raw, height=(int)[ 1, 1024 ], width=(int)[ 1, 1920 ],
-        format=(string){ BGR, RGB }
+API to create new caps with input parameters
+
+.. code-block::
+
+        ivas_caps_new() - Create new caps with input parameters
+        range_height
+             - true  : if kernel support range of height
+             - false : if kernel support fixed height
+        lower_height : lower value of height supported by kernel
+                       if range_height is false, this holds the fixed value
+        upper_height : higher value of hight supported by kernel
+                       if range_height is false, this should be 0
+        range_width : same as above
+        lower_width :
+        upper_width :
+       
+                    : variable range of format supported terminated by 0
+                      make sure to add 0 at end otherwise it
+                      code will take format till it get 0
+
+        kernelcaps * ivas_caps_new (uint8_t range_height,
+                                    uint32_t lower_height,
+                                    uint32_t upper_height, 
+                                    uint8_t range_width, 
+                                    uint32_t lower_width,
+                                    uint32_t upper_width, ...)
+
+
+API to  add new caps to sink pad. Only one pad is supported in this release.
+
+.. code-block::
+
+   bool ivas_caps_add_to_sink (IVASKernel * handle, kernelcaps * kcaps, int sinkpad_num)
+
+API to add new caps to src pad. Only one pad is supported as on today.
+
+.. code-block::
+
+   bool ivas_caps_add_to_src (IVASKernel * handle, kernelcaps * kcaps, int sinkpad_num)
+

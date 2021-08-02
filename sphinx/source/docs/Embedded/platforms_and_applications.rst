@@ -3,7 +3,7 @@ Platforms And Applications
 ########################################
 
 
-This VVAS release supports Zynq MPSoc based Embedded platforms and it has been validated with SOM and zcu104 platforms. Various supported example applications using VVAS on these platforms are listed below.
+This VVAS release supports Zynq MPSoc based Embedded platforms and it has been validated with ``KV260 SOM`` and ``zcu104`` platforms. Various supported example applications using VVAS on these platforms are listed below.
 
 *******************
 SOM Examples
