@@ -2,17 +2,17 @@
 OPEN SOURCE SOFTWARE NOTICE
 ===========================
 
-IVAS cmake files include software developed by
+VVAS cmake files include software developed by
 * Copyright (C) 2012 Raphael Kubo da Costa <rakuco@webkit.org>
 
-IVAS ivas_xmultisrc GStreamer plugins include software from (Library GPL 2.0)
+VVAS xm2m GStreamer plugins include software from (Library GPL 2.0)
 * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
 * Copyright (C) 2005-2012 David Schleef <ds@schleef.org>
 
-IVAS GStreamer libs include software from (Library GPL 2.0)
+VVAS GStreamer libs include software from (Library GPL 2.0)
  * Copyright (C) 2018-2020 RidgeRun <support@ridgerun.com>
 
-IVAS HLS libraries include software from openCV libraries developed by the following (
+VVAS HLS libraries include software from openCV libraries developed by the following (
 * Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
 * Copyright (C) 2009, Willow Garage Inc., all rights reserved.
 Third party copyrights are property of their respective owners.
