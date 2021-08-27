@@ -133,7 +133,7 @@ python3 = import('python').find_installation()
 pkgconfig = import('pkgconfig')
 
 # common kernel libraries for PCIe & embedded platforms
-foreach kernel : ['ivas_xdpuinfer', 'ivas_xboundingbox', 'ivas_xpp_pipeline']
+foreach kernel : ['ivas_xdpuinfer', 'ivas_xboundingbox']
   if not get_option(kernel).disabled()
     subdir(kernel)
   endif
