@@ -292,7 +292,7 @@ The Design consists of a base platform and integrated accelerator functions (Ker
 Base Platform
 ===========================
 
-``Smart Model Select`` application requires video decoding, resizing the decoded frames, Machine Learning and finally display the output. Hence, we need a platform that fulfills these requirement. This VVAS release has ``zcu104_vcuDec_DP`` base platform that meets the requirements of decode and display. This platform has hardware accelerated video decoding IP, Video Codec Unit ``VCU``. For display, this platform supports ``Display Port``.
+``Smart Model Select`` application requires video decoding, resizing the decoded frames, Machine Learning and finally display the output. Hence, we need a platform that fulfills these requirement. This VVAS release has ``zcu104_vcuDec_DP`` base platform that meets the requirements of decode and display. This platform has hardware accelerated video decoding IP, Video Codec Unit ``VCU``. For display, this platform supports ``Display Port``. The design also include two DPU 4096 cores for Machine Learning.
 
 In addition to the above-mentioned hardware components, ``zcu104_vcuDec_DP`` supports following software components
 

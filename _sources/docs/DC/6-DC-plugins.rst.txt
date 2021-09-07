@@ -17,4 +17,4 @@
 VVAS GStreamer Plug-ins for Data Center Platforms
 #################################################
 
-For more information, contact sales.
+For more information, contact `vvas_discuss@xilinx.com`.
