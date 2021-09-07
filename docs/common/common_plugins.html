@@ -32,11 +32,11 @@
   <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
     <script type="text/javascript" src="../../_static/js/d3dd8c60ed.js"></script>
     <script type="text/javascript" src="../../_static/js/common-ui-all.min.js"></script>
-    <script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../_static/js/CoveoJsSearch.Lazy.min.js"></script>
     <script type="text/javascript" src="../../_static/js/linkid.js"></script>
     <script type="text/javascript" src="../../_static/js/Searchbox.min.js"></script>
+	<script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -305,7 +305,7 @@
             
             
               <div class="version">
-                1.0
+                1.0.1
               </div>
             
           
@@ -481,7 +481,7 @@
             
   <div class="section" id="plug-ins">
 <h1>Plug-ins<a class="headerlink" href="#plug-ins" title="Permalink to this headline">¶</a></h1>
-<p>VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins.This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the <code class="docutils literal notranslate"><span class="pre">ivas-gst-plugins</span></code> folder of the VVAS source tree. This section covers the plug-is that are common for Edge as well as cloud solutions. There are few plug-ins that are pecific to Edge/Embedded platforms and are covered in <a class="reference internal" href="../Embedded/6-embedded-plugins.html"><span class="doc">Plugins for Embedded platforms</span></a>. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in <a class="reference internal" href="../DC/6-DC-plugins.html"><span class="doc">Plugins for Data Center Platform</span></a>. The following table lists the VVAS GStreamer plug-ins.</p>
+<p>VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the <code class="docutils literal notranslate"><span class="pre">ivas-gst-plugins</span></code> folder of the VVAS source tree. This section covers the plug-in that are common for Edge as well as cloud solutions. There are few plug-ins that are specific to Edge/Embedded platforms and are covered in <a class="reference internal" href="../Embedded/6-embedded-plugins.html"><span class="doc">Plugins for Embedded platforms</span></a>. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in <a class="reference internal" href="../DC/6-DC-plugins.html"><span class="doc">Plugins for Data Center Platform</span></a>. The following table lists the VVAS GStreamer plug-ins.</p>
 <p>Table 1: GStreamer Plug-ins</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
@@ -513,7 +513,7 @@
 <p>There are specific functions, like video decoder, encoder, and meta affixer where the requirements are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.</p>
 <div class="section" id="metaaffixer">
 <span id="ivas-xmetaaffixer"></span><h3>MetaAffixer<a class="headerlink" href="#metaaffixer" title="Permalink to this headline">¶</a></h3>
-<p>The metaaffixer plug-in, <code class="docutils literal notranslate"><span class="pre">ivas_xmetaaffixer</span></code>, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request, the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/metaaffixer">ivas_xmetaaffixer source code</a></p>
+<p>The metaaffixer plug-in, <code class="docutils literal notranslate"><span class="pre">ivas_xmetaaffixer</span></code>, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/metaaffixer">ivas_xmetaaffixer source code</a></p>
 <div class="figure align-default">
 <img alt="../../_images/image5.png" src="../../_images/image5.png" />
 </div>
@@ -564,7 +564,7 @@ pad.</p></td>
 </div>
 <div class="section" id="pad-naming-syntax">
 <h4>Pad naming syntax<a class="headerlink" href="#pad-naming-syntax" title="Permalink to this headline">¶</a></h4>
-<p>The pad naming syntax is listed and the following image shows the syntax:</p>
+<p>The pad naming syntax is listed, and the following image shows the syntax:</p>
 <ul class="simple">
 <li><p>MetaAffixer master input pad should be named sink_master.</p></li>
 <li><p>MetaAffixer master output pad should be named src_master.</p></li>
@@ -615,7 +615,7 @@ pad.</p></td>
 <p class="admonition-title">Important</p>
 <p>Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application.</p>
 </div>
-<p>As a reference, maximum resolution supported by multi-scaler kernel in <code class="docutils literal notranslate"><span class="pre">Smart</span> <span class="pre">Model</span> <span class="pre">Select</span></code> example design can be can be found in  <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33">multi-scaler kernel config</a></p>
+<p>As a reference, maximum resolution supported by multi-scaler kernel in <code class="docutils literal notranslate"><span class="pre">Smart</span> <span class="pre">Model</span> <span class="pre">Select</span></code> example design can be found in  <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33">multi-scaler kernel config</a></p>
 <div class="section" id="prerequisite">
 <h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this headline">¶</a></h4>
 <p>This plug-in requires the multiscaler kernel to be available in the hardware design. See <a class="reference internal" href="Acceleration-Hardware.html#multiscaler-kernel"><span class="std std-ref">Multiscaler Kernel</span></a></p>
@@ -647,7 +647,7 @@ pad.</p></td>
 <p class="admonition-title">Important</p>
 <p>Make sure that the color formats needed for your application are supported by the multi-scaler hardware kernel.</p>
 </div>
-<p>As a reference, multi-scaler configurtion for <code class="docutils literal notranslate"><span class="pre">smart</span> <span class="pre">model</span> <span class="pre">select</span></code> exampl design can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h">multi-scaler configuration</a></p>
+<p>As a reference, multi-scaler configuration for <code class="docutils literal notranslate"><span class="pre">smart</span> <span class="pre">model</span> <span class="pre">select</span></code> example design can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h">multi-scaler configuration</a></p>
 </div>
 <div class="section" id="id3">
 <h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
@@ -743,7 +743,7 @@ generated</p></td>
 12=&gt;12 taps</p></td>
 <td><p>1</p></td>
 <td><p>Number of filter
-taps to be ussed
+taps to be used
 for scaling</p></td>
 </tr>
 </tbody>
@@ -790,7 +790,7 @@ for scaling</p></td>
 <div class="section" id="infrastructure-plug-ins-and-acceleration-software-libraries">
 <span id="infra-plugins-label"></span><h2>Infrastructure Plug-ins and Acceleration Software Libraries<a class="headerlink" href="#infrastructure-plug-ins-and-acceleration-software-libraries" title="Permalink to this headline">¶</a></h2>
 <p>Infrastructure plug-ins are generic plug-ins that interact with the acceleration kernel through a set of APIs exposed by an acceleration software library corresponding to that kernel. Infrastructure plug-ins abstract the core/common functionality of the GStreamer framework (for example: caps negotiation and buffer management).</p>
-<p>Table 5: Acceleration Software Libraries</p>
+<p>Table 5: Infrastructure Plug-ins</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 54%" />
@@ -816,7 +816,7 @@ Support transform operation</p></td>
 </table>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend to use ivas_xfilter plugin for one input and one output kernels.</p>
+<p>Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend using ivas_xfilter plugin for one input and one output kernels.</p>
 </div>
 <p>Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.</p>
 <p>Table 6: Acceleration Software Libraries</p>
@@ -826,7 +826,7 @@ Support transform operation</p></td>
 <col style="width: 46%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p><strong>Acceleration SoftwareLibrary</strong></p></th>
+<tr class="row-odd"><th class="head"><p><strong>Acceleration Software Library</strong></p></th>
 <th class="head"><p><strong>Function</strong></p></th>
 </tr>
 </thead>
@@ -1252,25 +1252,25 @@ embedded platforms.</p></td>
 <h5>JSON File for Vitis AI API-based VVAS Acceleration Software Library<a class="headerlink" href="#json-file-for-vitis-ai-api-based-vvas-acceleration-software-library" title="Permalink to this headline">¶</a></h5>
 <p>The following JSON file is for pure software-based acceleration, it does not involve any kernel for acceleration. However, the Vitis AI API based DPU is a special case, where the DPU hardware kernel is controlled by Vitis AI. The acceleration software library calls the Vitis AI API calls and it is implemented as a pure software acceleration software library. There is no need to provide the path of the xclbin in the JSON file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-<span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
-<span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xdpuinfer.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;FACEDETECT&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;model-format&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="n">BGR</span><span class="s2">&quot;,</span>
-         <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-         <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-         <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-         <span class="s2">&quot;max_num&quot;</span> <span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-         <span class="s2">&quot;prob_cutoff&quot;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-         <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span>
+   <span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xdpuinfer.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;FACEDETECT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-format&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="n">BGR</span><span class="s2">&quot;,</span>
+            <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+            <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;max_num&quot;</span> <span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;prob_cutoff&quot;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span>
+         <span class="p">}</span>
       <span class="p">}</span>
-   <span class="p">}</span>
-<span class="p">]</span>
+   <span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1283,12 +1283,12 @@ embedded platforms.</p></td>
    <span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
    <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;passthrough&quot;</span><span class="p">,</span>
    <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;v_multi_scaler:v_multi_scaler_1&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xcrop.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="p">}</span>
-   <span class="p">}</span>
+       <span class="p">{</span>
+          <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;v_multi_scaler:v_multi_scaler_1&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xcrop.so&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="p">}</span>
+       <span class="p">}</span>
    <span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
@@ -1323,42 +1323,42 @@ embedded platforms.</p></td>
 <p>This section describes the JSON file format and configuration parameters for the bounding box acceleration software library. The GStreamer ivas_xfilter plug-in used in the inplace mode. Bounding box and labels are drawn on identified objects on the incoming frame. Bounding box functionality is implemented in the libivas_xboundingbox.so acceleration software library.</p>
 <p>The following example is of a JSON file to pass to the ivas_xfilter.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
-<span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/local/lib/ivas&quot;</span><span class="p">,</span>
-<span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
-<span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xboundingbox.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;font_size&quot;</span> <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-         <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-         <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-         <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-         <span class="s2">&quot;label_color&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span> <span class="p">},</span>
-         <span class="s2">&quot;label_filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;probability&quot;</span> <span class="p">],</span>
-         <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
-            <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
-            <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span>
-            <span class="p">},</span>
-            <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
-            <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span>
-            <span class="p">},</span>
-            <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">255</span>
-            <span class="p">}</span>
-         <span class="p">]</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/local/lib/ivas&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xboundingbox.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;font_size&quot;</span> <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;label_color&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span> <span class="p">},</span>
+            <span class="s2">&quot;label_filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;probability&quot;</span> <span class="p">],</span>
+            <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
+               <span class="p">{</span>
+                  <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+                  <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+               <span class="p">},</span>
+               <span class="p">{</span>
+                  <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+                  <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+               <span class="p">},</span>
+               <span class="p">{</span>
+                  <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">255</span>
+               <span class="p">}</span>
+            <span class="p">]</span>
+         <span class="p">}</span>
       <span class="p">}</span>
-   <span class="p">}</span>
-<span class="p">]</span>
+   <span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1452,7 +1452,7 @@ string. Using
 “class” alone adds
 the ML
 classification name.
-For example car,
+For example, car,
 person, etc.</p>
 <p>The addition of
 “probability” in the
@@ -1480,7 +1480,7 @@ configuration. Other
 classes are ignored.
 For instance, if
 “car”, “person”,
-“bicycle” are
+“bicycle” is
 entered under
 “classes”, then the
 bounding box is only
@@ -1490,7 +1490,7 @@ other classes like
 horse, motorbike,
 etc. are ignored.</p>
 <p>The expected value
-columns shows an
+columns show an
 example of how each
 class should be
 described. All
@@ -1500,7 +1500,7 @@ are drawn using the
 color combination
 listed.</p>
 <p>The class names in
-this list match the
+this list matches the
 class names assigned
 by the
 ivas_xdpuinfer.
@@ -1514,7 +1514,7 @@ array empty.</p>
 </tr>
 </tbody>
 </table>
-<p>An example of using a bounding box along with the machine learnin plug-in is shown in the <a class="reference internal" href="../Embedded/Tutorials/MultiChannelML.html"><span class="doc">Multi Channel ML</span></a> Tutoial.</p>
+<p>An example of using a bounding box along with the machine learning plug-in is shown in the <a class="reference internal" href="../Embedded/Tutorials/MultiChannelML.html"><span class="doc">Multi Channel ML</span></a> Tutorial.</p>
 </div>
 </div>
 <div class="section" id="machine-learning-example">
@@ -1523,7 +1523,7 @@ array empty.</p>
 <div class="figure align-default">
 <img alt="../../_images/image11.png" src="../../_images/image11.png" />
 </div>
-<p>The ivas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The ivas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS metameta structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.</p>
+<p>The ivas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The ivas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS meta data structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">ivas_xdpuinfer</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xdpuinfer">ivas_xdpuinfer source code</a></p>
 <div class="section" id="id9">
 <h4>Prerequisites<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h4>
@@ -1555,153 +1555,87 @@ array empty.</p>
 <p>Table 10: JSON File for ivas_xdpuinfer</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 15%" />
-<col style="width: 12%" />
-<col style="width: 18%" />
-<col style="width: 12%" />
-<col style="width: 43%" />
+<col style="width: 4%" />
+<col style="width: 2%" />
+<col style="width: 9%" />
+<col style="width: 3%" />
+<col style="width: 83%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p><strong>Parameter</strong></p></th>
-<th class="head"><p><strong>Type</strong></p></th>
-<th class="head"><p><strong>Expected Values</strong></p></th>
-<th class="head"><p><strong>Default</strong></p></th>
-<th class="head"><p><strong>Description</strong></p></th>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Expected Values</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td rowspan="2"><blockquote>
-<div><p>xclb
-in-location</p>
-</div></blockquote>
-<dl class="simple">
-<dt>+—————</dt><dd><p>ivas-l
-ibrary-repo</p>
-</dd>
-</dl>
-</td>
+<tr class="row-even"><td><p>xclbin-location</p></td>
 <td><p>string</p></td>
-<td><blockquote>
-<div><p>/usr/lib</p>
-</div></blockquote>
-<p>/dpu.xclbin</p>
-</td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/usr/lib/dpu.xclbin</span></code></p></td>
 <td><p>NULL</p></td>
-<td><p>By default, Vitis AI expects xclbin
-to be located at /usr/lib/ and xclbin
-is called dpu.xclbin.
-The environment variable XLNX_VART_FIRMWARE
-could also be used to change the path and
-the corresponding path can be updated in the
-JSON file.
-e.g., export XLNX_VART_FIRMWARE=/where/your/
-dpu.xclbin</p></td>
-</tr>
-<tr class="row-odd"><td><p>string</p></td>
-<td><blockquote>
-<div><p>/usr/loca</p>
-</div></blockquote>
-<p>l/lib/ivas/</p>
+<td><p>By default, Vitis AI expects xclbin to be located at /usr/lib/ and xclbin is called <code class="docutils literal notranslate"><span class="pre">dpu.xclbin</span></code>.</p>
+<p>The environment variable XLNX_VART_FIRMWARE could also be used to change the path and the corresponding path can be updated in the JSON file. For example, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.</p>
 </td>
-<td><p>/usr/lib/</p></td>
-<td><p>This is the path where the ivas_xfilter will
-search the acceleration software library.
-The kernel name is specified in the
-library-name parameter of the JSON file.</p></td>
+</tr>
+<tr class="row-odd"><td><p>ivas-library-repo</p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/usr/local/lib/ivas/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">usr/lib/</span></code></p></td>
+<td><p>This is the path where the ivas_xfilter will search the acceleration software library. The kernel name is specified in the library-name parameter of the JSON file.</p></td>
 </tr>
 <tr class="row-even"><td><p>element-mode</p></td>
 <td><p>string</p></td>
 <td><p>inplace</p></td>
 <td><p>None</p></td>
-<td><p>Because the input buffer is not modified by
-the ML operation, but the metadata generated
-out of an inference operation needs to be
-added/appended to the input buffer, the
-GstBuffer is writable. The ivas_xfilter is
-configured in inplace mode</p></td>
+<td><p>Because the input buffer is not modified by the ML operation, but the metadata generated out of an inference operation needs to be added/appended to the input buffer, the GstBuffer is writable. The ivas_xfilter is configured in inplace mode</p></td>
 </tr>
 <tr class="row-odd"><td><p>kernels</p></td>
 <td><p>N/A</p></td>
 <td><p>N/A</p></td>
 <td><p>N/A</p></td>
-<td><p>The JSON tag for starting the kernel specific
-configurations.</p></td>
+<td><p>The JSON tag for starting the kernel specific configurations.</p></td>
 </tr>
 <tr class="row-even"><td><p>kernel-name</p></td>
 <td><p>string</p></td>
 <td><p>N/A</p></td>
 <td><p>NULL</p></td>
-<td><p>The name and instance of a kernel separated
-by “:”</p></td>
+<td><p>The name and instance of a kernel separated by “:”</p></td>
 </tr>
 <tr class="row-odd"><td><p>library-name</p></td>
 <td><p>string</p></td>
 <td><p>N/A</p></td>
 <td><p>NULL</p></td>
-<td><p>Acceleration software library name for the
-kernel. It is appended to the ivas-l
-ibrary-repo for an absolute path.</p></td>
+<td><p>Acceleration software library name for the kernel. It is appended to the ivas-l ibrary-repo for an absolute path.</p></td>
 </tr>
 <tr class="row-even"><td><p>config</p></td>
 <td><p>N/A</p></td>
 <td><p>N/A</p></td>
 <td><p>N/A</p></td>
-<td><p>The JSON tag for kernel-specific
-configurations depending on the acceleration
-software library.</p></td>
+<td><p>The JSON tag for kernel-specific configurations depending on the acceleration software library.</p></td>
 </tr>
 <tr class="row-odd"><td><p>model-name</p></td>
 <td><p>string</p></td>
 <td><p>resnet50</p></td>
 <td><p>N/A</p></td>
-<td><p>Name string of the machine learning model to
-be executed. The name string should be same as
-the name of the directory available in model
--path parameter file. If the name of the model
-ELF file is resnet50.elf, then the model-name
-is resnet50 in the JSON file. The ELF file
-present in the specified path model-path of
-the JSON file.</p></td>
+<td><p>Name string of the machine learning model to be executed. The name string should be same as the name of the directory available in model -path parameter file. If the name of the model ELF file is resnet50.elf, then the model-name is resnet50 in the JSON file. The ELF file present in the specified path model-path of the JSON file.</p></td>
 </tr>
 <tr class="row-even"><td><p>model-class</p></td>
 <td><p>string</p></td>
-<td><blockquote>
-<div><blockquote>
-<div><p>YOLOV3</p>
-</div></blockquote>
+<td><p>YOLOV3</p>
 <p>FACEDETECT</p>
-</div></blockquote>
-<dl>
-<dt>CLASSIFICATION</dt><dd><blockquote>
-<div><p>SSD</p>
-</div></blockquote>
-<dl class="simple">
-<dt>REFINEDET</dt><dd><p>TFSSD
-YOLOV2</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<p>CLASSIFICATION</p>
+<p>SSD</p>
+<p>REFINEDET</p>
+<p>TFSSD</p>
+<p>YOLOV2</p>
 </td>
 <td><p>N/A</p></td>
-<td><p>Class of model corresponding to model. Some of
-the examples are shown here:</p>
+<td><p>Class of some model corresponding to model. Some examples are shown below:</p>
 <ul class="simple">
-<li><dl class="simple">
-<dt>YOLOV3: yolov3_adas_pruned_0_9,</dt><dd><p>yolov3_voc, yolov3_voc_tf</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>FACEDETECT: densebox_320_320,</dt><dd><p>densebox_640_360</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>CLASSIFICATION: resnet18, resnet50,</dt><dd><p>resnet_v1_50_tf</p>
-</dd>
-</dl>
-</li>
+<li><p><strong>YOLOV3</strong>: yolov3_adas_pruned_0_9, yolov3_voc, yolov3_voc_tf</p></li>
+<li><p><strong>FACEDETECT</strong>: densebox_320_320, densebox_640_360</p></li>
+<li><p><strong>CLASSIFICATION</strong>: resnet18, resnet50, resnet_v1_50_tf</p></li>
 </ul>
 </td>
 </tr>
@@ -1713,79 +1647,38 @@ the examples are shown here:</p>
 </tr>
 <tr class="row-even"><td><p>model-path</p></td>
 <td><p>string</p></td>
-<td><dl class="simple">
-<dt>/usr/share/</dt><dd><p><a href="#id18"><span class="problematic" id="id19">vitis_</span></a></p>
-</dd>
-<dt>ai_library/</dt><dd><p>models/</p>
-</dd>
-</dl>
-</td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/usr/share/vitis_ai_library/models/</span></code></p></td>
 <td><p>N/A</p></td>
-<td><p>Path of the folder where the model to be
-executed is stored.</p></td>
+<td><p>Path of the folder where the model to be executed is stored.</p></td>
 </tr>
 <tr class="row-odd"><td><p>run_time_model</p></td>
 <td><p>Boolean</p></td>
 <td><p>True/False</p></td>
 <td><p>False</p></td>
-<td><p>If there is a requirement to change the ML
-model at the frame level, then set this flag
-to true. If this parameter is set to true then
-ivas_xdpuinfer will read the model name and
-class from the incoming input metadata and
-execute the same model found in the path
-specified in the model-path. The model-name
-and model-class parameter of the JSON file are
-not required when enabling this parameter.</p></td>
+<td><p>If there is a requirement to change the ML model at the frame level, then set this flag to true. If this parameter is set to true then ivas_xdpuinfer will read the model name and class from the incoming input metadata and execute the same model found in the path specified in the model-path. The model-name and model-class parameter of the JSON file are not required when enabling this parameter.</p></td>
 </tr>
 <tr class="row-even"><td><p>need_preprocess</p></td>
 <td><p>Boolean</p></td>
-<td></td>
+<td><p>True/False</p></td>
 <td><p>True</p></td>
-<td><p>If need_preprocess = true: Normalize with
-mean/scale through the Vitis AI Library
-If need_preprocess = false: Normalize with
-mean/scale is performed before feeding the
-frame to ivas_xdpuinfer. The Vitis AI library
-does not perform these operations.</p></td>
+<td><p>If need_preprocess = true: Normalize with mean/scale through the Vitis AI Library If need_preprocess = false: Normalize with mean/scale is performed before feeding the frame to ivas_xdpuinfer. The Vitis AI library does not perform these operations.</p></td>
 </tr>
-<tr class="row-odd"><td><blockquote>
-<div><p>perfo</p>
-</div></blockquote>
-<p>rmance_test</p>
-</td>
+<tr class="row-odd"><td><p>performance_test</p></td>
 <td><p>Boolean</p></td>
 <td><p>True/False</p></td>
 <td><p>False</p></td>
-<td><p>Enable performance test and corresponding
-flops per second (f/s) display logs.
-Calculates and displays the f/s of the
-standalone DPU after every second.</p></td>
+<td><p>Enable performance test and corresponding flops per second (f/s) display logs. Calculates and displays the f/s of the standalone DPU after every second.</p></td>
 </tr>
 <tr class="row-even"><td><p>debug_level</p></td>
 <td><p>integer</p></td>
 <td><p>0 to 3</p></td>
 <td><p>1</p></td>
 <td><p>Used to enable log levels.</p>
-<p>There are basically four log levels for a
-message sent by the kernel library code,
-starting from level 0 and decreasing in
-severity till level 3 the lowest log-level
-identifier. When a log level is set, it acts
-as a filter, where only messages with a
-log-level lower than it, (therefore messages
-with an higher severity) are displayed.</p>
-<p>0: This is the highest level in order of
-severity: It is used for messages about
-critical errors, both hardware or software
-related.</p>
-<p>1: This level is used in situations where
-your attention is immediately required.</p>
-<p>2: This is the log level used for
-informational messages about the action
-performed by the kernel and output of model</p>
-<p>3: This level is used for debugging.
-level is</p>
+<p>There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a log-level lower than it, (therefore messages with an higher severity) are displayed.</p>
+<p>0: This is the highest level in order of severity: it is used for messages about critical errors, both hardware and software related.</p>
+<p>1: This level is used in situations where you attention is immediately required.</p>
+<p>2: This is the log level used for information messages about the action performed by the kernel and output of model.</p>
+<p>3: This level is used for debugging.</p>
 </td>
 </tr>
 </tbody>
@@ -1812,31 +1705,31 @@ level is</p>
 </pre></div>
 </div>
 <p>The JSON file for the ivas_xdpuinfer to execute <code class="docutils literal notranslate"><span class="pre">resnet50</span></code> model based classification pipeline is described below.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="p">{</span>
-<span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/local/lib/ivas/&quot;</span><span class="p">,</span>
-<span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
-<span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-  <span class="p">{</span>
-   <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xdpuinfer.so&quot;</span><span class="p">,</span>
-   <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;resnet50&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;CLASSIFICATION&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;model-format : &quot;</span><span class="n">BGR</span><span class="s2">&quot;</span>
-      <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-      <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-      <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">2</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/local/lib/ivas/&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xdpuinfer.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;resnet50&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;CLASSIFICATION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-format : &quot;</span><span class="n">BGR</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+            <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">2</span>
+         <span class="p">}</span>
       <span class="p">}</span>
-   <span class="p">}</span>
-<span class="p">]</span>
+   <span class="p">]</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>}</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If “need_preprocess” = false, then pre-processing operations like, Normalization, scaling must be
-performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer othereise results may not be as expected.</p>
+performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer otherwise results may not be as expected.</p>
 </div>
 </div>
 </div>
@@ -1850,7 +1743,7 @@ performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer othereise r
 </div>
 <div class="section" id="id11">
 <h4>Input and Output<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
-<p>Input and output accepts buffers with the following color formats on input GstPad and output GstPad.</p>
+<p>Input and output accept buffers with the following color formats on input GstPad and output GstPad.</p>
 <ul class="simple">
 <li><p>GRAY8</p></li>
 <li><p>NV12</p></li>
@@ -1890,7 +1783,7 @@ performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer othereise r
 <td><p>N/A</p></td>
 <td><p>NULL</p></td>
 <td><p>Path of the JSON configuration file based
-on the VVAS cceleration software library
+on the VVAS acceleration software library
 requirements. For further information,
 refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span class="doc">JSON File Schema</span></a></p></td>
 </tr>
@@ -1907,23 +1800,23 @@ refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span clas
    <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/binary_1.xclbin&quot;</span><span class="p">,</span>
    <span class="s2">&quot;ivas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
    <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;resize:resize_1&quot;</span><span class="p">,</span> <span class="o">&lt;------------------</span> <span class="n">kernel</span> <span class="mi">1</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xresize.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="n">x</span> <span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-         <span class="n">y</span> <span class="p">:</span> <span class="mi">7</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;resize:resize_1&quot;</span><span class="p">,</span> <span class="o">&lt;------------------</span> <span class="n">kernel</span> <span class="mi">1</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libivas_xresize.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">x</span> <span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">y</span> <span class="p">:</span> <span class="mi">7</span>
+         <span class="p">}</span>
       <span class="p">}</span>
-   <span class="p">}</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;cvt_rgb:cvt_rgb_1&quot;</span><span class="p">,</span> <span class="o">&lt;--------------</span> <span class="n">kernel</span> <span class="mi">2</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libcvt_bgr.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;xilinx&quot;</span><span class="p">,</span>
-         <span class="n">value</span> <span class="o">=</span> <span class="mf">98.34</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;cvt_rgb:cvt_rgb_1&quot;</span><span class="p">,</span> <span class="o">&lt;--------------</span> <span class="n">kernel</span> <span class="mi">2</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libcvt_bgr.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;xilinx&quot;</span><span class="p">,</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="mf">98.34</span>
+         <span class="p">}</span>
       <span class="p">}</span>
-   <span class="p">}</span>
-<span class="p">]</span>
+   <span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1995,8 +1888,8 @@ acceleration software library.</p></td>
 </tbody>
 </table>
 </div>
-<div class="section" id="src-pad-naming-syntax">
-<h5>Src Pad Naming Syntax<a class="headerlink" href="#src-pad-naming-syntax" title="Permalink to this headline">¶</a></h5>
+<div class="section" id="source-pad-naming-syntax">
+<h5>Source Pad Naming Syntax<a class="headerlink" href="#source-pad-naming-syntax" title="Permalink to this headline">¶</a></h5>
 <p>For single output pad naming is optional. For multiple pads, the source pads names shall be as mentioned below, assuming the name of the plug-in as <cite>sc</cite>.</p>
 <p>sc.src_0, sc.src_1 …..sc.src_n</p>
 </div>
@@ -2161,7 +2054,7 @@ acceleration software library.</p></td>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 2, 2021.
+        Last updated on August 25, 2021.
       </span>
 
     </p>

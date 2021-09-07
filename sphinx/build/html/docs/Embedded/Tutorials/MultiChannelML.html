@@ -32,11 +32,11 @@
   <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
     <script type="text/javascript" src="../../../_static/js/d3dd8c60ed.js"></script>
     <script type="text/javascript" src="../../../_static/js/common-ui-all.min.js"></script>
-    <script type="text/javascript" src="../../../_static/js/header-footer.min.js"></script>
     <script type="text/javascript" src="../../../_static/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../../_static/js/CoveoJsSearch.Lazy.min.js"></script>
     <script type="text/javascript" src="../../../_static/js/linkid.js"></script>
     <script type="text/javascript" src="../../../_static/js/Searchbox.min.js"></script>
+	<script type="text/javascript" src="../../../_static/js/header-footer.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
@@ -305,7 +305,7 @@
             
             
               <div class="version">
-                1.0
+                1.0.1
               </div>
             
           
@@ -443,11 +443,10 @@
             
   <div class="section" id="multichannel-ml">
 <h1>Multichannel ML<a class="headerlink" href="#multichannel-ml" title="Permalink to this headline">¶</a></h1>
-<p>Vitis Video Analytics SDK (VVAS) is a Xilinx framework to build different video analytics solutions on Xilinx platforms.
-This tutorial begins with building a single stream Machine learning pipeline
-using VVAS and then scales up to build four channel Machine learning pipeline.
-The final goal would be to run some ML model on the four H.264 decoded streams and mix the videos and display the four streams on HDMI Monitor.
-By the end of this tutorial, you should be able to run the following pipeline.</p>
+<p>Vitis Video Analytics SDK (VVAS) is a Xilinx framework to build different video analytics solutions on Xilinx platforms.</p>
+<p>This tutorial begins with building a single stream Machine learning pipeline using VVAS and then scales up to build four channel Machine learning pipelines.</p>
+<p>The final goal would be to run some ML model on the four H.264 decoded streams and mix the videos and display the four streams on HDMI Monitor.</p>
+<p>By the end of this tutorial, you should be able to run the following pipeline.</p>
 <img alt="../../../_images/four_channel_pipeline.png" class="align-center" src="../../../_images/four_channel_pipeline.png" />
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
@@ -482,8 +481,7 @@ By the end of this tutorial, you should be able to run the following pipeline.</
 </div>
 <div class="section" id="platform">
 <h2>Platform<a class="headerlink" href="#platform" title="Permalink to this headline">¶</a></h2>
-<p>First, list all the components required to bring up the solution. If any of the components are available as a hardware block, select the specific platform.</p>
-<p>Because there is a video codec unit (VCU) decoder, Video Mixer and HDMI Tx in the pipeline and these are hardened blocks, hence, a platform with these hard blocks is needed.</p>
+<p>This tutorial needs video codec unit (VCU) decoder, Video Mixer and HDMI Tx, hence select a platform having these IPs.</p>
 <p>This tutorial uses the VVAS <a class="reference external" href="https://github.com/Xilinx/VVAS/ivas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx">zcu104_vcuDec_vmixHdmiTx</a> platform because it supports VCU decoder, Video mixer and HDMI Tx subsystem.</p>
 <p>For more information on Vitis platforms, see <a class="reference external" href="https://www.xilinx.com/products/design-tools/vitis/vitis-platform.html">Vitis Software Platform</a>.</p>
 <div class="admonition note">
@@ -537,7 +535,7 @@ Depending on the model selected, the preprocessor block is expected to support t
 <li><p>Scale Normalization</p></li>
 </ul>
 <p>Although all these operations can be achieved in software, the performance impact is substantial.
-VVAS support <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-accel-hw/">Multiscaler hardware accelerator</a> using <a class="reference internal" href="../../common/common_plugins.html#ivas-xabrscaler"><span class="std std-ref">ivas_xabrscaler</span></a> gstreamer plugin.</p>
+VVAS support <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/ivas-accel-hw/">Multiscaler hardware accelerator</a> using <a class="reference internal" href="../../common/common_plugins.html#ivas-xabrscaler"><span class="std std-ref">ivas_xabrscaler</span></a> GStreamer plugin.</p>
 <div class="figure align-center" id="id6">
 <a class="reference internal image-reference" href="../../../_images/xabrscaler_plugin.png"><img alt="../../../_images/xabrscaler_plugin.png" src="../../../_images/xabrscaler_plugin.png" style="width: 813.6px; height: 177.0px;" /></a>
 <p class="caption"><span class="caption-text">VVAS solution for Preprocessor block</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
@@ -643,7 +641,7 @@ channel</p></td>
 VVAS supports the DPU kernel released with <a class="reference external" href="https://github.com/Xilinx/Vitis-AI">Vitis-AI</a> 1.4, and the VVAS infrastructure plugin
 <a class="reference internal" href="../../common/common_plugins.html#ivas-xfilter"><span class="std std-ref">ivas_xfilter</span></a> is used along with the <a class="reference internal" href="../../common/common_plugins.html#ivas-xdpuinfer"><span class="std std-ref">ivas_xdpuinfer</span></a> accelerator software library.
 The beauty of this VVAS solution is that you do not need to figure out the resolution required for various DPU supported models,
-because the VVAS ML block identifies it dynamically based on the model requested, and negotiates the same resolution with its upstream element.
+because the VVAS ML block identifies it dynamically based on the requested model and negotiates the same resolution with its upstream element.
 In this case, the upstream element is the Preprocessor block, thus preprocessor converts the input image from the VCU
 as required by the model selected for the ML block. The model can be selected in the JSON, which is passed to ivas_xfilter.</p>
 <div class="figure align-center" id="id8">
@@ -799,7 +797,7 @@ This library along with VVAS infrastructure plug-in <a class="reference internal
 </div>
 <div class="section" id="four-channel-ml-pipeline">
 <h3>Four Channel ML pipeline<a class="headerlink" href="#four-channel-ml-pipeline" title="Permalink to this headline">¶</a></h3>
-<p>Now, constructing a four channel pipeline is simply duplicating the above pipeline four times for different models
+<p>Now, constructing a four-channel pipeline is simply duplicating the above pipeline four times for different models
 and positioning each output video appropriately on screen on different plane-ids.</p>
 <p>Below Vitis AI models are used as example in this tutorial.
 Refer <a class="reference external" href="https://www.xilinx.com/html_docs/vitis_ai/1_4/compiling_model.html">Vitis AI User Documentation</a> to compile different models
@@ -859,22 +857,22 @@ using arch.json file from release package.</p>
 </pre></div>
 </div>
 <p>The above command is available in the release package as <code class="docutils literal notranslate"><span class="pre">multichannel_ml.sh</span></code>.</p>
-<p>Now, let’s look into implementating the design and executing using Vitis AI and VVAS.</p>
+<p>Now, let’s look into implementing the design and executing using Vitis AI and VVAS.</p>
 </div>
 </div>
 <div class="section" id="implementation">
 <h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.1_zcu104.zip">Release package</a> provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts.
 Download the release package. Let the path where release package is downloaded be represented as <code class="docutils literal notranslate"><span class="pre">&lt;RELEASE_PATH&gt;</span></code>.</p>
-<p>Below steps are required only if the platform and example design needs to be regenerated, else move to section <a class="reference internal" href="#board-bring-up"><span class="std std-ref">Board bring up</span></a> to try the released SD card image.</p>
+<p>Below steps are required only if the platform and example design need to be regenerated, else move to section <a class="reference internal" href="#board-bring-up"><span class="std std-ref">Board bring up</span></a> to try the released SD card image.</p>
 <div class="section" id="id1">
 <h3>Platform<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>As previously described, this solution uses the VVAS <code class="docutils literal notranslate"><span class="pre">zcu104_vcuDec_vmixHdmiTx</span></code> platform.
 The first and foremost step is to build this platform from its sources.</p>
 <p>The platform provides the following hardware and software components of the pipeline:</p>
 <ul class="simple">
-<li><p>VCU hardware</p></li>
-<li><p>Video Mixer and HDMI Tx hard block</p></li>
+<li><p>VCU hardened IP block</p></li>
+<li><p>Video Mixer and HDMI Tx soft IP blocks</p></li>
 <li><p>Opensource framework like Gstreamer, OpenCV</p></li>
 <li><p>Vitis AI 1.4 libraries</p></li>
 <li><p>Xilinx Runtime (XRT)</p></li>
@@ -928,7 +926,7 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 <p>1. Download Vitis-AI. Let the path where Vitis-AI is downloaded be represented as <code class="docutils literal notranslate"><span class="pre">&lt;VITIS_AI_REPO&gt;</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">Xilinx</span><span class="o">/</span><span class="n">Vitis</span><span class="o">-</span><span class="n">AI</span><span class="o">.</span><span class="n">git</span>
 <span class="n">cd</span> <span class="n">Vitis</span><span class="o">-</span><span class="n">AI</span><span class="o">/</span>
-<span class="n">git</span> <span class="n">checkout</span> <span class="n">tags</span><span class="o">/</span><span class="n">v1</span><span class="o">.</span><span class="mi">4</span> <span class="o">-</span><span class="n">b</span> <span class="n">v1</span><span class="o">.</span><span class="mi">4</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="n">tags</span><span class="o">/</span><span class="n">v1</span><span class="mf">.4</span> <span class="o">-</span><span class="n">b</span> <span class="n">v1</span><span class="mf">.4</span>
 </pre></div>
 </div>
 <p>2. Change directory to example project</p>
@@ -948,17 +946,22 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 </div>
 <div class="section" id="board-bring-up">
 <span id="id2"></span><h3>Board bring up<a class="headerlink" href="#board-bring-up" title="Permalink to this headline">¶</a></h3>
-<p>1. Burn the SD card image <code class="docutils literal notranslate"><span class="pre">sd_card.img</span></code> (Either from <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.1_zcu104.zip">Release package</a> or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
-Boot the board using this SD card.</p>
-<p>2. Once the board is booted, resize the ext4 partition to extend to full SD card size.</p>
+<ol class="arabic">
+<li><p>Burn the SD card image <code class="docutils literal notranslate"><span class="pre">sd_card.img</span></code> (Either from <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.1_zcu104.zip">Release package</a> or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.</p>
+<p>Boot the board using this SD card.</p>
+</li>
+<li><p>Once the board is booted, resize the ext4 partition to extend to full SD card size:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resize</span><span class="o">-</span><span class="n">part</span> <span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">mmcblk0p2</span>
 </pre></div>
 </div>
-<p>3. From the host system, copy the video files on the board.</p>
+</li>
+<li><p>From the host system, copy the video files on the board:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">~/</span><span class="n">videos</span>
 <span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">Path</span> <span class="n">to</span> <span class="n">Videos</span><span class="o">&gt;</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;</span><span class="p">:</span><span class="o">~/</span><span class="n">videos</span>
 </pre></div>
 </div>
+</li>
+</ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Password for <em>root</em> user is <em>root</em>.</p>
@@ -967,26 +970,31 @@ Boot the board using this SD card.</p>
 <p class="admonition-title">Note</p>
 <p>Video files are not provided as part of release package.</p>
 </div>
-<p>4. Copy the model json files and scripts on the board</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2021</span><span class="o">.</span><span class="mi">1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;</span><span class="p">:</span><span class="o">~</span>
+<ol class="arabic" start="4">
+<li><p>Copy the model json files and scripts on the board:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2021</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;</span><span class="p">:</span><span class="o">~</span>
 </pre></div>
 </div>
-<p>5. Copy the Vitis-AI model files on board</p>
+</li>
+<li><p>Copy the Vitis-AI model files on board:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span>
-<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2021</span><span class="o">.</span><span class="mi">1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">vai_models</span><span class="o">/*</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
+<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2021</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">vai_models</span><span class="o">/*</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
 </pre></div>
 </div>
-<p>6. Execute four channel Gstreamer pipeline script</p>
+</li>
+<li><p>Execute four channel Gstreamer pipeline script:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sh</span> <span class="o">~/</span><span class="n">utils</span><span class="o">/</span><span class="n">scripts</span><span class="o">/</span><span class="n">multichannel_ml</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
-<p>You can now see the 4 channel mixed video on the HDMI monitor.</p>
+</li>
+</ol>
+<p>You can now see the 4-channel mixed video on the HDMI monitor.</p>
 </div>
 </div>
 <div class="section" id="known-issues">
 <h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
 <p>1. Sometimes on reboot, the HDMI screen remains blank and following error log is observed during the boot.
-Power OFF and ON (Hard reboot) the board to fix the issue.</p>
+Power OFF and ON (Hard reboot) the board to fix the issue:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xlnx</span><span class="o">-</span><span class="n">drm</span><span class="o">-</span><span class="n">hdmi</span> <span class="n">a0100000</span><span class="o">.</span><span class="n">v_hdmi_tx_ss</span><span class="p">:</span> <span class="n">tx</span><span class="o">-</span><span class="n">clk</span> <span class="ow">not</span> <span class="n">ready</span> <span class="o">-</span><span class="n">EPROBE_DEFER</span>
 </pre></div>
 </div>
@@ -1035,7 +1043,7 @@ Power OFF and ON (Hard reboot) the board to fix the issue.</p>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 2, 2021.
+        Last updated on August 25, 2021.
       </span>
 
     </p>

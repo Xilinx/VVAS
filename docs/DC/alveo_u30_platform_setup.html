@@ -32,11 +32,11 @@
   <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
     <script type="text/javascript" src="../../_static/js/d3dd8c60ed.js"></script>
     <script type="text/javascript" src="../../_static/js/common-ui-all.min.js"></script>
-    <script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../_static/js/CoveoJsSearch.Lazy.min.js"></script>
     <script type="text/javascript" src="../../_static/js/linkid.js"></script>
     <script type="text/javascript" src="../../_static/js/Searchbox.min.js"></script>
+	<script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -303,7 +303,7 @@
             
             
               <div class="version">
-                1.0
+                1.0.1
               </div>
             
           
@@ -430,8 +430,10 @@
 <p>This section covers installatiion of various software dependencies for the VVAS framework.</p>
 <ol class="arabic">
 <li><p>Download the packages:</p>
-<p>git clone <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/aws-ivas-installer.git">https://gitenterprise.xilinx.com/IPS-SSW/aws-ivas-installer.git</a>
-git checkout be316eb7b7d56b0483c0be8065352341e5bcdec3</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">gitenterprise</span><span class="o">.</span><span class="n">xilinx</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">IPS</span><span class="o">-</span><span class="n">SSW</span><span class="o">/</span><span class="n">aws</span><span class="o">-</span><span class="n">ivas</span><span class="o">-</span><span class="n">installer</span><span class="o">.</span><span class="n">git</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="n">be316eb7b7d56b0483c0be8065352341e5bcdec3</span>
+</pre></div>
+</div>
 </li>
 <li><p>Unzip the package, which has the following contents:</p>
 <ul>
@@ -451,10 +453,14 @@ git checkout be316eb7b7d56b0483c0be8065352341e5bcdec3</p>
 </ul>
 </li>
 <li><p>Install GStreamer version 1.16.2:</p>
-<p>source ./install_gst.sh</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">./</span><span class="n">install_gst</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
 </li>
 <li><p>Install VVAS plugins and applications:</p>
-<p>source install_ivas.sh</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">install_ivas</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
 </li>
 </ol>
 <p>Command clones the VVAS source code, compiles &amp; installs all VVAS GStreamer plugins &amp; sample applications required for AWS. Like open source GStreamer installation, all VVAS binaries will be installed in /opt/xilinx/ivas folder.</p>
@@ -546,7 +552,7 @@ git checkout be316eb7b7d56b0483c0be8065352341e5bcdec3</p>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 2, 2021.
+        Last updated on August 25, 2021.
       </span>
 
     </p>

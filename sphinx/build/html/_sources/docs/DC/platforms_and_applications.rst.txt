@@ -2,5 +2,5 @@
 Supported Platforms And Applications
 #############################################
 
-For more information, contact marketing.
+For more information, contact sales.
 

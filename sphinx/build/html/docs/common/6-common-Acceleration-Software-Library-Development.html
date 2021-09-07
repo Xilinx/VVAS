@@ -32,11 +32,11 @@
   <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
     <script type="text/javascript" src="../../_static/js/d3dd8c60ed.js"></script>
     <script type="text/javascript" src="../../_static/js/common-ui-all.min.js"></script>
-    <script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../_static/js/CoveoJsSearch.Lazy.min.js"></script>
     <script type="text/javascript" src="../../_static/js/linkid.js"></script>
     <script type="text/javascript" src="../../_static/js/Searchbox.min.js"></script>
+	<script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -305,7 +305,7 @@
             
             
               <div class="version">
-                1.0
+                1.0.1
               </div>
             
           
@@ -349,7 +349,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#ivas-utils">ivas-utils</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#vvas-datastructures">VVAS Datastructures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-data-structures">VVAS Data structures</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#ivaskernel">IVASKernel</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ivasvideoformat">IVASVideoFormat</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ivasframe">IVASFrame</a></li>
@@ -507,8 +507,8 @@
 </div>
 </div>
 </div>
-<div class="section" id="vvas-datastructures">
-<h2>VVAS Datastructures<a class="headerlink" href="#vvas-datastructures" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="vvas-data-structures">
+<h2>VVAS Data structures<a class="headerlink" href="#vvas-data-structures" title="Permalink to this headline">¶</a></h2>
 <p>The following sections list the core structures and enumerations.</p>
 <div class="section" id="ivaskernel">
 <h3>IVASKernel<a class="headerlink" href="#ivaskernel" title="Permalink to this headline">¶</a></h3>
@@ -600,7 +600,7 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">_ivas_frame_props</span> <span class="n">IVASFrameProps</span><span class="p">;</span>
 <span class="n">typedef</span> <span class="n">struct</span> <span class="n">_ivas_frame</span> <span class="n">IVASFrame</span><span class="p">;</span>
 
-<span class="o">//</span> <span class="n">frame</span> <span class="n">properties</span> <span class="n">holds</span> <span class="n">information</span> <span class="n">about</span> <span class="n">video</span> <span class="n">frame</span>
+<span class="o">//</span> <span class="n">frame</span> <span class="n">properties</span> <span class="n">hold</span> <span class="n">information</span> <span class="n">about</span> <span class="n">video</span> <span class="n">frame</span>
 <span class="n">struct</span> <span class="n">_ivas_frame_props</span> <span class="p">{</span>
 <span class="n">uint32_t</span> <span class="n">width</span><span class="p">;</span>
 <span class="n">uint32_t</span> <span class="n">height</span><span class="p">;</span>
@@ -608,7 +608,7 @@
 <span class="n">IVASVideoFormat</span> <span class="n">fmt</span><span class="p">;</span>
 <span class="p">};</span>
 <span class="n">struct</span> <span class="n">_ivas_frame</span> <span class="p">{</span>
-<span class="n">uint32_t</span> <span class="n">bo</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span> <span class="o">//</span> <span class="n">ignore</span> <span class="p">:</span> <span class="n">currently</span> <span class="ow">not</span> <span class="n">used</span>
+<span class="n">uint32_t</span> <span class="n">bo</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span> <span class="o">//</span> <span class="n">ignore</span><span class="p">:</span> <span class="n">currently</span> <span class="ow">not</span> <span class="n">used</span>
 <span class="n">void</span> <span class="o">*</span><span class="n">vaddr</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span> <span class="o">//</span> <span class="n">virtual</span><span class="o">/</span><span class="n">user</span> <span class="n">space</span> <span class="n">address</span> <span class="n">of</span>
                                <span class="o">//</span><span class="n">video</span> <span class="n">frame</span> <span class="n">memory</span>
 <span class="n">uint64_t</span> <span class="n">paddr</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span> <span class="o">//</span> <span class="n">physical</span> <span class="n">address</span> <span class="n">of</span> <span class="n">video</span> <span class="n">frame</span>
@@ -728,7 +728,7 @@ Return:
     IVASFrame handle on success or NULL on failure
 </pre></div>
 </div>
-<p>The following API is free memory that is allocated using the ivas_alloc_buffer() API.</p>
+<p>The following API is to free the memory that is allocated using the ivas_alloc_buffer() API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void ivas_free_buffer (IVASKernel * handle, IVASFrame *ivas_frame)
 
 Parameters:
@@ -807,7 +807,7 @@ Return:
 <p>This section covers the steps to develop an acceleration software library for hard kernels.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It is assumed that hard kernel work only on physicle address. Hence Infrastructure plugins will only provide physical address for the input/output buffers. If for any reason one wants to access the input/output buffers in s/w accel lib, then need to map the buffer and get the virtual address.</p>
+<p>It is assumed that hard kernel work only on physical address. Hence Infrastructure plugins will only provide physical address for the input/output buffers. If for any reason one wants to access the input/output buffers in s/w accel lib, then need to map the buffer and get the virtual address.</p>
 </div>
 <p>Virtual address is populated by infrastructure plugins only in case of s/w accel lib for “software only” kernels.</p>
 <div class="section" id="memory-allocation">
@@ -822,7 +822,7 @@ Return:
 <p>In this mode, VVAS is relying on the underlying XRT framework to write to the kernel registers to start the kernel. The underlying XRT framework ensures that the kernel is not accessed simultaneously by multiple users at any time. This is the recommended mode of operation for kernels that operate on memory buffers. However, there is one limitation. This mode is not suitable for streaming kernels, where kernels need to be started in auto-restart mode. For starting kernels in auto-restart mode, you must use the manual mode.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>To operate a acceleration software library in automatic mode, set the is_multiprocess flag to True in the kernel initialization API (xlnx_kernel_init).</p>
+<p>To operate an acceleration software library in automatic mode, set the is_multiprocess flag to True in the kernel initialization API (xlnx_kernel_init).</p>
 </div>
 <ul class="simple">
 <li><dl class="simple">
@@ -961,7 +961,7 @@ Return:
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 2, 2021.
+        Last updated on August 25, 2021.
       </span>
 
     </p>

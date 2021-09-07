@@ -32,11 +32,11 @@
   <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
     <script type="text/javascript" src="../../_static/js/d3dd8c60ed.js"></script>
     <script type="text/javascript" src="../../_static/js/common-ui-all.min.js"></script>
-    <script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../_static/js/CoveoJsSearch.Lazy.min.js"></script>
     <script type="text/javascript" src="../../_static/js/linkid.js"></script>
     <script type="text/javascript" src="../../_static/js/Searchbox.min.js"></script>
+	<script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -303,7 +303,7 @@
             
             
               <div class="version">
-                1.0
+                1.0.1
               </div>
             
           
@@ -426,11 +426,12 @@
 <h1>Application Development Guide<a class="headerlink" href="#application-development-guide" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt><cite>XRM Library</cite></dt><dd><p>The XRM library is used to manage the hardware accelerators available in the system. XRM keeps track of total system capacity for each of the compute units such as the decoder, scaler, and encoder. The XRM library makes it possible to perform actions such as reserving, allocating and releasing resources; calculating resource load and max capacity.</p>
-</dd>
-</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><cite>XRM Library</cite>
+The XRM library is used to manage the hardware accelerators available in the system. XRM keeps track of total system capacity for each of the compute units such as the decoder, scaler, and encoder. The XRM library makes it possible to perform actions such as reserving, allocating and releasing resources; calculating resource load and max capacity.</p>
 <p>Details about XRM can be found in general <a class="reference external" href="https://xilinx.github.io/XRM/index.html">XRM documentation</a>.</p>
+</div>
 <p>General application development on Data Center platforms is organised into below mentioned logicle steps.</p>
 <ol class="arabic simple">
 <li><p>Initialization</p></li>
@@ -511,7 +512,7 @@ This example can be used as a starting point for developing custom orchestration
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 2, 2021.
+        Last updated on August 25, 2021.
       </span>
 
     </p>

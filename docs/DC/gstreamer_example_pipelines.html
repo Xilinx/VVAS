@@ -32,11 +32,11 @@
   <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
     <script type="text/javascript" src="../../_static/js/d3dd8c60ed.js"></script>
     <script type="text/javascript" src="../../_static/js/common-ui-all.min.js"></script>
-    <script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../_static/js/CoveoJsSearch.Lazy.min.js"></script>
     <script type="text/javascript" src="../../_static/js/linkid.js"></script>
     <script type="text/javascript" src="../../_static/js/Searchbox.min.js"></script>
+	<script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -303,7 +303,7 @@
             
             
               <div class="version">
-                1.0
+                1.0.1
               </div>
             
           
@@ -439,7 +439,7 @@ Missing to source the above setup script in current terminal, it gives the error
 </div>
 <div class="section" id="decode-only-pipeline">
 <h2>Decode only Pipeline<a class="headerlink" href="#decode-only-pipeline" title="Permalink to this headline">¶</a></h2>
-<p>This example accepts a clip that is already encoded in h.264 and will decode it using ivas_xvcudec plugin file into a RAW NV12 format and save it to disk at /tmp/xil_dec_out_*.nv12. To get more understanding of the ivas_xvcudec plugin properties, refer to the section VVAS VCU Decoder Plug-in.</p>
+<p>This example accepts a clip that is already encoded in h.264 and will decode it using ivas_xvcudec plugin file into a RAW NV12 format and save it to disk at /tmp/xil_dec_out_*.nv12. To get more understanding of the ivas_xvcudec plugin properties, refer to the section VVAS VCU Decoder Plug-in:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">01</span><span class="n">_gst_decode_only</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">Test_1080p60</span><span class="o">.</span><span class="n">h264</span> <span class="mi">1</span> <span class="mi">0</span>
 </pre></div>
 </div>
@@ -454,10 +454,11 @@ streams and the levels accordingly.
 </div>
 <div class="section" id="encode-only-pipeline">
 <h2>Encode only Pipeline<a class="headerlink" href="#encode-only-pipeline" title="Permalink to this headline">¶</a></h2>
-<p>This example accepts a RAW 1080p60 clip in NV12 format. It will pass the clip to the encoder using <code class="docutils literal notranslate"><span class="pre">ivas_xvcuenc</span></code> plugin  to produce an h.264 encoded outputs with a target bitrate of 8Mbps and save it to disk at /tmp/xil_enc_out_*.h264. To get more understanding of the ivas_xvcuenc plugin properties, refer to the section VVAS VCU Encoder Plug-in.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">02</span><span class="n">_gst_h264_encode_only_1080p</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">Test_1080p</span><span class="o">.</span><span class="n">nv12</span> <span class="mi">1</span> <span class="mi">1</span>
-</pre></div>
-</div>
+<p>This example accepts a RAW 1080p60 clip in NV12 format. It will pass the clip to the encoder using <code class="docutils literal notranslate"><span class="pre">ivas_xvcuenc</span></code> plugin to produce an h.264 encoded outputs with a target bitrate of 8Mbps and save it to disk at /tmp/xil_enc_out_*.h264. To get more understanding of the ivas_xvcuenc plugin properties, refer to the section VVAS VCU Encoder Plug-in.</p>
+<dl class="simple">
+<dt>::</dt><dd><p>./02_gst_h264_encode_only_1080p.sh 0 ~/videos/Test_1080p.nv12 1 1</p>
+</dd>
+</dl>
 <p>The format of the script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">02</span><span class="n">_gst_h264_encode_only_1080p</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">device</span> <span class="n">index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Input</span> <span class="mi">1080</span><span class="n">p</span> <span class="n">NV12</span> <span class="n">file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">encoder</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">8</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 </pre></div>
@@ -465,11 +466,12 @@ streams and the levels accordingly.
 </div>
 <div class="section" id="basic-transcode">
 <h2>Basic Transcode<a class="headerlink" href="#basic-transcode" title="Permalink to this headline">¶</a></h2>
-<p>This example demonstrates how to achieve simple transcoding, i.e. encoding format change without resolution change. Input is H.264 elementary stream, 1080p60, from file source, decoded using hardware decoder and then re-encoded using vcu hardware encoder to H.264 format. To get more understanding of the <code class="docutils literal notranslate"><span class="pre">ivas_xvcudec</span></code> plugin properties, refer to the section VVAS VCU Decoder Plug-in. To get more understanding of the <code class="docutils literal notranslate"><span class="pre">ivas_xvcuenc</span></code> plugin properties, refer to the section VVAS VCU Encoder Plug-in.
-The output files are stored at /tmp/xil_xcode_out_*.h264</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">03</span><span class="n">_gst_h264_transcode_only</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">Test_1080p60</span><span class="o">.</span><span class="n">h264</span> <span class="mi">1</span> <span class="mi">0</span>
-</pre></div>
-</div>
+<p>This example demonstrates how to achieve simple transcoding, i.e. encoding format change without resolution change. Input is H.264 elementary stream, 1080p60, from file source, decoded using hardware decoder and then re-encoded using vcu hardware encoder to H.264 format. To get more understanding of the <code class="docutils literal notranslate"><span class="pre">ivas_xvcudec</span></code> plugin properties, refer to the section VVAS VCU Decoder Plug-in. To get more understanding of the <code class="docutils literal notranslate"><span class="pre">ivas_xvcuenc</span></code> plugin properties, refer to the section VVAS VCU Encoder Plug-in.</p>
+<p>The output files are stored at <code class="docutils literal notranslate"><span class="pre">/tmp/xil_xcode_out_*.h264</span></code></p>
+<dl class="simple">
+<dt>::</dt><dd><p>./03_gst_h264_transcode_only.sh 0 ~/videos/Test_1080p60.h264 1 0</p>
+</dd>
+</dl>
 <p>The format of the script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">03</span><span class="n">_gst_h264_transcode_only</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">device</span> <span class="n">index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Input</span> <span class="n">H264</span> <span class="n">file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">transcode</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">8</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 </pre></div>
@@ -480,9 +482,10 @@ The output files are stored at /tmp/xil_xcode_out_*.h264</p>
 <p>This example will decode an 8-bit, YUV420, pre-encoded 60FPS MP4 file with h.264 content as input and  scales this decoded output into multiple renditions of various sizes and send them back to disk in /tmp/sink_dec_scal*.nv12.
 The 1080p60 input is scaled down to the following resolutions and framerates (respectively):
 720p60, 720p30, 480p30, 360p30, 288p30</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">04</span><span class="n">_gst_decode_plus_scale</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">bbb_sunflower_1080p_60fps_normal</span><span class="o">.</span><span class="n">mp4</span> <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">0</span>
-</pre></div>
-</div>
+<dl class="simple">
+<dt>::</dt><dd><p>./04_gst_decode_plus_scale.sh 0 ~/videos/bbb_sunflower_1080p_60fps_normal.mp4 1 -1 0</p>
+</dd>
+</dl>
 <p>The format of the script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">04</span><span class="n">_gst_decode_plus_scale</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">device</span> <span class="n">index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Input</span> <span class="n">MP4</span> <span class="n">file</span> <span class="k">with</span> <span class="n">H264</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">num</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">buffers</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 <span class="n">Num</span> <span class="n">of</span> <span class="n">buffers</span> <span class="k">as</span> <span class="o">-</span><span class="mi">1</span> <span class="n">will</span> <span class="n">run</span> <span class="n">the</span> <span class="n">complete</span> <span class="n">video</span> <span class="n">stream</span><span class="o">.</span> <span class="n">For</span> <span class="nb">any</span> <span class="n">positive</span> <span class="n">value</span><span class="p">,</span> <span class="n">it</span> <span class="n">will</span> <span class="n">decode</span> <span class="n">only</span> <span class="n">those</span> <span class="n">many</span> <span class="n">buffers</span>
@@ -491,11 +494,12 @@ The 1080p60 input is scaled down to the following resolutions and framerates (re
 </div>
 <div class="section" id="encode-only-into-multiple-resolution-outputs">
 <h2>Encode only into Multiple-Resolution outputs<a class="headerlink" href="#encode-only-into-multiple-resolution-outputs" title="Permalink to this headline">¶</a></h2>
-<p>This example will take a 1080p60 RAW NV12 file and scale it and encode it into the resolutions as defined below and save them to disk under <strong>/tmp/sink_scale_enc*.h264</strong>
+<p>This example will take a 1080p60 RAW NV12 file and scale it and encode it into the resolutions as defined below and save them to disk under <code class="docutils literal notranslate"><span class="pre">/tmp/sink_scale_enc*.h264</span></code>
 720p60, 720p30, 480p30, 360p30, 288p30</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">05</span><span class="n">_gst_encode_plus_scale_1080p</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">Test_1080p</span><span class="o">.</span><span class="n">nv12</span> <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">0</span>
-</pre></div>
-</div>
+<dl class="simple">
+<dt>::</dt><dd><p>./05_gst_encode_plus_scale_1080p.sh 0 ~/videos/Test_1080p.nv12 1 -1 0</p>
+</dd>
+</dl>
 <p>The format of the script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">05</span><span class="n">_gst_encode_plus_scale_1080p</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">device</span> <span class="n">index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="mi">8</span><span class="o">-</span><span class="n">bit</span><span class="p">,</span> <span class="n">YUV420</span><span class="p">,</span> <span class="mi">1080</span><span class="n">p60</span> <span class="n">RAW</span> <span class="n">file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">num</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">buffers</span><span class="o">&gt;&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 </pre></div>
@@ -503,11 +507,13 @@ The 1080p60 input is scaled down to the following resolutions and framerates (re
 </div>
 <div class="section" id="transcode-with-multiple-resolution-outputs">
 <h2>Transcode with Multiple-Resolution outputs<a class="headerlink" href="#transcode-with-multiple-resolution-outputs" title="Permalink to this headline">¶</a></h2>
-<p>This example will do a full transcode pipeline on an 1080p60 h.264 input, scale it into the resolutions below, and re-encode them, saving them in /tmp/sink_xcode_scale_*.h264</p>
+<p>This example will do a full transcode pipeline on an 1080p60 h.264 input, scale it into the resolutions below, and re-encode them, saving them in <code class="docutils literal notranslate"><span class="pre">/tmp/sink_xcode_scale_*.h264</span></code></p>
 <p>The 1080p60 input is scaled down and encoded back to the following resolutions and framerates (respectively):
-720p60, 720p30, 480p30, 360p30, 288p30
-::
-./06_gst_transcode_plus_scale.sh 0 ~/videos/bbb_sunflower_1080p_60fps_normal.mp4 1 -1 0</p>
+720p60, 720p30, 480p30, 360p30, 288p30</p>
+<dl class="simple">
+<dt>::</dt><dd><p>./06_gst_transcode_plus_scale.sh 0 ~/videos/bbb_sunflower_1080p_60fps_normal.mp4 1 -1 0</p>
+</dd>
+</dl>
 <p>The format of the script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">06</span><span class="n">_gst_transcode_plus_scale</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">device</span> <span class="n">index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Input</span> <span class="n">MP4</span> <span class="n">file</span> <span class="k">with</span> <span class="n">H264</span> <span class="n">content</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">num</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">buffers</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 </pre></div>
@@ -517,9 +523,10 @@ The 1080p60 input is scaled down to the following resolutions and framerates (re
 <h2>Lower latency Transcode with Multiple-Resolution outputs<a class="headerlink" href="#lower-latency-transcode-with-multiple-resolution-outputs" title="Permalink to this headline">¶</a></h2>
 <p>This example is the same as full transcode pipeline (decode, scale, encode), saving the scaled outputs into the files /tmp/sink_ll_*.h264. This differs in that it is a <code class="docutils literal notranslate"><span class="pre">low</span> <span class="pre">latency</span></code> version, which doesn’t encode <code class="docutils literal notranslate"><span class="pre">B-frames</span></code>, and reduces the lookahead depth. This, in short, decreases the latency at the cost of visual quality.
 This example will output corrupt data if you provide an input file that contains B-Frames.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">07</span><span class="n">_gst_transcode_plus_scale_lowlatency</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">bbb_sunflower_1080p_60fps_normal</span><span class="o">.</span><span class="n">mp4</span> <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">0</span>
-</pre></div>
-</div>
+<dl class="simple">
+<dt>::</dt><dd><p>./07_gst_transcode_plus_scale_lowlatency.sh 0 ~/videos/bbb_sunflower_1080p_60fps_normal.mp4 1 -1 0</p>
+</dd>
+</dl>
 <p>The format of the script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">07</span><span class="n">_gst_transcode_plus_scale_lowlatency</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">device</span> <span class="n">index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Input</span> <span class="n">MP4</span> <span class="n">file</span> <span class="k">with</span> <span class="n">H264</span> <span class="n">content</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">num</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">buffers</span><span class="o">&gt;&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 </pre></div>
@@ -538,10 +545,8 @@ This example will output corrupt data if you provide an input file that contains
 </div>
 <div class="section" id="encoding">
 <h3>Encoding<a class="headerlink" href="#encoding" title="Permalink to this headline">¶</a></h3>
-<dl class="simple">
-<dt>4K H.264 Live-Encode</dt><dd><p>While most use-cases will not involve live-streaming 4k sized H.264/HEVC files, should you wish to do this, an example command line follows and the output file is stored at <strong>/tmp/xil_4k_enc_out.h265</strong></p>
-</dd>
-</dl>
+<p>4K H.264 Live-Encode
+While most use-cases will not involve live-streaming 4k sized H.264/HEVC files, should you wish to do this, an example command line follows and the output file is stored at <code class="docutils literal notranslate"><span class="pre">/tmp/xil_4k_enc_out.h265</span></code>.</p>
 <dl class="simple">
 <dt>::</dt><dd><p>./08_gst_encode_only_4k.sh 0 ~/videos/test4K.nv12 1 0</p>
 </dd>
@@ -550,26 +555,25 @@ This example will output corrupt data if you provide an input file that contains
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">08</span><span class="n">_gst_encode_only_4k</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">Device</span> <span class="n">Index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">raw</span> <span class="mi">4</span><span class="n">K</span> <span class="n">nv12</span> <span class="n">file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">encode</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>4K H.264 Live-Transcode</dt><dd><p>The output is stored at <cite>/tmp/xil_4k_xcode.h264</cite>. Command:</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>::</dt><dd><p>./09_gst_transcode_only_4k.sh 0 ~/videos/xil_4k.h264 1 0</p>
-</dd>
-</dl>
-<p>The format of the script is:
-::
-./09_gst_transcode_only_4k.sh &lt;Device Index&gt; &lt;Input 4K H264 file&gt; &lt;Number of transcode instances, 1 to 2&gt;&lt;fakesink 0/1&gt;</p>
+<p>4K H.264 Live-Transcode</p>
+<p>The output is stored at <code class="docutils literal notranslate"><span class="pre">/tmp/xil_4k_xcode.h264</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">09</span><span class="n">_gst_transcode_only_4k</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">xil_4k</span><span class="o">.</span><span class="n">h264</span> <span class="mi">1</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>The format of the script is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">09</span><span class="n">_gst_transcode_only_4k</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">Device</span> <span class="n">Index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Input</span> <span class="mi">4</span><span class="n">K</span> <span class="n">H264</span> <span class="n">file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">transcode</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">2</span><span class="o">&gt;&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="faster-than-real-time">
 <h2>Faster Than Real Time<a class="headerlink" href="#faster-than-real-time" title="Permalink to this headline">¶</a></h2>
 <p>The U30 is optimized for <code class="docutils literal notranslate"><span class="pre">low</span> <span class="pre">latency</span></code> <code class="docutils literal notranslate"><span class="pre">realtime</span></code> applications. It provides deterministic low latency transcoding, while operating at the FPS the human eye would normally process/watch it. This is ideal for ingesting a live video stream where there is minimal buffering.
 Faster Than Real Time (FTRT) is almost the contrary: you have the entire file/clip saved and can therefore “divide and conquer”. There are two main flags to consider when processing in this flow: cores and slices. The outputs are stored in <cite>/tmp/xil_xcode_ftrt_out_*.h264</cite>. This script can be best demonstrated only if the number of instances are less than what a device is capable of, e.g. 1 instance as shown below:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">11</span><span class="n">_gst_ftrt_transcode_only</span><span class="o">.</span><span class="n">sh</span> <span class="mi">0</span> <span class="o">~/</span><span class="n">videos</span><span class="o">/</span><span class="n">Test_1080p60</span><span class="o">.</span><span class="n">h264</span> <span class="mi">1</span> <span class="mi">1</span>
-</pre></div>
-</div>
+<dl class="simple">
+<dt>::</dt><dd><p>./11_gst_ftrt_transcode_only.sh 0 ~/videos/Test_1080p60.h264 1 1</p>
+</dd>
+</dl>
 <p>The format of the script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="mi">11</span><span class="n">_gst_ftrt_transcode_only</span><span class="o">.</span><span class="n">sh</span> <span class="o">&lt;</span><span class="n">device</span> <span class="n">index</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Input</span> <span class="n">H264</span> <span class="n">file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">transcode</span> <span class="n">instances</span><span class="p">,</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">8</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">fakesink</span> <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="o">&gt;</span>
 </pre></div>
@@ -597,7 +601,7 @@ Faster Than Real Time (FTRT) is almost the contrary: you have the entire file/cl
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 2, 2021.
+        Last updated on August 25, 2021.
       </span>
 
     </p>

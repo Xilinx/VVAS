@@ -17,4 +17,4 @@
 VVAS GStreamer Plug-ins for Data Center Platforms
 #################################################
 
-For more information, contact marketing team.
+For more information, contact sales.

@@ -12,44 +12,44 @@ SOM Examples
 There are four Application specific SOM platforms supported. Click on the link below to know more about these.
 
 Smart Camera
-   Smart Camera Application with face detection and display functionality. For more details refer to `Smart Camera <https://xilinx.github.io/kria-apps-docs/docs/smartcamera/smartcamera_landing.html>`_
+   Smart Camera Application with face detection and display functionality. For more details refer to `Smart Camera <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/smartcamera/smartcamera_landing.html>`_
 
 AIBox-ReiD
-   Application demonstrating multistream tracking and Re-Identification. For more details, refer to `AIBox-ReID <https://xilinx.github.io/kria-apps-docs/docs/aibox-reid/aibox_landing.html>`_
+   Application demonstrating multistream tracking and Re-Identification. For more details, refer to `AIBox-ReID <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/aibox-reid/aibox_landing.html>`_
 
 Defect Detection
-   Application to detect defects in mangoes. For more details, refer to `Defect Detect <https://xilinx.github.io/kria-apps-docs/docs/defect-detect/defectdetect_landing.html>`_
+   Application to detect defects in mangoes. For more details, refer to `Defect Detect <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/defect-detect/defectdetect_landing.html>`_
 
 NLP SmartVision
-   Application to demonstrate Natural Language Processing feature. For more details refer to `NLP SmartVision  <https://xilinx.github.io/kria-apps-docs/docs/nlp-smartvision/nlp_smartvision_landing.html>`_
+   Application to demonstrate Natural Language Processing feature. For more details refer to `NLP SmartVision <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/nlp-smartvision/nlp_smartvision_landing.html>`_
 
 .. toctree::
    :maxdepth: 3
    :caption: Smart Camera
    :hidden:
 
-   Smart Camera <https://xilinx.github.io/kria-apps-docs/docs/smartcamera/smartcamera_landing.html>
+   Smart Camera <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/smartcamera/smartcamera_landing.html>
 
 .. toctree::
    :maxdepth: 3
    :caption: AIBox-ReiD
    :hidden:
 
-   AIBox-ReID <https://xilinx.github.io/kria-apps-docs/docs/aibox-reid/aibox_landing.html>
+   AIBox-ReID <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/aibox-reid/aibox_landing.html>
 
 .. toctree::
    :maxdepth: 3
    :caption: Defect Detect
    :hidden:
 
-   Defect Detect <https://xilinx.github.io/kria-apps-docs/docs/defect-detect/defectdetect_landing.html>
+   Defect Detect <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/defect-detect/defectdetect_landing.html>
 
 .. toctree::
    :maxdepth: 3
    :caption: NLP SmartVision
    :hidden:
 
-   NLP SmartVision  <https://xilinx.github.io/kria-apps-docs/docs/nlp-smartvision/nlp_smartvision_landing.html>
+   NLP SmartVision  <https://xilinx.github.io/kria-apps-docs/main/build/html/docs/nlp-smartvision/nlp_smartvision_landing.html>
 
 
 *******************

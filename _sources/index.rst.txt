@@ -2,11 +2,11 @@
 Vitis Video Analytics SDK Overview
 ############################################################
 
-The Vitis Video Analytics SDK **(VVAS)** is a framework to build transcoding and AI-powered solutions on Xilinx platforms. It takes input data - from USB/CSI camera, video from file or streams over RTSP, and uses Vitis AI to generate insights from pixels for various usecases. VVAS SDK can be the foundation layer for a number of video analytic solutions like understanding traffic and pedestrians in smart city, health and safety monitoring in hospitals, self-checkout and analytics in retail, detecting component defects at a manufacturing facility and others. VVAS can also be used to build Adaptive Bitrate Transcoding solutions that may require re-encoding the incoming video at different bitrates, resolution and encoding format. 
+The Vitis Video Analytics SDK **(VVAS)** is a framework to build transcoding and AI-powered solutions on Xilinx platforms. It takes input data - from USB/CSI camera, video from file or streams over RTSP, and uses Vitis AI to generate insights from pixels for various usecases. VVAS SDK can be the foundation layer for several video analytic solutions like understanding traffic and pedestrians in smart city, health and safety monitoring in hospitals, self-checkout and analytics in retail, detecting component defects at a manufacturing facility and others. VVAS can also be used to build Adaptive Bitrate Transcoding solutions that may require re-encoding the incoming video at different bitrates, resolution and encoding format. 
 
 The core SDK consists of several hardware accelerator plugins that use various accelerators such as Video Encoder, Decoder, multiscaler (for resize and color space conversion), Deep learning Processing Unit (DPU) for Machine Learning etc.. By performing all the compute heavy operations in dedicated accelerators, VVAS can achieve highest performance for video analytics, transcoding and several other application areas. 
 
-For the developer community, VVAS also provides a framework in the form of generic Infrastructure plugins, software acceleration libraries and a simplified interface to develop their own acceleration library to control a custom hardware accelerator. Using this framework, user can easily integrate their custom accelerators/kernels into Gstreamer framework. VVAS builds on top of Xilinx Run Time (XRT) and Vitis AI and abstracts these complex interface, making it easy for developers to build video analytics and transcoding pipelines without having to learn the complexities of XRT, Vitis AI.
+For the developer community, VVAS also provides a framework in the form of generic Infrastructure plugins, software acceleration libraries and a simplified interface to develop their own acceleration library to control a custom hardware accelerator. Using this framework, user can easily integrate their custom accelerators/kernels into Gstreamer framework. VVAS builds on top of Xilinx Run Time (XRT) and Vitis AI and abstracts these complex interfaces, making it easy for developers to build video analytics and transcoding pipelines without having to learn the complexities of XRT, Vitis AI.
 
 Using VVAS SDK,  applications can be deployed on an embedded edge device running on Zynq UltraScale+ MPSoc platform or can be deployed on larger edge or datacenter platforms like Alveo U30. 
 
@@ -26,7 +26,7 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
 
 * Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. ``ivas_xvcudec``, ``omxh264dec`` and ``omxh265dec`` are the plugin for decoding. 
 * After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion. ``ivas_xabrscaler`` plugin can perform hardware accelerated resize as well as color format conversion on the frame.
-* After pre-processing, frame is sent for inference. Inference is performed using ivas infrastructure plugin, ``ivas_xfilter`` and ``ivas_xdpuinfer`` acceleration library. ivas_xdpuinfer is built on top of ``Vitis AI`` Development Kit to accelerate the AI Inference on Xilinx hardware platforms. 
+* After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, ``ivas_xfilter`` and ``ivas_xdpuinfer`` acceleration library. ivas_xdpuinfer is built on top of ``Vitis AI`` Development Kit to accelerate the AI Inference on Xilinx hardware platforms. 
 * To overlay the inference results such as bounding boxes, labels etc., there is a software acceleration library called ``ivas_xboundingbox``. This library along with ivas_xfilter plug-in draws bounding box and label information on the frame.
 * Finally to output the results, VVAS presents various options, like render the output with the bounding boxes on the screen, save the output to the local disk, stream out over RTSP.
 
@@ -75,10 +75,10 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
 Why VVAS?
 ============
 
-Application developers can build seamless streaming pipelines for AI-based video and image analytics, complex Adaptive Bitrate Transcoding pipelines and several other solutions using VVAS without having any understanding about FPGA or other development environmentcomplexities. VVAS ships with several hardware accelerators for various functionalities, highly optimized GStreamer plugins meeting most of the requirements of the Video Analytics and transcoding solutions.
+Application developers can build seamless streaming pipelines for AI-based video and image analytics, complex Adaptive Bitrate Transcoding pipelines and several other solutions using VVAS without having any understanding about FPGA or other development environment complexities. VVAS ships with several hardware accelerators for various functionalities, highly optimized GStreamer plugins meeting most of the requirements of the Video Analytics and transcoding solutions.
 For advanced developers, VVAS provides an easy to use framework to integrate their own hardware accelerators/kernels in to Gstreamer framework based applications.  
 VVAS provide AI model support for popular object detection and classification models such as  SSD, YOLO etc.
-All these infratructure gives the flexibility for rapid prototyping to full production level solutions by significantly reducing time to market for the solutions on Xilinx platforms. 
+All these infrastructure gives the flexibility for rapid prototyping to full production level solutions by significantly reducing time to market for the solutions on Xilinx platforms. 
 
 
 
@@ -111,7 +111,7 @@ Acceleration H/W (Kernels/IPs)
 
 These are highly optimized Kernels being developed by Xilinx. Details of these are captured in this section. Refer to VVAS Acceleration H/W :doc:`VVAS Acceleration H/W  <docs/common/Acceleration-Hardware>` for more details.
 
-Reference Platforms And Applications
+Reference Platforms and Applications
 ------------------------------------------
 
-There are different requirements of different applicatios. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms and sample application details can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section.
+There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms and sample application details can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section.

@@ -57,7 +57,7 @@ The utility sources are hosted in the ivas-utils repository/folder.
 
 
 **************************************
-VVAS Datastructures
+VVAS Data structures
 **************************************
 
 The following sections list the core structures and enumerations.
@@ -164,7 +164,7 @@ The IVASFrame stores information related to a video frame. The GStreamer infrast
         typedef struct _ivas_frame_props IVASFrameProps;
         typedef struct _ivas_frame IVASFrame;
 
-        // frame properties holds information about video frame
+        // frame properties hold information about video frame
         struct _ivas_frame_props {
         uint32_t width;
         uint32_t height;
@@ -172,7 +172,7 @@ The IVASFrame stores information related to a video frame. The GStreamer infrast
         IVASVideoFormat fmt;
         };
         struct _ivas_frame {
-        uint32_t bo[VIDEO_MAX_PLANES]; // ignore : currently not used 
+        uint32_t bo[VIDEO_MAX_PLANES]; // ignore: currently not used 
         void *vaddr[VIDEO_MAX_PLANES]; // virtual/user space address of 
                                        //video frame memory
         uint64_t paddr[VIDEO_MAX_PLANES]; // physical address of video frame
@@ -315,7 +315,7 @@ The following API must be used to allocate XRT memory for video frames as well a
         Return:
             IVASFrame handle on success or NULL on failure
 
-The following API is free memory that is allocated using the ivas_alloc_buffer() API.
+The following API is to free the memory that is allocated using the ivas_alloc_buffer() API.
 
 .. code-block::
 
@@ -407,7 +407,7 @@ Acceleration Software Library for Hard Kernels
 
 This section covers the steps to develop an acceleration software library for hard kernels.
 
-.. note:: It is assumed that hard kernel work only on physicle address. Hence Infrastructure plugins will only provide physical address for the input/output buffers. If for any reason one wants to access the input/output buffers in s/w accel lib, then need to map the buffer and get the virtual address.
+.. note:: It is assumed that hard kernel work only on physical address. Hence Infrastructure plugins will only provide physical address for the input/output buffers. If for any reason one wants to access the input/output buffers in s/w accel lib, then need to map the buffer and get the virtual address.
 Virtual address is populated by infrastructure plugins only in case of s/w accel lib for "software only" kernels.
 
 
@@ -428,7 +428,7 @@ Automatic Control Mode
 
 In this mode, VVAS is relying on the underlying XRT framework to write to the kernel registers to start the kernel. The underlying XRT framework ensures that the kernel is not accessed simultaneously by multiple users at any time. This is the recommended mode of operation for kernels that operate on memory buffers. However, there is one limitation. This mode is not suitable for streaming kernels, where kernels need to be started in auto-restart mode. For starting kernels in auto-restart mode, you must use the manual mode.
 
-.. note:: To operate a acceleration software library in automatic mode, set the is_multiprocess flag to True in the kernel initialization API (xlnx_kernel_init).
+.. note:: To operate an acceleration software library in automatic mode, set the is_multiprocess flag to True in the kernel initialization API (xlnx_kernel_init).
 
 - Programming Registers
    Use the ivas_register_write APIs to program the kernel register. In this mode, the registers are not immediately written to. The register value is updated in an internal buffer. The actual registers are updated in response to the kernel start request, described in the following section.

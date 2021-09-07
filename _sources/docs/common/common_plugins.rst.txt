@@ -2,7 +2,7 @@
 Plug-ins
 ###################
 
-VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins.This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``ivas-gst-plugins`` folder of the VVAS source tree. This section covers the plug-is that are common for Edge as well as cloud solutions. There are few plug-ins that are pecific to Edge/Embedded platforms and are covered in :doc:`Plugins for Embedded platforms <../Embedded/6-embedded-plugins>`. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in :doc:`Plugins for Data Center Platform <../DC/6-DC-plugins>`. The following table lists the VVAS GStreamer plug-ins.
+VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``ivas-gst-plugins`` folder of the VVAS source tree. This section covers the plug-in that are common for Edge as well as cloud solutions. There are few plug-ins that are specific to Edge/Embedded platforms and are covered in :doc:`Plugins for Embedded platforms <../Embedded/6-embedded-plugins>`. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in :doc:`Plugins for Data Center Platform <../DC/6-DC-plugins>`. The following table lists the VVAS GStreamer plug-ins.
 
 Table 1: GStreamer Plug-ins
 
@@ -40,7 +40,7 @@ There are specific functions, like video decoder, encoder, and meta affixer wher
 MetaAffixer
 ==========================
 
-The metaaffixer plug-in, ``ivas_xmetaaffixer``, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request, the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to `ivas_xmetaaffixer source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/metaaffixer>`_
+The metaaffixer plug-in, ``ivas_xmetaaffixer``, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to `ivas_xmetaaffixer source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/metaaffixer>`_
 
 .. figure:: ../images/image5.png
 
@@ -79,7 +79,7 @@ Table 2: ivas_xmetaaffixer Plug-in Properties
 
 Pad naming syntax
 ---------------------------
-The pad naming syntax is listed and the following image shows the syntax:
+The pad naming syntax is listed, and the following image shows the syntax:
 
 * MetaAffixer master input pad should be named sink_master.
 
@@ -137,7 +137,7 @@ This plug-in supports:
 
 .. important:: Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application. 
 
-As a reference, maximum resolution supported by multi-scaler kernel in ``Smart Model Select`` example design can be can be found in  `multi-scaler kernel config <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33>`_
+As a reference, maximum resolution supported by multi-scaler kernel in ``Smart Model Select`` example design can be found in  `multi-scaler kernel config <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33>`_
 
 Prerequisite
 ----------------
@@ -171,7 +171,7 @@ This plug-in accepts buffers with the following color format standards:
 .. important:: Make sure that the color formats needed for your application are supported by the multi-scaler hardware kernel. 
 
 
-As a reference, multi-scaler configurtion for ``smart model select`` exampl design can be found in `multi-scaler configuration <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h>`_
+As a reference, multi-scaler configuration for ``smart model select`` example design can be found in `multi-scaler configuration <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h>`_
 
 
 Control Parameters and Plug-in Properties
@@ -222,7 +222,7 @@ Table 3: ivas_xabrscaler Plug-in Properties
 |                    |             |               |             | generated        |
 +--------------------+-------------+---------------+-------------+------------------+
 |    num-taps        |  integer    | 6=>6 taps     |    1        | Number of filter |
-|                    |             | 8=>8 taps     |             | taps to be ussed |
+|                    |             | 8=>8 taps     |             | taps to be used  |
 |                    |             | 10=>10 taps   |             | for scaling      |
 |                    |             | 12=>12 taps   |             |                  |
 +--------------------+-------------+---------------+-------------+------------------+
@@ -280,7 +280,7 @@ Infrastructure Plug-ins and Acceleration Software Libraries
 
 Infrastructure plug-ins are generic plug-ins that interact with the acceleration kernel through a set of APIs exposed by an acceleration software library corresponding to that kernel. Infrastructure plug-ins abstract the core/common functionality of the GStreamer framework (for example: caps negotiation and buffer management).
 
-Table 5: Acceleration Software Libraries
+Table 5: Infrastructure Plug-ins
 
 +----------------------------------------+----------------------------------+
 |  **Infrastructure Plug-ins**           |          **Function**            |
@@ -297,7 +297,7 @@ Table 5: Acceleration Software Libraries
 
 .. note::
 
-        Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend to use ivas_xfilter plugin for one input and one output kernels.
+        Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend using ivas_xfilter plugin for one input and one output kernels.
 
 
 Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.
@@ -305,7 +305,7 @@ Acceleration software libraries control the acceleration kernel, like register p
 Table 6: Acceleration Software Libraries
 
 +----------------------------------------+----------------------------------+
-|  **Acceleration SoftwareLibrary**      |          **Function**            |
+|  **Acceleration Software Library**     |          **Function**            |
 |                                        |                                  |
 +========================================+==================================+
 |    ivas_xdpuinfer                      |    Library based on Vitis AI to  |
@@ -634,25 +634,25 @@ The following JSON file is for pure software-based acceleration, it does not inv
 .. code-block::
 
          {
-         "ivas-library-repo": "/usr/lib/",
-         "element-mode":"inplace",
-         "kernels" :[
-            {
-               "library-name":"libivas_xdpuinfer.so",
-               "config": {
-                  "model-name" : "densebox_320_320",
-                  "model-class" : "FACEDETECT",
-                  "model-format": ""BGR",
-                  "model-path" : "/usr/share/vitis_ai_library/models/",
-                  "run_time_model" : false,
-                  "need_preprocess" : true,
-                  "performance_test" : true,
-                  "max_num" : -1,
-                  "prob_cutoff" : 0.0,
-                  "debug_level" : 1
+            "ivas-library-repo": "/usr/lib/",
+            "element-mode":"inplace",
+            "kernels" :[
+               {
+                  "library-name":"libivas_xdpuinfer.so",
+                  "config": {
+                     "model-name" : "densebox_320_320",
+                     "model-class" : "FACEDETECT",
+                     "model-format": ""BGR",
+                     "model-path" : "/usr/share/vitis_ai_library/models/",
+                     "run_time_model" : false,
+                     "need_preprocess" : true,
+                     "performance_test" : true,
+                     "max_num" : -1,
+                     "prob_cutoff" : 0.0,
+                     "debug_level" : 1
+                  }
                }
-            }
-         ]
+            ]
          }
 
 
@@ -668,12 +668,12 @@ The following JSON file uses ivas_xfilter to control multi-scaler IP (hard-kerne
          "ivas-library-repo": "/usr/lib/",
          "element-mode":"passthrough",
          "kernels" :[
-         {
-            "kernel-name":"v_multi_scaler:v_multi_scaler_1",
-            "library-name":"libivas_xcrop.so",
-            "config": {
-            }
-         }
+             {
+                "kernel-name":"v_multi_scaler:v_multi_scaler_1",
+                "library-name":"libivas_xcrop.so",
+                "config": {
+                }
+             }
          ]
       }
 
@@ -719,42 +719,42 @@ The following example is of a JSON file to pass to the ivas_xfilter.
 .. code-block::
 
       {
-      "xclbin-location":"/usr/lib/dpu.xclbin",
-      "ivas-library-repo": "/usr/local/lib/ivas",
-      "element-mode":"inplace",
-      "kernels" :[
-         {
-            "library-name":"libivas_xboundingbox.so",
-            "config": {
-               "font_size" : 0.5,
-               "font" : 3,
-               "thickness" : 2,
-               "debug_level" : 2,
-               "label_color" : { "blue" : 0, "green" : 0, "red" : 0 },
-               "label_filter" : [ "class", "probability" ],
-               "classes" : [
-                  {
-                  "name" : "car",
-                  "blue" : 255,
-                  "green" : 0,
-                  "red" : 0
-                  },
-                  {
-                  "name" : "person",
-                  "blue" : 0,
-                  "green" : 255,
-                  "red" : 0
-                  },
-                  {
-                  "name" : "bicycle",
-                  "blue" : 0,
-                  "green" : 0,
-                  "red" : 255
-                  }
-               ]
+         "xclbin-location":"/usr/lib/dpu.xclbin",
+         "ivas-library-repo": "/usr/local/lib/ivas",
+         "element-mode":"inplace",
+         "kernels" :[
+            {
+               "library-name":"libivas_xboundingbox.so",
+               "config": {
+                  "font_size" : 0.5,
+                  "font" : 3,
+                  "thickness" : 2,
+                  "debug_level" : 2,
+                  "label_color" : { "blue" : 0, "green" : 0, "red" : 0 },
+                  "label_filter" : [ "class", "probability" ],
+                  "classes" : [
+                     {
+                        "name" : "car",
+                        "blue" : 255,
+                        "green" : 0,
+                        "red" : 0
+                     },
+                     {
+                        "name" : "person",
+                        "blue" : 0,
+                        "green" : 255,
+                        "red" : 0
+                     },
+                     {  
+                        "name" : "bicycle",
+                        "blue" : 0,
+                        "green" : 0,
+                        "red" : 255
+                     }
+                  ]
+               }  
             }
-         }
-      ]
+         ]
       }
 
 Various configuration parameters of the bounding box acceleration software library are described in the following table.
@@ -827,7 +827,7 @@ Table 9: ivas_xboundingbox Parameters
 |                      |                      | "class" alone adds   |
 |                      |                      | the ML               |
 |                      |                      | classification name. |
-|                      |                      | For example car,     |
+|                      |                      | For example, car,    |
 |                      |                      | person, etc.         |
 |                      |                      |                      |
 |                      |                      | The addition of      |
@@ -849,7 +849,7 @@ Table 9: ivas_xboundingbox Parameters
 |                      |                      | classes are ignored. |
 |                      |                      | For instance, if     |
 |                      |                      | "car", "person",     |
-|                      |                      | "bicycle" are        |
+|                      |                      | "bicycle" is         |
 |                      |                      | entered under        |
 |                      |                      | "classes", then the  |
 |                      |                      | bounding box is only |
@@ -860,7 +860,7 @@ Table 9: ivas_xboundingbox Parameters
 |                      |                      | etc. are ignored.    |
 |                      |                      |                      |
 |                      |                      | The expected value   |
-|                      |                      | columns shows an     |
+|                      |                      | columns show an      |
 |                      |                      | example of how each  |
 |                      |                      | class should be      |
 |                      |                      | described. All       |
@@ -871,7 +871,7 @@ Table 9: ivas_xboundingbox Parameters
 |                      |                      | listed.              |
 |                      |                      |                      |
 |                      |                      | The class names in   |
-|                      |                      | this list match the  |
+|                      |                      | this list matches the|
 |                      |                      | class names assigned |
 |                      |                      | by the               |
 |                      |                      | ivas_xdpuinfer.      |
@@ -884,7 +884,7 @@ Table 9: ivas_xboundingbox Parameters
 |                      |                      | array empty.         |
 +----------------------+----------------------+----------------------+
 
-An example of using a bounding box along with the machine learnin plug-in is shown in the :doc:`Multi Channel ML <../Embedded/Tutorials/MultiChannelML>` Tutoial.
+An example of using a bounding box along with the machine learning plug-in is shown in the :doc:`Multi Channel ML <../Embedded/Tutorials/MultiChannelML>` Tutorial.
 
 
 .. _ivas_xdpuinfer:
@@ -896,7 +896,7 @@ This section discusses how machine learning solutions can be implemented using t
 
 .. figure:: ../images/image11.png
 
-The ivas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The ivas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS metameta structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.
+The ivas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The ivas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS meta data structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.
 
 For ``ivas_xdpuinfer`` implementation details, refer to `ivas_xdpuinfer source code <https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xdpuinfer>`_
 
@@ -942,134 +942,64 @@ The following table shows the JSON file format and configuration parameters for 
 
 Table 10: JSON File for ivas_xdpuinfer
 
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-|                |             |                    |             |                                               |
-| **Parameter**  |  **Type**   | **Expected Values**| **Default** |          **Description**                      |
-|                |             |                    |             |                                               |
-+================+=============+====================+=============+===============================================+
-| xclb           |    string   |    /usr/lib        |    NULL     | By default, Vitis AI expects xclbin           |
-| in-location    |             | /dpu.xclbin        |             | to be located at /usr/lib/ and xclbin         |
-|                |             |                    |             | is called dpu.xclbin.                         |
-|                |             |                    |             | The environment variable XLNX_VART_FIRMWARE   |
-|                |             |                    |             | could also be used to change the path and     |
-|                |             |                    |             | the corresponding path can be updated in the  |
-|                |             |                    |             | JSON file.                                    |
-|                |             |                    |             | e.g., export XLNX_VART_FIRMWARE=/where/your/  |
-|                |             |                    |             | dpu.xclbin                                    |
-|+---------------+-------------+--------------------+-------------+-----------------------------------------------+
-| ivas-l         |    string   |                    |             | This is the path where the ivas_xfilter will  |
-| ibrary-repo    |             |   /usr/loca        |   /usr/lib/ | search the acceleration software library.     |
-|                |             | l/lib/ivas/        |             | The kernel name is specified in the           |
-|                |             |                    |             | library-name parameter of the JSON file.      |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| element-mode   |    string   |    inplace         |    None     | Because the input buffer is not modified by   |
-|                |             |                    |             | the ML operation, but the metadata generated  |
-|                |             |                    |             | out of an inference operation needs to be     |
-|                |             |                    |             | added/appended to the input buffer, the       |
-|                |             |                    |             | GstBuffer is writable. The ivas_xfilter is    |
-|                |             |                    |             | configured in inplace mode                    |
-|                |             |                    |             |                                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| kernels        |    N/A      |    N/A             |    N/A      | The JSON tag for starting the kernel specific |
-|                |             |                    |             | configurations.                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| kernel-name    |    string   |    N/A             |    NULL     | The name and instance of a kernel separated   |
-|                |             |                    |             | by ":"                                        |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| library-name   |    string   |    N/A             |    NULL     | Acceleration software library name for the    |
-|                |             |                    |             | kernel. It is appended to the ivas-l          |
-|                |             |                    |             | ibrary-repo for an absolute path.             |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| config         |    N/A      |    N/A             |    N/A      | The JSON tag for kernel-specific              |
-|                |             |                    |             | configurations depending on the acceleration  |
-|                |             |                    |             | software library.                             |
-|                |             |                    |             |                                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| model-name     |    string   |    resnet50        |    N/A      | Name string of the machine learning model to  |
-|                |             |                    |             | be executed. The name string should be same as|
-|                |             |                    |             | the name of the directory available in model  |
-|                |             |                    |             | -path parameter file. If the name of the model|
-|                |             |                    |             | ELF file is resnet50.elf, then the model-name |
-|                |             |                    |             | is resnet50 in the JSON file. The ELF file    |
-|                |             |                    |             | present in the specified path model-path of   |
-|                |             |                    |             | the JSON file.                                |
-|                |             |                    |             |                                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| model-class    |    string   |    YOLOV3          |    N/A      | Class of model corresponding to model. Some of|
-|                |             |                    |             | the examples are shown here:                  |
-|                |             |  FACEDETECT        |             |                                               |
-|                |             |                    |             | * YOLOV3: yolov3_adas_pruned_0_9,             |
-|                |             | CLASSIFICATION     |             |           yolov3_voc, yolov3_voc_tf           |
-|                |             |    SSD             |             | * FACEDETECT: densebox_320_320,               |
-|                |             |  REFINEDET         |             |               densebox_640_360                |                                         
-|                |             |    TFSSD           |             | * CLASSIFICATION: resnet18, resnet50,         |
-|                |             |    YOLOV2          |             |                   resnet_v1_50_tf             |
-|                |             |                    |             |                                               | 
-|                |             |                    |             |                                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| model-format   |   string    |  RGB/BGR           |    N/A      | Image color format required by model.         |
-|                |             |                    |             |                                               | 
-|                |             |                    |             |                                               |
-|                |             |                    |             |                                               |
-|                |             |                    |             |                                               | 
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-|                |    string   |                    |    N/A      | Path of the folder where the model to be      |
-| model-path     |             | /usr/share/        |             | executed is stored.                           |
-|                |             |    vitis_          |             |                                               |
-|                |             | ai_library/        |             |                                               |
-|                |             |    models/         |             |                                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| run_time_model |    Boolean  |  True/False        |    False    | If there is a requirement to change the ML    |
-|                |             |                    |             | model at the frame level, then set this flag  |
-|                |             |                    |             | to true. If this parameter is set to true then|
-|                |             |                    |             | ivas_xdpuinfer will read the model name and   |
-|                |             |                    |             | class from the incoming input metadata and    |
-|                |             |                    |             | execute the same model found in the path      |
-|                |             |                    |             | specified in the model-path. The model-name   |
-|                |             |                    |             | and model-class parameter of the JSON file are|
-|                |             |                    |             | not required when enabling this parameter.    |
-|                |             |                    |             |                                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| need_preprocess|    Boolean  |                    |    True     | If need_preprocess = true: Normalize with     |
-|                |             |                    |             | mean/scale through the Vitis AI Library       |
-|                |             |                    |             | If need_preprocess = false: Normalize with    |
-|                |             |                    |             | mean/scale is performed before feeding the    |
-|                |             |                    |             | frame to ivas_xdpuinfer. The Vitis AI library |
-|                |             |                    |             | does not perform these operations.            |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-|   perfo        |    Boolean  |                    |    False    | Enable performance test and corresponding     |
-| rmance_test    |             |  True/False        |             | flops per second (f/s) display logs.          |
-|                |             |                    |             | Calculates and displays the f/s of the        |
-|                |             |                    |             | standalone DPU after every second.            |
-|                |             |                    |             |                                               |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
-| debug_level    |    integer  |    0 to 3          |    1        | Used to enable log levels.                    |
-|                |             |                    |             |                                               |
-|                |             |                    |             |                                               |
-|                |             |                    |             | There are basically four log levels for a     |
-|                |             |                    |             | message sent by the kernel library code,      |
-|                |             |                    |             | starting from level 0 and decreasing in       |
-|                |             |                    |             | severity till level 3 the lowest log-level    |
-|                |             |                    |             | identifier. When a log level is set, it acts  |
-|                |             |                    |             | as a filter, where only messages with a       |
-|                |             |                    |             | log-level lower than it, (therefore messages  |
-|                |             |                    |             | with an higher severity) are displayed.       |
-|                |             |                    |             |                                               |
-|                |             |                    |             | 0: This is the highest level in order of      |
-|                |             |                    |             | severity: It is used for messages about       |
-|                |             |                    |             | critical errors, both hardware or software    |
-|                |             |                    |             | related.                                      |
-|                |             |                    |             |                                               |
-|                |             |                    |             | 1: This level is used in situations where     |
-|                |             |                    |             | your attention is immediately required.       |
-|                |             |                    |             |                                               |
-|                |             |                    |             | 2: This is the log level used for             |
-|                |             |                    |             | informational messages about the action       |
-|                |             |                    |             | performed by the kernel and output of model   |
-|                |             |                    |             |                                               |
-|                |             |                    |             | 3: This level is used for debugging.          |
-|                |             |                    |             | level is                                      |
-+----------------+-------------+--------------------+-------------+-----------------------------------------------+
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Parameter         | Type    | Expected Values                         | Default      | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
++===================+=========+=========================================+==============+==============================================================================================================================================================================================================================================================================================================================================================================================================+
+| xclbin-location   | string  | ``/usr/lib/dpu.xclbin``                 | NULL         | By default, Vitis AI expects xclbin to be located at /usr/lib/ and xclbin is called ``dpu.xclbin``.                                                                                                                                                                                                                                                                                                          |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              | The environment variable XLNX_VART_FIRMWARE could also be used to change the path and the corresponding path can be updated in the JSON file. For example, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.                                                                                                                                                                                                 |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ivas-library-repo | string  | ``/usr/local/lib/ivas/``                | ``usr/lib/`` | This is the path where the ivas_xfilter will search the acceleration software library. The kernel name is specified in the library-name parameter of the JSON file.                                                                                                                                                                                                                                          |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| element-mode      | string  | inplace                                 | None         | Because the input buffer is not modified by the ML operation, but the metadata generated out of an inference operation needs to be added/appended to the input buffer, the GstBuffer is writable. The ivas_xfilter is configured in inplace mode                                                                                                                                                             |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| kernels           | N/A     | N/A                                     | N/A          | The JSON tag for starting the kernel specific configurations.                                                                                                                                                                                                                                                                                                                                                |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| kernel-name       | string  | N/A                                     | NULL         | The name and instance of a kernel separated by “:”                                                                                                                                                                                                                                                                                                                                                           |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| library-name      | string  | N/A                                     | NULL         | Acceleration software library name for the kernel. It is appended to the ivas-l ibrary-repo for an absolute path.                                                                                                                                                                                                                                                                                            |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| config            | N/A     | N/A                                     | N/A          | The JSON tag for kernel-specific configurations depending on the acceleration software library.                                                                                                                                                                                                                                                                                                              |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| model-name        | string  | resnet50                                | N/A          | Name string of the machine learning model to be executed. The name string should be same as the name of the directory available in model -path parameter file. If the name of the model ELF file is resnet50.elf, then the model-name is resnet50 in the JSON file. The ELF file present in the specified path model-path of the JSON file.                                                                  |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| model-class       | string  | YOLOV3                                  | N/A          | Class of some model corresponding to model. Some examples are shown below:                                                                                                                                                                                                                                                                                                                                   |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         | FACEDETECT                              |              | * **YOLOV3**: yolov3_adas_pruned_0_9, yolov3_voc, yolov3_voc_tf                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         | CLASSIFICATION                          |              | * **FACEDETECT**: densebox_320_320, densebox_640_360                                                                                                                                                                                                                                                                                                                                                         |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         | SSD                                     |              | * **CLASSIFICATION**: resnet18, resnet50, resnet_v1_50_tf                                                                                                                                                                                                                                                                                                                                                    |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         | REFINEDET                               |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         | TFSSD                                   |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         | YOLOV2                                  |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| model-format      | string  | RGB/BGR                                 | N/A          | Image color format required by model.                                                                                                                                                                                                                                                                                                                                                                        |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| model-path        | string  | ``/usr/share/vitis_ai_library/models/`` | N/A          | Path of the folder where the model to be executed is stored.                                                                                                                                                                                                                                                                                                                                                 |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| run_time_model    | Boolean | True/False                              | False        | If there is a requirement to change the ML model at the frame level, then set this flag to true. If this parameter is set to true then ivas_xdpuinfer will read the model name and class from the incoming input metadata and execute the same model found in the path specified in the model-path. The model-name and model-class parameter of the JSON file are not required when enabling this parameter. |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| need_preprocess   | Boolean | True/False                              | True         | If need_preprocess = true: Normalize with mean/scale through the Vitis AI Library If need_preprocess = false: Normalize with mean/scale is performed before feeding the frame to ivas_xdpuinfer. The Vitis AI library does not perform these operations.                                                                                                                                                     |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| performance_test  | Boolean | True/False                              | False        | Enable performance test and corresponding flops per second (f/s) display logs. Calculates and displays the f/s of the standalone DPU after every second.                                                                                                                                                                                                                                                     |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| debug_level       | integer | 0 to 3                                  | 1            | Used to enable log levels.                                                                                                                                                                                                                                                                                                                                                                                   |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              | There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a log-level lower than it, (therefore messages with an higher severity) are displayed.                                                                        |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              | 0: This is the highest level in order of severity: it is used for messages about critical errors, both hardware and software related.                                                                                                                                                                                                                                                                        |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              | 1: This level is used in situations where you attention is immediately required.                                                                                                                                                                                                                                                                                                                             |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              | 2: This is the log level used for information messages about the action performed by the kernel and output of model.                                                                                                                                                                                                                                                                                         |
+|                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
+|                   |         |                                         |              | 3: This level is used for debugging.                                                                                                                                                                                                                                                                                                                                                                         |
++-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
 
 
 Model Parameters
@@ -1105,29 +1035,29 @@ The JSON file for the ivas_xdpuinfer to execute ``resnet50`` model based classif
 .. code-block::
 
         {
-      "ivas-library-repo": "/usr/local/lib/ivas/",
-      "element-mode":"inplace",
-      "kernels" :[
-        {
-         "library-name":"libivas_xdpuinfer.so",
-         "config": {
-            "model-name" : "resnet50",
-            "model-class" : "CLASSIFICATION",
-            "model-format : "BGR"
-            "model-path" : "/usr/share/vitis_ai_library/models/",
-            "run_time_model" : false,
-            "need_preprocess" : true,
-            "performance_test" : true,
-            "debug_level" : 2
-            }
-         }
-      ]
-}
+           "ivas-library-repo": "/usr/local/lib/ivas/",
+           "element-mode":"inplace",
+           "kernels" :[
+              {
+                 "library-name":"libivas_xdpuinfer.so",
+                 "config": {
+                    "model-name" : "resnet50",
+                    "model-class" : "CLASSIFICATION",
+                    "model-format : "BGR"
+                    "model-path" : "/usr/share/vitis_ai_library/models/",
+                    "run_time_model" : false,
+                    "need_preprocess" : true,
+                    "performance_test" : true,
+                    "debug_level" : 2
+                 }
+              }
+           ]
+        }
 
 
 .. note::
         If "need_preprocess" = false, then pre-processing operations like, Normalization, scaling must be
-        performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer othereise results may not be as expected.
+        performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer otherwise results may not be as expected.
 
 
 .. _ivas_xmultisrc:
@@ -1145,7 +1075,7 @@ For ``ivas_xmultisrc`` implementation details, refer to `ivas_xmultisrc source c
 Input and Output
 --------------------------------
 
-Input and output accepts buffers with the following color formats on input GstPad and output GstPad.
+Input and output accept buffers with the following color formats on input GstPad and output GstPad.
 
 * GRAY8
 
@@ -1181,7 +1111,7 @@ Table 11: Plug-in Properties
 |                    |             |             |             |                                           |
 +====================+=============+=============+=============+===========================================+
 | Kconfig            |    String   |    N/A      |    NULL     | Path of the JSON configuration file based |
-|                    |             |             |             | on the VVAS cceleration software library  |
+|                    |             |             |             | on the VVAS acceleration software library |
 |                    |             |             |             | requirements. For further information,    |
 |                    |             |             |             | refer to :doc:`B-JSON-File-Schema`        |
 |                    |             |             |             |                                           |
@@ -1205,23 +1135,23 @@ The following example file describes how to specify two kernels that are being c
          "xclbin-location":"/usr/lib/binary_1.xclbin",
          "ivas-library-repo": "/usr/lib/",
          "kernels" :[
-         {
-            "kernel-name":"resize:resize_1", <------------------ kernel 1
-            "library-name":"libivas_xresize.so",
-            "config": {
-               x : 4,
-               y : 7
+            {
+               "kernel-name":"resize:resize_1", <------------------ kernel 1
+               "library-name":"libivas_xresize.so",
+               "config": {
+                  x : 4,
+                  y : 7
+               }
             }
-         }
-         {
-            "kernel-name":"cvt_rgb:cvt_rgb_1", <-------------- kernel 2
-            "library-name":"libcvt_bgr.so",
-            "config": {
-               name = "xilinx",
-               value = 98.34
+            {
+               "kernel-name":"cvt_rgb:cvt_rgb_1", <-------------- kernel 2
+               "library-name":"libcvt_bgr.so",
+               "config": {
+                  name = "xilinx",
+                  value = 98.34
+               }
             }
-         }
-      ]
+         ]
       }
 
 Table 12: JSON Properties
@@ -1257,7 +1187,7 @@ Table 12: JSON Properties
 +--------------------+-------------+-------------+-------------+------------------------------------------+
 
 
-Src Pad Naming Syntax
+Source Pad Naming Syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^                  
 
 For single output pad naming is optional. For multiple pads, the source pads names shall be as mentioned below, assuming the name of the plug-in as `sc`.

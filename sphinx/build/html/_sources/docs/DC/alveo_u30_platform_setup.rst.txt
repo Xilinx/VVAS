@@ -12,8 +12,8 @@ This section covers installatiion of various software dependencies for the VVAS 
 
 #. Download the packages::
 
-   git clone https://gitenterprise.xilinx.com/IPS-SSW/aws-ivas-installer.git 
-   git checkout be316eb7b7d56b0483c0be8065352341e5bcdec3
+      git clone https://gitenterprise.xilinx.com/IPS-SSW/aws-ivas-installer.git 
+      git checkout be316eb7b7d56b0483c0be8065352341e5bcdec3
 
 #. Unzip the package, which has the following contents:
 
@@ -33,11 +33,11 @@ This section covers installatiion of various software dependencies for the VVAS 
 
 #. Install GStreamer version 1.16.2::
 
-   source ./install_gst.sh
+      source ./install_gst.sh
 
 #. Install VVAS plugins and applications::
 
-   source install_ivas.sh
+      source install_ivas.sh
 
 Command clones the VVAS source code, compiles & installs all VVAS GStreamer plugins & sample applications required for AWS. Like open source GStreamer installation, all VVAS binaries will be installed in /opt/xilinx/ivas folder.
 

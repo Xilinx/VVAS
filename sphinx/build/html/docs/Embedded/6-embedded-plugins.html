@@ -32,11 +32,11 @@
   <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
     <script type="text/javascript" src="../../_static/js/d3dd8c60ed.js"></script>
     <script type="text/javascript" src="../../_static/js/common-ui-all.min.js"></script>
-    <script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../_static/js/CoveoJsSearch.Lazy.min.js"></script>
     <script type="text/javascript" src="../../_static/js/linkid.js"></script>
     <script type="text/javascript" src="../../_static/js/Searchbox.min.js"></script>
+	<script type="text/javascript" src="../../_static/js/header-footer.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -305,7 +305,7 @@
             
             
               <div class="version">
-                1.0
+                1.0.1
               </div>
             
           
@@ -468,7 +468,7 @@ interest metadata.</p></td>
 </table>
 <div class="section" id="omx-encoder-decoder-plug-in">
 <h2>OMX Encoder/Decoder Plug-in<a class="headerlink" href="#omx-encoder-decoder-plug-in" title="Permalink to this headline">¶</a></h2>
-<p>“omxh264decoder/omxh265decoder” are GStreamer Plugins for hardware accelerated H264/H265 Video decoding using VCU IP. Similarly “omxh264encoder/omxh265encoder” are GStreamer Plugins for hardware accelerated H264/H265 Video encoding using VCU IP.
+<p>“omxh264decoder/omxh265decoder” are GStreamer Plugins for hardware accelerated H264/H265 Video decoding using VCU IP. Similarly, “omxh264encoder/omxh265encoder” are GStreamer Plugins for hardware accelerated H264/H265 Video encoding using VCU IP.
 For more details about these plugins, refer to the <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a>  Chapter 23: Encoder and Decoder Software Features.</p>
 </div>
 <div class="section" id="region-of-interest-plug-in">
@@ -658,7 +658,7 @@ delta)</p>
 </table>
 <div class="section" id="example-pipelines">
 <h4>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h4>
-<p>The following pipeline takes input video in an MP4 container from the filesrc plug-in. The <code class="docutils literal notranslate"><span class="pre">qtdemux</span></code> extracts the <code class="docutils literal notranslate"><span class="pre">H.264</span></code> elementary stream from the MP4 container and pass it to the <code class="docutils literal notranslate"><span class="pre">omxh264dec</span></code> plug-in for decoding. The output of the decoder goes to the <code class="docutils literal notranslate"><span class="pre">ivas_xmultisrc</span></code> plug-in for resizing to a resolution of 640 x 360 and color-space conversion to <code class="docutils literal notranslate"><span class="pre">BGR</span></code> format. If your design has other kernels, like <code class="docutils literal notranslate"><span class="pre">multiscaler</span></code>, for re-size and colorspace conversin, then you may use it along with <code class="docutils literal notranslate"><span class="pre">ivas_xabrscaler</span></code> plug-in. The output from ivas_xmultisrc goes to the ivas_xfilter plug-in for object detection using the densebox model. The inference operation generates the metadata and bounding box, for each detected object. The ivas_xroigen plug-in creates the ROI metadata from the incoming bounding box information and passes this metadata to omxh264enc for ROI based encoding. This is an example pipeline to demonstrate ROI feature. This pipeline uses omxh264enc hence your design must have <code class="docutils literal notranslate"><span class="pre">VCU</span></code> encoder.</p>
+<p>The following pipeline takes input video in an MP4 container from the filesrc plug-in. The <code class="docutils literal notranslate"><span class="pre">qtdemux</span></code> extracts the <code class="docutils literal notranslate"><span class="pre">H.264</span></code> elementary stream from the MP4 container and pass it to the <code class="docutils literal notranslate"><span class="pre">omxh264dec</span></code> plug-in for decoding. The output of the decoder goes to the <code class="docutils literal notranslate"><span class="pre">ivas_xmultisrc</span></code> plug-in for resizing to a resolution of 640 x 360 and color-space conversion to <code class="docutils literal notranslate"><span class="pre">BGR</span></code> format. If your design has other kernels, like <code class="docutils literal notranslate"><span class="pre">multiscaler</span></code>, for re-size and colorspace conversion, then you may use it along with <code class="docutils literal notranslate"><span class="pre">ivas_xabrscaler</span></code> plug-in. The output from ivas_xmultisrc goes to the ivas_xfilter plug-in for object detection using the densebox model. The inference operation generates the metadata and bounding box, for each detected object. The ivas_xroigen plug-in creates the ROI metadata from the incoming bounding box information and passes this metadata to omxh264enc for ROI based encoding. This is an example pipeline to demonstrate ROI feature. This pipeline uses omxh264enc hence your design must have <code class="docutils literal notranslate"><span class="pre">VCU</span></code> encoder.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc location=&lt;filename&gt;.mp4 \
 ! qtdemux \
 ! h264parse \
@@ -713,7 +713,7 @@ range=&quot;&lt;0,0,500,300&gt;&quot; \
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 2, 2021.
+        Last updated on August 25, 2021.
       </span>
 
     </p>

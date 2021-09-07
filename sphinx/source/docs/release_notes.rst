@@ -35,7 +35,7 @@ Features
    - yolov2_voc_pruned_0_77
    - densebox_320_320
    - densebox_640_360
-* Hardware accelerated Resize and colorspace conversion
+* Hardware accelerated Resize and color space conversion
 * Region Of Interest based encoding
 * On-screen displaying bounding box around objects and text overly
 * HDMI Tx and Display Port interface for displaying the contents

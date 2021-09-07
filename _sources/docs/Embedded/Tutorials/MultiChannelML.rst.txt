@@ -3,9 +3,11 @@ Multichannel ML
 #########################################
 
 Vitis Video Analytics SDK (VVAS) is a Xilinx framework to build different video analytics solutions on Xilinx platforms. 
-This tutorial begins with building a single stream Machine learning pipeline 
-using VVAS and then scales up to build four channel Machine learning pipeline. 
+
+This tutorial begins with building a single stream Machine learning pipeline using VVAS and then scales up to build four channel Machine learning pipelines. 
+
 The final goal would be to run some ML model on the four H.264 decoded streams and mix the videos and display the four streams on HDMI Monitor.
+
 By the end of this tutorial, you should be able to run the following pipeline.
 
 .. image:: ./media/multichannel_ml/four_channel_pipeline.png
@@ -16,6 +18,7 @@ By the end of this tutorial, you should be able to run the following pipeline.
 Requirements
 *****************
 
+
 Hardware Requirements
 ========================
 
@@ -24,6 +27,7 @@ Hardware Requirements
 - MicroSD card, 8 GB or larger, class 10 (recommended)
 - HDMI 2.0 supported Monitor with 3840x2160 as the native resolution
 - HDMI 2.0 cable
+
 
 Software Requirements
 ========================
@@ -47,9 +51,7 @@ System Requirements
 Platform
 ************
 
-First, list all the components required to bring up the solution. If any of the components are available as a hardware block, select the specific platform.
-
-Because there is a video codec unit (VCU) decoder, Video Mixer and HDMI Tx in the pipeline and these are hardened blocks, hence, a platform with these hard blocks is needed.
+This tutorial needs video codec unit (VCU) decoder, Video Mixer and HDMI Tx, hence select a platform having these IPs.
 
 This tutorial uses the VVAS `zcu104_vcuDec_vmixHdmiTx <https://github.com/Xilinx/VVAS/ivas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx>`_ platform because it supports VCU decoder, Video mixer and HDMI Tx subsystem. 
 
@@ -126,7 +128,7 @@ Depending on the model selected, the preprocessor block is expected to support t
 * Scale Normalization
 
 Although all these operations can be achieved in software, the performance impact is substantial. 
-VVAS support `Multiscaler hardware accelerator <https://github.com/Xilinx/VVAS/tree/master/ivas-accel-hw/>`_ using :ref:`ivas_xabrscaler` gstreamer plugin. 
+VVAS support `Multiscaler hardware accelerator <https://github.com/Xilinx/VVAS/tree/master/ivas-accel-hw/>`_ using :ref:`ivas_xabrscaler` GStreamer plugin. 
 
 .. figure:: ./media/multichannel_ml/xabrscaler_plugin.png
    :align: center
@@ -206,7 +208,7 @@ Machine Learning inference is performed using DPU hardware accelerator and a gst
 VVAS supports the DPU kernel released with `Vitis-AI <https://github.com/Xilinx/Vitis-AI>`_ 1.4, and the VVAS infrastructure plugin 
 :ref:`ivas_xfilter` is used along with the :ref:`ivas_xdpuinfer <ivas_xdpuinfer>` accelerator software library.
 The beauty of this VVAS solution is that you do not need to figure out the resolution required for various DPU supported models, 
-because the VVAS ML block identifies it dynamically based on the model requested, and negotiates the same resolution with its upstream element. 
+because the VVAS ML block identifies it dynamically based on the requested model and negotiates the same resolution with its upstream element. 
 In this case, the upstream element is the Preprocessor block, thus preprocessor converts the input image from the VCU 
 as required by the model selected for the ML block. The model can be selected in the JSON, which is passed to ivas_xfilter.
 
@@ -396,7 +398,7 @@ With addition of bounding box, your pipeline for single stream is complete.
 Four Channel ML pipeline
 ==================================
 
-Now, constructing a four channel pipeline is simply duplicating the above pipeline four times for different models 
+Now, constructing a four-channel pipeline is simply duplicating the above pipeline four times for different models 
 and positioning each output video appropriately on screen on different plane-ids. 
 
 Below Vitis AI models are used as example in this tutorial. 
@@ -461,7 +463,7 @@ A reference pipeline for four channel ML is given below.
 
 The above command is available in the release package as ``multichannel_ml.sh``. 
 
-Now, let's look into implementating the design and executing using Vitis AI and VVAS.
+Now, let's look into implementing the design and executing using Vitis AI and VVAS.
 
 
 *****************
@@ -471,7 +473,7 @@ Implementation
 `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.1_zcu104.zip>`_ provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts.
 Download the release package. Let the path where release package is downloaded be represented as ``<RELEASE_PATH>``.
 
-Below steps are required only if the platform and example design needs to be regenerated, else move to section :ref:`board-bring-up` to try the released SD card image.
+Below steps are required only if the platform and example design need to be regenerated, else move to section :ref:`board-bring-up` to try the released SD card image.
 
 Platform
 =============
@@ -481,8 +483,8 @@ The first and foremost step is to build this platform from its sources.
 
 The platform provides the following hardware and software components of the pipeline:
 
-* VCU hardware
-* Video Mixer and HDMI Tx hard block
+* VCU hardened IP block
+* Video Mixer and HDMI Tx soft IP blocks
 * Opensource framework like Gstreamer, OpenCV
 * Vitis AI 1.4 libraries
 * Xilinx Runtime (XRT)
@@ -572,44 +574,37 @@ Once the build is completed, you can find the sdcard image at
 Board bring up
 ==================================
 
-1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.1_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher. 
-Boot the board using this SD card.
-::
+1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.1_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
+   
+   Boot the board using this SD card.
 
+2. Once the board is booted, resize the ext4 partition to extend to full SD card size::
+
+      resize-part /dev/mmcblk0p2
   
+3. From the host system, copy the video files on the board::
 
-2. Once the board is booted, resize the ext4 partition to extend to full SD card size.
-::
-
-  resize-part /dev/mmcblk0p2
-  
-3. From the host system, copy the video files on the board.
-::
-
-  mkdir -p ~/videos
-  scp -r <Path to Videos> root@<board ip>:~/videos
+      mkdir -p ~/videos
+      scp -r <Path to Videos> root@<board ip>:~/videos
 
 .. Note:: Password for *root* user is *root*.
 
 .. Note:: Video files are not provided as part of release package.
 
-4. Copy the model json files and scripts on the board 
-::
+4. Copy the model json files and scripts on the board::
 
-  scp -r <RELEASE_PATH>/vvas_multichannel_ml_2021.1_zcu104/utils/ root@<board ip>:~
+      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2021.1_zcu104/utils/ root@<board ip>:~
 
-5. Copy the Vitis-AI model files on board
-::
+5. Copy the Vitis-AI model files on board::
 
-  mkdir -p /usr/share/vitis_ai_library/models
-  scp -r <RELEASE_PATH>/vvas_multichannel_ml_2021.1_zcu104/vai_models/* /usr/share/vitis_ai_library/models/
+      mkdir -p /usr/share/vitis_ai_library/models
+      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2021.1_zcu104/vai_models/* /usr/share/vitis_ai_library/models/
 
-6. Execute four channel Gstreamer pipeline script
-::
+6. Execute four channel Gstreamer pipeline script::
 
-  sh ~/utils/scripts/multichannel_ml.sh
+      sh ~/utils/scripts/multichannel_ml.sh
 
-You can now see the 4 channel mixed video on the HDMI monitor.
+You can now see the 4-channel mixed video on the HDMI monitor.
 
 
 ********************
@@ -617,10 +612,9 @@ Known Issues
 ********************
 
 1. Sometimes on reboot, the HDMI screen remains blank and following error log is observed during the boot.
-Power OFF and ON (Hard reboot) the board to fix the issue.
-::
+Power OFF and ON (Hard reboot) the board to fix the issue::
 
-  xlnx-drm-hdmi a0100000.v_hdmi_tx_ss: tx-clk not ready -EPROBE_DEFER
+   xlnx-drm-hdmi a0100000.v_hdmi_tx_ss: tx-clk not ready -EPROBE_DEFER
 
 
 

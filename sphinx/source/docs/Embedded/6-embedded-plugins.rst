@@ -42,7 +42,7 @@ Table 1: GStreamer Plug-ins
 OMX Encoder/Decoder Plug-in
 ******************************************************************
 
-“omxh264decoder/omxh265decoder” are GStreamer Plugins for hardware accelerated H264/H265 Video decoding using VCU IP. Similarly “omxh264encoder/omxh265encoder” are GStreamer Plugins for hardware accelerated H264/H265 Video encoding using VCU IP. 
+“omxh264decoder/omxh265decoder” are GStreamer Plugins for hardware accelerated H264/H265 Video decoding using VCU IP. Similarly, “omxh264encoder/omxh265encoder” are GStreamer Plugins for hardware accelerated H264/H265 Video encoding using VCU IP. 
 For more details about these plugins, refer to the `VCU PG252 <https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf>`_  Chapter 23: Encoder and Decoder Software Features. 
 
 
@@ -204,7 +204,7 @@ Table 4: ivas_xroigen Plug-in Properties
 Example Pipelines
 --------------------------------------------
 
-The following pipeline takes input video in an MP4 container from the filesrc plug-in. The ``qtdemux`` extracts the ``H.264`` elementary stream from the MP4 container and pass it to the ``omxh264dec`` plug-in for decoding. The output of the decoder goes to the ``ivas_xmultisrc`` plug-in for resizing to a resolution of 640 x 360 and color-space conversion to ``BGR`` format. If your design has other kernels, like ``multiscaler``, for re-size and colorspace conversin, then you may use it along with ``ivas_xabrscaler`` plug-in. The output from ivas_xmultisrc goes to the ivas_xfilter plug-in for object detection using the densebox model. The inference operation generates the metadata and bounding box, for each detected object. The ivas_xroigen plug-in creates the ROI metadata from the incoming bounding box information and passes this metadata to omxh264enc for ROI based encoding. This is an example pipeline to demonstrate ROI feature. This pipeline uses omxh264enc hence your design must have ``VCU`` encoder.
+The following pipeline takes input video in an MP4 container from the filesrc plug-in. The ``qtdemux`` extracts the ``H.264`` elementary stream from the MP4 container and pass it to the ``omxh264dec`` plug-in for decoding. The output of the decoder goes to the ``ivas_xmultisrc`` plug-in for resizing to a resolution of 640 x 360 and color-space conversion to ``BGR`` format. If your design has other kernels, like ``multiscaler``, for re-size and colorspace conversion, then you may use it along with ``ivas_xabrscaler`` plug-in. The output from ivas_xmultisrc goes to the ivas_xfilter plug-in for object detection using the densebox model. The inference operation generates the metadata and bounding box, for each detected object. The ivas_xroigen plug-in creates the ROI metadata from the incoming bounding box information and passes this metadata to omxh264enc for ROI based encoding. This is an example pipeline to demonstrate ROI feature. This pipeline uses omxh264enc hence your design must have ``VCU`` encoder.
 
 .. code-block::
 
