@@ -1,64 +1,46 @@
 # Vitis™ Video Analytics SDK
 
+## Copyright and license statement
+Copyright 2022 Xilinx Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+[http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 ### To clone this repo:
 
 ```
 git clone https://github.com/Xilinx/VVAS.git
 ```
 
-## View the [Documentation](https://xilinx.github.io/VVAS/)
-
 ## Folder Structure
 
-- **ivas-utis** core contains infrastructure libraries for VVAS gstreamer plugins and kernel libraries
-- **ivas-gst-plugins** contains VVAS specific gstreamer plugins
-- **ivas-accel-sw-libs** contains VVAS specific kernel libs which are supported by VVAS gstreamer infrastructure plugins
-- **ivas-accel-hw** contains VVAS HW kernels which can be build with vitis
-- **ivas-examples** contains examples for using VVAS stack
-- **ivas-platform** contains sample VVAS platforms
+- **vvas-utils** core contains infrastructure libraries for VVAS gstreamer plugins and kernel libraries
+- **vvas-gst-plugins** contains VVAS specific gstreamer plugins
+- **vvas-accel-sw-libs** contains VVAS specific kernel libs which are supported by VVAS gstreamer infrastructure plugins
+- **vvas-accel-hw** contains VVAS HW kernels which can be build with vitis
+- **vvas-examples** contains examples for using VVAS stack
+- **vvas-platform** contains sample VVAS platforms
 
-***Note:*** Compile and installation of VVAS software libraries need to follow below sequence:
-```
-	First  : ivas-utils
-	Second : ivas-gst-plugins
-	Third  : ivas-accel-sw-libs
-```
+## Build and install VVAS essentials for embedded solutions:
 
-## Build and install VVAS essentials for embedded:
-Following are the three VVAS folders which are essential to build the VVAS software stack for any platform:
-```
-	ivas-utils, ivas-gst-plugins and ivas-accel-sw-libs
-```
-A helper script is provided in root of this repo to build and install VVAS essentials for embedded devices.
+A helper script, **./build_install_vvas.sh**, is provided in root of this repo to build and install VVAS components.
 
-Step 1 : Source sysroot
+Step 1 : Source sysroot path if not done already
 ```
-	source <sysroot path>/environment-setup-aarch64-xilinx-linux
+	source <sysroot path>/environment-setup-cortexa72-cortexa53-xilinx-linux
 ```
 Step 2 : Build
 ```
-	./build-ivas-essential.sh Edge
+	./build_install_vvas.sh Edge
 ```
 Step 3 : copy VVAS installer to embedded board
 ```
-	scp install/ivas_installer.tar.gz <board ip>:/
+	scp install/vvas_installer.tar.gz <board ip>:/
 ```
 Step 4 : Install VVAS on embedded board
 ```
 	cd /
-	tar -xvf ivas_installer.tar.gz
-```
-## Steps to install meson:
-VVAS build system uses meson to build, following are the steps to install meson locally:
-
-```
-sudo apt-get install python3 python3-pip python3-setuptools python3-wheel ninja-build
-pip3 install meson 
-pip3 install ninja
-Above steps installs meson in  /home/<username>/.local/bin/meson, so change PATH env to point using
-export PATH= /home/<username>/.local/bin/meson:$PATH
-```
-***Note:*** In case pip3 is not installed in system run the following command
-```
-python3 -m pip install --user --upgrade pip==20.2.2
+	tar -xvf vvas_installer.tar.gz
 ```

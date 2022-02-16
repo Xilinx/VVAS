@@ -1,0 +1,18 @@
+{
+  "xclbin-location":"XCLBIN_PATH",
+  "vvas-library-repo": "/usr/lib/",
+  "element-mode":"inplace",
+  "kernel" : {
+    "library-name":"libvvas_xdpuinfer.so",
+    "config": {
+      "model-name" : "MODEL",
+      "model-class" : "CLASS",
+      "model-format" : "FORMAT",
+      "model-path" : "/usr/share/vitis_ai_library/models/",
+      "run_time_model" : false,
+      "need_preprocess" : false,
+      "performance_test" : false,
+      "debug_level" : 1
+    }
+  }
+}

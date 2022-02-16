@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: VVAS Gstreamer Library
+Description: VVAS Gstreamer Library Implementation
+Requires: xrt jansson vvas-utils glib-2.0 gobject-2.0 gstreamer-1.0 gstreamer-base-1.0 gstreamer-allocators-1.0 gstreamer-video-1.0 uuid
+Version: @VERSION@
+Libs: -L${libdir} -lgstvvasinfermeta-1.0 -lgstvvasinpinfermeta-1.0 -lgstvvasallocator-1.0
+Cflags: -I${includedir}
+

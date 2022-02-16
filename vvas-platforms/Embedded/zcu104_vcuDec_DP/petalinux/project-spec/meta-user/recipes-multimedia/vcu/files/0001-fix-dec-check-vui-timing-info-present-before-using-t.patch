@@ -1,0 +1,33 @@
+From 11f1212b82cd6a0802a129ef0b56ce2c05b5f22a Mon Sep 17 00:00:00 2001
+From: Arthur Vinchon <arthur.vinchon@allegrodvt.com>
+Date: Mon, 11 Oct 2021 11:05:44 +0200
+Subject: [PATCH] fix(dec): check vui timing info present before using them
+
+---
+ lib_decode/AvcDecoder.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib_decode/AvcDecoder.c b/lib_decode/AvcDecoder.c
+index 0c7156f..aafc8e0 100644
+--- a/lib_decode/AvcDecoder.c
++++ b/lib_decode/AvcDecoder.c
+@@ -137,7 +137,7 @@ static int getMaxNumberOfSlices(AL_TStreamSettings const* pStreamSettings, AL_TA
+
+   int numUnitsInTick = 1, timeScale = 1;
+
+-  if(pSPS->vui_parameters_present_flag)
++  if(pSPS->vui_parameters_present_flag && pSPS->vui_param.vui_timing_info_present_flag)
+   {
+     numUnitsInTick = pSPS->vui_param.vui_num_units_in_tick;
+     timeScale = pSPS->vui_param.vui_time_scale;
+@@ -326,7 +326,7 @@ static bool initChannel(AL_TDecCtx* pCtx, AL_TAvcSps const* pSPS)
+   pChan->iMaxSlices = iSPSMaxSlices;
+   pChan->iMaxTiles = 1;
+
+-  if(!pCtx->bForceFrameRate && pSPS->vui_parameters_present_flag)
++  if(!pCtx->bForceFrameRate && pSPS->vui_parameters_present_flag && pSPS->vui_param.vui_timing_info_present_flag)
+   {
+     pChan->uFrameRate = pSPS->vui_param.vui_time_scale / 2;
+     pChan->uClkRatio = pSPS->vui_param.vui_num_units_in_tick;
+--
+2.7.4

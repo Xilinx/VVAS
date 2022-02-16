@@ -1,0 +1,14 @@
+# Feature options for plugins without external deps
+option('enable_xrm', type : 'integer', min : -1, max : 1, value : -1)
+option('enable_ppe', type : 'integer', min : -1, max : 1, value : -1)
+
+option('metaaffixer', type : 'feature', value : 'auto')
+option('roigen', type : 'feature', value : 'auto')
+option('filter', type : 'feature', value : 'auto')
+option('multisrc', type : 'feature', value : 'auto')
+option('abrscaler', type : 'feature', value : 'auto')
+option('infer', type : 'feature', value : 'auto')
+option('processinferdata', type : 'feature', value : 'auto')
+
+# Common feature options
+option('examples', type : 'feature', value : 'auto', yield : true)

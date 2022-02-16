@@ -1,0 +1,21 @@
+{
+  "xclbin-location":"XCLBIN_PATH",
+  "vvas-library-repo": "/usr/lib",
+  "device-index": 0,
+  "kernels" :[
+    {
+      "kernel-name":"v_multi_scaler:v_multi_scaler_1",
+      "library-name": "libvvas_xpreprocessor.so",
+      "config": {
+        "alpha_r" : MEANR,
+        "alpha_g" : MEANG,
+        "alpha_b" : MEANB,
+        "beta_r" : SCALER,
+        "beta_g" : SCALEG,
+        "beta_b" : SCALEB,
+        "inference-level" : 1,
+        "debug_level" : 0
+      }
+    }
+  ]
+}
