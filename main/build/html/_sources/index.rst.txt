@@ -24,10 +24,10 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
 .. figure:: /docs/images/VVA_Graph.png
    :width: 1100
 
-* Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. ``ivas_xvcudec``, ``omxh264dec`` and ``omxh265dec`` are the plugin for decoding. 
-* After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion. ``ivas_xabrscaler`` plugin can perform hardware accelerated resize as well as color format conversion on the frame.
-* After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, ``ivas_xfilter`` and ``ivas_xdpuinfer`` acceleration library. ivas_xdpuinfer is built on top of ``Vitis AI`` Development Kit to accelerate the AI Inference on Xilinx hardware platforms. 
-* To overlay the inference results such as bounding boxes, labels etc., there is a software acceleration library called ``ivas_xboundingbox``. This library along with ivas_xfilter plug-in draws bounding box and label information on the frame.
+* Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. ``vvas_xvcudec``, ``omxh264dec`` and ``omxh265dec`` are the plugin for decoding. 
+* After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion. ``vvas_xabrscaler`` plugin can perform hardware accelerated resize as well as color format conversion on the frame.
+* After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, ``vvas_xfilter`` and ``vvas_xdpuinfer`` acceleration library. vvas_xdpuinfer is built on top of ``Vitis AI`` Development Kit to accelerate the AI Inference on Xilinx hardware platforms. 
+* To overlay the inference results such as bounding boxes, labels etc., there is a software acceleration library called ``vvas_xboundingbox``. This library along with vvas_xfilter plug-in draws bounding box and label information on the frame.
 * Finally to output the results, VVAS presents various options, like render the output with the bounding boxes on the screen, save the output to the local disk, stream out over RTSP.
 
 
@@ -99,7 +99,7 @@ These are highly optimized GStreamer plug-ins developed  to provide very specifi
 Infrastructure Plug-ins
 ------------------------------------------------
 
-These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to :ref:`VVAS Infrastructure Plug-ins <infra_plugins_label>` for more details about how to use these plug-ins. These plug-ins are part of “ivas-gst-plugins” repository.
+These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to :ref:`VVAS Infrastructure Plug-ins <infra_plugins_label>` for more details about how to use these plug-ins. These plug-ins are part of “vvas-gst-plugins” repository.
 
 Acceleration S/W Libs
 -----------------------------------

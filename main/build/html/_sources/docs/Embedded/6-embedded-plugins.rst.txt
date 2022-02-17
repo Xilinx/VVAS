@@ -19,7 +19,7 @@ VVAS GStreamer Plug-ins for Embedded Platforms
 
 
 
-The following section describes GStreamer plugins for Embedded platforms. The plug-ins source code is available in the ivas-gst-plugins repository/folder of the VVAS sources tree. The following table lists the GStreamer plug-ins.
+The following section describes GStreamer plugins for Embedded platforms. The plug-ins source code is available in the vvas-gst-plugins repository/folder of the VVAS sources tree. The following table lists the GStreamer plug-ins.
 
 Table 1: GStreamer Plug-ins
 
@@ -34,7 +34,7 @@ Table 1: GStreamer Plug-ins
 |                                  | hardware accelerated h264/h265   |
 |                                  | video encoding.                  |
 +----------------------------------+----------------------------------+
-|    ivas_xroigen                  | Plug-in to generate region of    |
+|    vvas_xroigen                  | Plug-in to generate region of    |
 |                                  | interest metadata.               |
 +----------------------------------+----------------------------------+
 
@@ -52,9 +52,9 @@ For more details about these plugins, refer to the `VCU PG252 <https://www.xilin
 Region of Interest Plug-in
 ******************************************************************
 
-The region of interest (ROI) GStreamer ivas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The ivas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an IVAS supported list of metadata objects (GstInferenceMeta).
+The region of interest (ROI) GStreamer vvas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The vvas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an IVAS supported list of metadata objects (GstInferenceMeta).
 
-For implementation details, refer to `ivas_xroigen source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/roigen>`_.
+For implementation details, refer to `vvas_xroigen source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/roigen>`_.
 
 .. tip::  
    This plug-in is only useful with embedded platforms because its main job is to generate metadata required for the GStreamer OMX encoder plug-in that exists on embedded platforms.
@@ -71,16 +71,16 @@ Accepts buffers with any of the GStreamer supported video formats on input and o
 Control Parameters and Plug-in Properties
 ==============================================================================
 
-The following table lists the GObject properties exposed by ivas_xroigen plug-in.
+The following table lists the GObject properties exposed by vvas_xroigen plug-in.
 
-Table 4: ivas_xroigen Plug-in Properties
+Table 4: vvas_xroigen Plug-in Properties
 
 +--------------------------+----------------+-------------+-------------+------------------------+
 |  **Property Name**       |   **Type**     |  **Range**  | **Default** | **Description**        |
 +==========================+================+=============+=============+========================+
 | class-filters            | GstValueArray  |    None     |    None     |   Array of desired     |
 |                          |                |             |             |   inference classes.   |
-|                          |                |             |             |   ivas_xroigen         |
+|                          |                |             |             |   vvas_xroigen         |
 |                          |                |             |             |   prepares ROI metadata|
 |                          |                |             |             |   only for             |
 |                          |                |             |             |   class-filters        |
@@ -204,7 +204,7 @@ Table 4: ivas_xroigen Plug-in Properties
 Example Pipelines
 --------------------------------------------
 
-The following pipeline takes input video in an MP4 container from the filesrc plug-in. The ``qtdemux`` extracts the ``H.264`` elementary stream from the MP4 container and pass it to the ``omxh264dec`` plug-in for decoding. The output of the decoder goes to the ``ivas_xmultisrc`` plug-in for resizing to a resolution of 640 x 360 and color-space conversion to ``BGR`` format. If your design has other kernels, like ``multiscaler``, for re-size and colorspace conversion, then you may use it along with ``ivas_xabrscaler`` plug-in. The output from ivas_xmultisrc goes to the ivas_xfilter plug-in for object detection using the densebox model. The inference operation generates the metadata and bounding box, for each detected object. The ivas_xroigen plug-in creates the ROI metadata from the incoming bounding box information and passes this metadata to omxh264enc for ROI based encoding. This is an example pipeline to demonstrate ROI feature. This pipeline uses omxh264enc hence your design must have ``VCU`` encoder.
+The following pipeline takes input video in an MP4 container from the filesrc plug-in. The ``qtdemux`` extracts the ``H.264`` elementary stream from the MP4 container and pass it to the ``omxh264dec`` plug-in for decoding. The output of the decoder goes to the ``vvas_xmultisrc`` plug-in for resizing to a resolution of 640 x 360 and color-space conversion to ``BGR`` format. If your design has other kernels, like ``multiscaler``, for re-size and colorspace conversion, then you may use it along with ``vvas_xabrscaler`` plug-in. The output from vvas_xmultisrc goes to the vvas_xfilter plug-in for object detection using the densebox model. The inference operation generates the metadata and bounding box, for each detected object. The vvas_xroigen plug-in creates the ROI metadata from the incoming bounding box information and passes this metadata to omxh264enc for ROI based encoding. This is an example pipeline to demonstrate ROI feature. This pipeline uses omxh264enc hence your design must have ``VCU`` encoder.
 
 .. code-block::
 
@@ -213,14 +213,14 @@ The following pipeline takes input video in an MP4 container from the filesrc pl
       ! h264parse \
       ! omxh264dec internal-entropy-buffers=3 \
       ! queue \
-      ! ivas_xmultisrc kconfig="/home/root/jsons/kernel_resize_bgr.json"
+      ! vvas_xmultisrc kconfig="/home/root/jsons/kernel_resize_bgr.json"
       name=m2m_0 \
       ! video/x-raw, width=640, height=360, format=BGR \
       ! queue \
-      ! ivas_xfilter kernels-config="/home/root/jsons/
+      ! vvas_xfilter kernels-config="/home/root/jsons/
       kernel_densebox_640_360.json" \
       ! queue \
-      ! ivas_xroigen roi-type=1 roi-qp-delta=-10 roi-max-num=10 resolution-
+      ! vvas_xroigen roi-type=1 roi-qp-delta=-10 roi-max-num=10 resolution-
       range="<0,0,500,300>" \
       ! queue \
       ! omxh264enc prefetch-buffer=true qp-mode=1

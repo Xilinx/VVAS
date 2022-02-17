@@ -1,8 +1,8 @@
-###################
+﻿###################
 Plug-ins
 ###################
 
-VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``ivas-gst-plugins`` folder of the VVAS source tree. This section covers the plug-in that are common for Edge as well as cloud solutions. There are few plug-ins that are specific to Edge/Embedded platforms and are covered in :doc:`Plugins for Embedded platforms <../Embedded/6-embedded-plugins>`. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in :doc:`Plugins for Data Center Platform <../DC/6-DC-plugins>`. The following table lists the VVAS GStreamer plug-ins.
+VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``vvas-gst-plugins`` folder of the VVAS source tree. This section covers the plug-in that are common for Edge as well as cloud solutions. There are few plug-ins that are specific to Edge/Embedded platforms and are covered in :doc:`Plugins for Embedded platforms <../Embedded/6-embedded-plugins>`. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in :doc:`Plugins for Data Center Platform <../DC/6-DC-plugins>`. The following table lists the VVAS GStreamer plug-ins.
 
 Table 1: GStreamer Plug-ins
 
@@ -13,18 +13,20 @@ Table 1: GStreamer Plug-ins
    * - Plug-in Name
      - Functionality
 	 
-   * - :ref:`ivas_xmetaaffixer`
+   * - :ref:`vvas_xmetaaffixer`
      - Plug-in to scale and attach metadata to the frame of different resolutions.
 
-   * - :ref:`ivas_xabrscaler`
+   * - :ref:`vvas_xabrscaler`
      - Hardware accelerated scaling and color space conversion.
 
-   * - :ref:`ivas_xmultisrc`
+   * - :ref:`vvas_xmultisrc`
      - A generic infrastructure plug-in: 1 input, N output, supporting transform processing.
 
-   * - :ref:`ivas_xfilter`
+   * - :ref:`vvas_xfilter`
      - A generic infrastructure plug-in: 1 input, 1 output, supporting pass-through, in-place, and transform processing.
 
+   * - :ref:`vvas_xinfer`
+     - An inference plug-in using vvas_xdpuinfer acceleration software library and attaches inference output as GstInferenceMeta to input buffer. Also, this plug-in does optinal pre-processing required for inference using vvas_xpreprocess acceleration software library.
 
 .. _custom_plugins_label:
 
@@ -34,13 +36,13 @@ Custom Plug-ins
 
 There are specific functions, like video decoder, encoder, and meta affixer where the requirements are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.
 
-.. _ivas_xmetaaffixer:
+.. _vvas_xmetaaffixer:
 
 
-MetaAffixer
-==========================
+vvas_xmetaaffixer
+==================
 
-The metaaffixer plug-in, ``ivas_xmetaaffixer``, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The ivas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to `ivas_xmetaaffixer source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/gst/metaaffixer>`_
+The metaaffixer plug-in, ``vvas_xmetaaffixer``, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The vvas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to `vvas_xmetaaffixer source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaaffixer>`_
 
 .. figure:: ../images/image5.png
 
@@ -48,37 +50,41 @@ The metaaffixer plug-in, ``ivas_xmetaaffixer``, is used to scale the incoming me
 Input and Output
 --------------------
 
-This plug-in is format agnostic and can accept any input format. It operates only on the metadata. The ivas_xmetaaffixer plug-in supports the GstInferenceMeta data structure. For details about this structure, refer to the :doc:`VVAS Inference Metadata <A-IVAS-Inference-Metadata>` section.
+This plug-in is format agnostic and can accept any input format. It operates only on the metadata. The vvas_xmetaaffixer plug-in supports the GstInferenceMeta data structure. For details about this structure, refer to the :doc:`VVAS Inference Metadata <A-VVAS-Inference-Metadata>` section.
 
 
 Control Parameters and Plug-in Properties
 --------------------------------------------------------
 
-Table 2: ivas_xmetaaffixer Plug-in Properties
+Table 2: vvas_xmetaaffixer Plug-in Properties
 
-+--------------------+-------------+-------------+-------------+--------------------------------------------------------+
-|                    |             |             |             |                                                        |
-| **Property Name**  |   **Type**  |  **Range**  | **Default** |                   **Description**                      |
-|                    |             |             |             |                                                        |
-+====================+=============+=============+=============+========================================================+
-|    sync            |    Boolean  |  True/False |    True     | This property is to enable the synchronization         |
-|                    |             |             |             | between master and slave pads buffers.                 |
-|                    |             |             |             | If sync=true is set, then the metadata is scaled       |
-|                    |             |             |             | and attached to buffers on slave pads that have        |
-|                    |             |             |             | matching PTS or PTS falls within frame duration of the |
-|                    |             |             |             | buffer on the master sink pad.                         |
-|                    |             |             |             | If sync=false is set on the element, then the          |
-|                    |             |             |             | metadata is scaled and attached to all the             |
-|                    |             |             |             | buffers on the slave pads. If this option is used,     |
-|                    |             |             |             | there is possibility that the metadata is not          |  
-|                    |             |             |             | suitable for the frames/buffers that are not           |
-|                    |             |             |             | corresponding to the frames/buffers on the master      |
-|                    |             |             |             | pad.                                                   |
-+--------------------+-------------+-------------+-------------+--------------------------------------------------------+
++--------------------+-------------+------------------+-------------+--------------------------------------------------------+
+|                    |             |                  |             |                                                        |
+| **Property Name**  |   **Type**  |  **Range**       | **Default** |                   **Description**                      |
+|                    |             |                  |             |                                                        |
++====================+=============+==================+=============+========================================================+
+|    sync            |    Boolean  |  True/False      |    True     | This property is to enable the synchronization         |
+|                    |             |                  |             | between master and slave pads buffers.                 |
+|                    |             |                  |             | If sync=true is set, then the metadata is scaled       |
+|                    |             |                  |             | and attached to buffers on slave pads that have        |
+|                    |             |                  |             | matching PTS or PTS falls within frame duration of the |
+|                    |             |                  |             | buffer on the master sink pad.                         |
+|                    |             |                  |             | If sync=false is set on the element, then the          |
+|                    |             |                  |             | metadata is scaled and attached to all the             |
+|                    |             |                  |             | buffers on the slave pads. If this option is used,     |
+|                    |             |                  |             | there is possibility that the metadata is not          |  
+|                    |             |                  |             | suitable for the frames/buffers that are not           |
+|                    |             |                  |             | corresponding to the frames/buffers on the master      |
+|                    |             |                  |             | pad.                                                   |
++--------------------+-------------+------------------+-------------+--------------------------------------------------------+
+|    timeout         |    Int64    |  -1 to           |    2000     | Timeout in millisec.                                   |
+|                    |             |  9223372036854   |             |                                                        |
++--------------------+-------------+------------------+-------------+--------------------------------------------------------+
 
 
 Pad naming syntax
 ---------------------------
+
 The pad naming syntax is listed, and the following image shows the syntax:
 
 * MetaAffixer master input pad should be named sink_master.
@@ -94,6 +100,7 @@ The pad naming syntax is listed, and the following image shows the syntax:
 
 Example Pipelines
 -----------------------------
+
 This section covers the example pipelines using the metaaffixer plug-in. 
 
 .. code-block::
@@ -103,7 +110,7 @@ This section covers the example pipelines using the metaaffixer plug-in.
         ! queue \
         ! videoconvert \
         ! queue \
-        ! ima.sink_master ivas_xmetaaffixer name=ima ima.src_master \
+        ! ima.sink_master vvas_xmetaaffixer name=ima ima.src_master \
         ! queue \
         ! fakesink videotestsrc num-buffers=1 \
         ! video/x-raw, width=1920, height=1080, format=NV12 \
@@ -115,13 +122,13 @@ This section covers the example pipelines using the metaaffixer plug-in.
         ! fakesink -v
 
 
-.. _ivas_xabrscaler:
+.. _vvas_xabrscaler:
 
 
-ivas_xabrscaler
+vvas_xabrscaler
 ================
 
-In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. ivas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ivas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. For more implementation details, refer to `ivas_xabrscaler source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/abrscaler>`_.
+In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. vvas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The vvas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. For more implementation details, refer to `vvas_xabrscaler source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/abrscaler>`_.
 
 This plug-in supports:
 
@@ -133,11 +140,11 @@ This plug-in supports:
 
 * Each output pad has independent resolution and color space conversion capability.
 
-.. important:: The `ivas_xabrscaler` plug-in controls the multiscaler kernel. If your application uses this plug-in, then make sure that multi-scaler kernel is included in your hardware design.
+.. important:: The `vvas_xabrscaler` plug-in controls the multiscaler kernel. If your application uses this plug-in, then make sure that multi-scaler kernel is included in your hardware design.
 
 .. important:: Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application. 
 
-As a reference, maximum resolution supported by multi-scaler kernel in ``Smart Model Select`` example design can be found in  `multi-scaler kernel config <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33>`_
+As a reference, maximum resolution supported by multi-scaler kernel in ``Smart Model Select`` example design can be found in  `multi-scaler kernel config <https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33>`_
 
 Prerequisite
 ----------------
@@ -167,65 +174,108 @@ This plug-in accepts buffers with the following color format standards:
 * BGR
 * RGBA
 * BGRA
+* I420
 
 .. important:: Make sure that the color formats needed for your application are supported by the multi-scaler hardware kernel. 
 
 
-As a reference, multi-scaler configuration for ``smart model select`` example design can be found in `multi-scaler configuration <https://github.com/Xilinx/VVAS/blob/master/ivas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h>`_
+As a reference, multi-scaler configuration for ``smart model select`` example design can be found in `multi-scaler configuration <https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h>`_
 
 
 Control Parameters and Plug-in Properties
 ------------------------------------------------
 
-The following table lists the GStreamer plug-in properties supported by the ivas_xabrscaler plug-in.
+The following table lists the GStreamer plug-in properties supported by the vvas_xabrscaler plug-in.
 
-Table 3: ivas_xabrscaler Plug-in Properties
+Table 3: vvas_xabrscaler Plug-in Properties
 
-+--------------------+-------------+---------------+-------------+------------------+
-|                    |             |               |             |                  |
-|  **Property Name** |   **Type**  | **Range**     | **Default** | **Description**  |
-|                    |             |               |             |                  |
-+====================+=============+===============+=============+==================+
-|                    |    string   |    N/A        | ./binary    | The              |
-|  xclbin-location   |             |               | _contain    | location of      |
-|                    |             |               | er_1.xclbin | xclbin.          |
-+--------------------+-------------+---------------+-------------+------------------+
-|                    |    string   |    N/A        |             | Kernel name      |
-| kernel-name        |             |               | v_multi_    | and              |
-|                    |             |               | scaler:     | instance         |
-|                    |             |               | multi_      | separated        |
-|                    |             |               | scaler_1    | by a colon.      |
-+--------------------+-------------+---------------+-------------+------------------+
-|    dev-idx         |    integer  | 0 to 31       |    0        | Device index     |
-|                    |             |               |             | This is valid    |
-|                    |             |               |             | only in PCIe/    |
-|                    |             |               |             | Data Center      |
-|                    |             |               |             | platforms.       |
-+--------------------+-------------+---------------+-------------+------------------+
-|    ppc             |    integer  | 1, 2, 4       |    2        | Pixel per        |
-|                    |             |               |             | clock            |
-|                    |             |               |             | supported        |
-|                    |             |               |             | by a multi-      |
-|                    |             |               |             | scaler           |
-|                    |             |               |             | kernel           |
-+--------------------+-------------+---------------+-------------+------------------+
-|   scale-mode       |    integer  | 0, 1, 2       |    0        | Scale algorithm  |
-|                    |             |               |             | to use:          |
-|                    |             |               |             | 0:BILINEAR       |
-|                    |             |               |             | 1:BICUBIC        |
-|                    |             |               |             | 2:POLYPHASE      |
-+--------------------+-------------+---------------+-------------+------------------+
-|    coef-load-type  |  integer    | 0 => Fixed    |    1        | Type of filter   |
-|                    |             | 1 => Auto     |             | Coefficients to  |
-|                    |             |               |             | be used: Fixed   |
-|                    |             |               |             | or Auto          |
-|                    |             |               |             | generated        |
-+--------------------+-------------+---------------+-------------+------------------+
-|    num-taps        |  integer    | 6=>6 taps     |    1        | Number of filter |
-|                    |             | 8=>8 taps     |             | taps to be used  |
-|                    |             | 10=>10 taps   |             | for scaling      |
-|                    |             | 12=>12 taps   |             |                  |
-+--------------------+-------------+---------------+-------------+------------------+
++--------------------+-------------+---------------+------------------------+------------------+
+|                    |             |               |                        |                  |
+|  **Property Name** |   **Type**  | **Range**     | **Default**            | **Description**  |
+|                    |             |               |                        |                  |
++====================+=============+===============+========================+==================+
+| avoid-output-copy  |   Boolean   | true/false    | False                  | Avoid output     |
+|                    |             |               |                        | frames copy on   |
+|                    |             |               |                        | all source pads  |
+|                    |             |               |                        | even when        |
+|                    |             |               |                        | downstream does  |
+|                    |             |               |                        | not support      |
+|                    |             |               |                        | GstVideoMeta     |
+|                    |             |               |                        | metadata         |
++--------------------+-------------+---------------+------------------------+------------------+
+| enable-pipeline    |    Boolean  |  true/false   | false                  | Enable buffer    |
+|                    |             |               |                        | pipelining to    |
+|                    |             |               |                        | improve          |
+|                    |             |               |                        | performance in   |
+|                    |             |               |                        | non zero-copy    |
+|                    |             |               |                        | use cases        |
++--------------------+-------------+---------------+------------------------+------------------+
+| in-mem-bank        | Unsigned int|  0 - 65535    | 0                      | VVAS input memory|
+|                    |             |               |                        | bank to allocate |
+|                    |             |               |                        | memory           |
++--------------------+-------------+---------------+------------------------+------------------+
+| out-mem-bank       | Unsigned int|  0 - 65535    | 0                      | VVAS o/p memory  |
+|                    |             |               |                        | bank to allocate |
+|                    |             |               |                        | memory           |
++--------------------+-------------+---------------+------------------------+------------------+
+|                    |    string   |    N/A        | ./binary_container_1   | The              |
+|  xclbin-location   |             |               | xclbin                 | location of      |
+|                    |             |               |                        | xclbin.          |
++--------------------+-------------+---------------+------------------------+------------------+
+|                    |    string   |    N/A        |                        | Kernel name      |
+| kernel-name        |             |               | v_multi_scaler:        | and              |
+|                    |             |               | multi_scaler_1         | instance         |
+|                    |             |               |                        | separated        |
+|                    |             |               |                        | by a colon.      |
++--------------------+-------------+---------------+------------------------+------------------+
+|    dev-idx         |    integer  | 0 to 31       |    0                   | Device index     |
+|                    |             |               |                        | This is valid    |
+|                    |             |               |                        | only in PCIe/    |
+|                    |             |               |                        | Data Center      |
+|                    |             |               |                        | platforms.       |
++--------------------+-------------+---------------+------------------------+------------------+
+|    ppc             |    integer  | 1, 2, 4       |    2                   | Pixel per        |
+|                    |             |               |                        | clock            |
+|                    |             |               |                        | supported        |
+|                    |             |               |                        | by a multi-      |
+|                    |             |               |                        | scaler           |
+|                    |             |               |                        | kernel           |
++--------------------+-------------+---------------+------------------------+------------------+
+|   scale-mode       |    integer  | 0, 1, 2       |    0                   | Scale algorithm  |
+|                    |             |               |                        | to use:          |
+|                    |             |               |                        | 0:BILINEAR       |
+|                    |             |               |                        | 1:BICUBIC        |
+|                    |             |               |                        | 2:POLYPHASE      |
++--------------------+-------------+---------------+------------------------+------------------+
+|    coef-load-type  |  integer    | 0 => Fixed    |    1                   | Type of filter   |
+|                    |             | 1 => Auto     |                        | Coefficients to  |
+|                    |             |               |                        | be used: Fixed   |
+|                    |             |               |                        | or Auto          |
+|                    |             |               |                        | generated        |
++--------------------+-------------+---------------+------------------------+------------------+
+|    num-taps        |  integer    | 6=>6 taps     |    1                   | Number of filter |
+|                    |             | 8=>8 taps     |                        | taps to be used  |
+|                    |             | 10=>10 taps   |                        | for scaling      |
+|                    |             | 12=>12 taps   |                        |                  |
++--------------------+-------------+---------------+------------------------+------------------+
+|    alpha-b         |  float      | 0 to 128      |    0                   | Mean subreaction |
+|                    |             |               |                        | for blue channel |
++--------------------+-------------+---------------+------------------------+------------------+
+|    alpha-g         |  float      | 0 to 128      |    0                   | Mean subreaction |
+|                    |             |               |                        | for green channel|
++--------------------+-------------+---------------+------------------------+------------------+
+|    alpha-r         |  float      | 0 to 128      |    0                   | Mean subreaction |
+|                    |             |               |                        | for red  channel |
++--------------------+-------------+---------------+------------------------+------------------+
+|    beta-b          |  float      | 0 to 1        |    1                   | Scaling for blue |
+|                    |             |               |                        | channel          |
++--------------------+-------------+---------------+------------------------+------------------+
+|    beta-g          |  float      | 0 to 1        |    1                   | scaling for green|
+|                    |             |               |                        | channel          |
++--------------------+-------------+---------------+------------------------+------------------+
+|    beta-r          |  float      | 0 to 1        |    1                   | scaling for red  |
+|                    |             |               |                        | channel          |
++--------------------+-------------+---------------+------------------------+------------------+
 
 
 Example Pipelines
@@ -235,20 +285,20 @@ Example Pipelines
 One input one output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following example configures ivas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed from NV12 to BGR.
+The following example configures vvas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed from NV12 to BGR.
 
 .. code-block::
 
       gst-launch-1.0 videotestsrc num-buffers=100 \
       ! "video/x-raw, width=1280, height=720, format=NV12" \
-      ! ivas_xabrscaler xclbin-location="/usr/lib/dpu.xclbin" kernel-name=v_multi_scaler:v_multi_scaler_1 \
+      ! vvas_xabrscaler xclbin-location="/usr/lib/dpu.xclbin" kernel-name=v_multi_scaler:v_multi_scaler_1 \
       ! "video/x-raw, width=640, height=360, format=BGR" ! fakesink -v
 
 
 One input multiple output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following example configures ivas_xabrscaler for one input and three outputs. The input is 1920 x 1080 resolution in NV12 format. There are three output formats:
+The following example configures vvas_xabrscaler for one input and three outputs. The input is 1920 x 1080 resolution in NV12 format. There are three output formats:
 
 * 1280 x 720 in BGR format
 
@@ -260,7 +310,7 @@ The following example configures ivas_xabrscaler for one input and three outputs
 
         gst-launch-1.0 videotestsrc num-buffers=100 \
         ! "video/x-raw, width=1920, height=1080, format=NV12, framerate=60/1" \
-        ! ivas_xabrscaler xclbin-location="/usr/lib/dpu.xclbin" kernel-name=v_multi_scaler:v_multi_scaler_1 name=sc sc.src_0 \
+        ! vvas_xabrscaler xclbin-location="/usr/lib/dpu.xclbin" kernel-name=v_multi_scaler:v_multi_scaler_1 name=sc sc.src_0 \
         ! queue \
         ! "video/x-raw, width=1280, height=720, format=BGR" \
         ! fakesink sc.src_1 \
@@ -271,6 +321,231 @@ The following example configures ivas_xabrscaler for one input and three outputs
         ! "video/x-raw, width=640, height=480, format=NV12" \
         ! fakesink -v
 
+.. _vvas_xinfer:
+
+vvas_xinfer
+================
+
+GStreamer inference vvas_xinfer plugin performs inferencing on video frames with the help of Vitis AI library and prepares tree like metadata in GstInferenceMeta object and attaches the same to input GstBuffer. This plugin triggers optional preprocessing (scale/crop & etc.) operations with the help of VVAS scaler kernel library (which is on top of Xilinx's multiscaler IP) on incoming video frames before calling VVAS inference kernel library. vvas_xinfer plugin's input capabilities are influenced by preprocessing library input capabilities and Vitis AI library capabilities (Vitis-AI does software scaling). This plugin disables preprocessing whenever the input resolution & color format is same as inference engine's resolution & color format. If preprocessing is enabled and vvas_xinfer plugin is receiving non-CMA memory frames, then data copy will be made to ensure CMA frames goes to preprocessing engine. The main advantage of this plugin is users/customers can realize inference cascading use cases with ease.
+
+.. figure:: ../images/vvas_xinfer_blockdiagram.png
+   :align: center
+   :scale: 80
+
+
+Input and Output
+--------------------
+  * Accepts buffers with GRAY8/ NV12/ BGR/ RGB/ YUY2/ r210/ v308/ GRAY10_LE32/ ABGR/ ARGB color formats on input GstPad & output GstPad.
+  * Attaches GstInferenceMeta metadata to output GstBuffer
+
+Control Parameters
+--------------------
+
+.. list-table:: Control Parameters
+   :widths: 20 10 10 10 50
+   :header-rows: 1
+
+   * - Property Name
+     - Type
+     - Range
+     - Default
+     - Description
+   * - dynamic-config
+     - String
+     - N/A
+     - Null
+     - String contains dynamic json configuration of inference accelration library
+   * - infer-config
+     - String
+     - N/A
+     - Null
+     - location of the inference kernel library configuration file in json format
+   * - preprocess-config
+     - String
+     - N/A
+     - Null
+     - location of the kernels config file in json format
+
+infer-config json members
+-------------------------
+
++---------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Json key            | Item               | Item description                                                                                                                                                           |
++=====================+====================+============================================================================================================================================================================+
+|                     | Description        | VVAS libraries repository path to look for kernel libraries by VVAS GStreamer plugin                                                                                       |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Value type         | String                                                                                                                                                                     |
+| vvas-library-repo   +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Mandatory/Optional | Optional                                                                                                                                                                   |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Default value      | /usr/lib in Embedded platforms                                                                                                                                             |
+|                     |                    | /opt/xilinx/vvas/lib in PCIe platforms                                                                                                                                     |
++---------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Description        | Inference level in cascaded inference use case. e.g. Object detection ML (level-1) followed by object classification (level-2) on detected objects                         |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Value type         | Integer                                                                                                                                                                    |
+| inference-level     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Mandatory/Optional | Optional                                                                                                                                                                   |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Default value      | 1                                                                                                                                                                          |
++---------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Description        | Parameter to enable/disable low-latency mode in vvas_xinfer and it is useful only when inference-level > 1.                                                                |
+|                     |                    | If enabled, then vvas_xinfer plugin will not wait for batch-size frames to be accumulated to reduce latency. If disabled, inference engine can work at maximum throughput. |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| low-latency         | Value type         | Boolean                                                                                                                                                                    |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Mandatory/Optional | Optional                                                                                                                                                                   |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Default value      | false                                                                                                                                                                      |
++---------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Description        | Maximum number of input frames those can be queued inside the plugin.                                                                                                      |
+|                     |                    | When low-latency is disabled, vvas_xinfer plugin will wait for inference-max-queue buffers until batch-size is accumulated                                                 |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| inference-max-queue | Value type         | Integer                                                                                                                                                                    |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Mandatory/Optional | Optional                                                                                                                                                                   |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Default value      | batch-size                                                                                                                                                                 |
++---------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Description        | Attaches output of preprocessing library to GstInferenceMeta to avoid redoing of the preprocessing if required.                                                            |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Value type         | Boolean                                                                                                                                                                    |
+| attach-ppe-outbuf   +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Mandatory/Optional | Optional                                                                                                                                                                   |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Default value      | False                                                                                                                                                                      |
++---------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Description        | Kernel object provides information about an VVAS kernel library configuration and kernel library name                                                                      |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Value type         | JSON Object                                                                                                                                                                |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| kernel              | Mandatory/Optional | Mandatory                                                                                                                                                                  |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Default value      | None                                                                                                                                                                       |
+|                     +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                     | Object Members     | members of kernel JSON object are mentioned below                                                                                                                          |
++---------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+infer-config::kernel json members
+---------------------------------
+
++--------------+--------------------+---------------------------------------------------------------------------------------------------------------------+
+| JSON key     | Item               | Description                                                                                                         |
++==============+====================+=====================================================================================================================+
+|              | Description        | Name of inference kernel library to be loaded for inferencing                                                       |
+|              +--------------------+---------------------------------------------------------------------------------------------------------------------+
+|              | Value type         | String                                                                                                              |
+| library-name +--------------------+---------------------------------------------------------------------------------------------------------------------+
+|              | Mandatory/Optional | Mandatory                                                                                                           |
+|              +--------------------+---------------------------------------------------------------------------------------------------------------------+
+|              | Default value      | NULL                                                                                                                |
++--------------+--------------------+---------------------------------------------------------------------------------------------------------------------+
+|              | Description        | Inference kernel specific configuration                                                                             |
+|              +--------------------+---------------------------------------------------------------------------------------------------------------------+
+|              | Value type         | JSON object                                                                                                         |
+|              +--------------------+---------------------------------------------------------------------------------------------------------------------+
+| config       | Mandatory/Optional | Mandatory                                                                                                           |
+|              +--------------------+---------------------------------------------------------------------------------------------------------------------+
+|              | Default value      | None                                                                                                                |
+|              +--------------------+---------------------------------------------------------------------------------------------------------------------+
+|              | Object members     | Contains members specific to inference kernel library. See vvas_xdpuinfer acceleration library for more information |
++--------------+--------------------+---------------------------------------------------------------------------------------------------------------------+
+
+preprocess-config json members
+------------------------------
+
+Table 5 preprocess-config json members
+
++-------------------+--------------------+-------------------------------------------------------------------------------------------------------+
+| Json key          | Item               | Item description                                                                                      |
++===================+====================+=======================================================================================================+
+|                   | Description        | Location of xclbin which contains scaler IP to program FPGA device based on device-index property     |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Value type         | String                                                                                                |
+| xclbin-location   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Mandatory/Optional | Mandatory                                                                                             |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Default value      | NULL                                                                                                  |
++-------------------+--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Description        | VVAS libraries repository path to look for kernel libraries by VVAS GStreamer plugin                  |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Value type         | String                                                                                                |
+| vvas-library-repo +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Mandatory/Optional | Optional                                                                                              |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Default value      | /usr/lib in Embedded platforms                                                                        |
+|                   |                    | /opt/xilinx/vvas/lib in PCIe platforms                                                                |
++-------------------+--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Description        | Device index on which scaler IP is present                                                            |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Value type         | Integer                                                                                               |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+| device-index      | Mandatory/Optional | Mandatory in PCIe platforms                                                                           |
+|                   |                    | In embedded platforms, device-index is not an applicable option as it is always zero                  |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Default value      | -1 in PCIe platforms                                                                                  |
+|                   |                    | 0 in Embedded platforms                                                                               |
++-------------------+--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Description        | Kernel object provides information about an VVAS kernel library configuration and kernel library name |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Value type         | JSON Object                                                                                           |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+| kernel            | Mandatory/Optional | Mandatory                                                                                             |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Default value      | None                                                                                                  |
+|                   +--------------------+-------------------------------------------------------------------------------------------------------+
+|                   | Object Members     | members of kernel JSON object are mentioned below                                                     |
++-------------------+--------------------+-------------------------------------------------------------------------------------------------------+
+
+preprocess-config::kernel json members
+---------------------------------------
+
+Table 3: preprocess-config::kernel json members
+
++--------------+--------------------+----------------------------------------------------------------------------+
+| JSON key     | Item               | Description                                                                |
++==============+====================+============================================================================+
+|              | Description        | Name of inference kernel library to be loaded for inferencing              |
+|              +--------------------+----------------------------------------------------------------------------+
+|              | Value type         | String                                                                     |
+| library-name +--------------------+----------------------------------------------------------------------------+
+|              | Mandatory/Optional | Mandatory                                                                  |
+|              +--------------------+----------------------------------------------------------------------------+
+|              | Default value      | NULL                                                                       |
++--------------+--------------------+----------------------------------------------------------------------------+
+|              | Description        | Name of the preprocessing kernel. Syntax : "<kernel_name>:<instance_name>" |
+|              +--------------------+----------------------------------------------------------------------------+
+|              | Value type         | String                                                                     |
+| kernel-name  +--------------------+----------------------------------------------------------------------------+
+|              | Mandatory/Optional | Mandatory                                                                  |
+|              +--------------------+----------------------------------------------------------------------------+
+|              | Default value      | NULL                                                                       |
++--------------+--------------------+----------------------------------------------------------------------------+
+|              | Description        | preprocess kernel specific configuration                                   |
+|              +--------------------+----------------------------------------------------------------------------+
+|              | Value type         | JSON object                                                                |
+|              +--------------------+----------------------------------------------------------------------------+
+| config       | Mandatory/Optional | Mandatory                                                                  |
+|              +--------------------+----------------------------------------------------------------------------+
+|              | Default value      | None                                                                       |
+|              +--------------------+----------------------------------------------------------------------------+
+|              | Object members     | Contains members specific to preprocess kernel library                     |
++--------------+--------------------+----------------------------------------------------------------------------+
+
+* Example Simple inference (YOLOv3) pipeline which takes NV12 YUV file (test.nv12) as input is described below:
+
+.. code-block::
+  
+  gst-launch-1.0 filesrc location=<test.nv12> ! videoparse width=1920 height=1080 format=nv12 ! \
+  vvas_xinfer preprocess-config=yolo_preproc.json infer-config=yolov3_voc.json ! fakesink -v
+
+* Example cascade inference (YOLOv3+Resnet18) pipeline which takes NV12 YUV file (test.nv12) as input is described below:
+
+.. code-block::
+
+  gst-launch-1.0 filesrc location=<test.nv12> ! videoparse width=1920 height=1080 format=nv12 ! \
+  vvas_xinfer preprocess-config=yolo_preproc.json infer-config=yolov3_voc.json ! queue ! \
+  vvas_xinfer preprocess-config=resnet_preproc.json infer-config=resnet18.json ! fakesink -v
 
 .. _infra_plugins_label:
 
@@ -286,18 +561,18 @@ Table 5: Infrastructure Plug-ins
 |  **Infrastructure Plug-ins**           |          **Function**            |
 |                                        |                                  |
 +========================================+==================================+
-|    ivas_xfilter                        | Plug-in has one input, one output|
+|    vvas_xfilter                        | Plug-in has one input, one output|
 |                                        | Support Transform, passthrough   |
 |                                        | and inplace transform operations |
 +----------------------------------------+----------------------------------+
-|    ivas_xmultisrc                      | Plug-in support one input and    |
+|    vvas_xmultisrc                      | Plug-in support one input and    |
 |                                        | multiple output pads.            |
 |                                        | Support transform operation      |
 +----------------------------------------+----------------------------------+
 
 .. note::
 
-        Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend using ivas_xfilter plugin for one input and one output kernels.
+        Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend using vvas_xfilter plugin for one input and one output kernels.
 
 
 Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.
@@ -308,25 +583,25 @@ Table 6: Acceleration Software Libraries
 |  **Acceleration Software Library**     |          **Function**            |
 |                                        |                                  |
 +========================================+==================================+
-|    ivas_xdpuinfer                      |    Library based on Vitis AI to  |
+|    vvas_xdpuinfer                      |    Library based on Vitis AI to  |
 |                                        |    control DPU kernels for       |
 |                                        |    machine learning.             |
 +----------------------------------------+----------------------------------+
-|    ivas_xboundingbox                   |    Library to draw a bounding    |
+|    vvas_xboundingbox                   |    Library to draw a bounding    |
 |                                        |    box and labels on the frame   |
 |                                        |    using OpenCV.                 |
 +----------------------------------------+----------------------------------+
 
 
-The GStreamer infrastructure plug-ins are available in the ivas-gst-plugins repository/ folder. The following section describes each infrastructure plug-in.
+The GStreamer infrastructure plug-ins are available in the vvas-gst-plugins repository/ folder. The following section describes each infrastructure plug-in.
 
-.. _ivas_xfilter:
+.. _vvas_xfilter:
 
 
-ivas_xfilter
+vvas_xfilter
 ==========================
 
-The GStreamer ivas_xfilter is an infrastructure plug-in that is derived from GstBaseTransform. It supports one input pad and one output pad. The ivas_xfilter efficiently works with hard-kernel/soft-kernel/software (user-space) acceleration software library types as shown in the following figure.
+The GStreamer vvas_xfilter is an infrastructure plug-in that is derived from GstBaseTransform. It supports one input pad and one output pad. The vvas_xfilter efficiently works with hard-kernel/soft-kernel/software (user-space) acceleration software library types as shown in the following figure.
 
 .. figure:: ../images/image8.png 
 
@@ -342,18 +617,18 @@ You must set the mode using the JSON file. Refer to :doc:`JSON File Schema <B-JS
 
 .. figure:: ../images/image9.png 
 
-The ivas_xfilter plug-in takes configuration file as one of the input properties, kernels- config. This configuration file is in JSON format and contains information required by the kernel. During initialization, the ivas_xfilter parses the JSON file and performs the following tasks:
+The vvas_xfilter plug-in takes configuration file as one of the input properties, kernels- config. This configuration file is in JSON format and contains information required by the kernel. During initialization, the vvas_xfilter parses the JSON file and performs the following tasks:
 
 * Finds the VVAS acceleration software library in the path and loads the shared library.
 
-* Understands the acceleration software library type and prepares the acceleration software library handle (IVASKernel) to be passed to the core APIs.
+* Understands the acceleration software library type and prepares the acceleration software library handle (VVASKernel) to be passed to the core APIs.
 
 
 
 Input and Output
 -------------------
 
-The ivas_xfilter accepts the buffers with the following color formats on input GstPad and output GstPad.
+The vvas_xfilter accepts the buffers with the following color formats on input GstPad and output GstPad.
 
 * GRAY8
 * NV12
@@ -366,14 +641,14 @@ The ivas_xfilter accepts the buffers with the following color formats on input G
 * ABGR
 * ARGB
 
-The formats listed are the Xilinx IP supported color formats. To add other color formats, update the ivas_kernel.h and ivas_xfilter plug-ins.
+The formats listed are the Xilinx IP supported color formats. To add other color formats, update the vvas_kernel.h and vvas_xfilter plug-ins.
 
 
 
 Control Parameters and Plug-in Properties
 --------------------------------------------
 
-The following table lists the GObject properties exposed by the ivas_xfilter. Most of them are only available in PCIe supported platforms.
+The following table lists the GObject properties exposed by the vvas_xfilter. Most of them are only available in PCIe supported platforms.
 
 Table 6: GObject Properties
 
@@ -409,10 +684,10 @@ Table 6: GObject Properties
 
 
 
-JSON Format for ivas_xfilter Plug-in
+JSON Format for vvas_xfilter Plug-in
 ---------------------------------------
 
-The following table provides the JSON keys accepted by the GStreamer ivas_xfilter plug-in.
+The following table provides the JSON keys accepted by the GStreamer vvas_xfilter plug-in.
 
 Table 7: Root JSON Object Members
 
@@ -456,7 +731,7 @@ Table 7: Root JSON Object Members
 +----------------------+----------------------+-----------------------------------+
 |                      | Default value        | NULL                              |
 +----------------------+----------------------+-----------------------------------+
-| ivas-library-repo    | Description          | This is the VVAS                  |
+| vvas-library-repo    | Description          | This is the VVAS                  |
 |                      |                      | libraries repository              |
 |                      |                      | path to look for                  |
 |                      |                      | acceleration                      |
@@ -516,7 +791,7 @@ Table 7: Root JSON Object Members
 |                      |                      | acceleration                      |
 |                      |                      | software library                  |
 |                      |                      | configuration. The                |
-|                      |                      | ivas_xfilter only                 |
+|                      |                      | vvas_xfilter only                 |
 |                      |                      | takes the first                   |
 |                      |                      | kernel object in the              |
 |                      |                      | kernel array.                     |
@@ -556,7 +831,7 @@ Table 8: Kernel JSON Object Members
 |                      |                      | kernel library is        |
 |                      |                      | formed by the            |
 |                      |                      | pre-pending              |
-|                      |                      | ivas-library-repo        |
+|                      |                      | vvas-library-repo        |
 |                      |                      | path.                    |
 +----------------------+----------------------+--------------------------+
 |                      | Value type           | String                   |
@@ -619,7 +894,7 @@ Table 8: Kernel JSON Object Members
 |                      |                      | embedded platforms.      |
 +----------------------+----------------------+--------------------------+
 
-For ``ivas_xfilter`` implementation details, refer to `ivas_xfilter source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/filter>`_
+For ``vvas_xfilter`` implementation details, refer to `vvas_xfilter source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/filter>`_
 
 
 Example JSON Configuration Files
@@ -634,11 +909,11 @@ The following JSON file is for pure software-based acceleration, it does not inv
 .. code-block::
 
          {
-            "ivas-library-repo": "/usr/lib/",
+            "vvas-library-repo": "/usr/lib/",
             "element-mode":"inplace",
             "kernels" :[
                {
-                  "library-name":"libivas_xdpuinfer.so",
+                  "library-name":"libvvas_xdpuinfer.so",
                   "config": {
                      "model-name" : "densebox_320_320",
                      "model-class" : "FACEDETECT",
@@ -659,18 +934,18 @@ The following JSON file is for pure software-based acceleration, it does not inv
 JSON File for a Hard Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following JSON file uses ivas_xfilter to control multi-scaler IP (hard-kernel). The acceleration software library accessing the register map is libivas_xcrop.so.
+The following JSON file uses vvas_xfilter to control multi-scaler IP (hard-kernel). The acceleration software library accessing the register map is libvvas_xcrop.so.
 
 .. code-block::
 
       {
          "xclbin-location":"/usr/lib/dpu.xclbin",
-         "ivas-library-repo": "/usr/lib/",
+         "vvas-library-repo": "/usr/lib/",
          "element-mode":"passthrough",
          "kernels" :[
              {
                 "kernel-name":"v_multi_scaler:v_multi_scaler_1",
-                "library-name":"libivas_xcrop.so",
+                "library-name":"libvvas_xcrop.so",
                 "config": {
                 }
              }
@@ -681,22 +956,22 @@ The following JSON file uses ivas_xfilter to control multi-scaler IP (hard-kerne
 Example Pipelines
 --------------------------
 
-This section covers the GStreamer example pipelines using the ``ivas_xfilter`` infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the ivas_xfilter plug-in.
+This section covers the GStreamer example pipelines using the ``vvas_xfilter`` infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the vvas_xfilter plug-in.
 
-* The bounding box functionality is implemented in the ``ivas_xboundingbox`` acceleration software library that is controlled by the ``ivas_xfilter`` plug-in.
+* The bounding box functionality is implemented in the ``vvas_xboundingbox`` acceleration software library that is controlled by the ``vvas_xfilter`` plug-in.
 
-* Machine learning using the DPU is implemented by the ``ivas_xdpuinfer`` acceleration software library that is called by the ``ivas_xfilter`` plug-in.
+* Machine learning using the DPU is implemented by the ``vvas_xdpuinfer`` acceleration software library that is called by the ``vvas_xfilter`` plug-in.
 
-.. _ivas_xboundingbox:
+.. _vvas_xboundingbox:
 
 Bounding Box Example
 ============================
 
-This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in ``ivas_xfilter`` and the ``ivas_xboundingbox`` acceleration software library. The ivas_xboundingbox interprets machine learning inference results from the ivas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.
+This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in ``vvas_xfilter`` and the ``vvas_xboundingbox`` acceleration software library. The vvas_xboundingbox interprets machine learning inference results from the vvas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.
 
-For ``ivas_xboundingbox`` implementation details, refer to `ivas_xboundingbox source code <https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xboundingbox>`_
+For ``vvas_xboundingbox`` implementation details, refer to `vvas_xboundingbox source code <https://github.com/Xilinx/VVAS/tree/master/vvas-accel-sw-libs/vvas_xboundingbox>`_
 
-.. figure:: ../images/X24998-ivas-xboundingbox.png
+.. figure:: ../images/X24998-vvas-xboundingbox.png
 
 
 Prerequisites
@@ -704,27 +979,27 @@ Prerequisites
 
 There are a few requirements before start running bounding box examples. Make sure these prerequisites are met.
 
-* Installation of OpenCV: The ivas_xboundingbox uses OpenCV for the graphics back-end library to draw the boxes and labels. Install the libopencv-core-dev package (the preferred version is 3.2.0 or later).
+* Installation of OpenCV: The vvas_xboundingbox uses OpenCV for the graphics back-end library to draw the boxes and labels. Install the libopencv-core-dev package (the preferred version is 3.2.0 or later).
 
-.. _json-ivas_xboundingbox:
+.. _json-vvas_xboundingbox:
 
 
-JSON File for ivas_xboundingbox
+JSON File for vvas_xboundingbox
 -------------------------------------------
 
-This section describes the JSON file format and configuration parameters for the bounding box acceleration software library. The GStreamer ivas_xfilter plug-in used in the inplace mode. Bounding box and labels are drawn on identified objects on the incoming frame. Bounding box functionality is implemented in the libivas_xboundingbox.so acceleration software library.
+This section describes the JSON file format and configuration parameters for the bounding box acceleration software library. The GStreamer vvas_xfilter plug-in used in the inplace mode. Bounding box and labels are drawn on identified objects on the incoming frame. Bounding box functionality is implemented in the libvvas_xboundingbox.so acceleration software library.
 
-The following example is of a JSON file to pass to the ivas_xfilter.
+The following example is of a JSON file to pass to the vvas_xfilter.
 
 .. code-block::
 
       {
          "xclbin-location":"/usr/lib/dpu.xclbin",
-         "ivas-library-repo": "/usr/local/lib/ivas",
+         "vvas-library-repo": "/usr/local/lib/vvas",
          "element-mode":"inplace",
          "kernels" :[
             {
-               "library-name":"libivas_xboundingbox.so",
+               "library-name":"libvvas_xboundingbox.so",
                "config": {
                   "font_size" : 0.5,
                   "font" : 3,
@@ -759,7 +1034,7 @@ The following example is of a JSON file to pass to the ivas_xfilter.
 
 Various configuration parameters of the bounding box acceleration software library are described in the following table.
 
-Table 9: ivas_xboundingbox Parameters
+Table 9: vvas_xboundingbox Parameters
 
 +----------------------+----------------------+----------------------+
 |    **Parameter**     | **Expected Values**  |    **Description**   |
@@ -840,7 +1115,7 @@ Table 9: ivas_xboundingbox Parameters
 | classes              |    { "name" : "car", | This is a filtering  |
 |                      |                      | option when using    |
 |                      |    "blue" : 255,     | the                  |
-|                      |    "green" :         | ivas_xboundingbox.   |
+|                      |    "green" :         | vvas_xboundingbox.   |
 |                      |                      | The bounding box is  |
 |                      |    0, "red" : 0 }    | only drawn for the   |
 |                      |                      | classes that are     |
@@ -874,7 +1149,7 @@ Table 9: ivas_xboundingbox Parameters
 |                      |                      | this list matches the|
 |                      |                      | class names assigned |
 |                      |                      | by the               |
-|                      |                      | ivas_xdpuinfer.      |
+|                      |                      | vvas_xdpuinfer.      |
 |                      |                      | Otherwise, the       |
 |                      |                      | bounding box is not  |
 |                      |                      | drawn.               |
@@ -883,22 +1158,26 @@ Table 9: ivas_xboundingbox Parameters
 |                      |                      | keep the "classes"   |
 |                      |                      | array empty.         |
 +----------------------+----------------------+----------------------+
+| display_level        |  Integer 0 to N      | display bounding box |
+|                      |  0 => all levels     | of one particular    |
+|                      |  N => specific level | level or all levels  |
++----------------------+----------------------+----------------------+
 
 An example of using a bounding box along with the machine learning plug-in is shown in the :doc:`Multi Channel ML <../Embedded/Tutorials/MultiChannelML>` Tutorial.
 
 
-.. _ivas_xdpuinfer:
+.. _vvas_xdpuinfer:
 
 Machine Learning Example
 ===================================
 
-This section discusses how machine learning solutions can be implemented using the VVAS infrastructure ``ivas_xfilter`` plug-in and the ``ivas_xdpuinfer`` acceleration software library.
+This section discusses how machine learning solutions can be implemented using the VVAS infrastructure ``vvas_xfilter`` plug-in and the ``vvas_xdpuinfer`` acceleration software library.
 
 .. figure:: ../images/image11.png
 
-The ivas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The ivas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS meta data structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.
+The vvas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The vvas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS meta data structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.
 
-For ``ivas_xdpuinfer`` implementation details, refer to `ivas_xdpuinfer source code <https://github.com/Xilinx/VVAS/tree/master/ivas-accel-sw-libs/ivas_xdpuinfer>`_
+For ``vvas_xdpuinfer`` implementation details, refer to `vvas_xdpuinfer source code <https://github.com/Xilinx/VVAS/tree/master/vvas-accel-sw-libs/vvas_xdpuinfer>`_
 
 
 Prerequisites
@@ -930,17 +1209,17 @@ By default, the Vitis AI interface expects xclbin to be located at /usr/lib/ and
 Input Image
 ---------------------------------------------
 
-The ivas_xdpuinfer works with raw BGR and RGB images as required by the model. Make sure you have specified correct color format in model-format field in json file. The exact resolution of the image to ivas_xdpuinfer must be provided, it is expected by the model. There is a performance loss if a different resolution of the BGR image is provided to the ivas_xdpuinfer, because resizing is done on the CPU inside the Vitis AI library.
+The vvas_xdpuinfer works with raw BGR and RGB images as required by the model. Make sure you have specified correct color format in model-format field in json file. The exact resolution of the image to vvas_xdpuinfer must be provided, it is expected by the model. There is a performance loss if a different resolution of the BGR image is provided to the vvas_xdpuinfer, because resizing is done on the CPU inside the Vitis AI library.
 
-.. _json-ivas-dpuinfer:
+.. _json-vvas-dpuinfer:
 
 
-JSON File for ivas_xdpuinfer
+JSON File for vvas_xdpuinfer
 ---------------------------------------------
 
-The following table shows the JSON file format and configuration parameters for ivas_xdpuinfer.
+The following table shows the JSON file format and configuration parameters for vvas_xdpuinfer.
 
-Table 10: JSON File for ivas_xdpuinfer
+Table 10: JSON File for vvas_xdpuinfer
 
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Parameter         | Type    | Expected Values                         | Default      | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -949,15 +1228,15 @@ Table 10: JSON File for ivas_xdpuinfer
 |                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
 |                   |         |                                         |              | The environment variable XLNX_VART_FIRMWARE could also be used to change the path and the corresponding path can be updated in the JSON file. For example, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.                                                                                                                                                                                                 |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ivas-library-repo | string  | ``/usr/local/lib/ivas/``                | ``usr/lib/`` | This is the path where the ivas_xfilter will search the acceleration software library. The kernel name is specified in the library-name parameter of the JSON file.                                                                                                                                                                                                                                          |
+| vvas-library-repo | string  | ``/usr/local/lib/vvas/``                | ``usr/lib/`` | This is the path where the vvas_xfilter will search the acceleration software library. The kernel name is specified in the library-name parameter of the JSON file.                                                                                                                                                                                                                                          |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| element-mode      | string  | inplace                                 | None         | Because the input buffer is not modified by the ML operation, but the metadata generated out of an inference operation needs to be added/appended to the input buffer, the GstBuffer is writable. The ivas_xfilter is configured in inplace mode                                                                                                                                                             |
+| element-mode      | string  | inplace                                 | None         | Because the input buffer is not modified by the ML operation, but the metadata generated out of an inference operation needs to be added/appended to the input buffer, the GstBuffer is writable. The vvas_xfilter is configured in inplace mode                                                                                                                                                             |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | kernels           | N/A     | N/A                                     | N/A          | The JSON tag for starting the kernel specific configurations.                                                                                                                                                                                                                                                                                                                                                |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | kernel-name       | string  | N/A                                     | NULL         | The name and instance of a kernel separated by “:”                                                                                                                                                                                                                                                                                                                                                           |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| library-name      | string  | N/A                                     | NULL         | Acceleration software library name for the kernel. It is appended to the ivas-l ibrary-repo for an absolute path.                                                                                                                                                                                                                                                                                            |
+| library-name      | string  | N/A                                     | NULL         | Acceleration software library name for the kernel. It is appended to the vvas-l ibrary-repo for an absolute path.                                                                                                                                                                                                                                                                                            |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | config            | N/A     | N/A                                     | N/A          | The JSON tag for kernel-specific configurations depending on the acceleration software library.                                                                                                                                                                                                                                                                                                              |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -981,9 +1260,9 @@ Table 10: JSON File for ivas_xdpuinfer
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | model-path        | string  | ``/usr/share/vitis_ai_library/models/`` | N/A          | Path of the folder where the model to be executed is stored.                                                                                                                                                                                                                                                                                                                                                 |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| run_time_model    | Boolean | True/False                              | False        | If there is a requirement to change the ML model at the frame level, then set this flag to true. If this parameter is set to true then ivas_xdpuinfer will read the model name and class from the incoming input metadata and execute the same model found in the path specified in the model-path. The model-name and model-class parameter of the JSON file are not required when enabling this parameter. |
+| run_time_model    | Boolean | True/False                              | False        | If there is a requirement to change the ML model at the frame level, then set this flag to true. If this parameter is set to true then vvas_xdpuinfer will read the model name and class from the incoming input metadata and execute the same model found in the path specified in the model-path. The model-name and model-class parameter of the JSON file are not required when enabling this parameter. |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| need_preprocess   | Boolean | True/False                              | True         | If need_preprocess = true: Normalize with mean/scale through the Vitis AI Library If need_preprocess = false: Normalize with mean/scale is performed before feeding the frame to ivas_xdpuinfer. The Vitis AI library does not perform these operations.                                                                                                                                                     |
+| need_preprocess   | Boolean | True/False                              | True         | If need_preprocess = true: Normalize with mean/scale through the Vitis AI Library If need_preprocess = false: Normalize with mean/scale is performed before feeding the frame to vvas_xdpuinfer. The Vitis AI library does not perform these operations.                                                                                                                                                     |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | performance_test  | Boolean | True/False                              | False        | Enable performance test and corresponding flops per second (f/s) display logs. Calculates and displays the f/s of the standalone DPU after every second.                                                                                                                                                                                                                                                     |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1017,7 +1296,7 @@ This section describes a few example GStreamer pipelines.
 Classification Example Using Resnet50
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following pipeline performs ML using a Resnet50 model. DPU configuration uses kernels- config = ./json_files/kernel_resnet50.json for the ivas_xdpuinfer. The output of the ivas_xfilter is passed to fakesink along with the metadata.
+The following pipeline performs ML using a Resnet50 model. DPU configuration uses kernels- config = ./json_files/kernel_resnet50.json for the vvas_xdpuinfer. The output of the vvas_xfilter is passed to fakesink along with the metadata.
 
 .. figure:: ../images/example-using-resnet50-model.png 
 
@@ -1027,19 +1306,19 @@ The GStreamer command for the example pipeline:
 
       gst-launch-1.0 filesrc location="<PATH>/001.bgr" blocksize=150528 numbuffers=1 
       ! videoparse width=224 height=224 framerate=30/1 format=16 
-      ! ivas_xfilter name="kernel1" kernels-config="<PATH>/kernel_resnet50.json" 
+      ! vvas_xfilter name="kernel1" kernels-config="<PATH>/kernel_resnet50.json" 
       ! fakesink
   
-The JSON file for the ivas_xdpuinfer to execute ``resnet50`` model based classification pipeline is described below.
+The JSON file for the vvas_xdpuinfer to execute ``resnet50`` model based classification pipeline is described below.
 
 .. code-block::
 
         {
-           "ivas-library-repo": "/usr/local/lib/ivas/",
+           "vvas-library-repo": "/usr/local/lib/vvas/",
            "element-mode":"inplace",
            "kernels" :[
               {
-                 "library-name":"libivas_xdpuinfer.so",
+                 "library-name":"libvvas_xdpuinfer.so",
                  "config": {
                     "model-name" : "resnet50",
                     "model-class" : "CLASSIFICATION",
@@ -1057,19 +1336,19 @@ The JSON file for the ivas_xdpuinfer to execute ``resnet50`` model based classif
 
 .. note::
         If "need_preprocess" = false, then pre-processing operations like, Normalization, scaling must be
-        performed on the frame before feeding to ivas_xfilter/ivas_xdpuinfer otherwise results may not be as expected.
+        performed on the frame before feeding to vvas_xfilter/vvas_xdpuinfer otherwise results may not be as expected.
 
 
-.. _ivas_xmultisrc:
+.. _vvas_xmultisrc:
 
-ivas_xmultisrc
+vvas_xmultisrc
 ==============================
 
-The GStreamer ivas_xmultisrc plug-in can have one input pad and multiple-output pads. This single plug-in supports multiple acceleration kernels, each controlled by a separate acceleration software library.
+The GStreamer vvas_xmultisrc plug-in can have one input pad and multiple-output pads. This single plug-in supports multiple acceleration kernels, each controlled by a separate acceleration software library.
 
-For ``ivas_xmultisrc`` implementation details, refer to `ivas_xmultisrc source code <https://github.com/Xilinx/VVAS/tree/master/ivas-gst-plugins/sys/multisrc>`_
+For ``vvas_xmultisrc`` implementation details, refer to `vvas_xmultisrc source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/multisrc>`_
 
-.. figure:: ../images/ivas_xmultisrc.png
+.. figure:: ../images/vvas_xmultisrc.png
 
 
 Input and Output
@@ -1097,7 +1376,7 @@ Input and output accept buffers with the following color formats on input GstPad
 
 * ARGB
 
-The formats listed are the Xilinx IP supported color formats. To add other color formats, update the ivas_kernel.h and ivas_xfilter plug-ins.
+The formats listed are the Xilinx IP supported color formats. To add other color formats, update the vvas_kernel.h and vvas_xfilter plug-ins.
 
 
 Control Parameters and Plug-in Properties
@@ -1110,34 +1389,36 @@ Table 11: Plug-in Properties
 |  **Property Name** |  **Type**   |  **Range**  | **Default** |         **Description**                   |
 |                    |             |             |             |                                           |
 +====================+=============+=============+=============+===========================================+
-| Kconfig            |    String   |    N/A      |    NULL     | Path of the JSON configuration file based |
+| kconfig            |    String   |    N/A      |    NULL     | Path of the JSON configuration file based |
 |                    |             |             |             | on the VVAS acceleration software library |
 |                    |             |             |             | requirements. For further information,    |
 |                    |             |             |             | refer to :doc:`B-JSON-File-Schema`        |
 |                    |             |             |             |                                           |
 +--------------------+-------------+-------------+-------------+-------------------------------------------+
+| dynamic-config     |  String     |    N/A      |    NULL     |                                           |
++--------------------+-------------+-------------+-------------+-------------------------------------------+
 
 
-JSON File for ivas_xmultisrc
+JSON File for vvas_xmultisrc
 ---------------------------------------
 
-This section covers the format of JSON file/string to be passed to the ivas_xmultisrc plug-in.
+This section covers the format of JSON file/string to be passed to the vvas_xmultisrc plug-in.
 
 
 Example JSON File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following example file describes how to specify two kernels that are being controlled by the single instance of the ivas_xmultisrc plug-in. Modify this json file as per your kernels and acceleration software library. The next section describes each field in this example file.
+The following example file describes how to specify two kernels that are being controlled by the single instance of the vvas_xmultisrc plug-in. Modify this json file as per your kernels and acceleration software library. The next section describes each field in this example file.
 
 .. code-block::
 
       {
          "xclbin-location":"/usr/lib/binary_1.xclbin",
-         "ivas-library-repo": "/usr/lib/",
+         "vvas-library-repo": "/usr/lib/",
          "kernels" :[
             {
                "kernel-name":"resize:resize_1", <------------------ kernel 1
-               "library-name":"libivas_xresize.so",
+               "library-name":"libvvas_xresize.so",
                "config": {
                   x : 4,
                   y : 7
@@ -1167,7 +1448,7 @@ Table 12: JSON Properties
 |                    |             |             |             | allocation and programming kernels.      |
 |                    |             |             |             |                                          |
 +--------------------+-------------+-------------+-------------+------------------------------------------+
-| ivas-library-repo  |    String   |    N/A      |   /usr/lib  | The library path for the VVAS repository |
+| vvas-library-repo  |    String   |    N/A      |   /usr/lib  | The library path for the VVAS repository |
 |                    |             |             |             | for all the acceleration software        |
 |                    |             |             |             | libraries.                               |
 +--------------------+-------------+-------------+-------------+------------------------------------------+
@@ -1179,7 +1460,7 @@ Table 12: JSON Properties
 +--------------------+-------------+-------------+-------------+------------------------------------------+
 | library-name       |    String   |    N/A      |    NULL     | The acceleration software library name   |
 |                    |             |             |             | for the kernel. This is appended to      |
-|                    |             |             |             | ivas-library-repo for an absolute path.  |
+|                    |             |             |             | vvas-library-repo for an absolute path.  |
 +--------------------+-------------+-------------+-------------+------------------------------------------+
 | config             |    N/A      |    N/A      |    N/A      | The JSON tag for kernel specific         |
 |                    |             |             |             | configurations that depends on the       |
@@ -1202,13 +1483,13 @@ Example Pipelines
 Single Output Pad
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following example demonstrates the ivas_xmultisrc plug-in configured for one input and one output. A test video pattern is generated by the videotestrc plug-in and passed to the ivas_xmultisrc plug-in. Depending on the kernel being used, ivas_xmultisrc uses kernel.json to configure the kernel for processing the input frame before passing it to the fakesink.
+The following example demonstrates the vvas_xmultisrc plug-in configured for one input and one output. A test video pattern is generated by the videotestrc plug-in and passed to the vvas_xmultisrc plug-in. Depending on the kernel being used, vvas_xmultisrc uses kernel.json to configure the kernel for processing the input frame before passing it to the fakesink.
 
 .. code-block::
 
       gst-launch-1.0 videotestsrc 
       ! "video/x-raw, width=1280, height=720, format=BGR" 
-      ! ivas_xmultisrc kconfig="/root/jsons/<kernel.json>" 
+      ! vvas_xmultisrc kconfig="/root/jsons/<kernel.json>" 
       ! "video/x-raw, width=640, height=360, format=BGR" 
       ! fakesink -v
 
@@ -1218,11 +1499,11 @@ The following is an example kernel.json file having `mean_value` and `use_mean` 
 
       {
          "xclbin-location": "/usr/lib/dpu.xclbin",
-         "ivas-library-repo": "/usr/lib/ivas",
+         "vvas-library-repo": "/usr/lib/vvas",
          "kernels": [
             {
                "kernel-name": "<kernel-name>",
-               "library-name": "libivas_xresize_bgr.so",
+               "library-name": "libvvas_xresize_bgr.so",
                "config": {
                "use_mean": 1,
                "mean_value": 128
@@ -1231,7 +1512,7 @@ The following is an example kernel.json file having `mean_value` and `use_mean` 
          ]
       }
 
-GstIvasBufferPool
+GstVvasBufferPool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The GStreamer VVAS buffer pool holds the pool of video frames allocated using the GStreamer allocator object. It is derived from the GStreamer base video buffer pool object (GstVideoBufferPool).
@@ -1246,7 +1527,7 @@ The following API is used to create the buffer pool.
 
 .. code-block::
 
-      GstBufferPool *gst_ivas_buffer_pool_new (guint stride_align, guint
+      GstBufferPool *gst_vvas_buffer_pool_new (guint stride_align, guint
       elevation_align)
 
       Parameters:
@@ -1256,18 +1537,18 @@ The following API is used to create the buffer pool.
       Return:
          GstBufferPool object handle
 
-Plug-ins can use the following API to set the callback function on the IVAS buffer pool and the callback function is called when the buffer arrives back to the pool after it is used.
+Plug-ins can use the following API to set the callback function on the VVAS buffer pool and the callback function is called when the buffer arrives back to the pool after it is used.
 
 .. code-block::
 
       Buffer release callback function pointer declaration:
       typedef void (*ReleaseBufferCallback)(GstBuffer *buf, gpointer user_data);
 
-      void gst_ivas_buffer_pool_set_release_buffer_cb (GstIvasBufferPool *xpool,
+      void gst_vvas_buffer_pool_set_release_buffer_cb (GstVvasBufferPool *xpool,
       ReleaseBufferCallback release_buf_cb, gpointer user_data)
 
       Parameters:
-         xpool - IVAS buffer pool created using gst_ivas_buffer_pool_new
+         xpool - VVAS buffer pool created using gst_vvas_buffer_pool_new
          release_buf_cb - function pointer of callback
          user_data - user provided handle to be sent as function argument while
       calling release_buf_cb()
@@ -1276,20 +1557,20 @@ Plug-ins can use the following API to set the callback function on the IVAS buff
           None
 
 
-GstIvasAllocator
+GstVvasAllocator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The GStreamer IVAS allocator object is derived from an open source GstAllocator object designed for allocating memory using XRT APIs. The IVAS allocator is the backbone to the VVAS framework achieving zero-copy (wherever possible).
+The GStreamer VVAS allocator object is derived from an open source GstAllocator object designed for allocating memory using XRT APIs. The VVAS allocator is the backbone to the VVAS framework achieving zero-copy (wherever possible).
 
 
 Allocator APIs
 ---------------------------------
 
-GStreamer plug-in developers can use the following APIs to interact with the IVAS allocator. To allocate memory using XRT, the GStreamer plug-ins and buffer pools require the GstAllocator object provided by the following API.
+GStreamer plug-in developers can use the following APIs to interact with the VVAS allocator. To allocate memory using XRT, the GStreamer plug-ins and buffer pools require the GstAllocator object provided by the following API.
 
 .. code-block::
 
-      GstAllocator* gst_ivas_allocator_new (guint dev_idx, gboolean need_dma)
+      GstAllocator* gst_vvas_allocator_new (guint dev_idx, gboolean need_dma)
 
       Parameters:
          dev_idx - FPGA Device index on which memory is going to allocated
@@ -1298,26 +1579,26 @@ GStreamer plug-in developers can use the following APIs to interact with the IVA
       Return:
          GstAllocator handle on success or NULL on failure
 
-..note:: In PCIe platforms, the DMA buffer allocation support is not available. This means that the need_dma argument to gst_ivas_allocator_new() API must be false.
+..note:: In PCIe platforms, the DMA buffer allocation support is not available. This means that the need_dma argument to gst_vvas_allocator_new() API must be false.
 
-Use the following API to check if a particular GstMemory object is allocated using GstIvasAlloctor.
+Use the following API to check if a particular GstMemory object is allocated using GstVvasAlloctor.
 
 .. code-block::
 
-      gboolean gst_is_ivas_memory (GstMemory *mem)
+      gboolean gst_is_vvas_memory (GstMemory *mem)
 
       Parameters:
          mem - memory to be validated
 
       Return:
-         true if memory is allocated using IVAS Allocator or false
+         true if memory is allocated using VVAS Allocator or false
 
 
 When GStreamer plug-ins are interacting with hard-kernel IP or soft-kernel, the plug-ins need physical memory addresses on an FPGA using the following API.
 
 .. code-block::
 
-      guint64 gst_ivas_allocator_get_paddr (GstMemory *mem)
+      guint64 gst_vvas_allocator_get_paddr (GstMemory *mem)
 
       Parameters:
          mem - memory to get physical address
@@ -1329,7 +1610,7 @@ When GStreamer plug-ins are interacting with hard-kernel IP or soft-kernel, the 
 
 .. code-block::
 
-      guint gst_ivas_allocator_get_bo (GstMemory *mem)
+      guint gst_vvas_allocator_get_bo (GstMemory *mem)
 
       Parameters:
          mem - memory to get XRT BO
@@ -1348,4 +1629,4 @@ This section covers the JSON schema for the configuration files used by the infr
 VVAS Inference Meta Data
 =====================================
 
-This section covers details about inference meta data structure used to store meta data. For more details, refer to :doc:`VVAS Inference Meta Data <A-IVAS-Inference-Metadata>`
+This section covers details about inference meta data structure used to store meta data. For more details, refer to :doc:`VVAS Inference Meta Data <A-VVAS-Inference-Metadata>`

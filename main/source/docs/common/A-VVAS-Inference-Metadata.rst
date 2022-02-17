@@ -48,12 +48,12 @@ This structure represents the inference data generated from the ML operation. BB
 
 .. code-block::
 
-      typedef struct _IvasColorMetadata {
+      typedef struct _VvasColorMetadata {
         uint8_t red;
         uint8_t green;
         uint8_t blue;
         uint8_t alpha;
-      } IvasColorMetadata;
+      } VvasColorMetadata;
 
       struct _BoundingBox
       {
@@ -61,7 +61,7 @@ This structure represents the inference data generated from the ML operation. BB
         gint y;
         guint width;
         guint height;
-        IvasColorMetadata box_color;
+        VvasColorMetadata box_color;
       };
 
       typedef struct _BoundingBox BoundingBox;
@@ -137,7 +137,7 @@ This structure stores the results of the ML operation by the classification netw
          gint num_classes;
          gdouble *probabilities;
          gchar **labels;
-         IvasColorMetadata label_color;
+         VvasColorMetadata label_color;
       };
 
    

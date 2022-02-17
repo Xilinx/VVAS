@@ -25,9 +25,9 @@ Kernel Build Steps
 
 The following steps are used to build the kernel.
 
-#. Setup the Vitis HLS 2021.1 software. Refer to `Vitis Software Development Platform 2021.1 <https://www.xilinx.com/html_docs/xilinx2021_1/vitis_doc/gnq1597858079367.html>`_.
+#. Setup the Vitis HLS 2021.2 software. Refer to `Vitis Software Development Platform 2021.2 <https://www.xilinx.com/html_docs/xilinx2021.2/vitis_doc/gnq1597858079367.html>`_.
 
-#. Edit the makefile to point the PLATFORM_FILE to any Vitis 2021.1 platform.
+#. Edit the makefile to point the PLATFORM_FILE to any Vitis 2021.2 platform.
 
 #. Edit the options in <kernel_folder>/kernel_config.h.
 
@@ -139,9 +139,9 @@ Table 14: Multiscaler Kernel Configuration
 Steps to Build Kernel
 =====================
 
-#. Source the Vitis HLS 2021.1 software.
+#. Source the Vitis HLS 2021.2 software.
 
-#. Edit the makefile to point the PLATFORM_FILE, `(.xpfm)` file, to any Vitis 2021.1 platform (tested using the ZCU104 base platform).
+#. Edit the makefile to point the PLATFORM_FILE, `(.xpfm)` file, to any Vitis 2021.2 platform (tested using the ZCU104 base platform).
 
 #. Edit the options in the multiscaler/v_multi_scaler_config.h.
 

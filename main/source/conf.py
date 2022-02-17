@@ -24,14 +24,14 @@ sys.path.insert(0, os.path.abspath('docs'))
 # -- Project information -----------------------------------------------------
 
 project = 'Vitis™ Video Analytics SDK'
-copyright = '2021, Xilinx, Inc.'
+copyright = '2021-2022, Xilinx, Inc.'
 author = 'Xilinx, Inc.'
 
 # The short X.Y version
-version = '1.0.3'
+version = '1.1'
 # The full version, including alpha/beta/rc tags
-release = '1.0.3'
-html_last_updated_fmt = 'October 10, 2021'
+release = '1.1'
+html_last_updated_fmt = 'February 16, 2022'
 
 # -- General configuration ---------------------------------------------------
 

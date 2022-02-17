@@ -74,7 +74,7 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Vitis Video Analytics SDK Release V1.0" href="docs/release_notes.html" /> 
+    <link rel="next" title="Vitis Video Analytics SDK Release V1.1" href="docs/release_notes.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -225,7 +225,7 @@ function OptanonWrapper() { }
             
             
               <div class="version">
-                1.0.3
+                1.1
               </div>
             
           
@@ -361,10 +361,10 @@ function OptanonWrapper() { }
 <a class="reference internal image-reference" href="_images/VVA_Graph.png"><img alt="_images/VVA_Graph.png" src="_images/VVA_Graph.png" style="width: 1100px;" /></a>
 </div>
 <ul class="simple">
-<li><p>Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. <code class="docutils literal notranslate"><span class="pre">ivas_xvcudec</span></code>, <code class="docutils literal notranslate"><span class="pre">omxh264dec</span></code> and <code class="docutils literal notranslate"><span class="pre">omxh265dec</span></code> are the plugin for decoding.</p></li>
-<li><p>After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion. <code class="docutils literal notranslate"><span class="pre">ivas_xabrscaler</span></code> plugin can perform hardware accelerated resize as well as color format conversion on the frame.</p></li>
-<li><p>After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, <code class="docutils literal notranslate"><span class="pre">ivas_xfilter</span></code> and <code class="docutils literal notranslate"><span class="pre">ivas_xdpuinfer</span></code> acceleration library. ivas_xdpuinfer is built on top of <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">AI</span></code> Development Kit to accelerate the AI Inference on Xilinx hardware platforms.</p></li>
-<li><p>To overlay the inference results such as bounding boxes, labels etc., there is a software acceleration library called <code class="docutils literal notranslate"><span class="pre">ivas_xboundingbox</span></code>. This library along with ivas_xfilter plug-in draws bounding box and label information on the frame.</p></li>
+<li><p>Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. <code class="docutils literal notranslate"><span class="pre">vvas_xvcudec</span></code>, <code class="docutils literal notranslate"><span class="pre">omxh264dec</span></code> and <code class="docutils literal notranslate"><span class="pre">omxh265dec</span></code> are the plugin for decoding.</p></li>
+<li><p>After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion. <code class="docutils literal notranslate"><span class="pre">vvas_xabrscaler</span></code> plugin can perform hardware accelerated resize as well as color format conversion on the frame.</p></li>
+<li><p>After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> and <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> acceleration library. vvas_xdpuinfer is built on top of <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">AI</span></code> Development Kit to accelerate the AI Inference on Xilinx hardware platforms.</p></li>
+<li><p>To overlay the inference results such as bounding boxes, labels etc., there is a software acceleration library called <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code>. This library along with vvas_xfilter plug-in draws bounding box and label information on the frame.</p></li>
 <li><p>Finally to output the results, VVAS presents various options, like render the output with the bounding boxes on the screen, save the output to the local disk, stream out over RTSP.</p></li>
 </ul>
 <div class="toctree-wrapper compound">
@@ -396,7 +396,7 @@ All these infrastructure gives the flexibility for rapid prototyping to full pro
 </div>
 <div class="section" id="infrastructure-plug-ins">
 <h4>Infrastructure Plug-ins<a class="headerlink" href="#infrastructure-plug-ins" title="Permalink to this headline">¶</a></h4>
-<p>These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to <a class="reference internal" href="docs/common/common_plugins.html#infra-plugins-label"><span class="std std-ref">VVAS Infrastructure Plug-ins</span></a> for more details about how to use these plug-ins. These plug-ins are part of “ivas-gst-plugins” repository.</p>
+<p>These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to <a class="reference internal" href="docs/common/common_plugins.html#infra-plugins-label"><span class="std std-ref">VVAS Infrastructure Plug-ins</span></a> for more details about how to use these plug-ins. These plug-ins are part of “vvas-gst-plugins” repository.</p>
 </div>
 <div class="section" id="acceleration-s-w-libs">
 <h4>Acceleration S/W Libs<a class="headerlink" href="#acceleration-s-w-libs" title="Permalink to this headline">¶</a></h4>
@@ -430,7 +430,7 @@ All these infrastructure gives the flexibility for rapid prototyping to full pro
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="docs/release_notes.html" class="btn btn-neutral float-right" title="Vitis Video Analytics SDK Release V1.0" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="docs/release_notes.html" class="btn btn-neutral float-right" title="Vitis Video Analytics SDK Release V1.1" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -441,7 +441,7 @@ All these infrastructure gives the flexibility for rapid prototyping to full pro
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 10, 2021.
+        Last updated on February 16, 2022.
       </span>
 
     </p>

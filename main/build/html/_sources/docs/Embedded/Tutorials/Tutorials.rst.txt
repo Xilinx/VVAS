@@ -19,18 +19,10 @@ Tutorials
 
 This section covers tutorials that will explain step by step approach to build GStreamer pipelines for different usecases  using VVAS framework. Each tutorial explains what is the purpose of each plugin in the pipeline and how to configure, set properties and the corresponding json files whereever applicable.
 
-.. toctree::
-   :maxdepth: 3
-   :caption: Tutorials
-   :hidden:
-
-
-   Smart Model <../smart_model_select>
-
 ********************
 Multi Channel ML
 ********************
-This tutorial explains how to build Machine Learning pipelines using VVAS. For more details, refer to the link :doc:`MultiChannelML <MultiChannelML>` .
+This tutorial explains how to build Machine Learning pipelines using VVAS. This tutorial first covers single stage Machine Learning Inference pipeline where only one ML operation is required on input image. Complex Real life applications may require more than one stages of Machine Learning operations to get the required information. When more than once Machine Learning Inference operations are performed, then this is commonly known as Cascaded Machine Learning. This tutorial also covers how to build multi stage Cascaded Machine Learning Pipelines using VVAS. For more details, refer to the link :doc:`MultiChannelML <MultiChannelML>` .
 
 .. toctree::
    :maxdepth: 3
@@ -38,6 +30,6 @@ This tutorial explains how to build Machine Learning pipelines using VVAS. For m
    :hidden:
 
 
-   Multichannel ML <MultiChannelML>
+   Multichannel ML <./MultiChannelML>
 
 

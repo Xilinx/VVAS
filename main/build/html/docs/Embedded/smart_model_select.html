@@ -74,8 +74,8 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="VVAS GStreamer Plug-ins for Embedded Platforms" href="6-embedded-plugins.html" />
-    <link rel="prev" title="Multichannel ML" href="Tutorials/MultiChannelML.html" /> 
+    <link rel="next" title="Multichannel ML" href="Tutorials/MultiChannelML.html" />
+    <link rel="prev" title="Platforms And Applications" href="platforms_and_applications.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -226,7 +226,7 @@ function OptanonWrapper() { }
             
             
               <div class="version">
-                1.0.3
+                1.1
               </div>
             
           
@@ -265,7 +265,6 @@ function OptanonWrapper() { }
 <li class="toctree-l1 current"><a class="reference internal" href="platforms_and_applications.html">Platforms &amp; Applications</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="platforms_and_applications.html#som-examples">SOM Examples</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="platforms_and_applications.html#zcu104-examples">ZCU104 Examples</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Tutorials/MultiChannelML.html">Multi Channel ML</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Smart Model Select</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
@@ -275,8 +274,10 @@ function OptanonWrapper() { }
 <li class="toctree-l4"><a class="reference internal" href="#compiling-hardware-accelerators-kernels">Compiling Hardware Accelerators (Kernels)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creating-sd-card-image">Creating SD Card image</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#build-vvas-plug-ins-and-libraries">Build VVAS Plug-ins and Libraries</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#known-issues">Known Issues</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="Tutorials/MultiChannelML.html">Multi Channel ML</a></li>
 </ul>
 </li>
 </ul>
@@ -390,7 +391,7 @@ function OptanonWrapper() { }
 <li><p>ssd_traffic_pruned_0_9</p></li>
 <li><p>ssd_mobilenet_v2</p></li>
 <li><p>ssd_pedestrian_pruned_0_97</p></li>
-<li><p>tiny_yolov3_vmss</p></li>
+<li><p>plate_detect</p></li>
 <li><p>yolov3_voc_tf</p></li>
 <li><p>yolov3_adas_pruned_0_9</p></li>
 <li><p>refinedet_pruned_0_96</p></li>
@@ -402,7 +403,7 @@ function OptanonWrapper() { }
 </li>
 <li><p>Display Port for display</p></li>
 <li><p>H264/H265 Decode</p></li>
-<li><p>Input can be from file, rtsp source</p></li>
+<li><p>Input can be from file or rtsp source</p></li>
 </ul>
 </div>
 <div class="section" id="prerequisites">
@@ -438,7 +439,7 @@ Platform is nothing but collection of hardware as well as software components re
 Prebuilt design for <code class="docutils literal notranslate"><span class="pre">Smart</span> <span class="pre">Model</span> <span class="pre">Select</span></code> has been provided as part of this VVAS release.
 You may download this ready to use design by following the link <a class="reference internal" href="#prebuilt-binaries"><span class="std std-ref">Download pre-built binaries</span></a> and
 directly jump to <a class="reference internal" href="#preparing-setup"><span class="std std-ref">Preparing Setup</span></a> section describing how to prepare the setup and execute the example application.</p>
-<p>If for some reason, one wants to build the design from scratch, then refer to the section <a class="reference internal" href="#build-platform"><span class="std std-ref">Build Design</span></a> that describes the steps to build the platform, accelerator functions and finally integrate these to create complete Design for <cite>Smart Camera Select</cite> application.</p>
+<p>If for some reason, one wants to build the design from scratch, then refer to the section <a class="reference internal" href="#build-platform"><span class="std std-ref">Build Design</span></a> that describes the steps to build the platform, accelerator functions and finally integrate these to create complete Design for <cite>Smart Model Select</cite> application.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>VVAS platform <code class="docutils literal notranslate"><span class="pre">zcu104_vcuDec_DP</span></code> may not be performance optimal. This platform is made available as reference along with <cite>Smart Model Select Application</cite>.</p>
@@ -447,16 +448,16 @@ directly jump to <a class="reference internal" href="#preparing-setup"><span cla
 <p class="admonition-title">Note</p>
 <p>VVAS platform <code class="docutils literal notranslate"><span class="pre">zcu104_vcuDec_DP</span></code> adds patch to irps5401 driver for zcu104 board to support multi thread execution of VAI models.
 This <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/tree/master/dsa/DPU-TRD/app/dpu_sw_optimize.tar.gz">patch</a> shouldn’t be applied to other boards
-and is not part of the official Xilinx released 2021.1 Petalinux.</p>
+and is not part of the official Xilinx released 2021.2 Petalinux.</p>
 </div>
 </div>
 <div class="section" id="pre-built-binaries">
 <span id="prebuilt-binaries"></span><h3>Pre-built binaries<a class="headerlink" href="#pre-built-binaries" title="Permalink to this headline">¶</a></h3>
-<p>Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files and quickly run the example application.</p>
+<p>Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.</p>
 <p>Create a folder, say <cite>PREBUILT_BINARIES</cite>, where pre-built binaries are to be downloaded.</p>
-<p>Click on <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2021.1_zcu104.zip">Smart Model Select Prebuilt Binaries</a>. This will ask for few credentials and then start downloading.</p>
-<p>Unzip the downloaded package <cite>vvas_smart_model_select_2021.1_zcu104.zip</cite>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unzip</span> <span class="n">vvas_smart_model_select_2021</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">.</span><span class="n">zip</span>
+<p>Click on <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2021.2_zcu104.zip">Smart Model Select Prebuilt Binaries</a>. This will ask for few credentials and then start downloading.</p>
+<p>Unzip the downloaded package <cite>vvas_smart_model_select_2021.2_zcu104.zip</cite>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unzip</span> <span class="n">vvas_smart_model_select_2021</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">.</span><span class="n">zip</span>
 </pre></div>
 </div>
 <p>Prebuilt binaries package includes</p>
@@ -468,7 +469,15 @@ libraries. You do not need this if you simply want to execute the pre-built appl
 <li><p><code class="docutils literal notranslate"><span class="pre">app</span></code>: Contains application executable and input configuration/json files.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arch.json</span></code>: Represents DPU architecture.</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code</p>
+</div>
+<div class="section" id="open-source-licenses-and-source-code-vvas-1-1">
+<h4>Open Source Licenses and Source code - VVAS 1.1<a class="headerlink" href="#open-source-licenses-and-source-code-vvas-1-1" title="Permalink to this headline">¶</a></h4>
+<p>In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_1_1_thirdparty_sources.zip">Source Licenses and Source Code</a> that contain the Open Source Licenses and source code.</p>
 <p>Once you have downloaded the prebuilt binaries, you need to prepare the setup to execute the application, as shown in the next section.</p>
+</div>
 </div>
 </div>
 <div class="section" id="preparing-the-setup">
@@ -479,11 +488,11 @@ libraries. You do not need this if you simply want to execute the pre-built appl
 <ul>
 <li><p>Flash the SD Card with the <code class="docutils literal notranslate"><span class="pre">sd_card.img</span></code> using any SD card flashing tool like dd, Win32DiskImager, or BalenaEtcher.</p>
 <p>If using pre-built binaries, then sd_card.img is located as</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">sd_card</span><span class="o">.</span><span class="n">img</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">sd_card</span><span class="o">.</span><span class="n">img</span>
 </pre></div>
 </div>
 <p>If you have built the platform yourself, then sd_card.img would be located at</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">binary_container_1</span><span class="o">/</span><span class="n">sd_card</span><span class="o">.</span><span class="n">img</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">binary_container_1</span><span class="o">/</span><span class="n">sd_card</span><span class="o">.</span><span class="n">img</span>
 </pre></div>
 </div>
 </li>
@@ -494,9 +503,9 @@ in copying input video streams and storing output files from example application
 </pre></div>
 </div>
 </li>
-<li><p>Copy the <cite>&lt;PREBUILT_BINARIES&gt;/vvas_smart_model_select_2021.1_zcu104/app</cite> folder of the application onto <cite>home</cite> folder of the board.
+<li><p>Copy the <cite>&lt;PREBUILT_BINARIES&gt;/vvas_smart_model_select_2021.2_zcu104/app</cite> folder of the application onto <cite>home</cite> folder of the board.
 .. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">app</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;</span><span class="p">:</span><span class="o">~/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">app</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;</span><span class="p">:</span><span class="o">~/</span>
 </pre></div>
 </div>
 </li>
@@ -509,7 +518,7 @@ in copying input video streams and storing output files from example application
 </li>
 <li><p>Create <cite>/usr/share/vitis_ai_library/models</cite> folder on the board and copy the Vitis-AI models into it:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span>
-<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/*</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
+<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/*</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
 </pre></div>
 </div>
 </li>
@@ -558,6 +567,8 @@ to each model.</p>
 <p class="admonition-title">Note</p>
 <p>If performance mode is enabled, then the sink type should always be <code class="docutils literal notranslate"><span class="pre">fakesink</span></code>. Otherwise pipeline will not execute.</p>
 <p>If performance mode is enabled, there will be 4 ML pipelines executed simultaneously feeding DPU from multiple threads. This results in improved performance compared to when using DPU from single thread.</p>
+<p>In the GStreamer pipelines in this application, Sync is disabled. Which means frames are sent to the display at the rate at which these are processed by pipeline. Hence for smaller resolution streams, you may observe that frames are displayed at faster than real time rate
+.</p>
 </div>
 <p>Followed by the selection of ML model, source and sink elements, next step is the option to provide input filename or RTSP URL as applicable, to be processed.</p>
 <p>If the selected input is file source, then by default application will look for the input video files under <cite>app/videos</cite> folder.
@@ -565,6 +576,7 @@ Create the folder <code class="docutils literal notranslate"><span class="pre">/
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">videos</span><span class="o">/</span>
 <span class="o">+--</span> <span class="n">CLASSIFICATION</span><span class="o">.</span><span class="n">mp4</span>
 <span class="o">+--</span> <span class="n">FACEDETECT</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">PLATEDETECT</span><span class="o">.</span><span class="n">mp4</span>
 <span class="o">+--</span> <span class="n">REFINEDET</span><span class="o">.</span><span class="n">mp4</span>
 <span class="o">+--</span> <span class="n">SSD</span><span class="o">.</span><span class="n">mp4</span>
 <span class="o">+--</span> <span class="n">YOLOV2</span><span class="o">.</span><span class="n">mp4</span>
@@ -590,7 +602,7 @@ User has to enter the input file location in response to the below message promp
 </div>
 <p>Examples in gst-rtsp-server-1.16.2/examples can be used to serve RTSP data. Refer below example</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">gst</span><span class="o">-</span><span class="n">rtsp</span><span class="o">-</span><span class="n">server</span><span class="o">-</span><span class="mf">1.16.2</span><span class="o">/</span><span class="n">examples</span>
-<span class="o">./</span><span class="n">test</span><span class="o">-</span><span class="n">launch</span>  <span class="s2">&quot;filesrc location=&lt;File with H264 1080p in MP4 format&gt; ! qtdemux  ! h264parse ! rtph264pay name=pay0 pt=96&quot;</span>
+<span class="o">./</span><span class="n">test</span><span class="o">-</span><span class="n">launch</span>  <span class="s2">&quot;filesrc location=&lt;Absolute Path of File with H264 1080p in MP4 format&gt; ! qtdemux  ! h264parse ! rtph264pay name=pay0 pt=96&quot;</span>
 </pre></div>
 </div>
 <p>Streaming starts on the URL <a class="reference external" href="rtsp:/">rtsp:/</a>/&lt;RTSP server ip adress&gt;:8554/test. Enter the same URL as input to the application.</p>
@@ -609,7 +621,7 @@ User has to enter the input file location in response to the below message promp
 <ul class="simple">
 <li><p>omxh264dec GStreamer plugin</p></li>
 <li><p>Opensource framework like GStreamer, OpenCV</p></li>
-<li><p>Vitis AI 1.4 libraries</p></li>
+<li><p>Vitis AI 2.0 libraries</p></li>
 <li><p>Xilinx Run Time (XRT)</p></li>
 </ul>
 </div>
@@ -625,14 +637,14 @@ Follow the steps mentioned below to compile the platform.</p>
 </div>
 </li>
 <li><p>Setup tool chain environment:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">&lt;</span><span class="mf">2021.1</span><span class="n">_Vitis</span><span class="o">&gt;/</span><span class="n">settings64</span><span class="o">.</span><span class="n">sh</span>
-<span class="n">source</span> <span class="o">&lt;</span><span class="mf">2021.1</span><span class="n">_Petalinux</span><span class="o">&gt;/</span><span class="n">settings</span><span class="o">.</span><span class="n">sh</span>
-<span class="n">source</span> <span class="o">&lt;</span><span class="mf">2021.1</span><span class="n">_XRT</span><span class="o">&gt;/</span><span class="n">setenv</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">&lt;</span><span class="mf">2021.2</span><span class="n">_Vitis</span><span class="o">&gt;/</span><span class="n">settings64</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">source</span> <span class="o">&lt;</span><span class="mf">2021.2</span><span class="n">_Petalinux</span><span class="o">&gt;/</span><span class="n">settings</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">source</span> <span class="o">&lt;</span><span class="mf">2021.2</span><span class="n">_XRT</span><span class="o">&gt;/</span><span class="n">setenv</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 </li>
 <li><p>Navigate to <code class="docutils literal notranslate"><span class="pre">zcu104_vcuDec_DP</span></code> platform folder:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">platforms</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">zcu104_vcuDec_DP</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">platforms</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">zcu104_vcuDec_DP</span>
 </pre></div>
 </div>
 </li>
@@ -642,7 +654,7 @@ Follow the steps mentioned below to compile the platform.</p>
 </div>
 </li>
 </ol>
-<p id="platform-path">After build is finished, platform will be available <code class="docutils literal notranslate"><span class="pre">&lt;VVAS_SOURCES&gt;/VVAS/ivas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202110_1/export/xilinx_zcu104_vcuDec_DP_202110_1/</span></code> location.</p>
+<p id="platform-path">After build is finished, platform will be available <code class="docutils literal notranslate"><span class="pre">&lt;VVAS_SOURCES&gt;/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202120_1/export/xilinx_zcu104_vcuDec_DP_202120_1/</span></code> location.</p>
 </div>
 <div class="section" id="hardware-accelerators-kernels">
 <h3>Hardware Accelerators (Kernels)<a class="headerlink" href="#hardware-accelerators-kernels" title="Permalink to this headline">¶</a></h3>
@@ -661,12 +673,12 @@ Follow the steps mentioned below to compile the platform.</p>
 <li><p>DPU Kernel sources can be cloned from:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">Xilinx</span><span class="o">/</span><span class="n">Vitis</span><span class="o">-</span><span class="n">AI</span><span class="o">.</span><span class="n">git</span>
 <span class="n">cd</span> <span class="n">Vitis</span><span class="o">-</span><span class="n">AI</span><span class="o">/</span>
-<span class="n">git</span> <span class="n">checkout</span> <span class="n">tags</span><span class="o">/</span><span class="n">v1</span><span class="mf">.4</span> <span class="o">-</span><span class="n">b</span> <span class="n">v1</span><span class="mf">.4</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="n">tags</span><span class="o">/</span><span class="n">v2</span><span class="mf">.0</span> <span class="o">-</span><span class="n">b</span> <span class="n">v2</span><span class="mf">.0</span>
 </pre></div>
 </div>
 </li>
 <li><p>Multiscaler kernel sources are part of VVAS source tree and are located at:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span><span class="o">/</span><span class="n">multiscaler</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span><span class="o">/</span><span class="n">multiscaler</span>
 </pre></div>
 </div>
 </li>
@@ -677,12 +689,12 @@ Follow the steps mentioned below to compile the platform.</p>
 <p>Compilation of Kernels is initiated from the build process of the final design for the application. Hence kernel compilation steps are not covered separately here.</p>
 <ul>
 <li><p>Configuration of DPU:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">dpu_conf</span><span class="o">.</span><span class="n">vh</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">dpu_conf</span><span class="o">.</span><span class="n">vh</span>
 </pre></div>
 </div>
 </li>
 <li><p>Configuration of Multiscaler:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">v_multi_scaler_config</span><span class="o">.</span><span class="n">h</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">v_multi_scaler_config</span><span class="o">.</span><span class="n">h</span>
 </pre></div>
 </div>
 </li>
@@ -693,12 +705,12 @@ Follow the steps mentioned below to compile the platform.</p>
 <h2>Creating SD Card image<a class="headerlink" href="#creating-sd-card-image" title="Permalink to this headline">¶</a></h2>
 <p>Once platform is available and kernels are built, next step is to stitch the required hardware accelerators (kernels) into the platform and generate final SD Card image using Vitis Flow.</p>
 <p>VVAS sources already has ready to build example Vitis workspace for <code class="docutils literal notranslate"><span class="pre">smart_model_select</span></code> Application. This workspace uses Vitis Flow that stitches kernels into the platform and generates final SD card image. Follow below mentioned steps to build the final image.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span>
 <span class="n">make</span> <span class="n">PLATFORM</span><span class="o">=&lt;</span><span class="n">PLATFORM_PATH</span> <span class="o">&gt;</span> <span class="n">DPU_TRD_PATH</span><span class="o">=&lt;</span><span class="n">DPU_PATH</span><span class="o">&gt;</span> <span class="n">HW_ACCEL_PATH</span><span class="o">=&lt;</span><span class="n">MULTISCALER_PATH</span><span class="o">&gt;</span>
 
-<span class="n">PLATFORM_PATH</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">platforms</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">zcu104_vcuDec_DP</span><span class="o">/</span><span class="n">platform_repo</span><span class="o">/</span><span class="n">xilinx_zcu104_vcuDec_DP_202110_1</span><span class="o">/</span><span class="n">export</span><span class="o">/</span><span class="n">xilinx_zcu104_vcuDec_DP_202110_1</span><span class="o">/</span><span class="n">xilinx_zcu104_vcuDec_DP_202110_1</span><span class="o">.</span><span class="n">xpfm</span>
+<span class="n">PLATFORM_PATH</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">platforms</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">zcu104_vcuDec_DP</span><span class="o">/</span><span class="n">platform_repo</span><span class="o">/</span><span class="n">xilinx_zcu104_vcuDec_DP_202120_1</span><span class="o">/</span><span class="n">export</span><span class="o">/</span><span class="n">xilinx_zcu104_vcuDec_DP_202120_1</span><span class="o">/</span><span class="n">xilinx_zcu104_vcuDec_DP_202120_1</span><span class="o">.</span><span class="n">xpfm</span>
 <span class="n">DPU_PATH</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">Vitis</span><span class="o">-</span><span class="n">AI</span><span class="o">/</span><span class="n">dsa</span><span class="o">/</span><span class="n">DPU</span><span class="o">-</span><span class="n">TRD</span><span class="o">/</span>
-<span class="n">MULTISCALER_PATH</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span>
+<span class="n">MULTISCALER_PATH</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span>
 </pre></div>
 </div>
 <p>Once above build is done, final sdcard image is available at <code class="docutils literal notranslate"><span class="pre">./binary_container_1/sd_card.img</span></code> location.</p>
@@ -710,11 +722,11 @@ Follow the steps mentioned below to compile the platform.</p>
 <h3>Setting Sysroot<a class="headerlink" href="#setting-sysroot" title="Permalink to this headline">¶</a></h3>
 <p>Sysroot is required to build the VVAS GStreamer plugins. Sysroot installer location depends on whether you are using pre-built binaries, or you have built the platform from scratch.</p>
 <p>If you have downloaded the pre-built binaries in folder, say <code class="docutils literal notranslate"><span class="pre">PREBUILT_BINARIES</span></code>, then you can find the Sysroot installer at:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">sdk</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2021</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">sdk</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 <p>If you have built the platform yourself, then Sysroot installer is available at:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">platforms</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">zcu104_vcuDec_DP</span><span class="o">/</span><span class="n">platform_repo</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">sw_components</span><span class="o">/</span><span class="n">sdk</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">platforms</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">zcu104_vcuDec_DP</span><span class="o">/</span><span class="n">platform_repo</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">sw_components</span><span class="o">/</span><span class="n">sdk</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 <p>One need to install the sysroot. Create a folder, say <strong>sysroot</strong> in <cite>VVAS_SOURCES</cite>. Command for sysroot generation is:</p>
@@ -737,12 +749,12 @@ Follow the steps mentioned below to compile the platform.</p>
 <a class="reference internal image-reference" href="../../_images/image10.png"><img alt="../../_images/image10.png" src="../../_images/image10.png" style="width: 300px;" /></a>
 </div>
 <ul class="simple">
-<li><p><strong>ivas-utils:</strong> This folder contains the source code for the VVAS kernel interface to be exposed by the acceleration software libraries, abstraction APIs on top of the Xilinx Runtime (XRT) tool, and common headers (for example, metadata).</p></li>
-<li><p><strong>ivas-gst-plugins:</strong> This folder contains all the VVAS GSteamer plug-ins, including the infrastructure plug-ins and the Custom plug-ins.</p></li>
-<li><p><strong>ivas-accel-sw-libs:</strong> Contains source for the acceleration software libraries that are called from the GStreamer infrastructure plug-ins.</p></li>
-<li><p><strong>ivas-accel-hw:</strong> This folder contains the hardware kernel source code.</p></li>
-<li><p><strong>ivas-examples:</strong> This repository hosts example solutions.</p></li>
-<li><p><strong>ivas-platforms:</strong> This folder contains the reference platforms for different applications.</p></li>
+<li><p><strong>vvas-utils:</strong> This folder contains the source code for the VVAS kernel interface to be exposed by the acceleration software libraries, abstraction APIs on top of the Xilinx Runtime (XRT) tool, and common headers (for example, metadata).</p></li>
+<li><p><strong>vvas-gst-plugins:</strong> This folder contains all the VVAS GSteamer plug-ins, including the infrastructure plug-ins and the Custom plug-ins.</p></li>
+<li><p><strong>vvas-accel-sw-libs:</strong> Contains source for the acceleration software libraries that are called from the GStreamer infrastructure plug-ins.</p></li>
+<li><p><strong>vvas-accel-hw:</strong> This folder contains the hardware kernel source code.</p></li>
+<li><p><strong>vvas-examples:</strong> This repository hosts example solutions.</p></li>
+<li><p><strong>vvas-platforms:</strong> This folder contains the reference platforms for different applications.</p></li>
 </ul>
 </li>
 <li><p>Navigate to <code class="docutils literal notranslate"><span class="pre">VVAS_SOURCES/VVAS</span></code> folder</p></li>
@@ -758,24 +770,30 @@ Follow the steps mentioned below to compile the platform.</p>
 <p>You must have write permission to the sysroot.</p>
 </li>
 <li><p>Build VVAS plugins and libraries:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">build</span><span class="o">-</span><span class="n">ivas</span><span class="o">-</span><span class="n">essential</span><span class="o">.</span><span class="n">sh</span> <span class="n">Edge</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">build_install_vvas</span><span class="o">.</span><span class="n">sh</span> <span class="n">Edge</span>
 </pre></div>
 </div>
 </li>
-<li><p>When above step is complete, VVAS plugins are generated as <code class="docutils literal notranslate"><span class="pre">install/ivas_installer.tar.gz</span></code>.</p></li>
-<li><p>Copy <code class="docutils literal notranslate"><span class="pre">install/ivas_installer.tar.gz</span></code> onto the root folder (/) of the target board and untar it. VVAS Plugins are now installed on the target device.</p></li>
+<li><p>When above step is complete, VVAS plugins are generated as <code class="docutils literal notranslate"><span class="pre">install/vvas_installer.tar.gz</span></code>.</p></li>
+<li><p>Copy <code class="docutils literal notranslate"><span class="pre">install/vvas_installer.tar.gz</span></code> onto the root folder (/) of the target board and untar it. VVAS Plugins are now installed on the target device.</p></li>
 </ul>
 </div>
 <div class="section" id="build-smart-model-select-application">
 <h3>Build Smart Model Select Application<a class="headerlink" href="#build-smart-model-select-application" title="Permalink to this headline">¶</a></h3>
-<p>The example application (smart_model_select) is available in the “ivas-example” section of VVAS repository. Follow below steps to compile the application:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">ivas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">src</span>
+<p>The example application (smart_model_select) is available in the “vvas-example” section of VVAS repository. Follow below steps to compile the application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">VVAS_SOURCES</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">examples</span><span class="o">/</span><span class="n">Embedded</span><span class="o">/</span><span class="n">smart_model_select</span><span class="o">/</span><span class="n">src</span>
 <span class="n">unset</span> <span class="n">LD_LIBRARY_PATH</span>
 <span class="n">source</span> <span class="o">&lt;</span><span class="n">sysroot</span> <span class="n">path</span><span class="o">&gt;/</span><span class="n">environment</span><span class="o">-</span><span class="n">setup</span><span class="o">-</span><span class="n">cortexa72</span><span class="o">-</span><span class="n">cortexa53</span><span class="o">-</span><span class="n">xilinx</span><span class="o">-</span><span class="n">linux</span>
-<span class="n">make</span> <span class="n">SYSROOT</span><span class="o">=</span> <span class="o">&lt;</span><span class="n">sysroot</span> <span class="n">path</span><span class="o">&gt;/</span><span class="n">sysroots</span><span class="o">/</span><span class="n">cortexa72</span><span class="o">-</span><span class="n">cortexa53</span><span class="o">-</span><span class="n">xilinx</span><span class="o">-</span><span class="n">linux</span>
+<span class="n">make</span>
 </pre></div>
 </div>
 </div>
+</div>
+<div class="section" id="known-issues">
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>When we are executing 3 level cascade pipeline in a loop, by re-starting the pipeline after EOS, we start seeing shift in images. This issue is seen only in 3 stage ML cascading pipeline and only when we do start/stop in a loop. This is random in nature. The issue is not seen when we kept the same 3 stage cascade pipeline running continuously for 12 hrs.</p></li>
+</ol>
 </div>
 </div>
 
@@ -795,10 +813,10 @@ Follow the steps mentioned below to compile the platform.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="6-embedded-plugins.html" class="btn btn-neutral float-right" title="VVAS GStreamer Plug-ins for Embedded Platforms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Tutorials/MultiChannelML.html" class="btn btn-neutral float-right" title="Multichannel ML" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Tutorials/MultiChannelML.html" class="btn btn-neutral float-left" title="Multichannel ML" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="platforms_and_applications.html" class="btn btn-neutral float-left" title="Platforms And Applications" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -808,7 +826,7 @@ Follow the steps mentioned below to compile the platform.</p>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 10, 2021.
+        Last updated on February 16, 2022.
       </span>
 
     </p>

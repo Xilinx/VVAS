@@ -74,7 +74,7 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Multichannel ML" href="Tutorials/MultiChannelML.html" />
+    <link rel="next" title="Smart Model Select" href="smart_model_select.html" />
     <link rel="prev" title="Acceleration Hardware" href="../common/Acceleration-Hardware.html" /> 
 	</head>
 	<body>
@@ -226,7 +226,7 @@ function OptanonWrapper() { }
             
             
               <div class="version">
-                1.0.3
+                1.1
               </div>
             
           
@@ -264,15 +264,14 @@ function OptanonWrapper() { }
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Platforms &amp; Applications</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#som-examples">SOM Examples</a><ul>
-<li class="toctree-l3"><a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/smartcamera/smartcamera_landing.html">Smart Camera</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/aibox-reid/aibox_landing.html">AIBox-ReID</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/defect-detect/defectdetect_landing.html">Defect Detect</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/nlp-smartvision/nlp_smartvision_landing.html">NLP SmartVision</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://www.xilinx.com/products/app-store/kria/smart-camera.html">Smart Camera</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://www.xilinx.com/products/app-store/kria/ai-box-for-pedestrian-tracking.html">AIBox-ReID</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://www.xilinx.com/products/app-store/kria/defect-detection.html">Defect Detect</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#zcu104-examples">ZCU104 Examples</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="Tutorials/MultiChannelML.html">Multi Channel ML</a></li>
 <li class="toctree-l3"><a class="reference internal" href="smart_model_select.html">Smart Model Select</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Tutorials/MultiChannelML.html">Multi Channel ML</a></li>
 </ul>
 </li>
 </ul>
@@ -361,22 +360,22 @@ function OptanonWrapper() { }
             
   <div class="section" id="platforms-and-applications">
 <h1>Platforms And Applications<a class="headerlink" href="#platforms-and-applications" title="Permalink to this headline">¶</a></h1>
-<p>This VVAS release supports Zynq MPSoc based Embedded platforms and it has been validated with <code class="docutils literal notranslate"><span class="pre">KV260</span> <span class="pre">SOM</span></code> and <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> platforms. Various supported example applications using VVAS on these platforms are listed below.</p>
+<p>This VVAS release supports Zynq MPSoc based Embedded platforms like  <code class="docutils literal notranslate"><span class="pre">KV260</span> <span class="pre">SOM</span></code> and <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> platforms. This release has also enabled the support for <code class="docutils literal notranslate"><span class="pre">Versal</span></code> device based platforms. This release has been validated on <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> based platform for different usecases. Various supported example applications using VVAS on <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> and <code class="docutils literal notranslate"><span class="pre">KV260</span> <span class="pre">SOM</span></code> based platforms are listed below. For creating example designs for <code class="docutils literal notranslate"><span class="pre">Versal</span></code> based platforms, you may refer to the <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> based example designs provided with this release as reference for patches needed for other platforms.</p>
 <div class="section" id="som-examples">
 <h2>SOM Examples<a class="headerlink" href="#som-examples" title="Permalink to this headline">¶</a></h2>
-<p>There are four Application specific SOM platforms supported. Click on the link below to know more about these.</p>
+<p>There are three Application specific SOM platforms supported. Click on the link below to know more about these.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently KV260 SOM example designs mentioned below are based on VVAS 1.0 and Vitis AI 1.4 release. These designs will be upgraded to VVAS 1.1 and Vitis AI 2.0 soon.</p>
+</div>
 <dl class="simple">
-<dt>Smart Camera</dt><dd><p>Smart Camera Application with face detection and display functionality. For more details refer to <a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/smartcamera/smartcamera_landing.html">Smart Camera</a></p>
+<dt>Smart Camera</dt><dd><p>Smart Camera Application with face detection and display functionality. For more details refer to <a class="reference external" href="https://www.xilinx.com/products/app-store/kria/smart-camera.html">Smart Camera</a></p>
 </dd>
-<dt>AIBox-ReiD</dt><dd><p>Application demonstrating multistream tracking and Re-Identification. For more details, refer to <a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/aibox-reid/aibox_landing.html">AIBox-ReID</a></p>
+<dt>AIBox-ReiD</dt><dd><p>Application demonstrating multistream tracking and Re-Identification. For more details, refer to <a class="reference external" href="https://www.xilinx.com/products/app-store/kria/ai-box-for-pedestrian-tracking.html">AIBox-ReID</a></p>
 </dd>
-<dt>Defect Detection</dt><dd><p>Application to detect defects in mangoes. For more details, refer to <a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/defect-detect/defectdetect_landing.html">Defect Detect</a></p>
-</dd>
-<dt>NLP SmartVision</dt><dd><p>Application to demonstrate Natural Language Processing feature. For more details refer to <a class="reference external" href="https://xilinx.github.io/kria-apps-docs/docs/nlp-smartvision/nlp_smartvision_landing.html">NLP SmartVision</a></p>
+<dt>Defect Detection</dt><dd><p>Application to detect defects in mangoes. For more details, refer to <a class="reference external" href="https://www.xilinx.com/products/app-store/kria/defect-detection.html">Defect Detect</a></p>
 </dd>
 </dl>
-<div class="toctree-wrapper compound">
-</div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -387,9 +386,9 @@ function OptanonWrapper() { }
 <div class="section" id="zcu104-examples">
 <h2>ZCU104 Examples<a class="headerlink" href="#zcu104-examples" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>Multi Channel ML</dt><dd><p>This application demonstrates multi channel multi model Machine Learning capability using VVAS. <a class="reference internal" href="Tutorials/MultiChannelML.html"><span class="doc">Multi Channel ML Tutorial</span></a> tutorial for beginners explains step by step approach to build this application/pipeline using VVAS.</p>
-</dd>
 <dt>Smart Model Select</dt><dd><p>This application allows selection of ML model from 16 supported models, input source and output using command line and then it constructs and executes the pipeline. For more details, refer to <a class="reference internal" href="smart_model_select.html"><span class="doc">Smart ML Model Select</span></a>.</p>
+</dd>
+<dt>Multi Channel ML</dt><dd><p>This application demonstrates multi channel multi model Machine Learning capability using VVAS. <a class="reference internal" href="Tutorials/MultiChannelML.html"><span class="doc">Multi Channel ML Tutorial</span></a> tutorial for beginners explains step by step approach to build this application/pipeline using VVAS.</p>
 </dd>
 </dl>
 <div class="toctree-wrapper compound">
@@ -415,7 +414,7 @@ function OptanonWrapper() { }
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Tutorials/MultiChannelML.html" class="btn btn-neutral float-right" title="Multichannel ML" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="smart_model_select.html" class="btn btn-neutral float-right" title="Smart Model Select" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../common/Acceleration-Hardware.html" class="btn btn-neutral float-left" title="Acceleration Hardware" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -428,7 +427,7 @@ function OptanonWrapper() { }
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 10, 2021.
+        Last updated on February 16, 2022.
       </span>
 
     </p>
