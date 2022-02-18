@@ -1,18 +1,14 @@
 # Vitis™ Video Analytics SDK
 
-## Copyright and license statement
-Copyright 2022 Xilinx Inc.
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
-[http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0).
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-### To clone this repo:
+## To clone this repo
 
 ```
 git clone https://github.com/Xilinx/VVAS.git
 ```
+
+## View the [Documentation](https://xilinx.github.io/VVAS/)
+
 
 ## Folder Structure
 
@@ -27,20 +23,36 @@ git clone https://github.com/Xilinx/VVAS.git
 
 A helper script, **./build_install_vvas.sh**, is provided in root of this repo to build and install VVAS components.
 
-Step 1 : Source sysroot path if not done already
+Step 1: Source sysroot path (if not done already)
+
 ```
 	source <sysroot path>/environment-setup-cortexa72-cortexa53-xilinx-linux
 ```
+
 Step 2 : Build
+
 ```
 	./build_install_vvas.sh Edge
 ```
+
 Step 3 : copy VVAS installer to embedded board
+
 ```
 	scp install/vvas_installer.tar.gz <board ip>:/
 ```
+
 Step 4 : Install VVAS on embedded board
+
 ```
 	cd /
 	tar -xvf vvas_installer.tar.gz
 ```
+
+## Copyright and license statement
+
+Copyright 2021-2022 Xilinx Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+[http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
