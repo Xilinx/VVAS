@@ -12,16 +12,16 @@ git clone https://github.com/Xilinx/VVAS.git
 
 ## Folder Structure
 
-- **vvas-utils** core contains infrastructure libraries for VVAS gstreamer plugins and kernel libraries
-- **vvas-gst-plugins** contains VVAS specific gstreamer plugins
-- **vvas-accel-sw-libs** contains VVAS specific kernel libs which are supported by VVAS gstreamer infrastructure plugins
-- **vvas-accel-hw** contains VVAS HW kernels which can be build with vitis
-- **vvas-examples** contains examples for using VVAS stack
-- **vvas-platform** contains sample VVAS platforms
+- `vvas-utils` core contains infrastructure libraries for VVAS gstreamer plugins and kernel libraries
+- `vvas-gst-plugins` contains VVAS specific gstreamer plugins
+- `vvas-accel-sw-libs` contains VVAS specific kernel libs which are supported by VVAS gstreamer infrastructure plugins
+- `vvas-accel-hw` contains VVAS HW kernels which can be build with vitis
+- `vvas-examples` contains examples for using VVAS stack
+- `vvas-platform` contains sample VVAS platforms
 
-## Build and install VVAS essentials for embedded solutions:
+## Build and install VVAS essentials for embedded solutions
 
-A helper script, **./build_install_vvas.sh**, is provided in root of this repo to build and install VVAS components.
+A helper script, `./build_install_vvas.sh`, is provided in root of this repo to build and install VVAS components.
 
 Step 1: Source sysroot path (if not done already)
 
