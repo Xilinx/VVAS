@@ -61,7 +61,7 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :caption: Data Center
    :hidden:
 
-   Plattforms & Applications <docs/DC/platforms_and_applications>
+   Platforms & Applications <docs/DC/platforms_and_applications>
    Plugins <docs/DC/6-DC-plugins>
 
 .. toctree::
