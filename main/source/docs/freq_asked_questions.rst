@@ -1,5 +1,5 @@
 ..
-   Copyright 2021 Xilinx, Inc.
+   Copyright 2022 Xilinx, Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -57,9 +57,9 @@ VVAS Release has been covered by below mentioned licenses:
 .. raw:: html
 
    <details>
-   <summary>What platform and OS are compatible with VVAS?</summary>
+   <summary>What platforms and OS are compatible with VVAS?</summary>
 
-VVAS is tested on PetaLinux for embedded platforms. For more information about supported platforms, refer to :doc:`Platforms And Applications <Embedded/platforms_and_applications>`.
+VVAS is tested on PetaLinux for embedded platforms and UBUntu 20.04 for PCIe based platforms. For more information about supported platforms, refer to :doc:`Platforms And Applications <Embedded/platforms_and_applications>`.
 
 
 .. raw:: html
@@ -97,6 +97,7 @@ The following models are supported for this release:
 * densebox_320_320
 * densebox_640_360
 * Semantic Segmentation
+* TBD
 
 .. raw:: html
 
@@ -110,7 +111,7 @@ The following models are supported for this release:
    <details>
    <summary>How do I enable models that are not officially supported?</summary>
 
-Does this mean models not supported by Vitis AI? If the model is not in DPU deployable format, then it first needs to be converted into DPU deployable state. For this refer to `Vitis AI 2.0 documentation <https://www.xilinx.com/html_docs/vitis_ai/2_0/zmw1606771874842.html>`_.
+If the model is not in DPU deployable format, then it first needs to be converted into DPU deployable state. For this refer to `Vitis AI 2.5 documentation <https://docs.xilinx.com/access/sources/dita/map?Doc_Version=2.5%20English&url=ug1414-vitis-ai>`_.
 
 
 .. raw:: html
@@ -125,7 +126,7 @@ Does this mean models not supported by Vitis AI? If the model is not in DPU depl
    <details>
    <summary>What is the version of Vitis AI tool used for VVAS?</summary>
 
-This VVAS release supports Vitis AI 2.0.
+This VVAS release supports Vitis AI 2.5.
 
 
 .. raw:: html
@@ -139,7 +140,7 @@ This VVAS release supports Vitis AI 2.0.
    <details>
    <summary>Is VVAS compatible with lower versions of Vitis AI tools, such as VAI 1.3?</summary>
 
-No, it has dependencies on Vitis AI 2.0.
+No, it has dependencies on Vitis AI 2.5.
 
 
 .. raw:: html
@@ -153,7 +154,7 @@ No, it has dependencies on Vitis AI 2.0.
    <details>
    <summary>How can I change the model in the pipeline?</summary>
 
-The model name to be used for inferencing has to be provided in the JSON file for dpuinfer. For more details, see :ref:`DPU Infer <json-vvas-dpuinfer>`.
+The model name to be used for inferencing has to be provided in the JSON file for vvas_xdpuinfer acceleration library. For more details, see :ref:`DPU Infer <json-vvas-dpuinfer>`.
 
 
 .. raw:: html
@@ -167,7 +168,7 @@ The model name to be used for inferencing has to be provided in the JSON file fo
    <details>
    <summary>Can the model be changed dynamically?</summary>
 
-while a pipeline is running, the model details cannot change. To change the model's details, stop the running pipeline, and then update the JSON file. Re-start the pipeline.
+while a pipeline is running, the model parameters cannot be modified. To change the model's parameters, stop the running pipeline, and then update the JSON file and then re-start the pipeline.
 
 
 .. raw:: html
@@ -237,7 +238,7 @@ Refer to :doc:`Acceleration s/w development guide <common/6-common-Acceleration-
    <details>
    <summary>Do I need FPGA design experience to develop video analytics applications with VVAS?</summary>
 
-No. Using a platform that supports the required hardware/software components for the video analytics applications, you can directly use VVAS to realize your video analytics application with several reference solutions. Refer :doc:`Platforms And Applications <Embedded/platforms_and_applications>`.
+No. VVAS SDK ships with most of the building blocks needed for video alalytics applications. These building blocks are highly optimized and ready to use. There are several example designs available with this release for video analytics applications. You may directly use these or make modifications as per your needs to build video analytics application. Refer :doc:`Platforms And Applications <Embedded/platforms_and_applications>`.
 
 .. raw:: html
 
@@ -262,7 +263,7 @@ Yes. The :ref:`ROI Plug-in <roi-plugin>` that generates ROI data required for en
 .. raw:: html
 
    <details>
-   <summary>Can I generate multiple outputs for a single input?</summary>
+   <summary>Can I generate multiple output resolutions for a single input frame?</summary>
 
 Yes. The ``vvas_xabrscaler`` plug-in controls the ``multiscaler`` kernel to generate up to 8 different resolutions for one input frame. This plugin, along with resize, can also do colorspace conversion.
 
@@ -306,7 +307,7 @@ Yes. There are sample accelerated platforms and applications provided that you c
    <details>
    <summary>Is there support for multi-stage (cascading) network?</summary>
 
-One can connect multipe instances of ``vvas_xdpuinfer`` one after another to implement multi-stage cascading network and each ML instance will generate its own inference data separately. This is already supported in this release. However accumulation of inference data from several ML instances in a pipeline into a single meta data structure is not yet supported by plug-ins and this has to be done by the application.
+One can connect multipe instances of ``vvas_xinfer`` one after another to implement multi-stage cascading network. Inference data generated by current ML operation will be appended to the Inference data generated by the previous ML stages.
 
 .. raw:: html
 
@@ -345,7 +346,7 @@ Using GStreamer's native fps display mechanism.
    <details>
    <summary>How do I compile and prune the model to be used?</summary>
 
-Refer to `Vitis AI 2.0 documentation <https://www.xilinx.com/html_docs/vitis_ai/2_0/zmw1606771874842.html>`_.
+Refer to `Vitis AI 2.5 documentation <https://docs.xilinx.com/access/sources/dita/map?Doc_Version=2.5%20English&url=ug1414-vitis-ai>`_.
 
 .. raw:: html
 

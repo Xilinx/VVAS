@@ -21,12 +21,7 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
-	<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
-<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="37701bd4-e5c0-4ee3-9329-e7475d0b13a7" ></script>
-<script type="text/javascript">
-function OptanonWrapper() { }
-</script>
-<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+	
 		<!-- Google Tag Manager -->
 	<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -58,6 +53,7 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -72,10 +68,10 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Tutorials" href="Tutorials/Tutorials.html" />
-    <link rel="prev" title="Multichannel ML" href="Tutorials/MultiChannelML.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -226,7 +222,7 @@ function OptanonWrapper() { }
             
             
               <div class="version">
-                1.1
+                2.0
               </div>
             
           
@@ -251,38 +247,29 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">For Advanced Developers</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
-<ul class="current">
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Plugins</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#omx-encoder-decoder-plug-in">OMX Encoder/Decoder Plug-in</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#region-of-interest-plug-in">Region of Interest Plug-in</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#input-and-output">Input and Output</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#control-parameters-and-plug-in-properties">Control Parameters and Plug-in Properties</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#example-pipelines">Example Pipelines</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
@@ -394,7 +381,7 @@ For more details about these plugins, refer to the <a class="reference external"
 </div>
 <div class="section" id="region-of-interest-plug-in">
 <span id="roi-plugin"></span><h2>Region of Interest Plug-in<a class="headerlink" href="#region-of-interest-plug-in" title="Permalink to this headline">¶</a></h2>
-<p>The region of interest (ROI) GStreamer vvas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The vvas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an IVAS supported list of metadata objects (GstInferenceMeta).</p>
+<p>The region of interest (ROI) GStreamer vvas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The vvas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an VVAS supported list of metadata objects (GstInferenceMeta).</p>
 <p>For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/roigen">vvas_xroigen source code</a>.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -438,7 +425,7 @@ only for
 class-filters
 array of strings
 out of classes
-present in IVAS
+present in VVAS
 supported metadata
 objects.</p>
 <p>Default behavior:
@@ -619,22 +606,13 @@ range=&quot;&lt;0,0,500,300&gt;&quot; \
 
 	  <!-- Sphinx Page Footer block -->
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Tutorials/Tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="Tutorials/MultiChannelML.html" class="btn btn-neutral float-left" title="Multichannel ML" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
 
   <hr/>
 
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 16, 2022.
+        Last updated on June 22, 2022.
       </span>
 
     </p>

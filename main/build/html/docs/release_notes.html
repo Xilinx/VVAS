@@ -21,12 +21,7 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
-	<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
-<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="37701bd4-e5c0-4ee3-9329-e7475d0b13a7" ></script>
-<script type="text/javascript">
-function OptanonWrapper() { }
-</script>
-<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+	
 		<!-- Google Tag Manager -->
 	<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -58,6 +53,7 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
@@ -72,6 +68,8 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Plug-ins" href="common/common_plugins.html" />
@@ -226,7 +224,7 @@ function OptanonWrapper() { }
             
             
               <div class="version">
-                1.1
+                2.0
               </div>
             
           
@@ -251,35 +249,40 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-summary">Release Summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#what-is-new-in-this-release">What is new in this release?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#known-limitations">Known Limitations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#known-issues">Known Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#known-issues">Known Issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-center">Data Center</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#patches">Patches</a></li>
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="common/common_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/vvas_meta_data_structures.html">Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common/for_developers.html">For Advanced Developers</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Embedded/6-embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Embedded/embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DC/6-DC-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DC/DC_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
@@ -334,7 +337,7 @@ function OptanonWrapper() { }
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Vitis Video Analytics SDK Release V1.1</li>
+      <li>Vitis Video Analytics SDK Release V2.0</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -353,43 +356,63 @@ function OptanonWrapper() { }
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="vitis-video-analytics-sdk-release-v1-1">
-<h1>Vitis Video Analytics SDK Release V1.1<a class="headerlink" href="#vitis-video-analytics-sdk-release-v1-1" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="vitis-video-analytics-sdk-release-v2-0">
+<h1>Vitis Video Analytics SDK Release V2.0<a class="headerlink" href="#vitis-video-analytics-sdk-release-v2-0" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="release-summary">
+<h2>Release Summary<a class="headerlink" href="#release-summary" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Based on Vivado 2021.2, Vitis 2021.2, Petalinux 2021.2</p></li>
-<li><p>Based on Vitis AI 2.0 for Machine Learning</p></li>
-<li><p>Supports:</p>
-<ul>
-<li><p>Zynq Ultrascale+ MPSoc based devices like <code class="docutils literal notranslate"><span class="pre">ZCU104</span></code> Development Board and <code class="docutils literal notranslate"><span class="pre">KV260</span></code> SOM Embedded Platforms</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Versal</span></code> based platforms like <code class="docutils literal notranslate"><span class="pre">vck190</span></code></p></li>
+<li><p>Based on Vivado 2022.1, Vitis 2022.1, Petalinux 2022.1</p></li>
+<li><p>Based on Vitis AI 2.5 for Machine Learning</p></li>
+<li><dl class="simple">
+<dt>Embedded Platforms</dt><dd><ul>
+<li><p>Zynq UltraScale+ MPSoC based <code class="docutils literal notranslate"><span class="pre">ZCU104</span></code> Development Board</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KV260</span></code> KRIA SOM Boards</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vck190</span></code> board, a <code class="docutils literal notranslate"><span class="pre">Versal</span></code> based platform</p></li>
 </ul>
+</dd>
+</dl>
 </li>
+<li><dl class="simple">
+<dt>PCIe/Data Center Platform</dt><dd><ul>
+<li><p>Zynq UltraScale+ MPSoC based Alveo U30 Cards</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Based on GStreamer 1.18</p></li>
 </ul>
 </div>
 <div class="section" id="what-is-new-in-this-release">
 <h2>What is new in this release?<a class="headerlink" href="#what-is-new-in-this-release" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Added support for <code class="docutils literal notranslate"><span class="pre">Versal</span></code> device based platforms</p></li>
-<li><p>Support for cascaded Machine Learning</p></li>
-<li><p>Introducing a new plug-in called <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code>, which supports:</p>
+<li><p>Introducing support for PCIe based platforms</p>
 <ul>
-<li><p>pre-processing (Resize, colorspace conversion, Normalization</p></li>
-<li><p>batch mode for increased DPU throughput</p></li>
-<li><p>Consolidating the inference information generated from previous levels into a single data structure.</p></li>
+<li><p>Releasing example design for Transcoding solution on Alveo U30 based platform</p></li>
 </ul>
 </li>
-<li><p>Added support for two new models
-- Semantic Segmentation
-- Numberplate detection</p></li>
+<li><p>Added new plug-ins</p>
+<ul>
+<li><p><strong>vvas_xcompositor</strong>: Hardware accelerated composition of frames from up to 16 input sources.</p></li>
+<li><p><strong>vvas_xmulticrop</strong>: Hardware accelerate cropping of multiple ROI from a frame.</p></li>
+<li><p><strong>vvas_xopticleflow</strong>: To detect motion using optical flow algorithm.</p></li>
+<li><p><strong>vvas_xoverlay</strong>: To draw text, rectangle, polygone, arrows, circles on a frame</p></li>
+<li><p><strong>vvas_xmetaconvert</strong>: plug-in to translate inference meta data in to overlay meta data</p></li>
+<li><p><strong>vvas_xtracker</strong>: Implements tracking algorithms to track objects in multiple frames</p></li>
+<li><p><strong>vvas_xfunnel</strong>: Multiplex streams on multiple input pads and output onto a single pad</p></li>
+<li><p><strong>vvas_xdefunnel</strong>: Send buffetrs received on input pad on different output pads corresponding to the stream id information associated with the buffer.</p></li>
+</ul>
+</li>
+<li><p>Migrated to XRT native APIs
+- Development of acceleration software libraries simplified with this change. This is not backward compatible.</p></li>
+<li><p>Tutorial for cascaded Machine Learning</p></li>
+<li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygone etc.</p></li>
 </ul>
 </div>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Supports different input sources like Camera, RTP/RTSP streaming, file source etc.</p></li>
-<li><p>H264/H265 Video Encoding/Decoding</p></li>
+<li><p>Hardware accelerated H264/H265 Video Encoding/Decoding</p></li>
 <li><p>Vitis AI based inferencing for detection and classification</p></li>
 <li><p>Supported ML Models</p>
 <ul>
@@ -414,23 +437,34 @@ function OptanonWrapper() { }
 </li>
 <li><p>Hardware accelerated Resize and color space conversion</p></li>
 <li><p>Region Of Interest based encoding</p></li>
-<li><p>On-screen displaying bounding box around objects and text overly</p></li>
+<li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygone etc.</p></li>
 <li><p>HDMI Tx and Display Port interface for displaying the contents</p></li>
 </ul>
 </div>
 <div class="section" id="known-limitations">
 <h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline">¶</a></h2>
-<p>For known limitations, refer to the example/application design for specific limitations, if any.</p>
+<ul class="simple">
+<li><p>Multiscaler kernel require minimum cropping width and height to be 64. In case the cropping width or height is less than 64, then cropping is not performed.</p></li>
+<li><p>Due to the above limitation, during cascadded ML inferencing, in case the first stage ML inference generates- objects with region of interest having width and/height less than 64, then the object is not cropped and the ML inference for that object in next stages will not be correct.</p></li>
+<li><p>All inputs to the <code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> shall have same frame rate otherwise the processing will be controlled by the slowest frame rate input stream.</p></li>
+</ul>
+<p>For platform/example specific known limitations, refer to the example/application design.</p>
 </div>
 <div class="section" id="known-issues">
 <h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="data-center">
+<h3>Data Center<a class="headerlink" href="#data-center" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>High density transcoding performance is less than real time as XRT is being configured in polling mode instead of interrupt mode because of a known issue in XRT on U30 platform.</p></li>
+</ul>
 <p>For known issues, refer to the example/application design for specific issues, if any.</p>
+</div>
 </div>
 <div class="section" id="patches">
 <h2>Patches<a class="headerlink" href="#patches" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic simple">
-<li><p>We need one patch in XRT to fix an issue related to memory bank handling. This issue was seen in Versal based platform when plug-in tries to write into a buffer from memory Bank 3. Refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-platforms/Embedded/zcu104_vcuDec_DP/petalinux/project-spec/meta-user/recipes-xrt">XRT Patch</a> for more details.</p></li>
-</ol>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
 </div>
 </div>
 
@@ -463,7 +497,7 @@ function OptanonWrapper() { }
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 16, 2022.
+        Last updated on June 22, 2022.
       </span>
 
     </p>

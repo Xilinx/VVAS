@@ -1,10 +1,10 @@
-############################################################
+﻿############################################################
 Vitis Video Analytics SDK Overview
 ############################################################
 
 The Vitis Video Analytics SDK **(VVAS)** is a framework to build transcoding and AI-powered solutions on Xilinx platforms. It takes input data - from USB/CSI camera, video from file or streams over RTSP, and uses Vitis AI to generate insights from pixels for various usecases. VVAS SDK can be the foundation layer for several video analytic solutions like understanding traffic and pedestrians in smart city, health and safety monitoring in hospitals, self-checkout and analytics in retail, detecting component defects at a manufacturing facility and others. VVAS can also be used to build Adaptive Bitrate Transcoding solutions that may require re-encoding the incoming video at different bitrates, resolution and encoding format. 
 
-The core SDK consists of several hardware accelerator plugins that use various accelerators such as Video Encoder, Decoder, multiscaler (for resize and color space conversion), Deep learning Processing Unit (DPU) for Machine Learning etc.. By performing all the compute heavy operations in dedicated accelerators, VVAS can achieve highest performance for video analytics, transcoding and several other application areas. 
+The core SDK consists of several ready to use, highly optimized plug-ins that use various accelerators such as Video Encoder, Decoder, multiscaler (for resize and color space conversion), Deep learning Processing Unit (DPU) for Machine Learning etc.. By performing all the compute heavy operations in dedicated accelerators, VVAS can help in building highest performance pipelines for video analytics, transcoding and several other application areas. 
 
 For the developer community, VVAS also provides a framework in the form of generic Infrastructure plugins, software acceleration libraries and a simplified interface to develop their own acceleration library to control a custom hardware accelerator. Using this framework, user can easily integrate their custom accelerators/kernels into Gstreamer framework. VVAS builds on top of Xilinx Run Time (XRT) and Vitis AI and abstracts these complex interfaces, making it easy for developers to build video analytics and transcoding pipelines without having to learn the complexities of XRT, Vitis AI.
 
@@ -15,9 +15,9 @@ Using VVAS SDK,  applications can be deployed on an embedded edge device running
 
    VVAS Block Diagram
 
-**********************************************************
+************************
 VVAS Graph Architecture
-**********************************************************
+************************
 
 VVAS is an optimized graph architecture built using the open source GStreamer framework. The graph below shows a typical video analytic application starting from input video to outputting insights. All the individual blocks are various plugins that are used. At the bottom are the different hardware engines that are utilized throughout the application. Optimum memory management with zero-memory copy between plugins and the use of various accelerators ensure the highest performance.
 
@@ -25,9 +25,9 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :width: 1100
 
 * Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. ``vvas_xvcudec``, ``omxh264dec`` and ``omxh265dec`` are the plugin for decoding. 
-* After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion. ``vvas_xabrscaler`` plugin can perform hardware accelerated resize as well as color format conversion on the frame.
-* After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, ``vvas_xfilter`` and ``vvas_xdpuinfer`` acceleration library. vvas_xdpuinfer is built on top of ``Vitis AI`` Development Kit to accelerate the AI Inference on Xilinx hardware platforms. 
-* To overlay the inference results such as bounding boxes, labels etc., there is a software acceleration library called ``vvas_xboundingbox``. This library along with vvas_xfilter plug-in draws bounding box and label information on the frame.
+* After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion, mean subtrction etc.. ``vvas_xabrscaler`` plugin can perform hardware accelerated resize as well as color format conversion on the frame.
+* After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, ``vvas_xfilter`` and ``vvas_xdpuinfer`` acceleration library. There is another plug-in, ``vvas_xinfer`` that performs pre-processing as well as ML inferencing in batch mode to give improved performance. ``vvas_xdpuinfer`` is built on top of ``Vitis AI`` Development Kit to accelerate the AI Inference on Xilinx hardware platforms. 
+* To overlay the inference results such as bounding boxes, labels. arrows etc., there is a software acceleration library called ``vvas_xboundingbox``. This library along with vvas_xfilter plug-in draws bounding box and label information on the frame.
 * Finally to output the results, VVAS presents various options, like render the output with the bounding boxes on the screen, save the output to the local disk, stream out over RTSP.
 
 
@@ -45,6 +45,7 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :hidden:
 
    Plugins <docs/common/common_plugins>
+   Meta Data <docs/common/vvas_meta_data_structures>
    For Advanced Developers <docs/common/for_developers>
 
 .. toctree::
@@ -53,7 +54,7 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :hidden:
 
    Platforms & Applications <docs/Embedded/platforms_and_applications>
-   Plugins <docs/Embedded/6-embedded-plugins>
+   Plugins <docs/Embedded/embedded-plugins>
    Tutorials <docs/Embedded/Tutorials/Tutorials>
 
 .. toctree::
@@ -61,8 +62,9 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :caption: Data Center
    :hidden:
 
-   Plattforms & Applications <docs/DC/platforms_and_applications>
-   Plugins <docs/DC/6-DC-plugins>
+   Platforms & Applications <docs/DC/platforms_and_applications>
+   Plugins <docs/DC/DC_plugins>
+   Tutorials <docs/DC/Tutorials/Tutorials>
 
 .. toctree::
    :maxdepth: 3
@@ -99,7 +101,7 @@ These are highly optimized GStreamer plug-ins developed  to provide very specifi
 Infrastructure Plug-ins
 ------------------------------------------------
 
-These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to :ref:`VVAS Infrastructure Plug-ins <infra_plugins_label>` for more details about how to use these plug-ins. These plug-ins are part of “vvas-gst-plugins” repository.
+These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to :ref:`VVAS Infrastructure Plug-ins <infra_plugins_label>` for more details about how to use these plug-ins. These plug-ins are part of “vvas-gst-plugins” folder in the VVAS sources tree.
 
 Acceleration S/W Libs
 -----------------------------------
@@ -114,4 +116,4 @@ These are highly optimized Kernels being developed by Xilinx. Details of these a
 Reference Platforms and Applications
 ------------------------------------------
 
-There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms and sample application details can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section.
+There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms example designs and sample application details can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section. Similarly Platforms and application details for PCIe/Data center are covered in :doc:`PCIe/Data Center Platforms and Applications <docs/DC/platforms_and_applications>`
