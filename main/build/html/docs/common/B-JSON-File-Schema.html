@@ -21,7 +21,12 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
-	
+	<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="37701bd4-e5c0-4ee3-9329-e7475d0b13a7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
 		<!-- Google Tag Manager -->
 	<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -53,7 +58,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -68,8 +72,6 @@
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 	</head>
@@ -222,7 +224,7 @@
             
             
               <div class="version">
-                2.0
+                1.1
               </div>
             
           
@@ -247,29 +249,27 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<p class="caption"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<p class="caption"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
@@ -389,14 +389,14 @@ processing
 load.</p></td>
 </tr>
 <tr class="row-odd"><td><blockquote>
-<div><p>vvas-l</p>
+<div><p>ivas-l</p>
 </div></blockquote>
 <p>ibrary-repo</p>
 </td>
 <td colspan="2"><p>String</p></td>
 <td><p>Optional</p></td>
 <td><p>/usr/lib</p></td>
-<td><p>The VVAS
+<td><p>The IVAS
 library
 repository
 path that
@@ -406,7 +406,7 @@ cceleration
 software
 libraries
 using the
-VVAS
+IVAS
 GStreamer
 plug-in.</p></td>
 </tr>
@@ -567,7 +567,7 @@ object
 provides
 information
 about an
-VVAS video
+IVAS video
 library
 con
 figuration.</p>
@@ -612,11 +612,11 @@ ibrary-name</p></td>
 <td><p>Mandatory</p></td>
 <td><p>None</p></td>
 <td><p>The name of
-the VVAS
+the IVAS
 video
 library
 loaded by
-the VVAS
+the IVAS
 GStreamer
 plug-ins.
 The
@@ -626,7 +626,7 @@ video
 library is
 formed by
 pre-pending
-the vvas-
+the ivas-
 l
 ibrary-repo
 path.</p></td>
@@ -658,10 +658,10 @@ co</p>
 <dt>nfiguration</dt><dd><blockquote>
 <div><p>specific
 to the
-VVAS
+IVAS
 video
 library.
-The VVAS</p>
+The IVAS</p>
 </div></blockquote>
 <dl class="simple">
 <dt>GStreamer</dt><dd><p>plug-ins
@@ -742,7 +742,7 @@ based</p>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 22, 2022.
+        Last updated on February 16, 2022.
       </span>
 
     </p>

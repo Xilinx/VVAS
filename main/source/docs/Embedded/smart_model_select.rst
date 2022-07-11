@@ -1,6 +1,6 @@
-##############################
-Smart Model Select Application
-##############################
+#########################################
+Smart Model Select
+#########################################
 
 Smart Model Select is an example application to demonstrate inferencing using 16 Machine Learning (ML) models supported by VVAS. User can select the input source, ML model to be used and the output option, like display on monitor or dump the results to file.
 
@@ -13,9 +13,9 @@ Smart Model Select application design is built on ``zcu104`` development board w
 
 Smart Model Select design doesn't support Capture Pipeline.
 
-*********
+************************************
 Features
-*********
+************************************
 
 Smart Model Select application supports below mentioned features
 
@@ -41,15 +41,15 @@ Smart Model Select application supports below mentioned features
 * H264/H265 Decode
 * Input can be from file or rtsp source
 
-**************
+************************************
 Prerequisites
-**************
+************************************
 
 Before attempting the execution of application, please ensure that all the pre-requisites mentioned below are fulfilled.
 
 
 Hardware Requirements
-======================
+=====================================
 
 * `ZCU104 Evaluation Board Rev 1.0 <https://www.xilinx.com/products/boards-and-kits/zcu104.html>`_
 * Micro USB cable, connected to laptop or desktop computer for the terminal emulator
@@ -59,19 +59,19 @@ Hardware Requirements
 
 
 Software/Tools Requirements
-============================
+=========================================
 
 * Serial terminal emulator (for example, Tera Term)
 * Balena etcher or equivalent flashing tool to flash the SD Card image
 
 System Requirements
-====================
+======================
 
 - Board must have access to the internet and be accessible from your development system
 
 
 Application Design
-===================
+===============================
 
 ``Smart Model Select`` application design has a platform and integrated accelerator functions. 
 Platform is nothing but collection of hardware as well as software components required to build a solution. 
@@ -85,23 +85,29 @@ If for some reason, one wants to build the design from scratch, then refer to th
 
     VVAS platform ``zcu104_vcuDec_DP`` may not be performance optimal. This platform is made available as reference along with `Smart Model Select Application`.
 
+.. Note::
+
+    VVAS platform ``zcu104_vcuDec_DP`` adds patch to irps5401 driver for zcu104 board to support multi thread execution of VAI models.
+    This `patch <https://github.com/Xilinx/Vitis-AI/tree/master/dsa/DPU-TRD/app/dpu_sw_optimize.tar.gz>`_ shouldn't be applied to other boards 
+    and is not part of the official Xilinx released 2021.2 Petalinux.
+
 
 .. _prebuilt_binaries:
 
 Pre-built binaries
-===================
+===============================
 
 Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.
 
 Create a folder, say `PREBUILT_BINARIES`, where pre-built binaries are to be downloaded.
 
-Click on `Smart Model Select Prebuilt Binaries <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2022.1_zcu104.zip>`_. This will ask for few credentials and then start downloading. 
+Click on `Smart Model Select Prebuilt Binaries <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2021.2_zcu104.zip>`_. This will ask for few credentials and then start downloading. 
 
-Unzip the downloaded package `vvas_smart_model_select_2022.1_zcu104.zip`.
+Unzip the downloaded package `vvas_smart_model_select_2021.2_zcu104.zip`.
 
 .. code-block::
    
-   unzip vvas_smart_model_select_2022.1_zcu104.zip
+   unzip vvas_smart_model_select_2021.2_zcu104.zip
 
 
 Prebuilt binaries package includes
@@ -117,30 +123,30 @@ Prebuilt binaries package includes
 
    The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
 
-Open Source Licenses and Source code - VVAS 2.0
+Open Source Licenses and Source code - VVAS 1.1
 ------------------------------------------------
 
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip>`_ that contain the Open Source Licenses and source code.
+In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_1_1_thirdparty_sources.zip>`_ that contain the Open Source Licenses and source code.
 
 Once you have downloaded the prebuilt binaries, you need to prepare the setup to execute the application, as shown in the next section.
 
 .. _preparing_setup:
 
-********************
+**************************************
 Preparing the setup
-********************
+**************************************
 
 It is assumed that all the pre-requisites are fulfilled and we are ready to setup the board and execute the example application. There are few steps that are required only for the first time when the ``zcu104`` board is not flashed with the sd_card image for ``smart_model_select`` application. You may skip these steps if ``zcu104`` board has already been flashed with the required sd_card image.
 
 One time setup
-===============
+=========================
 
 * Flash the SD Card with the ``sd_card.img`` using any SD card flashing tool like dd, Win32DiskImager, or BalenaEtcher.
 
   If using pre-built binaries, then sd_card.img is located as
   ::
   
-    <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/sd_card.img
+    <PREBUILT_BINARIES>/vvas_smart_model_select_2021.2_zcu104/sd_card.img
 
   If you have built the platform yourself, then sd_card.img would be located at
   ::
@@ -157,14 +163,12 @@ One time setup
 
      resize-part /dev/mmcblk0p2
 
-* Copy the `<PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/app` folder of the application onto `home` folder of the board.
-
+* Copy the `<PREBUILT_BINARIES>/vvas_smart_model_select_2021.2_zcu104/app` folder of the application onto `home` folder of the board.
   .. code-block::
 
-     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/app root@<board ip>:~/
+     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2021.2_zcu104/app root@<board ip>:~/
 
 * After copying, ``chmod`` `~/app/setup.sh` and `~/app/smart_model_select` to make them executable on the board.
-
   .. code-block::
 
      chmod 777 ~/app/smart_model_select
@@ -173,13 +177,13 @@ One time setup
 * Create `/usr/share/vitis_ai_library/models` folder on the board and copy the Vitis-AI models into it::
 
      mkdir -p /usr/share/vitis_ai_library/models
-     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/models/* root@<board ip>/usr/share/vitis_ai_library/models/
+     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2021.2_zcu104/models/* root@<board ip>/usr/share/vitis_ai_library/models/
 
 
 
-************************
+**********************************
 Running the application
-************************
+**********************************
 
 This section will elaborate on the usage of the application and various options with it.
 
@@ -224,13 +228,12 @@ Below command line prompt will appear on console/command prompt when the applica
        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 .. note::
-
         If performance mode is enabled, then the sink type should always be ``fakesink``. Otherwise pipeline will not execute.
         
         If performance mode is enabled, there will be 4 ML pipelines executed simultaneously feeding DPU from multiple threads. This results in improved performance compared to when using DPU from single thread.
 
-        In the GStreamer pipelines in this application, Sync is disabled. Which means frames are sent to the display at the rate at which these are processed by pipeline. Hence for smaller resolution streams, you may observe that frames are displayed at faster than real time rate.
-
+        In the GStreamer pipelines in this application, Sync is disabled. Which means frames are sent to the display at the rate at which these are processed by pipeline. Hence for smaller resolution streams, you may observe that frames are displayed at faster than real time rate
+        .
 Followed by the selection of ML model, source and sink elements, next step is the option to provide input filename or RTSP URL as applicable, to be processed.
 
 If the selected input is file source, then by default application will look for the input video files under `app/videos` folder. 
@@ -260,7 +263,7 @@ If the selected input source is “RTSP”, then application will prompt for ent
 
       Enter the RTSP url to be processed
 
-The application supports RTSP input with RTP packets containing H264 payload of resolution 1920x1080. One can download and setup GStreamer RTSP server or VLC can also be used to serve RTSP data. Follow below mentioned steps to compile GStreamer RTSP server. For successful compilation of GStreamer RTSP server, GStreamer framework must be installed as a prerequisite.
+The application supports RTSP input with RTP packets containing H264 payload of resolution 1920x1080. One can download and setup GStreamer RTSP server or VLC can also be used to serve RTSP data. Follow below steps to compile GStreamer RTSP server. For successful compilation of GStreamer RTSP server, GStreamer framework must be installed as a prerequisite.
 
 .. code-block::
 
@@ -291,15 +294,15 @@ Fig 2: Typical GStreamer pipeline that application creates
 
 .. _build_platform:
 
-*************
+********************************
 Build Design
-*************
+********************************
 
 The Design consists of a base platform and integrated accelerator functions (Kernels).
 
 
 Base Platform
-==============
+===========================
 
 ``Smart Model Select`` application requires video decoding, resizing the decoded frames, Machine Learning and finally display the output. Hence, we need a platform that fulfills these requirement. This VVAS release has ``zcu104_vcuDec_DP`` base platform that meets the requirements of decode and display. This platform has hardware accelerated video decoding IP, Video Codec Unit ``VCU``. For display, this platform supports ``Display Port``. The design also include two DPU 4096 cores for Machine Learning.
 
@@ -307,12 +310,12 @@ In addition to the above-mentioned hardware components, ``zcu104_vcuDec_DP`` sup
 
 * omxh264dec GStreamer plugin
 * Opensource framework like GStreamer, OpenCV
-* Vitis AI 2.5 libraries
+* Vitis AI 2.0 libraries
 * Xilinx Run Time (XRT)
 
 
 Compiling base platform
-========================
+==============================
 
 Complete sources along with workspace to build the platform is provided as part of this release. 
 Follow the steps mentioned below to compile the platform.
@@ -326,9 +329,9 @@ Follow the steps mentioned below to compile the platform.
          
 3. Setup tool chain environment::
 
-      source <2022.1_Vitis>/settings64.sh
-      source <2022.1_Petalinux>/settings.sh
-      source <2022.1_Vivado>/setenv.sh
+      source <2021.2_Vitis>/settings64.sh
+      source <2021.2_Petalinux>/settings.sh
+      source <2021.2_XRT>/setenv.sh
        
 4. Navigate to ``zcu104_vcuDec_DP`` platform folder::
 
@@ -340,10 +343,10 @@ Follow the steps mentioned below to compile the platform.
 
 .. _platform_path:
 
-After build is finished, platform will be available ``<VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202210_1/export/xilinx_zcu104_vcuDec_DP_202210_1/`` location.
+After build is finished, platform will be available ``<VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202120_1/export/xilinx_zcu104_vcuDec_DP_202120_1/`` location.
 
 Hardware Accelerators (Kernels)
-================================
+=========================================
 
 ``Smart Model Select`` application's requirements of Machine Learning and Resize operations are fulfilled by below mentioned accelerators (Kernels):
 
@@ -351,26 +354,19 @@ Hardware Accelerators (Kernels)
 *  ``Multiscaler`` for Preprocessing operation
 
 
-******************************************
+**********************************************************************
 Compiling Hardware Accelerators (Kernels)
-******************************************
+**********************************************************************
 
 The sources for hardware accelerators required for ``Smart Model Select`` application can be made available as mentioned below:
 
 1. Navigate to <VVAS_SOURCES>
 
-2. DPU Kernel sources can be obtained by following steps as below:
+2. DPU Kernel sources can be cloned from::
 
-  * Open the `reference_design <https://github.com/Xilinx/Vitis-AI/tree/master/reference_design#readme>`__ readme page from Vitis-AI release repo.
-
-  * Copy the ``Download Link`` for ``IP Name`` corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table::
-
-      wget -O DPUCZDX8G.tar.gz '<Download Link>'
-
-  * Uarchive ``DPUCZDX8G.tar.gz`` ::
-
-      tar -xf DPUCZDX8G.tar.gz
-
+      git clone https://github.com/Xilinx/Vitis-AI.git
+      cd Vitis-AI/
+      git checkout tags/v2.0 -b v2.0
 
 3. Multiscaler kernel sources are part of VVAS source tree and are located at::
 
@@ -382,9 +378,7 @@ Each application design workspace provided with this VVAS release has the requir
 
 In case one wants to change the kernel configuration for some reason, do these changes in the configuration files mentioned below. 
 
-.. note::
-
-   Compilation of Kernels is initiated from the build process of the final design for the application. Hence kernel compilation steps are not covered separately here.
+Compilation of Kernels is initiated from the build process of the final design for the application. Hence kernel compilation steps are not covered separately here.
 
 
 * Configuration of DPU::
@@ -397,45 +391,42 @@ In case one wants to change the kernel configuration for some reason, do these c
 
 You may modify the kernel configuration as per your requirements in these files.
 
-
-***********************
+************************************************
 Creating SD Card image
-***********************
+************************************************
 
-Once platform is built, next step is to compile and stitch the required hardware accelerators (kernels) into the platform and generate final SD Card image using Vitis Flow.
+Once platform is available and kernels are built, next step is to stitch the required hardware accelerators (kernels) into the platform and generate final SD Card image using Vitis Flow.
 
 VVAS sources already has ready to build example Vitis workspace for ``smart_model_select`` Application. This workspace uses Vitis Flow that stitches kernels into the platform and generates final SD card image. Follow below mentioned steps to build the final image.
 
 .. code-block::
 
       cd <VVAS_SOURCES>/VVAS/vvas-examples/Embedded/smart_model_select
-      make PLATFORM=<PLATFORM_PATH> DPU_TRD_PATH=<DPU_PATH> HW_ACCEL_PATH=<MULTISCALER_PATH>
+      make PLATFORM=<PLATFORM_PATH > DPU_TRD_PATH=<DPU_PATH> HW_ACCEL_PATH=<MULTISCALER_PATH>
       
-      PLATFORM_PATH=<VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202210_1/export/xilinx_zcu104_vcuDec_DP_202210_1/xilinx_zcu104_vcuDec_DP_202210_1.xpfm
-
-      DPU_PATH=<VVAS_SOURCES>/DPUCZDX8G
-
-      MULTISCALER_PATH=<VVAS_SOURCES>/VVAS/vvas-accel-hw
+      PLATFORM_PATH = <VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202120_1/export/xilinx_zcu104_vcuDec_DP_202120_1/xilinx_zcu104_vcuDec_DP_202120_1.xpfm
+      DPU_PATH = <VVAS_SOURCES>/Vitis-AI/dsa/DPU-TRD/
+      MULTISCALER_PATH = <VVAS_SOURCES>/VVAS/vvas-accel-hw
 
 Once above build is done, final sdcard image is available at ``./binary_container_1/sd_card.img`` location.
 
 .. _build_vvas_plugins_and_libs:
 
-**********************************
+****************************************************
 Build VVAS Plug-ins and Libraries
-**********************************
+****************************************************
 
 VVAS Plugins and libraries are part of petalinux bsp and are built along with building platform. So, no need to build again. Still if one wants to build these for some reason, follow the steps mentioned below,
 
 
 Setting Sysroot
-================
+=====================
 
 Sysroot is required to build the VVAS GStreamer plugins. Sysroot installer location depends on whether you are using pre-built binaries, or you have built the platform from scratch.
 
 If you have downloaded the pre-built binaries in folder, say ``PREBUILT_BINARIES``, then you can find the Sysroot installer at::
 
-   <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/sdk.sh
+   <PREBUILT_BINARIES>/vvas_smart_model_select_2021.2_zcu104/sdk.sh
 
 
 If you have built the platform yourself, then Sysroot installer is available at::
@@ -451,7 +442,7 @@ Now sysroot is installed. You are ready to build plugins and applications.
 
 
 Build Plugins and Libraries
-============================
+===================================
 
 Get the VVAS Sources if not done already. Follow the steps mentioned below.
 
@@ -503,7 +494,7 @@ Get the VVAS Sources if not done already. Follow the steps mentioned below.
 
 
 Build Smart Model Select Application
-=====================================
+=============================================
 
 The example application (smart_model_select) is available in the “vvas-example” section of VVAS repository. Follow below steps to compile the application::
 
@@ -512,9 +503,9 @@ The example application (smart_model_select) is available in the “vvas-example
    source <sysroot path>/environment-setup-cortexa72-cortexa53-xilinx-linux
    make
 
-*************
+*******************
 Known Issues
-*************
+*******************
 
 1.  When we are executing 3 level cascade pipeline in a loop, by re-starting the pipeline after EOS, we start seeing shift in images. This issue is seen only in 3 stage ML cascading pipeline and only when we do start/stop in a loop. This is random in nature. The issue is not seen when we kept the same 3 stage cascade pipeline running continuously for 12 hrs.
 

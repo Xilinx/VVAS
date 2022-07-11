@@ -11,7 +11,7 @@ For advanced developers who wants to develop their Kernel or VVAS acceleration s
    :caption: For Advanced Developers
    :hidden:
 
-   Acceleration s/w Library Developement Guide <Acceleration-Software-Library-Development>
+   Acceleration s/w Library Developement Guide <6-common-Acceleration-Software-Library-Development>
    Acceleration H/W Kernels <Acceleration-Hardware>
 
 
@@ -23,7 +23,7 @@ For advanced developers who wants to develop their Kernel or VVAS acceleration s
    * - Title
      - Description
 	 
-   * - :doc:`Acceleration s/w Library Developement Guide <Acceleration-Software-Library-Development>`
+   * - :doc:`Acceleration s/w Library Developement Guide <6-common-Acceleration-Software-Library-Development>`
      - This section covers the intefaces exposed by VVAS framework to develop the aceleration s/w library. It also covers various types of Kernels supported and how to develop acceleration s/w lib for each type of kernels.
 
    * - :doc:`Acceleration H/W Kernels <Acceleration-Hardware>`

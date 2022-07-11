@@ -42,7 +42,7 @@ Table 15: Root JSON Object Members
 |             |               |                           |                     | processing         |
 |             |               |                           |                     | load.              |
 +-------------+---------------+---------------------------+---------------------+--------------------+
-|    vvas-l   |    String     |    Optional               |    /usr/lib         | The VVAS           |
+|    ivas-l   |    String     |    Optional               |    /usr/lib         | The IVAS           |
 | ibrary-repo |               |                           |                     | library            |
 |             |               |                           |                     | repository         |
 |             |               |                           |                     | path that          |
@@ -52,7 +52,7 @@ Table 15: Root JSON Object Members
 |             |               |                           |                     | software           |
 |             |               |                           |                     | libraries          |
 |             |               |                           |                     | using the          |
-|             |               |                           |                     | VVAS               |
+|             |               |                           |                     | IVAS               |
 |             |               |                           |                     | GStreamer          |
 |             |               |                           |                     | plug-in.           |
 +-------------+---------------+---------------------------+---------------------+--------------------+
@@ -140,7 +140,7 @@ Table 15: Root JSON Object Members
 |             |               |                           |                     | provides           |
 |             |               |                           |                     | information        |
 |             |               |                           |                     | about an           |
-|             |               |                           |                     | VVAS video         |
+|             |               |                           |                     | IVAS video         |
 |             |               |                           |                     | library            |
 |             |               |                           |                     | con                |
 |             |               |                           |                     | figuration.        |
@@ -173,11 +173,11 @@ Table 16: Kernel JSON Object Members
 |             |               |                           |                   |                 |
 +=============+===============+===========================+===================+=================+
 | l           |    String     |                           |    None           | The name of     |
-| ibrary-name |               |   Mandatory               |                   | the VVAS        |
+| ibrary-name |               |   Mandatory               |                   | the IVAS        |
 |             |               |                           |                   | video           |
 |             |               |                           |                   | library         |
 |             |               |                           |                   | loaded by       |
-|             |               |                           |                   | the VVAS        |
+|             |               |                           |                   | the IVAS        |
 |             |               |                           |                   | GStreamer       |
 |             |               |                           |                   | plug-ins.       |
 |             |               |                           |                   | The             |
@@ -187,7 +187,7 @@ Table 16: Kernel JSON Object Members
 |             |               |                           |                   | library is      |
 |             |               |                           |                   | formed by       |
 |             |               |                           |                   | pre-pending     |
-|             |               |                           |                   | the vvas-       |
+|             |               |                           |                   | the ivas-       |
 |             |               |                           |                   | l               |
 |             |               |                           |                   | ibrary-repo     |
 |             |               |                           |                   | path.           |
@@ -208,10 +208,10 @@ Table 16: Kernel JSON Object Members
 |             |               |                           |                   | nfiguration     |
 |             |               |                           |                   |    specific     |
 |             |               |                           |                   |    to the       |
-|             |               |                           |                   |    VVAS         |
+|             |               |                           |                   |    IVAS         |
 |             |               |                           |                   |    video        |
 |             |               |                           |                   |    library.     |
-|             |               |                           |                   |    The VVAS     |
+|             |               |                           |                   |    The IVAS     |
 |             |               |                           |                   |                 |
 |             |               |                           |                   |   GStreamer     |
 |             |               |                           |                   |    plug-ins     |

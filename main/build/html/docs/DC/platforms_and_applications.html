@@ -21,7 +21,12 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
-	
+	<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="37701bd4-e5c0-4ee3-9329-e7475d0b13a7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
 		<!-- Google Tag Manager -->
 	<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -53,7 +58,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -68,11 +72,9 @@
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Alveo U30 Platform" href="u30_platform/u30_platform.html" />
+    <link rel="next" title="VVAS GStreamer Plug-ins for Data Center Platforms" href="6-DC-plugins.html" />
     <link rel="prev" title="Tutorials" href="../Embedded/Tutorials/Tutorials.html" /> 
 	</head>
 	<body>
@@ -224,7 +226,7 @@
             
             
               <div class="version">
-                2.0
+                1.1
               </div>
             
           
@@ -249,32 +251,27 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">For Advanced Developers</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<p class="caption"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<p class="caption"><span class="caption-text">Data Center</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Platforms &amp; Applications</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="u30_platform/u30_platform.html">Alveo U30 Transcoding Solution</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="6-DC-plugins.html">Plugins</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Tutorials/Tutorials.html">Tutorials</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
@@ -329,7 +326,7 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>PCIe/Data Center Platforms And Applications</li>
+      <li>Supported Platforms And Applications</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -348,13 +345,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pcie-data-center-platforms-and-applications">
-<h1>PCIe/Data Center Platforms And Applications<a class="headerlink" href="#pcie-data-center-platforms-and-applications" title="Permalink to this headline">¶</a></h1>
-<p>This section covers the PCIe/Data Center platforms supported by VVAS.
-This release supports Alveo U30 card based solution which is suitable for high density Transcoding usecases.
-For more information about the Transcoding solution using Alveo U30 Cards, refer to <a class="reference internal" href="u30_platform/u30_platform.html"><span class="doc">Transcoding Solution Using Alveo U30 Cards</span></a></p>
-<div class="toctree-wrapper compound">
-</div>
+  <div class="section" id="supported-platforms-and-applications">
+<h1>Supported Platforms And Applications<a class="headerlink" href="#supported-platforms-and-applications" title="Permalink to this headline">¶</a></h1>
 <p>For more information, contact <cite>vvas_discuss&#64;xilinx.com</cite>.</p>
 </div>
 
@@ -374,7 +366,7 @@ For more information about the Transcoding solution using Alveo U30 Cards, refer
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="u30_platform/u30_platform.html" class="btn btn-neutral float-right" title="Alveo U30 Platform" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="6-DC-plugins.html" class="btn btn-neutral float-right" title="VVAS GStreamer Plug-ins for Data Center Platforms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../Embedded/Tutorials/Tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -387,7 +379,7 @@ For more information about the Transcoding solution using Alveo U30 Cards, refer
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 22, 2022.
+        Last updated on February 16, 2022.
       </span>
 
     </p>

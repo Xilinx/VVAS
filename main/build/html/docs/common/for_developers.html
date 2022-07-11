@@ -21,7 +21,12 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
-	
+	<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="37701bd4-e5c0-4ee3-9329-e7475d0b13a7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
 		<!-- Google Tag Manager -->
 	<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -53,7 +58,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -68,12 +72,10 @@
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Acceleration Software Library Development Guide" href="Acceleration-Software-Library-Development.html" />
-    <link rel="prev" title="VVAS Meta Data Structures" href="vvas_meta_data_structures.html" /> 
+    <link rel="next" title="Acceleration Software Library Development Guide" href="6-common-Acceleration-Software-Library-Development.html" />
+    <link rel="prev" title="Plug-ins" href="common_plugins.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -224,7 +226,7 @@
             
             
               <div class="version">
-                2.0
+                1.1
               </div>
             
           
@@ -249,33 +251,31 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">Meta Data</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">For Advanced Developers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Acceleration-Software-Library-Development.html">Acceleration s/w Library Developement Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">Acceleration s/w Library Developement Guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Acceleration-Hardware.html">Acceleration H/W Kernels</a></li>
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<p class="caption"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<p class="caption"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<p class="caption"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
@@ -365,7 +365,7 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><a class="reference internal" href="Acceleration-Software-Library-Development.html"><span class="doc">Acceleration s/w Library Developement Guide</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html"><span class="doc">Acceleration s/w Library Developement Guide</span></a></p></td>
 <td><p>This section covers the intefaces exposed by VVAS framework to develop the aceleration s/w library. It also covers various types of Kernels supported and how to develop acceleration s/w lib for each type of kernels.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="Acceleration-Hardware.html"><span class="doc">Acceleration H/W Kernels</span></a></p></td>
@@ -391,10 +391,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Acceleration-Software-Library-Development.html" class="btn btn-neutral float-right" title="Acceleration Software Library Development Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="6-common-Acceleration-Software-Library-Development.html" class="btn btn-neutral float-right" title="Acceleration Software Library Development Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="vvas_meta_data_structures.html" class="btn btn-neutral float-left" title="VVAS Meta Data Structures" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="common_plugins.html" class="btn btn-neutral float-left" title="Plug-ins" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -404,7 +404,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 22, 2022.
+        Last updated on February 16, 2022.
       </span>
 
     </p>

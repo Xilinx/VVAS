@@ -64,24 +64,24 @@
 			<text x="10.93" y="317.71" class="st2" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>xclbin</text>		</g>
 		<g id="shape7-4" v:mID="7" v:groupContext="shape" transform="translate(91,-156.351)">
 			<title>Rectangle.6</title>
-			<desc>vvas_xabrscaler Plug-in</desc>
+			<desc>ivas_xabrscaler Plug-in</desc>
 			<v:userDefs>
 				<v:ud v:nameU="visVersion" v:val="VT0(14):26"/>
 			</v:userDefs>
 			<v:textBlock v:margins="rect(4,4,4,4)"/>
 			<v:textRect cx="110.2" cy="269.628" width="220.41" height="118.248"/>
 			<rect x="0" y="210.504" width="220.4" height="118.248" class="st3"/>
-			<text x="49.15" y="273.23" class="st4" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>vvas_xabrscaler Plug-in</text>		</g>
+			<text x="49.15" y="273.23" class="st4" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>ivas_xabrscaler Plug-in</text>		</g>
 		<g id="shape10-7" v:mID="10" v:groupContext="shape" transform="translate(91,-107.751)">
 			<title>Rectangle.10</title>
-			<desc>VVAS Low-level Libraries</desc>
+			<desc>IVAS Low-level Libraries</desc>
 			<v:userDefs>
 				<v:ud v:nameU="visVersion" v:val="VT0(14):26"/>
 			</v:userDefs>
 			<v:textBlock v:margins="rect(4,4,4,4)"/>
 			<v:textRect cx="61.2" cy="315.252" width="122.4" height="27"/>
 			<rect x="0" y="301.752" width="122.4" height="27" class="st3"/>
-			<text x="7.88" y="318.25" class="st5" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>VVAS Low-level Libraries</text>		</g>
+			<text x="7.88" y="318.25" class="st5" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>IVAS Low-level Libraries</text>		</g>
 		<g id="shape11-10" v:mID="11" v:groupContext="shape" transform="translate(91,-62.751)">
 			<title>Rectangle.11</title>
 			<desc>XRT</desc>
@@ -216,14 +216,14 @@
 			<text x="5.27" y="323.88" class="st12" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>...</text>		</g>
 		<g id="shape34-65" v:mID="34" v:groupContext="shape" transform="translate(91.22,-14.151)">
 			<title>Rectangle.34</title>
-			<desc>VVAS Multi-scaler Hardware</desc>
+			<desc>IVAS Multi-scaler Hardware</desc>
 			<v:userDefs>
 				<v:ud v:nameU="visVersion" v:val="VT0(14):26"/>
 			</v:userDefs>
 			<v:textBlock v:margins="rect(4,4,4,4)"/>
 			<v:textRect cx="109.98" cy="315.252" width="219.96" height="27"/>
 			<rect x="0" y="301.752" width="219.96" height="27" class="st3"/>
-			<text x="49.09" y="318.25" class="st5" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>VVAS Multi-scaler Hardware</text>		</g>
+			<text x="49.09" y="318.25" class="st5" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>IVAS Multi-scaler Hardware</text>		</g>
 		<g id="shape35-68" v:mID="35" v:groupContext="shape" v:layerMember="0" transform="translate(145,-156.557)">
 			<title>Standard Arrow.487</title>
 			<path d="M7.2 328.75 L7.2 343.66" class="st13"/>

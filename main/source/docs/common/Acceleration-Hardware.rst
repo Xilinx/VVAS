@@ -13,21 +13,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-**********************
-Acceleration Kernels
-**********************
+*********************
+Acceleration Hardware
+*********************
 
-This section covers details about how to build the HLS/RTL acceleration kernels. The kernels are HLS code that can be built using Vitis HLS and the compiled kernels are provided as ``.xo`` files. These compiled kernels then can be used with any Vitis platform.
+This section covers details about the HLS/RTL acceleration kernels. The kernels are HLS code that can be built using Vitis HLS and the compiled kernels are provided as ``.xo`` files. These compiled kernels then can be used with any Vitis platform.
 
 ==================
-Building Kernels
+Kernel Build Steps
 ==================
 
-Follow the steps mentioned below to build the kernel. These are mostly applicable for building any HLS kernel.
+The following steps are used to build the kernel.
 
-#. Setup the Vitis HLS 2022.1 software. Refer to `Vitis Software Development Platform 2022.1 <https://www.xilinx.com/html_docs/xilinx2022.1/vitis_doc/gnq1597858079367.html>`_.
+#. Setup the Vitis HLS 2021.2 software. Refer to `Vitis Software Development Platform 2021.2 <https://www.xilinx.com/html_docs/xilinx2021.2/vitis_doc/gnq1597858079367.html>`_.
 
-#. Edit the makefile to point the PLATFORM_FILE to any Vitis 2022.1 platform.
+#. Edit the makefile to point the PLATFORM_FILE to any Vitis 2021.2 platform.
 
 #. Edit the options in <kernel_folder>/kernel_config.h.
 
@@ -35,18 +35,18 @@ Follow the steps mentioned below to build the kernel. These are mostly applicabl
 
 .. _multiscaler-kernel:
 
-===================
+==================
 Multiscaler Kernel
-===================
+==================
 
-Multiscaler Kernel is capable of hardware accelerated resizing, color space conversion and cropping of region of interest in a frame. VVAS releases full HLS source code of the Multiscaler 2.0 IP/Kernel.
+VVAS releases the full HLS source code of the Multiscaler 2.0 IP, it is based on the descriptor approach for programming. This kernel produces a multiscaler kernel xo/v_multi_scaler.xo.
 
-
+~~~~~~~~~~~~~~~~~~~~
 Kernel Configuration
----------------------                    
+~~~~~~~~~~~~~~~~~~~~                    
 
-Multiscaler IP is highly configurable and supports several features. All applications may not need all the features. Keeping all the features enabled results in lots of FPGA resources being consumed. Hence it is recommended to enable only those features that are required for your applications. The multiscaler kernel configuration can be edited by changing the `<VVAS_SOURCES>/vvas-accel-hw/multiscaler/v_multi_scaler_config.h` file. The parameters in the following table can be changed as required.
-
+The multiscaler kernel configuration can be edited by changing the `<VVAS_SOURCES>/ivas-accel-hw/multiscaler/v_multi_scaler_config.h` file. The parameters in the following table can be changed as required.
+i
 Table 14: Multiscaler Kernel Configuration
 
 +----------------------+----------------------+----------------------+
@@ -134,12 +134,14 @@ Table 14: Multiscaler Kernel Configuration
 +----------------------+----------------------+----------------------+
 
 
+
+=====================
 Steps to Build Kernel
-----------------------
+=====================
 
-#. Source the Vitis HLS 2022.1 software.
+#. Source the Vitis HLS 2021.2 software.
 
-#. Edit the makefile to point the PLATFORM_FILE, `(.xpfm)` file, to any Vitis 2022.1 platform (tested using the ZCU104 base platform).
+#. Edit the makefile to point the PLATFORM_FILE, `(.xpfm)` file, to any Vitis 2021.2 platform (tested using the ZCU104 base platform).
 
 #. Edit the options in the multiscaler/v_multi_scaler_config.h.
 
