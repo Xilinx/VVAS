@@ -21,12 +21,7 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
-	<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
-<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="37701bd4-e5c0-4ee3-9329-e7475d0b13a7" ></script>
-<script type="text/javascript">
-function OptanonWrapper() { }
-</script>
-<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+	
 		<!-- Google Tag Manager -->
 	<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -58,6 +53,7 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -72,10 +68,10 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Acceleration Hardware" href="Acceleration-Hardware.html" />
-    <link rel="prev" title="Development Guide" href="for_developers.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -226,7 +222,7 @@ function OptanonWrapper() { }
             
             
               <div class="version">
-                1.1
+                2.0
               </div>
             
           
@@ -251,69 +247,29 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
-<ul class="current">
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">For Advanced Developers</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration s/w Library Developement Guide</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#types-of-kernels">Types of Kernels</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hard-kernel">Hard Kernel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#softkernel">Softkernel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#software-kernel">Software Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
 </ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#interfaces-for-acceleration-software-libraries">Interfaces for Acceleration Software Libraries</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#vvas-utils">vvas-utils</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#vvas-data-structures">VVAS Data structures</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#vvaskernel">VVASKernel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#vvasvideoformat">VVASVideoFormat</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#vvasframe">VVASFrame</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#other-vvas-declarations">Other VVAS Declarations</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#core-api">Core API</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#initialization-api">Initialization API</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#process-api">Process API</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#de-initialization-api">De-Initialization API</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#utility-apis">Utility APIs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#memory-management-api">Memory Management API</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#register-access-apis">Register Access APIs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#execution-apis">Execution APIs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#acceleration-software-library-for-hard-kernels">Acceleration Software Library for Hard Kernels</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#memory-allocation">Memory Allocation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#controlling-kernel">Controlling Kernel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#acceleration-software-library-for-the-software-kernel">Acceleration Software Library for the Software Kernel</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#capability-negotiation-support-in-the-acceleration-software-library">Capability Negotiation Support in the Acceleration Software Library</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Acceleration-Hardware.html">Acceleration H/W Kernels</a></li>
-</ul>
-</li>
-</ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
@@ -368,8 +324,6 @@ function OptanonWrapper() { }
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="for_developers.html">Development Guide</a> &raquo;</li>
-        
       <li>Acceleration Software Library Development Guide</li>
     
     
@@ -391,20 +345,22 @@ function OptanonWrapper() { }
             
   <div class="section" id="acceleration-software-library-development-guide">
 <h1>Acceleration Software Library Development Guide<a class="headerlink" href="#acceleration-software-library-development-guide" title="Permalink to this headline">¶</a></h1>
-<p>One of the objectives of VVAS is to define a methodology for advanced developers to develop their own kernel and integrate it into GStreamer-based applications. This section defines the steps required to develop an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application. There are three types of kernels.</p>
+<p>One of the objectives of VVAS is to define a framework for the advanced developers that enables them to develop their own kernel and integrate it into GStreamer-based applications. Kernel developers might not be experts in software development and there is always some learning curve to understand the frameworks like Xilinx Runtime (XRT), GStreamer, etc. This framework abstracts the complexities of the XRT and GStreamer framework and provides simple and easy to understand APIs to hook their kernels developed on a Xilinx FPGA into complex applications.
+This section covers the details about developing an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine, and it provides hooks to control the kernel from the GStreamer plug-ins or an application.</p>
+<p>There are different types of acceleration kernels supported by VVAS and details about these are covered below.</p>
+<div class="section" id="types-of-kernels">
+<h2>Types of Kernels<a class="headerlink" href="#types-of-kernels" title="Permalink to this headline">¶</a></h2>
+<p>There are three types of acceleration kernels based on the implementation.</p>
 <div class="figure align-center">
 <img alt="../../_images/image15.png" src="../../_images/image15.png" />
 </div>
-<div class="section" id="types-of-kernels">
-<h2>Types of Kernels<a class="headerlink" href="#types-of-kernels" title="Permalink to this headline">¶</a></h2>
-<p>There are three types of kernels as mentioned below.</p>
 <div class="section" id="hard-kernel">
 <h3>Hard Kernel<a class="headerlink" href="#hard-kernel" title="Permalink to this headline">¶</a></h3>
 <p>A hard kernel is made up of HLS and RTL kernels.</p>
 </div>
 <div class="section" id="softkernel">
 <h3>Softkernel<a class="headerlink" href="#softkernel" title="Permalink to this headline">¶</a></h3>
-<p>These are special kernels that executes on the application Processor of the device and are controlled over PCIe interface from the Server. These kernels are not for Embedded platforms.</p>
+<p>These are special kernels where actual hardware is controlled by a software running on the application processor of the device connected to the server over PCIe interface. The software that is controlling the actual hardware on the device is called as softkernel. This softkernel is receiving the commands/control information from the application running on the server. These softkernel are used only in PCIe based platforms, like Data Center.  These kernels are not for Embedded platforms.</p>
 </div>
 <div class="section" id="software-kernel">
 <h3>Software Kernel<a class="headerlink" href="#software-kernel" title="Permalink to this headline">¶</a></h3>
@@ -413,27 +369,203 @@ function OptanonWrapper() { }
 </div>
 <div class="section" id="interfaces-for-acceleration-software-libraries">
 <h2>Interfaces for Acceleration Software Libraries<a class="headerlink" href="#interfaces-for-acceleration-software-libraries" title="Permalink to this headline">¶</a></h2>
-<p>To be able to be controlled from an application or GStreamer plug-ins, each acceleration software library must expose three core API functions.</p>
+<p>VVAS has defined a simplified, easy to use interface so that developer can easliy hook their Kernels into GStreamer based applications. The interface has been divided into two parts, core APIs and utility APIs. Core APIs are mandatory APIs, to be implemented by the acceleration softeare libraries so that these can be controlled from the GStreamere Infrastructure plug-ins as well as applications. Utility APIs are provided to abstract the Xilinx Run Time (XRT) interface from the developer and provide easy to use interface to interact with the kernel.</p>
+<div class="section" id="core-api">
+<h3>Core API<a class="headerlink" href="#core-api" title="Permalink to this headline">¶</a></h3>
+<p>Each acceleration software library must implement these Core APIs. The GStreamer VVAS infrastructure plug-ins (vvas_xfilter and vvas_xmultisrc) call these core APIs to perform operations on the kernel. The following is a list of core APIs.</p>
 <div class="figure align-default">
 <img alt="../../_images/core-API-functions.png" src="../../_images/core-API-functions.png" />
 </div>
-<p>To interact with the kernel, a set of utility APIs are provided.</p>
-<div class="section" id="vvas-utils">
-<h3>vvas-utils<a class="headerlink" href="#vvas-utils" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="xlnx-kernel-init">
+<h4>xlnx_kernel_init<a class="headerlink" href="#xlnx-kernel-init" title="Permalink to this headline">¶</a></h4>
+<p>This API is called by the VVAS infrastructure plug-in only once at the time of plug-in initialization. The acceleration software library can perform all of the one-time initialization in this function.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_init</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="xlnx-kernel-start">
+<h4>xlnx_kernel_start<a class="headerlink" href="#xlnx-kernel-start" title="Permalink to this headline">¶</a></h4>
+<p>This API is called by infrastructure plug-in for each input frame/buffer it has received for further processing by the kernel.
+The acceleration software library can perform per frame operations like updating the state machine, reading/writing the registers of the IP and then instructing the kernel to process the input. Steps to start the kernel depends on the type of the kernel and are covered in details later in this section.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>int32_t xlnx_kernel_start (VVASKernel * handle, int start, VVASFrame *
+input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT])
+
+Parameters:
+   handle - VVAS kernel handle that has kernel context
+    start – flag to indicate start of the kernel. Mainly useful in
+streaming kernel mode
+    input[MAX_NUM_OBJECT] – Array of input frames populated in VVASFrame
+handle
+    output[MAX_NUM_OBJECT] – Array of output frames populated in VVASFrame
+handle
+Return:
+    0 on success or -1 on failure
+
+Note:
+    1. MAX_NUM_OBJECT is 512 and same is assigned in vvas_kernel.h
+    2. Input and output of array is NULL terminated to know number of input
+&amp; output frames received to start function
+</pre></div>
+</div>
+</div>
+<div class="section" id="xlnx-kernel-done">
+<h4>xlnx_kernel_done<a class="headerlink" href="#xlnx-kernel-done" title="Permalink to this headline">¶</a></h4>
+<p>To know whether the kernel has finished processing the current frame/buffer, infrastructure plug-in, application will call this API. The acceleration software library can use this API to wait for completion of the task that was started using the xlnx_kernel_start() API. User can provide the “time_out” value for the maximum amount of time this API will wait before returning from this function. Depending on the type of kernel, implementation inside this API may change. More information about guidelines to implement this API for different types of kernels are covered in more details later in this section.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">int32_t</span> <span class="n">timeout</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+    <span class="n">timeout</span> <span class="o">-</span> <span class="nb">max</span><span class="o">.</span> <span class="n">time</span> <span class="n">to</span> <span class="n">wait</span> <span class="k">for</span> <span class="s2">&quot;kernel done&quot;</span> <span class="n">notification</span> <span class="kn">from</span> <span class="nn">the</span>
+<span class="n">kernel</span><span class="o">.</span>
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="xlnx-kernel-deinit">
+<h4>xlnx_kernel_deinit<a class="headerlink" href="#xlnx-kernel-deinit" title="Permalink to this headline">¶</a></h4>
+<p>This API is called by the infrastructure plug-in when plug-in is de-initializing. Acceleration software library must perform any clean-up, de-initialization tasks such as freeing private handles and internal memory allocation as part of the library initialization process.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_deinit</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="utility-apis">
+<h3>Utility APIs<a class="headerlink" href="#utility-apis" title="Permalink to this headline">¶</a></h3>
 <p>This section covers details about the utility infrastructure required to develop the kernel libraries for a new kernel and to integrate these acceleration software libraries into the GStreamer framework.</p>
-<p>The VVAS acceleration software library APIs are C-based APIs designed for ease of use. A developer does not need knowledge of the GStreamer plug-ins. The acceleration software libraries are developed using the following APIs and can be used by the GStreamer VVAS infrastructure plug-ins to realize plug and play functionality of various processing blocks and filters.</p>
-<p>The utility sources are hosted in the vvas-utils repository/folder.</p>
+<p>The acceleration software libraries are developed using the following utility APIs.</p>
+<p>The utility API sources are hosted in the vvas-utils folder of the VVAS sources tree.</p>
 <div class="figure align-default">
 <a class="reference internal image-reference" href="../../_images/image24.png"><img alt="../../_images/image24.png" src="../../_images/image24.png" style="width: 400px;" /></a>
+</div>
+<div class="section" id="memory-management-apis">
+<h4>Memory Management APIs<a class="headerlink" href="#memory-management-apis" title="Permalink to this headline">¶</a></h4>
+<p>Hardware Kernels work on physically contiguous memory. In a case where acceleration software library need physically contiguous memory, the utility APIs mentioned below can be used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>VVASFrame* vvas_alloc_buffer (VVASKernel *handle, uint32_t size,
+VVASMemoryType mem_type, VVASFrameProps *props)
+
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    size - memory size to be allocated
+    mem_type - memory can be VVAS_FRAME_MEMORY or VVAS_INTERNAL_MEMORY
+    props – required when requesting VVAS_FRAME_MEMORY
+
+Return:
+    VVASFrame handle on success or NULL on failure
+</pre></div>
+</div>
+<p>In a case where frequent memory allocation/de-allocation is required, the recommendation is to allocate from the memory pool. The developer can allocate the memory from the memory pool managed by the GStreamer infrastructure plug-in. To allocate memory from the memory pool managed by the GStreamer Infrastructure plug-in, the developer must pass the “props” parameter value as VVAS_FRAME_MEMORY. If the “props” parameter value is set to VVAS_INTERNAL_MEMORY, then the memory is not allocated from a memory pool.</p>
+<p>The following API is to free the memory that is allocated using the vvas_alloc_buffer() API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_free_buffer (VVASKernel * handle, VVASFrame *vvas_frame)
+
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    vvas_frame – VVASFrame handle allocated using vvas_alloc_buffer() API
+
+Return:
+    None
+</pre></div>
+</div>
+</div>
+<div class="section" id="kernel-management-modes">
+<h4>Kernel Management Modes<a class="headerlink" href="#kernel-management-modes" title="Permalink to this headline">¶</a></h4>
+<p>Kernels can be managed in two different modes:</p>
+<ul class="simple">
+<li><p>In XRT managed mode, kernel execution (starting/stopping/configuration) is managed by the underlying Xilinx Runtime (XRT). In this mode, the synchronization between different kernel instances executing simultaneously in different thread/process contexts is managed by XRT. This mode of operation is multi thread/multiprocess safe. XRT ensures that at any point, only one kernel context is given access to the actual kernel hardware resources.</p></li>
+<li><p>In user managed mode, the user is responsible to start, stop and configure the kernel using register read/write APIs. This mode is allowed only if the kernel object is created in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode. If the kernel is opened in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode, then only one instance of the kernel object can be created/opened.</p></li>
+</ul>
+<p>It is strongly recommended to use the kernel in XRT managed mode by opening kernel in <code class="docutils literal notranslate"><span class="pre">shared</span></code> mode, as this is multi thread/multi-process safe and easy to configure.</p>
+<p>The APIs described below can be used in XRT managed mode and user managed mode.</p>
+</div>
+<div class="section" id="read-write-register-apis">
+<h4>Read/Write Register APIs<a class="headerlink" href="#read-write-register-apis" title="Permalink to this headline">¶</a></h4>
+<p>These APIs can be used only if kernel object is created in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode. The developer must ensure that the “is_multiprocess” parameter is set to “false” in VVASKernel object in the acceleration software library.</p>
+<p>If the developer has decided use the option of programing the kernel using register programming, then the only option to start a kernel is to set the “ap_start” bit by writing into the control register.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_write (VVASKernel *handle, void *src, size_t size,
+size_t offset)
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    src – pointer to data to be written at offset in ERT command buffer or
+register at offset from base address of IP
+    size – size of the data pointer src
+    offset – offset at which data to be written
+
+Return:
+    None
+</pre></div>
+</div>
+<p>The following API is used to read from the registers of an IP/kernel. You can use this API to read the interrupt status register to know the status of the task in polling mode.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_read (VVASKernel *handle, void *src, size_t size, size_t
+offset)
+
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    src – pointer to data which will be updated after read
+    size – size of the data pointer src
+    offset – offset from base address of an IP
+
+Return:
+    None
+</pre></div>
+</div>
+</div>
+<div class="section" id="execution-apis">
+<h4>Execution APIs<a class="headerlink" href="#execution-apis" title="Permalink to this headline">¶</a></h4>
+<p>These APIs are used in case the kernel is being used in XRT managed mode.
+Execution APIs are used to start kernel execution and then wait for the completion of the kernel current task. These APIs are multi-process/multi-thread safe. These APIs are only used when <cite>is_multiprocess</cite> is set to true during kernel initialization. Use the following API to start IP/kernel execution.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_start</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="nb">format</span><span class="p">,</span> <span class="o">...</span><span class="p">);</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+    <span class="nb">format</span> <span class="o">-</span> <span class="n">Variable</span> <span class="n">arguments</span> <span class="k">for</span> <span class="n">the</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">arguments</span> <span class="n">that</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">takes</span><span class="o">.</span>
+
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+<p>Follow below format specifiers for kernel arguments for “format” argument</p>
+<p>“i” : Signed int argument.
+“u” : Unsigned int argument.
+“l” : Unsigned long long argument.
+“p” : Any pointer argument.
+“b” : Buffer Object argument.
+“s” : If you want to skip the argument.</p>
+<dl>
+<dt>Ex<span class="classifier">For passing 3 arguments of types int, unsigned int and a pointer,</span></dt><dd><p>then the format specifier string would be “iup”</p>
+<p>If you want to skip the middler argument in the above case, then
+the format specifier string would be “isp”</p>
+</dd>
+</dl>
+<p>Use the following API to check whether the IP or kernel has finished execution. This function internally loops for MAX_EXEC_WAIT_RETRY_CNT times until a timeout before returning an error.</p>
+<p>We strongly discourage use of this API in case developer has started the kernel by directly setting the AP_START bit of the kernel control register using <code class="docutils literal notranslate"><span class="pre">vvas_register_write</span></code> API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">int32_t</span> <span class="n">timeout</span><span class="p">);</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span>  <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+    <span class="n">timeout</span> <span class="o">-</span> <span class="n">Timeout</span> <span class="ow">in</span> <span class="n">milliseconds</span>
+
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
 </div>
 </div>
 </div>
 <div class="section" id="vvas-data-structures">
 <h2>VVAS Data structures<a class="headerlink" href="#vvas-data-structures" title="Permalink to this headline">¶</a></h2>
-<p>The following sections list the core structures and enumerations.</p>
+<p>The following sections list the core structures and enumerations used in VVAS framework.</p>
 <div class="section" id="vvaskernel">
 <h3>VVASKernel<a class="headerlink" href="#vvaskernel" title="Permalink to this headline">¶</a></h3>
-<p>The VVASKernel is handle to kernel context and is created and passed to the core APIs by the GStreamer infrastructure plug-ins (for example: the vvas_xfilter).</p>
+<p>The VVASKernel is a structure to hold the kernel context and is created and passed to the core APIs by the GStreamer infrastructure plug-ins (for example: the vvas_xfilter).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> \<span class="n">_vvas_kernel</span> <span class="n">VVASKernel</span><span class="p">;</span>
 
 <span class="n">struct</span> \<span class="n">_vvas_kernel</span> <span class="p">{</span>
@@ -523,7 +655,7 @@ function OptanonWrapper() { }
 </div>
 <div class="section" id="vvasframe">
 <h3>VVASFrame<a class="headerlink" href="#vvasframe" title="Permalink to this headline">¶</a></h3>
-<p>The VVASFrame stores information related to a video frame. The GStreamer infrastructure plug- ins allocate the VVASFrame handle for input and output video frames and sends them to the VVAS kernel processing APIs. Also, the VVASFrame can be allocated by kernel libraries for internal memory requirements (i.e., memory for filter coefficients).</p>
+<p>The VVASFrame stores information related to a video frame. The GStreamer infrastructure plug-ins allocate the VVASFrame handle for input and output video frames and sends them to the VVAS kernel processing APIs. Also, the VVASFrame can be allocated by kernel libraries for internal memory requirements (i.e., memory for filter coefficients).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">_vvas_frame_props</span> <span class="n">VVASFrameProps</span><span class="p">;</span>
 <span class="n">typedef</span> <span class="n">struct</span> <span class="n">_vvas_frame</span> <span class="n">VVASFrame</span><span class="p">;</span>
 
@@ -576,161 +708,6 @@ function OptanonWrapper() { }
 <p>VVAS acceleration software libraries APIs are broadly categorized into two API types, <a class="reference external" href="#_bookmark17">Core API</a> and <a class="reference external" href="#utility-api">Utility API</a>.</p>
 </div>
 </div>
-<div class="section" id="core-api">
-<h2>Core API<a class="headerlink" href="#core-api" title="Permalink to this headline">¶</a></h2>
-<p>Core APIs are exposed by the VVAS acceleration software library developer through a shared library. The GStreamer VVAS infrastructure plug-ins (vvas_xfilter and vvas_xmultisrc) call the APIs to perform operations on the kernel. The following is a list of core APIs.</p>
-<div class="section" id="initialization-api">
-<h3>Initialization API<a class="headerlink" href="#initialization-api" title="Permalink to this headline">¶</a></h3>
-<p>The acceleration software library must perform one-time initialization tasks, such as private handles and internal memory allocations.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_init</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
-<span class="n">Parameters</span><span class="p">:</span>
-    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
-<span class="n">Return</span><span class="p">:</span>
-    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="process-api">
-<h3>Process API<a class="headerlink" href="#process-api" title="Permalink to this headline">¶</a></h3>
-<p>The acceleration software library must perform per frame operations such as updating IP registers or calling the processing function of the user space library. If a acceleration software library is developed for IP (HardKernel), then this API must call the vvas_kernel_start() utility API to issue a command to process the registers using XRT.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>int32_t xlnx_kernel_start (VVASKernel * handle, int start, VVASFrame *
-input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT])
-
-Parameters:
-    handle - VVAS kernel handle which has kernel context
-    start – flag to indicate start of the kernel. Mainly useful in
-streaming kernel mode
-    input[MAX_NUM_OBJECT] – Array of input frames populated in VVASFrame
-handle
-    output[MAX_NUM_OBJECT] – Array of output frames populated in VVASFrame
-handle
-Return:
-    0 on success or -1 on failure
-
-Note:
-    1. MAX_NUM_OBJECT is 512 and same is assigned in vvas_kernel.h
-    2. Input and output of array is NULL terminated to know number of input
-&amp; output frames received to start function
-</pre></div>
-</div>
-<p>The acceleration software library can use the following API to wait for completion of the task that was started using the xlnx_kernel_start() API. In the case of a memory-memory IP acceleration software library, this API can leverage the vvas_kernel_done() API to check whether an issued command to XRT is completed.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">int32_t</span> <span class="n">timeout</span><span class="p">)</span>
-
-<span class="n">Parameters</span><span class="p">:</span>
-    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
-    <span class="n">timeout</span> <span class="o">-</span> <span class="nb">max</span><span class="o">.</span> <span class="n">time</span> <span class="n">to</span> <span class="n">wait</span> <span class="k">for</span> <span class="s2">&quot;kernel done&quot;</span> <span class="n">notification</span> <span class="kn">from</span> <span class="nn">the</span>
-<span class="n">kernel</span><span class="o">.</span>
-<span class="n">Return</span><span class="p">:</span>
-    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="de-initialization-api">
-<h3>De-Initialization API<a class="headerlink" href="#de-initialization-api" title="Permalink to this headline">¶</a></h3>
-<p>The acceleration software library must perform de-initialization tasks such as freeing private handles and internal memory allocation as part of the library initialization process.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_deinit</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
-
-<span class="n">Parameters</span><span class="p">:</span>
-    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
-<span class="n">Return</span><span class="p">:</span>
-    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="utility-apis">
-<h2>Utility APIs<a class="headerlink" href="#utility-apis" title="Permalink to this headline">¶</a></h2>
-<p>For ease of use, the utility APIs are abstracted from the XRT APIs. The following is the list of utility APIs.</p>
-<div class="section" id="memory-management-api">
-<h3>Memory Management API<a class="headerlink" href="#memory-management-api" title="Permalink to this headline">¶</a></h3>
-<p>The following API must be used to allocate XRT memory for video frames as well as for internal memory requirements (i.e., memory for filter coefficients to be sent to IP). If video frames are requested using VVAS_FRAME_MEMORY, then the callback function invoked to the GStreamer VVAS infrastructure plug-ins, like the vvas_xfilter, will allocate frames from GstVideoBufferPool and GstVvasAllocator to avoid memory fragmentation or the memory will be allocated using direct XRT APIs.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>VVASFrame* vvas_alloc_buffer (VVASKernel *handle, uint32_t size,
-VVASMemoryType mem_type, VVASFrameProps *props)
-
-Parameters:
-    handle - VVAS kernel handle which has kernel context
-    size - memory size to be allocated
-    mem_type - memory can be VVAS_FRAME_MEMORY or VVAS_INTERNAL_MEMORY
-    props – required when requesting VVAS_FRAME_MEMORY
-
-Return:
-    VVASFrame handle on success or NULL on failure
-</pre></div>
-</div>
-<p>The following API is to free the memory that is allocated using the vvas_alloc_buffer() API.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_free_buffer (VVASKernel * handle, VVASFrame *vvas_frame)
-
-Parameters:
-    handle - VVAS kernel handle which has kernel context
-    vvas_frame – VVASFrame handle allocated using vvas_alloc_buffer() API
-
-Return:
-    None
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="register-access-apis">
-<h2>Register Access APIs<a class="headerlink" href="#register-access-apis" title="Permalink to this headline">¶</a></h2>
-<p>The register access APIs are used to directly set or get registers of an IP or ERT command buffer that is sent to XRT. The following API is used write into the registers of an IP or to write into the ERT command buffer that is sent to XRT while starting the kernel execution.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_write (VVASKernel *handle, void *src, size_t size,
-size_t offset)
-Parameters:
-    handle - VVAS kernel handle which has kernel context
-    src – pointer to data to be written at offset in ERT command buffer or
-register at offset from base address of IP
-    size – size of the data pointer src
-    offset – offset at which data to be written
-
-Return:
-    None
-</pre></div>
-</div>
-<p>The following API used to read from the registers of an IP. This API is not required when is_multiprocess enabled in the VVASKernel handle.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_read (VVASKernel *handle, void *src, size_t size, size_t
-offset)
-
-Parameters:
-    handle - VVAS kernel handle which has kernel context
-    src – pointer to data which will be updated after read
-    size – size of the data pointer src
-    offset – offset from base address of an IP
-
-Return:
-    None
-</pre></div>
-</div>
-</div>
-<div class="section" id="execution-apis">
-<h2>Execution APIs<a class="headerlink" href="#execution-apis" title="Permalink to this headline">¶</a></h2>
-<p>Execution APIs are used to start kernel execution and wait for the completion of the kernel. These APIs are only used when is_multiprocess is enabled in the VVASKernel handle. Use the following API o start IP/kernel execution.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_start</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span>
-
-<span class="n">Parameters</span><span class="p">:</span>
-    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
-
-<span class="n">Return</span><span class="p">:</span>
-    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
-</pre></div>
-</div>
-<p>Use the following API to check whether the IP or kernel has finished execution. This function internally loops for MAX_EXEC_WAIT_RETRY_CNT times until a timeout before returning an error.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_start</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span>
-
-<span class="n">Parameters</span><span class="p">:</span>
-    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
-
-<span class="n">Return</span><span class="p">:</span>
-    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
-<span class="n">int32_t</span> <span class="n">xlnx_kernel_init</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
-
-<span class="n">Parameters</span><span class="p">:</span>
-    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
-
-<span class="n">Return</span><span class="p">:</span>
-    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="acceleration-software-library-for-hard-kernels">
 <h2>Acceleration Software Library for Hard Kernels<a class="headerlink" href="#acceleration-software-library-for-hard-kernels" title="Permalink to this headline">¶</a></h2>
 <p>This section covers the steps to develop an acceleration software library for hard kernels.</p>
@@ -741,62 +718,34 @@ Return:
 <p>Virtual address is populated by infrastructure plugins only in case of s/w accel lib for “software only” kernels.</p>
 <div class="section" id="memory-allocation">
 <h3>Memory Allocation<a class="headerlink" href="#memory-allocation" title="Permalink to this headline">¶</a></h3>
-<p>A hard kernel works on the physically contiguous memory. Use the vvas_alloc_buffer API to allocate physically contiguous memory on the device (FPGA).</p>
+<p>A hard kernel works on the physically contiguous memory. Use the <code class="docutils literal notranslate"><span class="pre">vvas_alloc_buffer</span></code> API to allocate physically contiguous memory on the device (FPGA).</p>
 </div>
-<div class="section" id="controlling-kernel">
-<h3>Controlling Kernel<a class="headerlink" href="#controlling-kernel" title="Permalink to this headline">¶</a></h3>
-<p>There are two ways to control a kernel, manual mode and automatic mode.</p>
-<div class="section" id="automatic-control-mode">
-<h4>Automatic Control Mode<a class="headerlink" href="#automatic-control-mode" title="Permalink to this headline">¶</a></h4>
-<p>In this mode, VVAS is relying on the underlying XRT framework to write to the kernel registers to start the kernel. The underlying XRT framework ensures that the kernel is not accessed simultaneously by multiple users at any time. This is the recommended mode of operation for kernels that operate on memory buffers. However, there is one limitation. This mode is not suitable for streaming kernels, where kernels need to be started in auto-restart mode. For starting kernels in auto-restart mode, you must use the manual mode.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>To operate an acceleration software library in automatic mode, set the is_multiprocess flag to True in the kernel initialization API (xlnx_kernel_init).</p>
+<div class="section" id="starting-kernel">
+<h3>Starting Kernel<a class="headerlink" href="#starting-kernel" title="Permalink to this headline">¶</a></h3>
+<p>APIs to start a kernel depends on the mode in which kernel object is created.</p>
+<div class="section" id="xrt-managed-kernel">
+<h4>XRT Managed Kernel<a class="headerlink" href="#xrt-managed-kernel" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">vvas_kernel_start</span></code> must be used to start the kernel execution. It takes all kernel parameters required to be programmed as function arguments.</p>
+</div></blockquote>
 </div>
+<div class="section" id="user-managed-mode">
+<h4>User Managed Mode<a class="headerlink" href="#user-managed-mode" title="Permalink to this headline">¶</a></h4>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">vvas_register_write</span></code> API to set the AP_START bit in kernel control register.</p>
+</div>
+</div>
+<div class="section" id="checking-kernel-task-status">
+<h3>Checking Kernel Task Status<a class="headerlink" href="#checking-kernel-task-status" title="Permalink to this headline">¶</a></h3>
+<p>After the kernel is started, the next step is to check whether the task is completed. Depending on the mode in which kernel object is created, different mechanisms are used.</p>
 <ul class="simple">
-<li><dl class="simple">
-<dt>Programming Registers</dt><dd><p>Use the vvas_register_write APIs to program the kernel register. In this mode, the registers are not immediately written to. The register value is updated in an internal buffer. The actual registers are updated in response to the kernel start request, described in the following section.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Starting Kernel</dt><dd><p>When all the register values are programed, the acceleration software library calls the vvas_kernel_start API. The kernel registers are programed and the kernel is started using the XRT command internally by the vvas_kernel_start API implementation.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Check Kernel Done Status</dt><dd><p>The acceleration software library calls the vvas_kernel_done API. The acceleration software library can specify the time_out value before returning from this API.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div>
-<div class="section" id="manual-control-mode">
-<h4>Manual Control Mode<a class="headerlink" href="#manual-control-mode" title="Permalink to this headline">¶</a></h4>
-<p>The manual control mode is used when you need to start the kernel in auto-restart mode, for example, in streaming kernels. The XRT framework does not support this mode. This is achieved by directly writing into the control registers of the kernel. In this mode, you must ensure that the acceleration software library (GStreamer plug-in or application) does not allow the kernel to be accessed simultaneously by more than one thread or process at any time. It can cause unpredictable results.</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt>Programming Registers</dt><dd><p>In the manual control mode, use the vvas_register_read/vvas_register_write APIs to read from or write to the kernel register. The register is accessed immediately for reading and writing.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Starting Kernel</dt><dd><p>Start the kernel by directly writing the appropriate value in the kernel control register.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Check Kernel Done Status</dt><dd><p>In this mode, the acceleration software library must either continuously poll the kernel status register using vvas_register_read, or to wait on an interrupt to know if the kernel is finished processing.</p>
-</dd>
-</dl>
-</li>
+<li><p>For XRT managed kernels, the developer must call the <code class="docutils literal notranslate"><span class="pre">vvas_kernel_done</span></code> API. This API will return when kernel finished processing current task. The developer can provide the “time-out” interval value, indicating how long this API has to wait before it can return in case the kernel has not finished processing.</p></li>
+<li><p>For user managed mode, there is no callback or interrupt notification mechanism available that can be used to notify the task completion. The acceleration software library must continuously poll the kernel status register using <code class="docutils literal notranslate"><span class="pre">vvas_register_read</span></code>.</p></li>
 </ul>
 </div>
 </div>
 <div class="section" id="acceleration-software-library-for-the-software-kernel">
-<h3>Acceleration Software Library for the Software Kernel<a class="headerlink" href="#acceleration-software-library-for-the-software-kernel" title="Permalink to this headline">¶</a></h3>
+<h2>Acceleration Software Library for the Software Kernel<a class="headerlink" href="#acceleration-software-library-for-the-software-kernel" title="Permalink to this headline">¶</a></h2>
 <p>Software kernels are software modules that run on the application processor. The acceleration software library for these processing modules do not interact with the XRT interface. The interface APIs that abstract the XRT interface are not needed. You must implement the core API in the acceleration software library for use in the GStreamer application through VVAS infrastructure plug-ins.</p>
-</div>
 </div>
 <div class="section" id="capability-negotiation-support-in-the-acceleration-software-library">
 <h2>Capability Negotiation Support in the Acceleration Software Library<a class="headerlink" href="#capability-negotiation-support-in-the-acceleration-software-library" title="Permalink to this headline">¶</a></h2>
@@ -875,22 +824,13 @@ Return:
 
 	  <!-- Sphinx Page Footer block -->
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Acceleration-Hardware.html" class="btn btn-neutral float-right" title="Acceleration Hardware" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="for_developers.html" class="btn btn-neutral float-left" title="Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
 
   <hr/>
 
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 16, 2022.
+        Last updated on June 22, 2022.
       </span>
 
     </p>

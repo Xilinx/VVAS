@@ -52,7 +52,7 @@ For more details about these plugins, refer to the `VCU PG252 <https://www.xilin
 Region of Interest Plug-in
 ******************************************************************
 
-The region of interest (ROI) GStreamer vvas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The vvas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an IVAS supported list of metadata objects (GstInferenceMeta).
+The region of interest (ROI) GStreamer vvas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The vvas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an VVAS supported list of metadata objects (GstInferenceMeta).
 
 For implementation details, refer to `vvas_xroigen source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/roigen>`_.
 
@@ -86,7 +86,7 @@ Table 4: vvas_xroigen Plug-in Properties
 |                          |                |             |             |   class-filters        |
 |                          |                |             |             |   array of strings     |
 |                          |                |             |             |   out of classes       |
-|                          |                |             |             |   present in IVAS      |
+|                          |                |             |             |   present in VVAS      |
 |                          |                |             |             |   supported metadata   |
 |                          |                |             |             |   objects.             |
 |                          |                |             |             |                        |

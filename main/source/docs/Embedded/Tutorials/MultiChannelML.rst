@@ -6,6 +6,7 @@ This tutorial covers steps to create Machine Learning (ML) based example pipelin
 
 * Single stage ML that involve only one ML operation on the input image
 * Multi stage ML, also commonly known as Cascaded ML, that involve several ML operation using different ML models on single input image
+
 This tutorial begins with building a one stream, single stage Machine Learning pipeline using VVAS and then scales up to build four channel Machine learning pipelines that processes 4 streams in parallel.
 
 The pipeline will run some ML model on the four H.264 decoded streams and mix the videos and display the four streams on HDMI Monitor.
@@ -33,10 +34,10 @@ Hardware Requirements
 Software Requirements
 ========================
 
-(Refer `Vitis Unified Software Development Platform 2021.2 Documentation <https://docs.xilinx.com/r/en-US/ug1400-vitis-embedded/Installation>`_ for installation instructions)
+(Refer `Vitis Unified Software Development Platform 2022.1 Documentation <https://docs.xilinx.com/r/en-US/ug1400-vitis-embedded/Installation>`_ for installation instructions)
 
-- `Vitis™ Unified Software Platform <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis/2021-2.html>`_ version 2021.2
-- `Petalinux tool <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/2021-2.html>`_ version 2021.2
+- `Vitis™ Unified Software Platform <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis/2022-1.html>`_ version 2022.1
+- `Petalinux tool <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/2022-1.html>`_ version 2022.1
 - Serial terminal emulator (for example, Tera Term)
 - Git
 - Host system with Ubuntu 18.04/20.04 (Recommended)
@@ -51,7 +52,7 @@ System Requirements
 Pre-built binaries
 *******************
 
-`Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.2_zcu104.zip>`_ provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.
+`Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip>`_ provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.
 
 Download the release package. Let the path where release package is downloaded be represented as ``<RELEASE_PATH>``.
 
@@ -59,10 +60,7 @@ Download the release package. Let the path where release package is downloaded b
 
    The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
 
-Open Source Licenses and Source code - VVAS 1.1
--------------------------------------------------------
-
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_1_1_thirdparty_sources.zip>`_ that contain the Open Source Licenses and source code.
+In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip>`_ that contain the Open Source Licenses and source code.
 
 Once you have downloaded the pre-built binaries, you may go to section :ref:`board-bring-up` to try the released SD card image.
 
@@ -157,7 +155,7 @@ Machine Learning (ML) block
 -------------------------------
 
 Machine Learning inference is performed by DPU hardware accelerator and :ref:`vvas_xinfer` plug-in.
-VVAS supports the DPU libraries released with `Vitis-AI <https://github.com/Xilinx/Vitis-AI>`_ 2.0. :ref:`vvas_xinfer` is used along with the :ref:`vvas_xdpuinfer <vvas_xdpuinfer>` acceleration software library to perform the Machine Learning Inference.
+VVAS supports the DPU libraries released with `Vitis-AI <https://github.com/Xilinx/Vitis-AI>`_ 2.5. :ref:`vvas_xinfer` is used along with the :ref:`vvas_xdpuinfer <vvas_xdpuinfer>` acceleration software library to perform the Machine Learning Inference.
 The beauty of this VVAS solution is that user need not figure out the resolution required for various DPU supported models.
 vvas_xinfer plug-in gets this information from the requested model and perform resize, color space conversion operation on the input image as per the requirement of the model using preprocessor block (vvas_xpreprocessor). The output of the vvas_xinfer is the original input image along with the scaled metadata for that resolution.
 
@@ -209,7 +207,7 @@ Sample JSON files **kernel_pp_facedectect.json** for preprocesing and **kernel_d
           "device-index": 0,
           "kernels" :[
             {
-              "kernel-name":"v_multi_scaler:v_multi_scaler_1",
+              "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
               "library-name": "libvvas_xpreprocessor.so",
               "config": {
                 "alpha_r" : 128,
@@ -514,7 +512,7 @@ Below are the sample json files.
    "device-index": 0,
    "kernels" :[
      {
-       "kernel-name":"v_multi_scaler:v_multi_scaler_1",
+       "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
        "library-name": "libvvas_xpreprocessor.so",
        "config": {
          "alpha_r" : 0,
@@ -614,7 +612,7 @@ Below are the sample json files for 2nd level.
    "device-index": 0,
    "kernels" :[
      {
-       "kernel-name":"v_multi_scaler:v_multi_scaler_1",
+       "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
        "library-name": "libvvas_xpreprocessor.so",
        "config": {
          "alpha_r" : 128,
@@ -688,7 +686,7 @@ Below are the sample json files for 3rd level.
    "device-index": 0,
    "kernels" :[
      {
-       "kernel-name":"v_multi_scaler:v_multi_scaler_1",
+       "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
        "library-name": "libvvas_xpreprocessor.so",
        "config": {
          "alpha_r" : 128,
@@ -758,7 +756,7 @@ For more information on Vitis platforms, see `Vitis Software Platform <https://w
 
     VVAS platform ``zcu104_vcuDec_vmixHdmiTx`` adds patch to irps5401 driver for zcu104 board to support multi thread execution of VAI models.
     This `patch <https://github.com/Xilinx/Vitis-AI/blob/v2.0/dsa/DPU-TRD/app/dpu_sw_optimize.tar.gz>`_ shouldn't be applied to other boards
-    and is not part of the official Xilinx released 2021.2 Petalinux.
+    and is not part of the official Xilinx released 2022.1 Petalinux.
 
 Build Platform
 ==============
@@ -770,7 +768,7 @@ The platform provides the following hardware and software components of the pipe
 * VCU hardened IP block
 * Video Mixer and HDMI Tx soft IP blocks
 * Opensource framework like GStreamer, OpenCV
-* Vitis AI 2.0 libraries
+* Vitis AI 2.5 libraries
 * Xilinx Runtime (XRT)
 * omxh264dec GStreamer plugin
 * kmmsink GStreamer plugin
@@ -790,9 +788,8 @@ Steps for building the platform:
 2. Setup the toolchain
 ::
 
-  source <2021.2.1_Vitis>/settings64.sh
-  source <2021.2_Petalinux>/settings.sh
-  source <2021.2_XRT>/setenv.sh
+  source <2022.1_Vitis>/settings64.sh
+  source <2022.1_Petalinux>/settings.sh
 
 3. Change directory to the platform
 ::
@@ -805,7 +802,7 @@ Steps for building the platform:
   make
 
 After the build is finished, the platform is available at
-``<VVAS_REPO>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx/platform_repo/xilinx_zcu104_vcuDec_vmixHdmiTx_202120_1/export/xilinx_zcu104_vcuDec_vmixHdmiTx_202120_1/``.
+``<VVAS_REPO>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx/platform_repo/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1/export/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1/``.
 
 Let the path to platform be represented as ``<PLATFORM_PATH>``.
 
@@ -824,26 +821,40 @@ The hardware accelerators required are:
 The Xilinx deep learning processor unit (DPU) is a configurable computation engine dedicated for convolutional neural networks.
 Refer to `DPU-TRD <https://github.com/Xilinx/Vitis-AI/blob/master/dsa/DPU-TRD/prj/Vitis/README.md>`_ for more information and compiling the DPU accelerator.
 
+Multiscaler IP/Kernel source code can be refered from <TBD>
+
 The ``multichannel_ml`` example design adds two instances of B3136 DPU configuration and a single instance of Multiscaler to the ``zcu104_vcuDec_vmixHdmiTx`` platform.
 
 Steps for building Vitis example project:
 
 1. Download Vitis-AI. Let the path where Vitis-AI is downloaded be represented as ``<VITIS_AI_REPO>``.
-::
 
-  git clone https://github.com/Xilinx/Vitis-AI.git
-  cd Vitis-AI/
-  git checkout tags/v2.0 -b v2.0
+  * Open the `reference_design <https://github.com/Xilinx/Vitis-AI/tree/master/reference_design#readme>`__ readme page from Vitis-AI release repo.
+
+  * Copy the ``Download Link`` for ``IP Name`` corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table
+
+  ::
+
+      wget -o DPUCZDX8G.tar.gz '<Download Link>'
+
+  * Uarchive ``DPUCZDX8G.tar.gz``
+
+  ::
+
+      tar -xf DPUCZDX8G.tar.gz
+
 
 2. Change directory to example project
+
 ::
 
   cd <VVAS_REPO>/VVAS/vvas-examples/Embedded/multichannel_ml/
 
 3. Compile the project
+
 ::
 
-  make PLATFORM=<PLATFORM_PATH>/xilinx_zcu104_vcuDec_vmixHdmiTx_202120_1.xpfm DPU_TRD_PATH=<VITIS_AI_REPO>/Vitis-AI/dsa/DPU-TRD/ HW_ACCEL_PATH=<VVAS_REPO>/VVAS/vvas-accel-hw/
+  make PLATFORM=<PLATFORM_PATH>/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1.xpfm DPU_TRD_PATH=<VITIS_AI_REPO>/Vitis-AI/DPUCZDX8G HW_ACCEL_PATH=<VVAS_REPO>/VVAS/vvas-accel-hw/
 
 
 .. Note:: *Depending on the build machine capacity, building this example project can take about 3 or more hours to compile*.
@@ -857,7 +868,7 @@ Once the build is completed, you can find the sdcard image at
 Board bring up
 ==================================
 
-1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2021.1_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
+1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
 
    Boot the board using this SD card.
 
@@ -876,31 +887,31 @@ Board bring up
 
 4. Copy the model json files and scripts on the board::
 
-      scp -r <RELEASE_PATH>/vvas_1.1_multichannel_ml_zcu104/scripts_n_utils/ root@<board ip>:~
+      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2022.1_zcu104/scripts_n_utils/ root@<board ip>:~
 
-5. Copy the Vitis-AI model files on board::
+5. Copy the Vitis-AI model files on board. Execute the command mentioned below on the target board::
 
       mkdir -p /usr/share/vitis_ai_library/models
-      scp -r <RELEASE_PATH>/vvas_1.1_multichannel_ml_zcu104/vai_models/* /usr/share/vitis_ai_library/models/
+      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2022.1_zcu104/models/* /usr/share/vitis_ai_library/models/
 
-6. Execute four channel GStreamer pipeline script::
+6. Execute four channel GStreamer pipeline script. Execute the command mentioned below on the target board::
       
-      cd scripts_n_utils/multichannel_ml/
+      cd ~/scripts_n_utils/multichannel_ml/
       ./multichannel_ml.sh
 
 You can now see the 4-channel mixed video on the HDMI monitor.
 
 7. Execute multi level cascade Gstreamer pipeline scripts::
 
-      cd scripts_n_utils/cascade/
+      cd ~/scripts_n_utils/cascade/
       ./1_level_cascade.sh
       ./2_level_cascade.sh
       ./3_level_cascade.sh
 
 
-********************
+*************
 Known Issues
-********************
+*************
 
 1. In Multi Channel ML design, the design is congested due to having multiple logic blocks including 2 DPU IPs and it is not able to meet timing with few slack violations. They are ignored using vItis compiler switch "skipTimingCheckAndFrequencyScaling".
 
@@ -913,7 +924,7 @@ References
 ********************
 
 1.	https://github.com/Xilinx/Vitis-AI
-2.	https://www.xilinx.com/html_docs/vitis_ai/2_0
+2.	https://www.xilinx.com/html_docs/vitis_ai/2_0/index.html
 3.	https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-designtools.html
 4.	https://www.xilinx.com/products/boards-and-kits/zcu104.html
 5.	https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf

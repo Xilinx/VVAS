@@ -21,12 +21,7 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
-	<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
-<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="37701bd4-e5c0-4ee3-9329-e7475d0b13a7" ></script>
-<script type="text/javascript">
-function OptanonWrapper() { }
-</script>
-<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+	
 		<!-- Google Tag Manager -->
 	<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -58,6 +53,7 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -72,10 +68,12 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Smart Model Select" href="smart_model_select.html" />
-    <link rel="prev" title="Acceleration Hardware" href="../common/Acceleration-Hardware.html" /> 
+    <link rel="next" title="Smart Model Select Application" href="smart_model_select.html" />
+    <link rel="prev" title="Acceleration Kernels" href="../common/Acceleration-Hardware.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -226,7 +224,7 @@ function OptanonWrapper() { }
             
             
               <div class="version">
-                1.1
+                2.0
               </div>
             
           
@@ -251,16 +249,17 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">For Advanced Developers</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Platforms &amp; Applications</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#som-examples">SOM Examples</a><ul>
@@ -276,15 +275,16 @@ function OptanonWrapper() { }
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="6-embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
@@ -414,10 +414,10 @@ function OptanonWrapper() { }
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="smart_model_select.html" class="btn btn-neutral float-right" title="Smart Model Select" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="smart_model_select.html" class="btn btn-neutral float-right" title="Smart Model Select Application" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../common/Acceleration-Hardware.html" class="btn btn-neutral float-left" title="Acceleration Hardware" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../common/Acceleration-Hardware.html" class="btn btn-neutral float-left" title="Acceleration Kernels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -427,7 +427,7 @@ function OptanonWrapper() { }
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 16, 2022.
+        Last updated on June 22, 2022.
       </span>
 
     </p>

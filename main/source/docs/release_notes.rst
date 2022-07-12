@@ -1,50 +1,51 @@
-######################################
-Vitis Video Analytics SDK Release V1.1
-######################################
+#######################################
+Vitis Video Analytics SDK Release V2.0
+#######################################
 
-*********
-Summary
-*********
+****************
+Release Summary
+****************
 
-- Based on Vivado 2021.2, Vitis 2021.2, Petalinux 2021.2
-- Based on Vitis AI 2.0 for Machine Learning
-- Supports:
-  
-  - Zynq Ultrascale+ MPSoc based devices like ``ZCU104`` Development Board and ``KV260`` SOM Embedded Platforms
-  - ``Versal`` based platforms like ``vck190``
+* Based on Vivado 2022.1, Vitis 2022.1, Petalinux 2022.1
+* Based on Vitis AI 2.5 for Machine Learning
+* Embedded Platforms
+   - Zynq UltraScale+ MPSoC based ``ZCU104`` Development Board 
+   - ``KV260`` KRIA SOM Boards
+   - ``vck190`` board, a ``Versal`` based platform
+* PCIe/Data Center Platform
+   - Zynq UltraScale+ MPSoC based Alveo U30 Cards
+* Based on GStreamer 1.18
 
-****************************
+*****************************
 What is new in this release?
-****************************
+*****************************
 
-- Added support for ``Versal`` device based platforms
-- Support for cascaded Machine Learning
-- Introducing a new plug-in called ``vvas_xinfer``, which supports:
+* Introducing support for PCIe based platforms
 
-  - pre-processing (Resize, colorspace conversion, Normalization
-  - batch mode for increased DPU throughput
-  - Consolidating the inference information generated from previous levels into a single data structure.
+  - Releasing example design for Transcoding solution on Alveo U30 based platform
+* Added new plug-ins
 
-- Added support for two new models
-  - Semantic Segmentation
-  - Numberplate detection
-
-
-
-
-
-
-
-
+  - **vvas_xcompositor**: Hardware accelerated composition of frames from up to 16 input sources.
+  - **vvas_xmulticrop**: Hardware accelerate cropping of multiple ROI from a frame.
+  - **vvas_xopticleflow**: To detect motion using optical flow algorithm.
+  - **vvas_xoverlay**: To draw text, rectangle, polygone, arrows, circles on a frame
+  - **vvas_xmetaconvert**: plug-in to translate inference meta data in to overlay meta data
+  - **vvas_xtracker**: Implements tracking algorithms to track objects in multiple frames
+  - **vvas_xfunnel**: Multiplex streams on multiple input pads and output onto a single pad
+  - **vvas_xdefunnel**: Send buffetrs received on input pad on different output pads corresponding to the stream id information associated with the buffer.
+* Migrated to XRT native APIs
+  - Development of acceleration software libraries simplified with this change. This is not backward compatible.
+* Tutorial for cascaded Machine Learning
+* On-screen displaying bounding box around objects, text, circle. arrows, polygone etc.
 
 *********
 Features
 *********
 
-- Supports different input sources like Camera, RTP/RTSP streaming, file source etc.
-- H264/H265 Video Encoding/Decoding
-- Vitis AI based inferencing for detection and classification
-- Supported ML Models
+* Supports different input sources like Camera, RTP/RTSP streaming, file source etc.
+* Hardware accelerated H264/H265 Video Encoding/Decoding
+* Vitis AI based inferencing for detection and classification
+* Supported ML Models
 
   - resnet50
   - resnet18
@@ -64,24 +65,34 @@ Features
   - densebox_320_320
   - densebox_640_360
 
-- Hardware accelerated Resize and color space conversion
-- Region Of Interest based encoding
-- On-screen displaying bounding box around objects and text overly
-- HDMI Tx and Display Port interface for displaying the contents
+* Hardware accelerated Resize and color space conversion
+* Region Of Interest based encoding
+* On-screen displaying bounding box around objects, text, circle. arrows, polygone etc.
+* HDMI Tx and Display Port interface for displaying the contents
 
 ******************
 Known Limitations
 ******************
 
-For known limitations, refer to the example/application design for specific limitations, if any.
+* Multiscaler kernel require minimum cropping width and height to be 64. In case the cropping width or height is less than 64, then cropping is not performed. 
+* Due to the above limitation, during cascadded ML inferencing, in case the first stage ML inference generates- objects with region of interest having width and/height less than 64, then the object is not cropped and the ML inference for that object in next stages will not be correct.  
+* All inputs to the ``vvas_xcompositor`` shall have same frame rate otherwise the processing will be controlled by the slowest frame rate input stream.
+
+For platform/example specific known limitations, refer to the example/application design.
 
 *************
 Known Issues
 *************
+
+Data Center
+------------
+
+* High density transcoding performance is less than real time as XRT is being configured in polling mode instead of interrupt mode because of a known issue in XRT on U30 platform.
 
 For known issues, refer to the example/application design for specific issues, if any.
 
 **************
 Patches
 **************
-1. We need one patch in XRT to fix an issue related to memory bank handling. This issue was seen in Versal based platform when plug-in tries to write into a buffer from memory Bank 3. Refer to `XRT Patch <https://github.com/Xilinx/VVAS/tree/master/vvas-platforms/Embedded/zcu104_vcuDec_DP/petalinux/project-spec/meta-user/recipes-xrt>`_ for more details.
+
+* None

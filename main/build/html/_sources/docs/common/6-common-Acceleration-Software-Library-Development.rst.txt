@@ -1,72 +1,288 @@
-##############################################################
+################################################
 Acceleration Software Library Development Guide
-##############################################################
+################################################
 
-One of the objectives of VVAS is to define a methodology for advanced developers to develop their own kernel and integrate it into GStreamer-based applications. This section defines the steps required to develop an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application. There are three types of kernels.
+One of the objectives of VVAS is to define a framework for the advanced developers that enables them to develop their own kernel and integrate it into GStreamer-based applications. Kernel developers might not be experts in software development and there is always some learning curve to understand the frameworks like Xilinx Runtime (XRT), GStreamer, etc. This framework abstracts the complexities of the XRT and GStreamer framework and provides simple and easy to understand APIs to hook their kernels developed on a Xilinx FPGA into complex applications.
+This section covers the details about developing an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine, and it provides hooks to control the kernel from the GStreamer plug-ins or an application.
+
+There are different types of acceleration kernels supported by VVAS and details about these are covered below.
+
+*****************
+Types of Kernels
+*****************
+
+There are three types of acceleration kernels based on the implementation.
 
 .. figure:: ../images/image15.png
    :align: center
 
-**********************************************************
-Types of Kernels
-**********************************************************
-
-There are three types of kernels as mentioned below.
-
 
 Hard Kernel
-======================
+============
 
 A hard kernel is made up of HLS and RTL kernels.
 
 
 Softkernel
-======================
+===========
 
-These are special kernels that executes on the application Processor of the device and are controlled over PCIe interface from the Server. These kernels are not for Embedded platforms.
+These are special kernels where actual hardware is controlled by a software running on the application processor of the device connected to the server over PCIe interface. The software that is controlling the actual hardware on the device is called as softkernel. This softkernel is receiving the commands/control information from the application running on the server. These softkernel are used only in PCIe based platforms, like Data Center.  These kernels are not for Embedded platforms.
 
 
 Software Kernel
-===============================
+================
 
 Software kernels are software processing modules that execute fully on the host CPU. Exposing software kernel through the acceleration software library interface allows them to integrate into the GStreamer framework without an in-depth knowledge of the GStreamer framework.
 
-******************************************************
+***********************************************
 Interfaces for Acceleration Software Libraries
-******************************************************
+***********************************************
 
-To be able to be controlled from an application or GStreamer plug-ins, each acceleration software library must expose three core API functions.
+VVAS has defined a simplified, easy to use interface so that developer can easliy hook their Kernels into GStreamer based applications. The interface has been divided into two parts, core APIs and utility APIs. Core APIs are mandatory APIs, to be implemented by the acceleration softeare libraries so that these can be controlled from the GStreamere Infrastructure plug-ins as well as applications. Utility APIs are provided to abstract the Xilinx Run Time (XRT) interface from the developer and provide easy to use interface to interact with the kernel.
+
+
+Core API
+========
+
+Each acceleration software library must implement these Core APIs. The GStreamer VVAS infrastructure plug-ins (vvas_xfilter and vvas_xmultisrc) call these core APIs to perform operations on the kernel. The following is a list of core APIs.
+
 
 .. figure:: ../images/core-API-functions.png
 
-To interact with the kernel, a set of utility APIs are provided.
+
+xlnx_kernel_init
+----------------
+
+This API is called by the VVAS infrastructure plug-in only once at the time of plug-in initialization. The acceleration software library can perform all of the one-time initialization in this function.
 
 
-vvas-utils
-=================
+.. code-block::
+
+        int32_t xlnx_kernel_init (VVASKernel * handle)
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+        Return:
+            0 on success or -1 on failure
+
+
+xlnx_kernel_start
+-----------------
+
+This API is called by infrastructure plug-in for each input frame/buffer it has received for further processing by the kernel.
+The acceleration software library can perform per frame operations like updating the state machine, reading/writing the registers of the IP and then instructing the kernel to process the input. Steps to start the kernel depends on the type of the kernel and are covered in details later in this section.
+
+.. code-block::
+
+        int32_t xlnx_kernel_start (VVASKernel * handle, int start, VVASFrame *
+        input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT])
+
+        Parameters:
+           handle - VVAS kernel handle that has kernel context
+            start – flag to indicate start of the kernel. Mainly useful in
+        streaming kernel mode
+            input[MAX_NUM_OBJECT] – Array of input frames populated in VVASFrame
+        handle
+            output[MAX_NUM_OBJECT] – Array of output frames populated in VVASFrame
+        handle
+        Return:
+            0 on success or -1 on failure
+
+        Note:
+            1. MAX_NUM_OBJECT is 512 and same is assigned in vvas_kernel.h
+            2. Input and output of array is NULL terminated to know number of input
+        & output frames received to start function
+
+
+xlnx_kernel_done
+-----------------
+
+To know whether the kernel has finished processing the current frame/buffer, infrastructure plug-in, application will call this API. The acceleration software library can use this API to wait for completion of the task that was started using the xlnx_kernel_start() API. User can provide the "time_out" value for the maximum amount of time this API will wait before returning from this function. Depending on the type of kernel, implementation inside this API may change. More information about guidelines to implement this API for different types of kernels are covered in more details later in this section.
+
+.. code-block::
+
+        int32_t vvas_kernel_done (VVASKernel * handle, int32_t timeout)
+
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+            timeout - max. time to wait for "kernel done" notification from the
+        kernel.
+        Return:
+            0 on success or -1 on failure
+
+
+xlnx_kernel_deinit
+--------------------
+
+This API is called by the infrastructure plug-in when plug-in is de-initializing. Acceleration software library must perform any clean-up, de-initialization tasks such as freeing private handles and internal memory allocation as part of the library initialization process.
+
+.. code-block::
+
+        int32_t xlnx_kernel_deinit (VVASKernel * handle)
+
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+        Return:
+            0 on success or -1 on failure
+
+
+Utility APIs
+==============
 
 This section covers details about the utility infrastructure required to develop the kernel libraries for a new kernel and to integrate these acceleration software libraries into the GStreamer framework.
 
-The VVAS acceleration software library APIs are C-based APIs designed for ease of use. A developer does not need knowledge of the GStreamer plug-ins. The acceleration software libraries are developed using the following APIs and can be used by the GStreamer VVAS infrastructure plug-ins to realize plug and play functionality of various processing blocks and filters.
+The acceleration software libraries are developed using the following utility APIs.
 
-The utility sources are hosted in the vvas-utils repository/folder.
+The utility API sources are hosted in the vvas-utils folder of the VVAS sources tree.
 
-.. figure:: ../images/image24.png 
+.. figure:: ../images/image24.png
    :width: 400
 
 
+Memory Management APIs
+-----------------------
 
-**************************************
+Hardware Kernels work on physically contiguous memory. In a case where acceleration software library need physically contiguous memory, the utility APIs mentioned below can be used.
+
+.. code-block::
+
+        VVASFrame* vvas_alloc_buffer (VVASKernel *handle, uint32_t size,
+        VVASMemoryType mem_type, VVASFrameProps *props)
+
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+            size - memory size to be allocated
+            mem_type - memory can be VVAS_FRAME_MEMORY or VVAS_INTERNAL_MEMORY
+            props – required when requesting VVAS_FRAME_MEMORY
+
+        Return:
+            VVASFrame handle on success or NULL on failure
+
+In a case where frequent memory allocation/de-allocation is required, the recommendation is to allocate from the memory pool. The developer can allocate the memory from the memory pool managed by the GStreamer infrastructure plug-in. To allocate memory from the memory pool managed by the GStreamer Infrastructure plug-in, the developer must pass the "props" parameter value as VVAS_FRAME_MEMORY. If the "props" parameter value is set to VVAS_INTERNAL_MEMORY, then the memory is not allocated from a memory pool.
+
+
+The following API is to free the memory that is allocated using the vvas_alloc_buffer() API.
+
+.. code-block::
+
+        void vvas_free_buffer (VVASKernel * handle, VVASFrame *vvas_frame)
+
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+            vvas_frame – VVASFrame handle allocated using vvas_alloc_buffer() API
+
+        Return:
+            None
+
+Kernel Management Modes
+------------------------
+
+Kernels can be managed in two different modes:
+
+- In XRT managed mode, kernel execution (starting/stopping/configuration) is managed by the underlying Xilinx Runtime (XRT). In this mode, the synchronization between different kernel instances executing simultaneously in different thread/process contexts is managed by XRT. This mode of operation is multi thread/multiprocess safe. XRT ensures that at any point, only one kernel context is given access to the actual kernel hardware resources.
+- In user managed mode, the user is responsible to start, stop and configure the kernel using register read/write APIs. This mode is allowed only if the kernel object is created in ``exclusive`` mode. If the kernel is opened in ``exclusive`` mode, then only one instance of the kernel object can be created/opened.
+
+It is strongly recommended to use the kernel in XRT managed mode by opening kernel in ``shared`` mode, as this is multi thread/multi-process safe and easy to configure.
+
+The APIs described below can be used in XRT managed mode and user managed mode.
+
+
+Read/Write Register APIs
+---------------------------
+
+These APIs can be used only if kernel object is created in ``exclusive`` mode. The developer must ensure that the "is_multiprocess" parameter is set to "false" in VVASKernel object in the acceleration software library.
+
+If the developer has decided use the option of programing the kernel using register programming, then the only option to start a kernel is to set the "ap_start" bit by writing into the control register.
+
+.. code-block::
+
+        void vvas_register_write (VVASKernel *handle, void *src, size_t size,
+        size_t offset)
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+            src – pointer to data to be written at offset in ERT command buffer or
+        register at offset from base address of IP
+            size – size of the data pointer src
+            offset – offset at which data to be written
+
+        Return:
+            None
+
+The following API is used to read from the registers of an IP/kernel. You can use this API to read the interrupt status register to know the status of the task in polling mode.
+
+.. code-block::
+
+        void vvas_register_read (VVASKernel *handle, void *src, size_t size, size_t
+        offset)
+
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+            src – pointer to data which will be updated after read
+            size – size of the data pointer src
+            offset – offset from base address of an IP
+
+        Return:
+            None
+
+
+Execution APIs
+---------------
+
+These APIs are used in case the kernel is being used in XRT managed mode.
+Execution APIs are used to start kernel execution and then wait for the completion of the kernel current task. These APIs are multi-process/multi-thread safe. These APIs are only used when `is_multiprocess` is set to true during kernel initialization. Use the following API to start IP/kernel execution.
+
+.. code-block::
+
+        int32_t vvas_kernel_start (VVASKernel * handle, const char *format, ...);
+
+        Parameters:
+            handle - VVAS kernel handle which has kernel context
+            format - Variable arguments for the list of arguments that the kernel takes.
+
+        Return:
+            0 on success -1 on failure
+
+Follow below format specifiers for kernel arguments for "format" argument
+
+"i" : Signed int argument.
+"u" : Unsigned int argument.
+"l" : Unsigned long long argument.
+"p" : Any pointer argument.
+"b" : Buffer Object argument.
+"s" : If you want to skip the argument.
+
+Ex : For passing 3 arguments of types int, unsigned int and a pointer,
+     then the format specifier string would be "iup"
+
+     If you want to skip the middler argument in the above case, then
+     the format specifier string would be "isp"
+
+Use the following API to check whether the IP or kernel has finished execution. This function internally loops for MAX_EXEC_WAIT_RETRY_CNT times until a timeout before returning an error.
+
+We strongly discourage use of this API in case developer has started the kernel by directly setting the AP_START bit of the kernel control register using ``vvas_register_write`` API.
+
+.. code-block::
+
+        int32_t vvas_kernel_done (VVASKernel * handle, int32_t timeout);
+
+        Parameters:
+            handle  - VVAS kernel handle which has kernel context
+            timeout - Timeout in milliseconds
+
+        Return:
+            0 on success or -1 on failure
+
+
+*********************
 VVAS Data structures
-**************************************
+*********************
 
-The following sections list the core structures and enumerations.
+The following sections list the core structures and enumerations used in VVAS framework.
 
 
 VVASKernel
-======================
+==========
 
-The VVASKernel is handle to kernel context and is created and passed to the core APIs by the GStreamer infrastructure plug-ins (for example: the vvas_xfilter).
+The VVASKernel is a structure to hold the kernel context and is created and passed to the core APIs by the GStreamer infrastructure plug-ins (for example: the vvas_xfilter).
 
 .. code-block::
 
@@ -116,9 +332,9 @@ The VVASKernel is handle to kernel context and is created and passed to the core
 
         be used to start kernel. else, direct register programming will be
         used \*/
-        
+
         uint8_t  \*name; /\* TBD \*/
-        
+
         uint16_t in_mem_bank; /\* Memory bank to which input port of kernel is attached to \*/
         uint16_t out_mem_bank; /\* Memory bank to which output port of kernel is attached to
 
@@ -126,7 +342,7 @@ The VVASKernel is handle to kernel context and is created and passed to the core
 
 
 VVASVideoFormat
-=================================
+================
 
 The VVASVideoFormat represents the video color formats supported by the VVAS framework. The GStreamer infrastructure plug-ins supports the mapping of the following formats and corresponding GStreamer color formats.
 
@@ -141,7 +357,7 @@ The VVASVideoFormat represents the video color formats supported by the VVAS fra
         VVAS_VFMT_RGBX10,
         VVAS_VFMT_YUVX10,
         VVAS_VFMT_Y_UV8,
-        VVAS_VFMT_Y_UV8_420, // NV12 
+        VVAS_VFMT_Y_UV8_420, // NV12
         VVAS_VFMT_RGB8,
         VVAS_VFMT_YUVA8,
         VVAS_VFMT_YUV8,
@@ -152,7 +368,7 @@ The VVASVideoFormat represents the video color formats supported by the VVAS fra
         VVAS_VFMT_ARGB8,
         VVAS_VFMT_BGRX8,
         VVAS_VFMT_UYVY8,
-        VVAS_VFMT_BGR8, // BGR 
+        VVAS_VFMT_BGR8, // BGR
         VVAS_VFMT_RGBX12,
         VVAS_VFMT_RGB16,
         VVAS_VFMT_I420
@@ -160,9 +376,9 @@ The VVASVideoFormat represents the video color formats supported by the VVAS fra
 
 
 VVASFrame
-=============================
+==========
 
-The VVASFrame stores information related to a video frame. The GStreamer infrastructure plug- ins allocate the VVASFrame handle for input and output video frames and sends them to the VVAS kernel processing APIs. Also, the VVASFrame can be allocated by kernel libraries for internal memory requirements (i.e., memory for filter coefficients).
+The VVASFrame stores information related to a video frame. The GStreamer infrastructure plug-ins allocate the VVASFrame handle for input and output video frames and sends them to the VVAS kernel processing APIs. Also, the VVASFrame can be allocated by kernel libraries for internal memory requirements (i.e., memory for filter coefficients).
 
 
 .. code-block::
@@ -178,8 +394,8 @@ The VVASFrame stores information related to a video frame. The GStreamer infrast
         VVASVideoFormat fmt;
         };
         struct _vvas_frame {
-        uint32_t bo[VIDEO_MAX_PLANES]; // ignore: currently not used 
-        void \*vaddr[VIDEO_MAX_PLANES]; // virtual/user space address of 
+        uint32_t bo[VIDEO_MAX_PLANES]; // ignore: currently not used
+        void \*vaddr[VIDEO_MAX_PLANES]; // virtual/user space address of
                                        //video frame memory
         uint64_t paddr[VIDEO_MAX_PLANES]; // physical address of video frame
         uint32_t size[VIDEO_MAX_PLANES];
@@ -196,7 +412,7 @@ The VVASFrame stores information related to a video frame. The GStreamer infrast
 
 
 Other VVAS Declarations
-===========================================
+========================
 
 .. code-block::
 
@@ -222,262 +438,62 @@ Other VVAS Declarations
 
 VVAS acceleration software libraries APIs are broadly categorized into two API types, `Core API <#_bookmark17>`__ and `Utility API <#utility-api>`__.
 
-********************************
-Core API
-********************************
-
-Core APIs are exposed by the VVAS acceleration software library developer through a shared library. The GStreamer VVAS infrastructure plug-ins (vvas_xfilter and vvas_xmultisrc) call the APIs to perform operations on the kernel. The following is a list of core APIs.
-
-
-Initialization API
-=================================
-
-The acceleration software library must perform one-time initialization tasks, such as private handles and internal memory allocations.
-
-.. code-block::
-
-        int32_t xlnx_kernel_init (VVASKernel * handle)
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-        Return:
-            0 on success or -1 on failure
-
-
-Process API
-========================================
-
-The acceleration software library must perform per frame operations such as updating IP registers or calling the processing function of the user space library. If a acceleration software library is developed for IP (HardKernel), then this API must call the vvas_kernel_start() utility API to issue a command to process the registers using XRT.
-
-.. code-block::
-
-        int32_t xlnx_kernel_start (VVASKernel * handle, int start, VVASFrame *
-        input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT])
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-            start – flag to indicate start of the kernel. Mainly useful in
-        streaming kernel mode
-            input[MAX_NUM_OBJECT] – Array of input frames populated in VVASFrame
-        handle
-            output[MAX_NUM_OBJECT] – Array of output frames populated in VVASFrame
-        handle
-        Return:
-            0 on success or -1 on failure
-
-        Note:
-            1. MAX_NUM_OBJECT is 512 and same is assigned in vvas_kernel.h
-            2. Input and output of array is NULL terminated to know number of input 
-        & output frames received to start function
-
-The acceleration software library can use the following API to wait for completion of the task that was started using the xlnx_kernel_start() API. In the case of a memory-memory IP acceleration software library, this API can leverage the vvas_kernel_done() API to check whether an issued command to XRT is completed.
-
-.. code-block::
-
-        int32_t vvas_kernel_done (VVASKernel * handle, int32_t timeout)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-            timeout - max. time to wait for "kernel done" notification from the
-        kernel.
-        Return:
-            0 on success or -1 on failure
-
-
-De-Initialization API
-================================
-
-The acceleration software library must perform de-initialization tasks such as freeing private handles and internal memory allocation as part of the library initialization process.
-
-.. code-block::
-
-        int32_t xlnx_kernel_deinit (VVASKernel * handle)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-        Return:
-            0 on success or -1 on failure
-
-******************************
-Utility APIs
-******************************
-
-For ease of use, the utility APIs are abstracted from the XRT APIs. The following is the list of utility APIs.
-
-
-Memory Management API
-===========================
-
-The following API must be used to allocate XRT memory for video frames as well as for internal memory requirements (i.e., memory for filter coefficients to be sent to IP). If video frames are requested using VVAS_FRAME_MEMORY, then the callback function invoked to the GStreamer VVAS infrastructure plug-ins, like the vvas_xfilter, will allocate frames from GstVideoBufferPool and GstVvasAllocator to avoid memory fragmentation or the memory will be allocated using direct XRT APIs.
-
-.. code-block::
-
-        VVASFrame* vvas_alloc_buffer (VVASKernel *handle, uint32_t size,
-        VVASMemoryType mem_type, VVASFrameProps *props)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-            size - memory size to be allocated
-            mem_type - memory can be VVAS_FRAME_MEMORY or VVAS_INTERNAL_MEMORY
-            props – required when requesting VVAS_FRAME_MEMORY
-
-        Return:
-            VVASFrame handle on success or NULL on failure
-
-The following API is to free the memory that is allocated using the vvas_alloc_buffer() API.
-
-.. code-block::
-
-        void vvas_free_buffer (VVASKernel * handle, VVASFrame *vvas_frame)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-            vvas_frame – VVASFrame handle allocated using vvas_alloc_buffer() API
-
-        Return:
-            None
-
-
-********************************
-Register Access APIs
-********************************
-
-The register access APIs are used to directly set or get registers of an IP or ERT command buffer that is sent to XRT. The following API is used write into the registers of an IP or to write into the ERT command buffer that is sent to XRT while starting the kernel execution.
-
-.. code-block::
-
-        void vvas_register_write (VVASKernel *handle, void *src, size_t size,
-        size_t offset)
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-            src – pointer to data to be written at offset in ERT command buffer or
-        register at offset from base address of IP
-            size – size of the data pointer src
-            offset – offset at which data to be written
-
-        Return:
-            None
-
-The following API used to read from the registers of an IP. This API is not required when is_multiprocess enabled in the VVASKernel handle.
-
-.. code-block::
-
-        void vvas_register_read (VVASKernel *handle, void *src, size_t size, size_t
-        offset)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-            src – pointer to data which will be updated after read
-            size – size of the data pointer src
-            offset – offset from base address of an IP
-
-        Return:
-            None
-
-********************************
-Execution APIs
-********************************
-
-Execution APIs are used to start kernel execution and wait for the completion of the kernel. These APIs are only used when is_multiprocess is enabled in the VVASKernel handle. Use the following API o start IP/kernel execution.
-
-.. code-block::
-
-        int32_t vvas_kernel_start (VVASKernel *handle)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-
-        Return:
-            0 on success -1 on failure
-
-Use the following API to check whether the IP or kernel has finished execution. This function internally loops for MAX_EXEC_WAIT_RETRY_CNT times until a timeout before returning an error.
-
-.. code-block::
-
-        int32_t vvas_kernel_start (VVASKernel *handle)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-
-        Return:
-            0 on success or -1 on failure
-        int32_t xlnx_kernel_init (VVASKernel * handle)
-
-        Parameters:
-            handle - VVAS kernel handle which has kernel context
-
-        Return:
-            0 on success or -1 on failure
-
-
-**********************************************************
+***********************************************
 Acceleration Software Library for Hard Kernels
-**********************************************************
+***********************************************
 
 This section covers the steps to develop an acceleration software library for hard kernels.
 
 .. note:: It is assumed that hard kernel work only on physical address. Hence Infrastructure plugins will only provide physical address for the input/output buffers. If for any reason one wants to access the input/output buffers in s/w accel lib, then need to map the buffer and get the virtual address.
+
 Virtual address is populated by infrastructure plugins only in case of s/w accel lib for "software only" kernels.
 
-
 Memory Allocation
-==============================
+==================
 
-A hard kernel works on the physically contiguous memory. Use the vvas_alloc_buffer API to allocate physically contiguous memory on the device (FPGA).
-
-
-Controlling Kernel
-==============================
-
-There are two ways to control a kernel, manual mode and automatic mode.
+A hard kernel works on the physically contiguous memory. Use the ``vvas_alloc_buffer`` API to allocate physically contiguous memory on the device (FPGA).
 
 
-Automatic Control Mode
----------------------------------
+Starting Kernel
+===============
 
-In this mode, VVAS is relying on the underlying XRT framework to write to the kernel registers to start the kernel. The underlying XRT framework ensures that the kernel is not accessed simultaneously by multiple users at any time. This is the recommended mode of operation for kernels that operate on memory buffers. However, there is one limitation. This mode is not suitable for streaming kernels, where kernels need to be started in auto-restart mode. For starting kernels in auto-restart mode, you must use the manual mode.
+APIs to start a kernel depends on the mode in which kernel object is created.
 
-.. note:: To operate an acceleration software library in automatic mode, set the is_multiprocess flag to True in the kernel initialization API (xlnx_kernel_init).
+XRT Managed Kernel
+-------------------
 
-- Programming Registers
-   Use the vvas_register_write APIs to program the kernel register. In this mode, the registers are not immediately written to. The register value is updated in an internal buffer. The actual registers are updated in response to the kernel start request, described in the following section.
+ ``vvas_kernel_start`` must be used to start the kernel execution. It takes all kernel parameters required to be programmed as function arguments.
 
-- Starting Kernel
-   When all the register values are programed, the acceleration software library calls the vvas_kernel_start API. The kernel registers are programed and the kernel is started using the XRT command internally by the vvas_kernel_start API implementation.
+User Managed Mode
+--------------------
 
-- Check Kernel Done Status
-   The acceleration software library calls the vvas_kernel_done API. The acceleration software library can specify the time_out value before returning from this API.
+Use the ``vvas_register_write`` API to set the AP_START bit in kernel control register.
 
+Checking Kernel Task Status
+===========================
 
-Manual Control Mode
--------------------------
+After the kernel is started, the next step is to check whether the task is completed. Depending on the mode in which kernel object is created, different mechanisms are used.
 
-The manual control mode is used when you need to start the kernel in auto-restart mode, for example, in streaming kernels. The XRT framework does not support this mode. This is achieved by directly writing into the control registers of the kernel. In this mode, you must ensure that the acceleration software library (GStreamer plug-in or application) does not allow the kernel to be accessed simultaneously by more than one thread or process at any time. It can cause unpredictable results.
-
-- Programming Registers
-   In the manual control mode, use the vvas_register_read/vvas_register_write APIs to read from or write to the kernel register. The register is accessed immediately for reading and writing.
-
-- Starting Kernel
-   Start the kernel by directly writing the appropriate value in the kernel control register.
-
-- Check Kernel Done Status
-   In this mode, the acceleration software library must either continuously poll the kernel status register using vvas_register_read, or to wait on an interrupt to know if the kernel is finished processing.
+- For XRT managed kernels, the developer must call the ``vvas_kernel_done`` API. This API will return when kernel finished processing current task. The developer can provide the "time-out" interval value, indicating how long this API has to wait before it can return in case the kernel has not finished processing.
+- For user managed mode, there is no callback or interrupt notification mechanism available that can be used to notify the task completion. The acceleration software library must continuously poll the kernel status register using ``vvas_register_read``.
 
 
+******************************************************
 Acceleration Software Library for the Software Kernel
-========================================================
+******************************************************
 
 Software kernels are software modules that run on the application processor. The acceleration software library for these processing modules do not interact with the XRT interface. The interface APIs that abstract the XRT interface are not needed. You must implement the core API in the acceleration software library for use in the GStreamer application through VVAS infrastructure plug-ins.
 
-****************************************************************************************
+********************************************************************
 Capability Negotiation Support in the Acceleration Software Library
-****************************************************************************************
+********************************************************************
 
 Kernel capability negotiation is an important functionality that should be accepted between the upstream element and infrastructure plug-ins to achieve an optimal solution. Because the infrastructure plug-ins are generic, the acceleration software library is responsible to populate the required kernel capability during xlnx_kernel_init(), which is negotiated between the infrastructure plug-ins and the upstream element. The infrastructure plug-in suggests a format on its sink pad and arranges the recommendation in priority order as per the kernel capability in the result from the CAPS query that is performed on the sink pad. Only the vvas_xfilter plug-in is currently supporting the kernel specific capability negotiation.
 
 The following section explains the data structures exchange between acceleration software libraries and the infrastructure plug-ins for capability negotiation.
 
 .. code-block::
-   
+
         typedef struct caps
         {
         uint8_t range_height; /* true/false if height is specified in range */
@@ -516,15 +532,15 @@ API to create new caps with input parameters
         range_width : same as above
         lower_width :
         upper_width :
-       
+
                     : variable range of format supported terminated by 0
                       make sure to add 0 at end otherwise it
                       code will take format till it get 0
 
         kernelcaps * vvas_caps_new (uint8_t range_height,
                                     uint32_t lower_height,
-                                    uint32_t upper_height, 
-                                    uint8_t range_width, 
+                                    uint32_t upper_height,
+                                    uint8_t range_width,
                                     uint32_t lower_width,
                                     uint32_t upper_width, ...)
 
@@ -540,4 +556,3 @@ API to add new caps to src pad. Only one pad is supported as on today.
 .. code-block::
 
    bool vvas_caps_add_to_src (VVASKernel * handle, kernelcaps * kcaps, int sinkpad_num)
-
