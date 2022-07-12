@@ -79,7 +79,7 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :caption: Other Versions
    :hidden:
 
-   2.0 <https://xilinx.github.io/VVAS/2.0/build/html/index.html>
+   2.0 <https://xilinx.github.io/VVAS/main/build/html/index.html>
    1.1 <https://xilinx.github.io/VVAS/1.1/build/html/index.html>
 
 

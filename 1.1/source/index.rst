@@ -124,5 +124,5 @@ There are different requirements of different applications. VVAS provides severa
    :caption: Other Versions
    :hidden:
 
-   2.0 <https://xilinx.github.io/VVAS/2.0/build/html/index.html>
+   2.0 <https://xilinx.github.io/VVAS/main/build/html/index.html>
    1.0 <https://xilinx.github.io/VVAS/1.0/build/html/index.html>
