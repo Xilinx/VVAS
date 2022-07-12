@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -58,8 +59,10 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
@@ -72,6 +75,8 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 	</head>
@@ -249,29 +254,34 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/2.0/build/html/index.html">2.0</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
             
@@ -343,12 +353,12 @@ function OptanonWrapper() { }
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="vvas-inference-metadata">
-<h1>VVAS Inference Metadata<a class="headerlink" href="#vvas-inference-metadata" title="Permalink to this headline">¶</a></h1>
+  <section id="vvas-inference-metadata">
+<h1>VVAS Inference Metadata<a class="headerlink" href="#vvas-inference-metadata" title="Permalink to this heading">¶</a></h1>
 <p>The VVAS inference metadata (GstInferenceMeta) object holds information about the metadata produced by the machine learning (ML) inference acceleration software libraries. This metadata structure stores the inferred data generated at multiple levels of ML operation into a single structure in a hierarchical way. This data structure combines, and stores metadata generated by detection and classification models.</p>
 <p>The GStreamer plug-ins can set and get inference metadata from the GstBuffer by using the <cite>gst_buffer_add_meta ()</cite> API and <cite>gst_buffer_get_meta ()</cite> API, respectively.</p>
-<div class="section" id="gstinferencemeta">
-<h2>GstInferenceMeta<a class="headerlink" href="#gstinferencemeta" title="Permalink to this headline">¶</a></h2>
+<section id="gstinferencemeta">
+<h2>GstInferenceMeta<a class="headerlink" href="#gstinferencemeta" title="Permalink to this heading">¶</a></h2>
 <p>GstInferenceMeta is the root node of the inference metadata. GstInferencePrediction hosts the actual inference metadata.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
 <span class="o">*</span> <span class="n">Implements</span> <span class="n">the</span> <span class="n">placeholder</span> <span class="k">for</span> <span class="n">inference</span> <span class="n">information</span><span class="o">.</span>
@@ -362,9 +372,9 @@ function OptanonWrapper() { }
 <span class="p">};</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="gstinferenceprediction">
-<h2>GstInferencePrediction<a class="headerlink" href="#gstinferenceprediction" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="gstinferenceprediction">
+<h2>GstInferencePrediction<a class="headerlink" href="#gstinferenceprediction" title="Permalink to this heading">¶</a></h2>
 <p>This structure represents the inference data generated from the ML operation. BBox represents the bounding box around the detected object from detection model. The classification parameter of this structure stores a list of classification information associated with the detected object. This structure also stores the results of the next level of ML operation performed (typically in cascaded network based ML operation).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">_VvasColorMetadata</span> <span class="p">{</span>
   <span class="n">uint8_t</span> <span class="n">red</span><span class="p">;</span>
@@ -421,9 +431,9 @@ function OptanonWrapper() { }
 <span class="p">};</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="gstinferenceclassification">
-<h2>GstInferenceClassification<a class="headerlink" href="#gstinferenceclassification" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="gstinferenceclassification">
+<h2>GstInferenceClassification<a class="headerlink" href="#gstinferenceclassification" title="Permalink to this heading">¶</a></h2>
 <p>This structure stores the results of the ML operation by the classification network.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>/**
 * GstInferenceClassification:
@@ -456,8 +466,8 @@ struct _GstInferenceClassification
 };
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

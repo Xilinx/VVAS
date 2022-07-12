@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -58,8 +59,10 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
@@ -72,6 +75,8 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Acceleration Hardware" href="Acceleration-Hardware.html" />
@@ -251,11 +256,11 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">For Advanced Developers</a><ul class="current">
@@ -302,20 +307,25 @@ function OptanonWrapper() { }
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/2.0/build/html/index.html">2.0</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
             
@@ -389,50 +399,50 @@ function OptanonWrapper() { }
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="acceleration-software-library-development-guide">
-<h1>Acceleration Software Library Development Guide<a class="headerlink" href="#acceleration-software-library-development-guide" title="Permalink to this headline">¶</a></h1>
+  <section id="acceleration-software-library-development-guide">
+<h1>Acceleration Software Library Development Guide<a class="headerlink" href="#acceleration-software-library-development-guide" title="Permalink to this heading">¶</a></h1>
 <p>One of the objectives of VVAS is to define a methodology for advanced developers to develop their own kernel and integrate it into GStreamer-based applications. This section defines the steps required to develop an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application. There are three types of kernels.</p>
-<div class="figure align-center">
+<figure class="align-center">
 <img alt="../../_images/image15.png" src="../../_images/image15.png" />
-</div>
-<div class="section" id="types-of-kernels">
-<h2>Types of Kernels<a class="headerlink" href="#types-of-kernels" title="Permalink to this headline">¶</a></h2>
+</figure>
+<section id="types-of-kernels">
+<h2>Types of Kernels<a class="headerlink" href="#types-of-kernels" title="Permalink to this heading">¶</a></h2>
 <p>There are three types of kernels as mentioned below.</p>
-<div class="section" id="hard-kernel">
-<h3>Hard Kernel<a class="headerlink" href="#hard-kernel" title="Permalink to this headline">¶</a></h3>
+<section id="hard-kernel">
+<h3>Hard Kernel<a class="headerlink" href="#hard-kernel" title="Permalink to this heading">¶</a></h3>
 <p>A hard kernel is made up of HLS and RTL kernels.</p>
-</div>
-<div class="section" id="softkernel">
-<h3>Softkernel<a class="headerlink" href="#softkernel" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="softkernel">
+<h3>Softkernel<a class="headerlink" href="#softkernel" title="Permalink to this heading">¶</a></h3>
 <p>These are special kernels that executes on the application Processor of the device and are controlled over PCIe interface from the Server. These kernels are not for Embedded platforms.</p>
-</div>
-<div class="section" id="software-kernel">
-<h3>Software Kernel<a class="headerlink" href="#software-kernel" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="software-kernel">
+<h3>Software Kernel<a class="headerlink" href="#software-kernel" title="Permalink to this heading">¶</a></h3>
 <p>Software kernels are software processing modules that execute fully on the host CPU. Exposing software kernel through the acceleration software library interface allows them to integrate into the GStreamer framework without an in-depth knowledge of the GStreamer framework.</p>
-</div>
-</div>
-<div class="section" id="interfaces-for-acceleration-software-libraries">
-<h2>Interfaces for Acceleration Software Libraries<a class="headerlink" href="#interfaces-for-acceleration-software-libraries" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="interfaces-for-acceleration-software-libraries">
+<h2>Interfaces for Acceleration Software Libraries<a class="headerlink" href="#interfaces-for-acceleration-software-libraries" title="Permalink to this heading">¶</a></h2>
 <p>To be able to be controlled from an application or GStreamer plug-ins, each acceleration software library must expose three core API functions.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/core-API-functions.png" src="../../_images/core-API-functions.png" />
-</div>
+</figure>
 <p>To interact with the kernel, a set of utility APIs are provided.</p>
-<div class="section" id="vvas-utils">
-<h3>vvas-utils<a class="headerlink" href="#vvas-utils" title="Permalink to this headline">¶</a></h3>
+<section id="vvas-utils">
+<h3>vvas-utils<a class="headerlink" href="#vvas-utils" title="Permalink to this heading">¶</a></h3>
 <p>This section covers details about the utility infrastructure required to develop the kernel libraries for a new kernel and to integrate these acceleration software libraries into the GStreamer framework.</p>
 <p>The VVAS acceleration software library APIs are C-based APIs designed for ease of use. A developer does not need knowledge of the GStreamer plug-ins. The acceleration software libraries are developed using the following APIs and can be used by the GStreamer VVAS infrastructure plug-ins to realize plug and play functionality of various processing blocks and filters.</p>
 <p>The utility sources are hosted in the vvas-utils repository/folder.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <a class="reference internal image-reference" href="../../_images/image24.png"><img alt="../../_images/image24.png" src="../../_images/image24.png" style="width: 400px;" /></a>
-</div>
-</div>
-</div>
-<div class="section" id="vvas-data-structures">
-<h2>VVAS Data structures<a class="headerlink" href="#vvas-data-structures" title="Permalink to this headline">¶</a></h2>
+</figure>
+</section>
+</section>
+<section id="vvas-data-structures">
+<h2>VVAS Data structures<a class="headerlink" href="#vvas-data-structures" title="Permalink to this heading">¶</a></h2>
 <p>The following sections list the core structures and enumerations.</p>
-<div class="section" id="vvaskernel">
-<h3>VVASKernel<a class="headerlink" href="#vvaskernel" title="Permalink to this headline">¶</a></h3>
+<section id="vvaskernel">
+<h3>VVASKernel<a class="headerlink" href="#vvaskernel" title="Permalink to this heading">¶</a></h3>
 <p>The VVASKernel is handle to kernel context and is created and passed to the core APIs by the GStreamer infrastructure plug-ins (for example: the vvas_xfilter).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> \<span class="n">_vvas_kernel</span> <span class="n">VVASKernel</span><span class="p">;</span>
 
@@ -489,9 +499,9 @@ function OptanonWrapper() { }
 <span class="p">};</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="vvasvideoformat">
-<h3>VVASVideoFormat<a class="headerlink" href="#vvasvideoformat" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="vvasvideoformat">
+<h3>VVASVideoFormat<a class="headerlink" href="#vvasvideoformat" title="Permalink to this heading">¶</a></h3>
 <p>The VVASVideoFormat represents the video color formats supported by the VVAS framework. The GStreamer infrastructure plug-ins supports the mapping of the following formats and corresponding GStreamer color formats.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">enum</span> <span class="p">{</span>
 <span class="n">VVAS_VMFT_UNKNOWN</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
@@ -520,9 +530,9 @@ function OptanonWrapper() { }
 <span class="p">}</span>  <span class="n">VVASVideoFormat</span><span class="p">;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="vvasframe">
-<h3>VVASFrame<a class="headerlink" href="#vvasframe" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="vvasframe">
+<h3>VVASFrame<a class="headerlink" href="#vvasframe" title="Permalink to this heading">¶</a></h3>
 <p>The VVASFrame stores information related to a video frame. The GStreamer infrastructure plug- ins allocate the VVASFrame handle for input and output video frames and sends them to the VVAS kernel processing APIs. Also, the VVASFrame can be allocated by kernel libraries for internal memory requirements (i.e., memory for filter coefficients).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">_vvas_frame_props</span> <span class="n">VVASFrameProps</span><span class="p">;</span>
 <span class="n">typedef</span> <span class="n">struct</span> <span class="n">_vvas_frame</span> <span class="n">VVASFrame</span><span class="p">;</span>
@@ -550,9 +560,9 @@ function OptanonWrapper() { }
 <span class="p">};</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="other-vvas-declarations">
-<h3>Other VVAS Declarations<a class="headerlink" href="#other-vvas-declarations" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="other-vvas-declarations">
+<h3>Other VVAS Declarations<a class="headerlink" href="#other-vvas-declarations" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define MAX_NUM_OBJECT 512 /* max number of video frames/objects</span>
 <span class="n">handled</span> <span class="n">by</span> <span class="n">VVAS</span> \<span class="o">*/</span>
 <span class="c1">#define MAX_EXEC_WAIT_RETRY_CNT 10 /* retry count on xclExecWait failure \*/</span>
@@ -574,13 +584,13 @@ function OptanonWrapper() { }
 </pre></div>
 </div>
 <p>VVAS acceleration software libraries APIs are broadly categorized into two API types, <a class="reference external" href="#_bookmark17">Core API</a> and <a class="reference external" href="#utility-api">Utility API</a>.</p>
-</div>
-</div>
-<div class="section" id="core-api">
-<h2>Core API<a class="headerlink" href="#core-api" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="core-api">
+<h2>Core API<a class="headerlink" href="#core-api" title="Permalink to this heading">¶</a></h2>
 <p>Core APIs are exposed by the VVAS acceleration software library developer through a shared library. The GStreamer VVAS infrastructure plug-ins (vvas_xfilter and vvas_xmultisrc) call the APIs to perform operations on the kernel. The following is a list of core APIs.</p>
-<div class="section" id="initialization-api">
-<h3>Initialization API<a class="headerlink" href="#initialization-api" title="Permalink to this headline">¶</a></h3>
+<section id="initialization-api">
+<h3>Initialization API<a class="headerlink" href="#initialization-api" title="Permalink to this heading">¶</a></h3>
 <p>The acceleration software library must perform one-time initialization tasks, such as private handles and internal memory allocations.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_init</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
 <span class="n">Parameters</span><span class="p">:</span>
@@ -589,9 +599,9 @@ function OptanonWrapper() { }
     <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="process-api">
-<h3>Process API<a class="headerlink" href="#process-api" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="process-api">
+<h3>Process API<a class="headerlink" href="#process-api" title="Permalink to this heading">¶</a></h3>
 <p>The acceleration software library must perform per frame operations such as updating IP registers or calling the processing function of the user space library. If a acceleration software library is developed for IP (HardKernel), then this API must call the vvas_kernel_start() utility API to issue a command to process the registers using XRT.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>int32_t xlnx_kernel_start (VVASKernel * handle, int start, VVASFrame *
 input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT])
@@ -624,9 +634,9 @@ Note:
     <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="de-initialization-api">
-<h3>De-Initialization API<a class="headerlink" href="#de-initialization-api" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="de-initialization-api">
+<h3>De-Initialization API<a class="headerlink" href="#de-initialization-api" title="Permalink to this heading">¶</a></h3>
 <p>The acceleration software library must perform de-initialization tasks such as freeing private handles and internal memory allocation as part of the library initialization process.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_deinit</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
 
@@ -636,13 +646,13 @@ Note:
     <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="utility-apis">
-<h2>Utility APIs<a class="headerlink" href="#utility-apis" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="utility-apis">
+<h2>Utility APIs<a class="headerlink" href="#utility-apis" title="Permalink to this heading">¶</a></h2>
 <p>For ease of use, the utility APIs are abstracted from the XRT APIs. The following is the list of utility APIs.</p>
-<div class="section" id="memory-management-api">
-<h3>Memory Management API<a class="headerlink" href="#memory-management-api" title="Permalink to this headline">¶</a></h3>
+<section id="memory-management-api">
+<h3>Memory Management API<a class="headerlink" href="#memory-management-api" title="Permalink to this heading">¶</a></h3>
 <p>The following API must be used to allocate XRT memory for video frames as well as for internal memory requirements (i.e., memory for filter coefficients to be sent to IP). If video frames are requested using VVAS_FRAME_MEMORY, then the callback function invoked to the GStreamer VVAS infrastructure plug-ins, like the vvas_xfilter, will allocate frames from GstVideoBufferPool and GstVvasAllocator to avoid memory fragmentation or the memory will be allocated using direct XRT APIs.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>VVASFrame* vvas_alloc_buffer (VVASKernel *handle, uint32_t size,
 VVASMemoryType mem_type, VVASFrameProps *props)
@@ -668,10 +678,10 @@ Return:
     None
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="register-access-apis">
-<h2>Register Access APIs<a class="headerlink" href="#register-access-apis" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="register-access-apis">
+<h2>Register Access APIs<a class="headerlink" href="#register-access-apis" title="Permalink to this heading">¶</a></h2>
 <p>The register access APIs are used to directly set or get registers of an IP or ERT command buffer that is sent to XRT. The following API is used write into the registers of an IP or to write into the ERT command buffer that is sent to XRT while starting the kernel execution.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_write (VVASKernel *handle, void *src, size_t size,
 size_t offset)
@@ -700,9 +710,9 @@ Return:
     None
 </pre></div>
 </div>
-</div>
-<div class="section" id="execution-apis">
-<h2>Execution APIs<a class="headerlink" href="#execution-apis" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="execution-apis">
+<h2>Execution APIs<a class="headerlink" href="#execution-apis" title="Permalink to this heading">¶</a></h2>
 <p>Execution APIs are used to start kernel execution and wait for the completion of the kernel. These APIs are only used when is_multiprocess is enabled in the VVASKernel handle. Use the following API o start IP/kernel execution.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_start</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span>
 
@@ -730,24 +740,24 @@ Return:
     <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="acceleration-software-library-for-hard-kernels">
-<h2>Acceleration Software Library for Hard Kernels<a class="headerlink" href="#acceleration-software-library-for-hard-kernels" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="acceleration-software-library-for-hard-kernels">
+<h2>Acceleration Software Library for Hard Kernels<a class="headerlink" href="#acceleration-software-library-for-hard-kernels" title="Permalink to this heading">¶</a></h2>
 <p>This section covers the steps to develop an acceleration software library for hard kernels.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>It is assumed that hard kernel work only on physical address. Hence Infrastructure plugins will only provide physical address for the input/output buffers. If for any reason one wants to access the input/output buffers in s/w accel lib, then need to map the buffer and get the virtual address.</p>
 </div>
 <p>Virtual address is populated by infrastructure plugins only in case of s/w accel lib for “software only” kernels.</p>
-<div class="section" id="memory-allocation">
-<h3>Memory Allocation<a class="headerlink" href="#memory-allocation" title="Permalink to this headline">¶</a></h3>
+<section id="memory-allocation">
+<h3>Memory Allocation<a class="headerlink" href="#memory-allocation" title="Permalink to this heading">¶</a></h3>
 <p>A hard kernel works on the physically contiguous memory. Use the vvas_alloc_buffer API to allocate physically contiguous memory on the device (FPGA).</p>
-</div>
-<div class="section" id="controlling-kernel">
-<h3>Controlling Kernel<a class="headerlink" href="#controlling-kernel" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="controlling-kernel">
+<h3>Controlling Kernel<a class="headerlink" href="#controlling-kernel" title="Permalink to this heading">¶</a></h3>
 <p>There are two ways to control a kernel, manual mode and automatic mode.</p>
-<div class="section" id="automatic-control-mode">
-<h4>Automatic Control Mode<a class="headerlink" href="#automatic-control-mode" title="Permalink to this headline">¶</a></h4>
+<section id="automatic-control-mode">
+<h4>Automatic Control Mode<a class="headerlink" href="#automatic-control-mode" title="Permalink to this heading">¶</a></h4>
 <p>In this mode, VVAS is relying on the underlying XRT framework to write to the kernel registers to start the kernel. The underlying XRT framework ensures that the kernel is not accessed simultaneously by multiple users at any time. This is the recommended mode of operation for kernels that operate on memory buffers. However, there is one limitation. This mode is not suitable for streaming kernels, where kernels need to be started in auto-restart mode. For starting kernels in auto-restart mode, you must use the manual mode.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -770,9 +780,9 @@ Return:
 </dl>
 </li>
 </ul>
-</div>
-<div class="section" id="manual-control-mode">
-<h4>Manual Control Mode<a class="headerlink" href="#manual-control-mode" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="manual-control-mode">
+<h4>Manual Control Mode<a class="headerlink" href="#manual-control-mode" title="Permalink to this heading">¶</a></h4>
 <p>The manual control mode is used when you need to start the kernel in auto-restart mode, for example, in streaming kernels. The XRT framework does not support this mode. This is achieved by directly writing into the control registers of the kernel. In this mode, you must ensure that the acceleration software library (GStreamer plug-in or application) does not allow the kernel to be accessed simultaneously by more than one thread or process at any time. It can cause unpredictable results.</p>
 <ul class="simple">
 <li><dl class="simple">
@@ -791,15 +801,15 @@ Return:
 </dl>
 </li>
 </ul>
-</div>
-</div>
-<div class="section" id="acceleration-software-library-for-the-software-kernel">
-<h3>Acceleration Software Library for the Software Kernel<a class="headerlink" href="#acceleration-software-library-for-the-software-kernel" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="acceleration-software-library-for-the-software-kernel">
+<h3>Acceleration Software Library for the Software Kernel<a class="headerlink" href="#acceleration-software-library-for-the-software-kernel" title="Permalink to this heading">¶</a></h3>
 <p>Software kernels are software modules that run on the application processor. The acceleration software library for these processing modules do not interact with the XRT interface. The interface APIs that abstract the XRT interface are not needed. You must implement the core API in the acceleration software library for use in the GStreamer application through VVAS infrastructure plug-ins.</p>
-</div>
-</div>
-<div class="section" id="capability-negotiation-support-in-the-acceleration-software-library">
-<h2>Capability Negotiation Support in the Acceleration Software Library<a class="headerlink" href="#capability-negotiation-support-in-the-acceleration-software-library" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="capability-negotiation-support-in-the-acceleration-software-library">
+<h2>Capability Negotiation Support in the Acceleration Software Library<a class="headerlink" href="#capability-negotiation-support-in-the-acceleration-software-library" title="Permalink to this heading">¶</a></h2>
 <p>Kernel capability negotiation is an important functionality that should be accepted between the upstream element and infrastructure plug-ins to achieve an optimal solution. Because the infrastructure plug-ins are generic, the acceleration software library is responsible to populate the required kernel capability during xlnx_kernel_init(), which is negotiated between the infrastructure plug-ins and the upstream element. The infrastructure plug-in suggests a format on its sink pad and arranges the recommendation in priority order as per the kernel capability in the result from the CAPS query that is performed on the sink pad. Only the vvas_xfilter plug-in is currently supporting the kernel specific capability negotiation.</p>
 <p>The following section explains the data structures exchange between acceleration software libraries and the infrastructure plug-ins for capability negotiation.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">caps</span>
@@ -858,8 +868,8 @@ Return:
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">bool</span> <span class="n">vvas_caps_add_to_src</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">kernelcaps</span> <span class="o">*</span> <span class="n">kcaps</span><span class="p">,</span> <span class="nb">int</span> <span class="n">sinkpad_num</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

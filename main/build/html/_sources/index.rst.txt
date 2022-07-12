@@ -117,3 +117,14 @@ Reference Platforms and Applications
 ------------------------------------------
 
 There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms example designs and sample application details can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section. Similarly Platforms and application details for PCIe/Data center are covered in :doc:`PCIe/Data Center Platforms and Applications <docs/DC/platforms_and_applications>`
+
+
+.. _versions:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Other Versions
+   :hidden:
+
+   1.1 <https://xilinx.github.io/VVAS/1.1/build/html/index.html>
+   1.0 <https://xilinx.github.io/VVAS/1.0/build/html/index.html>

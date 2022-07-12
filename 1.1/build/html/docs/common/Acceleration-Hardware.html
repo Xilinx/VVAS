@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -58,8 +59,10 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
@@ -72,6 +75,8 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Platforms And Applications" href="../Embedded/platforms_and_applications.html" />
@@ -251,11 +256,11 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">For Advanced Developers</a><ul class="current">
@@ -272,20 +277,25 @@ function OptanonWrapper() { }
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/2.0/build/html/index.html">2.0</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
             
@@ -359,11 +369,11 @@ function OptanonWrapper() { }
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="acceleration-hardware">
-<h1>Acceleration Hardware<a class="headerlink" href="#acceleration-hardware" title="Permalink to this headline">¶</a></h1>
+  <section id="acceleration-hardware">
+<h1>Acceleration Hardware<a class="headerlink" href="#acceleration-hardware" title="Permalink to this heading">¶</a></h1>
 <p>This section covers details about the HLS/RTL acceleration kernels. The kernels are HLS code that can be built using Vitis HLS and the compiled kernels are provided as <code class="docutils literal notranslate"><span class="pre">.xo</span></code> files. These compiled kernels then can be used with any Vitis platform.</p>
-<div class="section" id="kernel-build-steps">
-<h2>Kernel Build Steps<a class="headerlink" href="#kernel-build-steps" title="Permalink to this headline">¶</a></h2>
+<section id="kernel-build-steps">
+<h2>Kernel Build Steps<a class="headerlink" href="#kernel-build-steps" title="Permalink to this heading">¶</a></h2>
 <p>The following steps are used to build the kernel.</p>
 <ol class="arabic simple">
 <li><p>Setup the Vitis HLS 2021.2 software. Refer to <a class="reference external" href="https://www.xilinx.com/html_docs/xilinx2021.2/vitis_doc/gnq1597858079367.html">Vitis Software Development Platform 2021.2</a>.</p></li>
@@ -371,21 +381,16 @@ function OptanonWrapper() { }
 <li><p>Edit the options in &lt;kernel_folder&gt;/kernel_config.h.</p></li>
 <li><p>Make &lt;kernel name&gt;.</p></li>
 </ol>
-</div>
-<div class="section" id="multiscaler-kernel">
-<span id="id1"></span><h2>Multiscaler Kernel<a class="headerlink" href="#multiscaler-kernel" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="multiscaler-kernel">
+<span id="id1"></span><h2>Multiscaler Kernel<a class="headerlink" href="#multiscaler-kernel" title="Permalink to this heading">¶</a></h2>
 <p>VVAS releases the full HLS source code of the Multiscaler 2.0 IP, it is based on the descriptor approach for programming. This kernel produces a multiscaler kernel xo/v_multi_scaler.xo.</p>
-<div class="section" id="kernel-configuration">
-<h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this headline">¶</a></h3>
+<section id="kernel-configuration">
+<h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this heading">¶</a></h3>
 <p>The multiscaler kernel configuration can be edited by changing the <cite>&lt;VVAS_SOURCES&gt;/ivas-accel-hw/multiscaler/v_multi_scaler_config.h</cite> file. The parameters in the following table can be changed as required.
 i
 Table 14: Multiscaler Kernel Configuration</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Parameter Macro</strong></p></th>
 <th class="head"><p><strong>Possible Values</strong></p></th>
@@ -530,18 +535,18 @@ format support</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="steps-to-build-kernel">
-<h2>Steps to Build Kernel<a class="headerlink" href="#steps-to-build-kernel" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="steps-to-build-kernel">
+<h2>Steps to Build Kernel<a class="headerlink" href="#steps-to-build-kernel" title="Permalink to this heading">¶</a></h2>
 <ol class="arabic simple">
 <li><p>Source the Vitis HLS 2021.2 software.</p></li>
 <li><p>Edit the makefile to point the PLATFORM_FILE, <cite>(.xpfm)</cite> file, to any Vitis 2021.2 platform (tested using the ZCU104 base platform).</p></li>
 <li><p>Edit the options in the multiscaler/v_multi_scaler_config.h.</p></li>
 <li><p>Make v_multi_scaler.xo. The generated output will be in the xo folder as xo/ v_multi_scaler.xo.</p></li>
 </ol>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

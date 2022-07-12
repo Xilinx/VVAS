@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -58,8 +59,10 @@ function OptanonWrapper() { }
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
@@ -72,6 +75,8 @@ function OptanonWrapper() { }
   <link rel="stylesheet" href="../../_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Development Guide" href="for_developers.html" />
@@ -251,11 +256,11 @@ function OptanonWrapper() { }
               
             
             
-              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Base Infrastructure</span></p>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Plugins</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#custom-plug-ins">Custom Plug-ins</a><ul>
@@ -324,20 +329,25 @@ function OptanonWrapper() { }
 </li>
 <li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Embedded</span></p>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Data Center</span></p>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
 </ul>
-<p class="caption"><span class="caption-text">FAQ</span></p>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/2.0/build/html/index.html">2.0</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
             
@@ -409,11 +419,11 @@ function OptanonWrapper() { }
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="plug-ins">
-<h1>Plug-ins<a class="headerlink" href="#plug-ins" title="Permalink to this headline">¶</a></h1>
+  <section id="plug-ins">
+<h1>Plug-ins<a class="headerlink" href="#plug-ins" title="Permalink to this heading">¶</a></h1>
 <p>VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the <code class="docutils literal notranslate"><span class="pre">vvas-gst-plugins</span></code> folder of the VVAS source tree. This section covers the plug-in that are common for Edge as well as cloud solutions. There are few plug-ins that are specific to Edge/Embedded platforms and are covered in <a class="reference internal" href="../Embedded/6-embedded-plugins.html"><span class="doc">Plugins for Embedded platforms</span></a>. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in <a class="reference internal" href="../DC/6-DC-plugins.html"><span class="doc">Plugins for Data Center Platform</span></a>. The following table lists the VVAS GStreamer plug-ins.</p>
 <p>Table 1: GStreamer Plug-ins</p>
-<table class="colwidths-given docutils align-default">
+<table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -441,30 +451,23 @@ function OptanonWrapper() { }
 </tr>
 </tbody>
 </table>
-<div class="section" id="custom-plug-ins">
-<span id="custom-plugins-label"></span><h2>Custom Plug-ins<a class="headerlink" href="#custom-plug-ins" title="Permalink to this headline">¶</a></h2>
+<section id="custom-plug-ins">
+<span id="custom-plugins-label"></span><h2>Custom Plug-ins<a class="headerlink" href="#custom-plug-ins" title="Permalink to this heading">¶</a></h2>
 <p>There are specific functions, like video decoder, encoder, and meta affixer where the requirements are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.</p>
-<div class="section" id="vvas-xmetaaffixer">
-<span id="id1"></span><h3>vvas_xmetaaffixer<a class="headerlink" href="#vvas-xmetaaffixer" title="Permalink to this headline">¶</a></h3>
+<section id="vvas-xmetaaffixer">
+<span id="id1"></span><h3>vvas_xmetaaffixer<a class="headerlink" href="#vvas-xmetaaffixer" title="Permalink to this heading">¶</a></h3>
 <p>The metaaffixer plug-in, <code class="docutils literal notranslate"><span class="pre">vvas_xmetaaffixer</span></code>, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The vvas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaaffixer">vvas_xmetaaffixer source code</a></p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/image5.png" src="../../_images/image5.png" />
-</div>
-<div class="section" id="input-and-output">
-<h4>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h4>
+</figure>
+<section id="input-and-output">
+<h4>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h4>
 <p>This plug-in is format agnostic and can accept any input format. It operates only on the metadata. The vvas_xmetaaffixer plug-in supports the GstInferenceMeta data structure. For details about this structure, refer to the <a class="reference internal" href="A-VVAS-Inference-Metadata.html"><span class="doc">VVAS Inference Metadata</span></a> section.</p>
-</div>
-<div class="section" id="control-parameters-and-plug-in-properties">
-<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="control-parameters-and-plug-in-properties">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h4>
 <p>Table 2: vvas_xmetaaffixer Plug-in Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 11%" />
-<col style="width: 15%" />
-<col style="width: 11%" />
-<col style="width: 47%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -501,9 +504,9 @@ pad.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="pad-naming-syntax">
-<h4>Pad naming syntax<a class="headerlink" href="#pad-naming-syntax" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="pad-naming-syntax">
+<h4>Pad naming syntax<a class="headerlink" href="#pad-naming-syntax" title="Permalink to this heading">¶</a></h4>
 <p>The pad naming syntax is listed, and the following image shows the syntax:</p>
 <ul class="simple">
 <li><p>MetaAffixer master input pad should be named sink_master.</p></li>
@@ -511,12 +514,12 @@ pad.</p></td>
 <li><p>MetaAffixer slave input pad should be named sink_slave_0, sink_slave_1.</p></li>
 <li><p>MetaAffixer slave output pad should be named src_slave_0, src_slave_1, src_slave_2.</p></li>
 </ul>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/image6.png" src="../../_images/image6.png" />
-</div>
-</div>
-<div class="section" id="example-pipelines">
-<h4>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h4>
+</figure>
+</section>
+<section id="example-pipelines">
+<h4>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h4>
 <p>This section covers the example pipelines using the metaaffixer plug-in.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc num-buffers=1 \
 ! video/x-raw, width=1920, height=1080, format=NV12 \
@@ -535,10 +538,10 @@ pad.</p></td>
 ! fakesink -v
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="vvas-xabrscaler">
-<span id="id2"></span><h3>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="vvas-xabrscaler">
+<span id="id2"></span><h3>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this heading">¶</a></h3>
 <p>In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. vvas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The vvas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. For more implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/abrscaler">vvas_xabrscaler source code</a>.</p>
 <p>This plug-in supports:</p>
 <ul class="simple">
@@ -556,12 +559,12 @@ pad.</p></td>
 <p>Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application.</p>
 </div>
 <p>As a reference, maximum resolution supported by multi-scaler kernel in <code class="docutils literal notranslate"><span class="pre">Smart</span> <span class="pre">Model</span> <span class="pre">Select</span></code> example design can be found in  <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33">multi-scaler kernel config</a></p>
-<div class="section" id="prerequisite">
-<h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this headline">¶</a></h4>
+<section id="prerequisite">
+<h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this heading">¶</a></h4>
 <p>This plug-in requires the multiscaler kernel to be available in the hardware design. See <a class="reference internal" href="Acceleration-Hardware.html#multiscaler-kernel"><span class="std std-ref">Multiscaler Kernel</span></a></p>
-</div>
-<div class="section" id="id3">
-<h4>Input and Output<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="id3">
+<h4>Input and Output<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h4>
 <p>This plug-in accepts buffers with the following color format standards:</p>
 <ul class="simple">
 <li><p>RGBx</p></li>
@@ -589,19 +592,12 @@ pad.</p></td>
 <p>Make sure that the color formats needed for your application are supported by the multi-scaler hardware kernel.</p>
 </div>
 <p>As a reference, multi-scaler configuration for <code class="docutils literal notranslate"><span class="pre">smart</span> <span class="pre">model</span> <span class="pre">select</span></code> example design can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h">multi-scaler configuration</a></p>
-</div>
-<div class="section" id="id4">
-<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="id4">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h4>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xabrscaler plug-in.</p>
 <p>Table 3: vvas_xabrscaler Plug-in Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 14%" />
-<col style="width: 17%" />
-<col style="width: 27%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -768,11 +764,11 @@ channel</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="id5">
-<h4>Example Pipelines<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
-<div class="section" id="one-input-one-output">
-<h5>One input one output<a class="headerlink" href="#one-input-one-output" title="Permalink to this headline">¶</a></h5>
+</section>
+<section id="id5">
+<h4>Example Pipelines<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h4>
+<section id="one-input-one-output">
+<h5>One input one output<a class="headerlink" href="#one-input-one-output" title="Permalink to this heading">¶</a></h5>
 <p>The following example configures vvas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed from NV12 to BGR.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc num-buffers=100 \
 ! &quot;video/x-raw, width=1280, height=720, format=NV12&quot; \
@@ -780,9 +776,9 @@ channel</p></td>
 ! &quot;video/x-raw, width=640, height=360, format=BGR&quot; ! fakesink -v
 </pre></div>
 </div>
-</div>
-<div class="section" id="one-input-multiple-output">
-<h5>One input multiple output<a class="headerlink" href="#one-input-multiple-output" title="Permalink to this headline">¶</a></h5>
+</section>
+<section id="one-input-multiple-output">
+<h5>One input multiple output<a class="headerlink" href="#one-input-multiple-output" title="Permalink to this heading">¶</a></h5>
 <p>The following example configures vvas_xabrscaler for one input and three outputs. The input is 1920 x 1080 resolution in NV12 format. There are three output formats:</p>
 <ul class="simple">
 <li><p>1280 x 720 in BGR format</p></li>
@@ -803,27 +799,27 @@ channel</p></td>
 ! fakesink -v
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="vvas-xinfer">
-<span id="id6"></span><h3>vvas_xinfer<a class="headerlink" href="#vvas-xinfer" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+</section>
+<section id="vvas-xinfer">
+<span id="id6"></span><h3>vvas_xinfer<a class="headerlink" href="#vvas-xinfer" title="Permalink to this heading">¶</a></h3>
 <p>GStreamer inference vvas_xinfer plugin performs inferencing on video frames with the help of Vitis AI library and prepares tree like metadata in GstInferenceMeta object and attaches the same to input GstBuffer. This plugin triggers optional preprocessing (scale/crop &amp; etc.) operations with the help of VVAS scaler kernel library (which is on top of Xilinx’s multiscaler IP) on incoming video frames before calling VVAS inference kernel library. vvas_xinfer plugin’s input capabilities are influenced by preprocessing library input capabilities and Vitis AI library capabilities (Vitis-AI does software scaling). This plugin disables preprocessing whenever the input resolution &amp; color format is same as inference engine’s resolution &amp; color format. If preprocessing is enabled and vvas_xinfer plugin is receiving non-CMA memory frames, then data copy will be made to ensure CMA frames goes to preprocessing engine. The main advantage of this plugin is users/customers can realize inference cascading use cases with ease.</p>
-<div class="figure align-center">
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/vvas_xinfer_blockdiagram.png"><img alt="../../_images/vvas_xinfer_blockdiagram.png" src="../../_images/vvas_xinfer_blockdiagram.png" style="width: 927.2px; height: 592.8000000000001px;" /></a>
-</div>
-<div class="section" id="id7">
-<h4>Input and Output<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
+</figure>
+<section id="id7">
+<h4>Input and Output<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h4>
 <blockquote>
 <div><ul class="simple">
 <li><p>Accepts buffers with GRAY8/ NV12/ BGR/ RGB/ YUY2/ r210/ v308/ GRAY10_LE32/ ABGR/ ARGB color formats on input GstPad &amp; output GstPad.</p></li>
 <li><p>Attaches GstInferenceMeta metadata to output GstBuffer</p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="control-parameters">
-<h4>Control Parameters<a class="headerlink" href="#control-parameters" title="Permalink to this headline">¶</a></h4>
-<table class="colwidths-given docutils align-default" id="id17">
+</section>
+<section id="control-parameters">
+<h4>Control Parameters<a class="headerlink" href="#control-parameters" title="Permalink to this heading">¶</a></h4>
+<table class="docutils align-default" id="id17">
 <caption><span class="caption-text">Control Parameters</span><a class="headerlink" href="#id17" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 20%" />
@@ -861,15 +857,10 @@ channel</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="infer-config-json-members">
-<h4>infer-config json members<a class="headerlink" href="#infer-config-json-members" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="infer-config-json-members">
+<h4>infer-config json members<a class="headerlink" href="#infer-config-json-members" title="Permalink to this heading">¶</a></h4>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 9%" />
-<col style="width: 81%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Json key</p></th>
 <th class="head"><p>Item</p></th>
@@ -963,15 +954,10 @@ When low-latency is disabled, vvas_xinfer plugin will wait for inference-max-que
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="infer-config-kernel-json-members">
-<h4>infer-config::kernel json members<a class="headerlink" href="#infer-config-kernel-json-members" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="infer-config-kernel-json-members">
+<h4>infer-config::kernel json members<a class="headerlink" href="#infer-config-kernel-json-members" title="Permalink to this heading">¶</a></h4>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 9%" />
-<col style="width: 13%" />
-<col style="width: 77%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>JSON key</p></th>
 <th class="head"><p>Item</p></th>
@@ -1010,16 +996,11 @@ When low-latency is disabled, vvas_xinfer plugin will wait for inference-max-que
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="preprocess-config-json-members">
-<h4>preprocess-config json members<a class="headerlink" href="#preprocess-config-json-members" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="preprocess-config-json-members">
+<h4>preprocess-config json members<a class="headerlink" href="#preprocess-config-json-members" title="Permalink to this heading">¶</a></h4>
 <p>Table 5 preprocess-config json members</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 13%" />
-<col style="width: 14%" />
-<col style="width: 73%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Json key</p></th>
 <th class="head"><p>Item</p></th>
@@ -1087,16 +1068,11 @@ In embedded platforms, device-index is not an applicable option as it is always 
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="preprocess-config-kernel-json-members">
-<h4>preprocess-config::kernel json members<a class="headerlink" href="#preprocess-config-kernel-json-members" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="preprocess-config-kernel-json-members">
+<h4>preprocess-config::kernel json members<a class="headerlink" href="#preprocess-config-kernel-json-members" title="Permalink to this heading">¶</a></h4>
 <p>Table 3: preprocess-config::kernel json members</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 13%" />
-<col style="width: 18%" />
-<col style="width: 69%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>JSON key</p></th>
 <th class="head"><p>Item</p></th>
@@ -1163,18 +1139,14 @@ vvas_xinfer preprocess-config=yolo_preproc.json infer-config=yolov3_voc.json ! q
 vvas_xinfer preprocess-config=resnet_preproc.json infer-config=resnet18.json ! fakesink -v
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="infrastructure-plug-ins-and-acceleration-software-libraries">
-<span id="infra-plugins-label"></span><h2>Infrastructure Plug-ins and Acceleration Software Libraries<a class="headerlink" href="#infrastructure-plug-ins-and-acceleration-software-libraries" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+</section>
+<section id="infrastructure-plug-ins-and-acceleration-software-libraries">
+<span id="infra-plugins-label"></span><h2>Infrastructure Plug-ins and Acceleration Software Libraries<a class="headerlink" href="#infrastructure-plug-ins-and-acceleration-software-libraries" title="Permalink to this heading">¶</a></h2>
 <p>Infrastructure plug-ins are generic plug-ins that interact with the acceleration kernel through a set of APIs exposed by an acceleration software library corresponding to that kernel. Infrastructure plug-ins abstract the core/common functionality of the GStreamer framework (for example: caps negotiation and buffer management).</p>
 <p>Table 5: Infrastructure Plug-ins</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 54%" />
-<col style="width: 46%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Infrastructure Plug-ins</strong></p></th>
 <th class="head"><p><strong>Function</strong></p></th>
@@ -1200,10 +1172,6 @@ Support transform operation</p></td>
 <p>Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.</p>
 <p>Table 6: Acceleration Software Libraries</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 54%" />
-<col style="width: 46%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Acceleration Software Library</strong></p></th>
 <th class="head"><p><strong>Function</strong></p></th>
@@ -1223,12 +1191,12 @@ using OpenCV.</p></td>
 </tbody>
 </table>
 <p>The GStreamer infrastructure plug-ins are available in the vvas-gst-plugins repository/ folder. The following section describes each infrastructure plug-in.</p>
-<div class="section" id="vvas-xfilter">
-<span id="id8"></span><h3>vvas_xfilter<a class="headerlink" href="#vvas-xfilter" title="Permalink to this headline">¶</a></h3>
+<section id="vvas-xfilter">
+<span id="id8"></span><h3>vvas_xfilter<a class="headerlink" href="#vvas-xfilter" title="Permalink to this heading">¶</a></h3>
 <p>The GStreamer vvas_xfilter is an infrastructure plug-in that is derived from GstBaseTransform. It supports one input pad and one output pad. The vvas_xfilter efficiently works with hard-kernel/soft-kernel/software (user-space) acceleration software library types as shown in the following figure.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/image8.png" src="../../_images/image8.png" />
-</div>
+</figure>
 <p>This plug-in can operate in the following three modes.</p>
 <ul class="simple">
 <li><p><strong>Passthrough:</strong> Useful when the acceleration software library does not need to alter the input buffer.</p></li>
@@ -1236,16 +1204,16 @@ using OpenCV.</p></td>
 <li><p><strong>Transform:</strong> In this mode, for each input buffer, a new output buffer is produced.</p></li>
 </ul>
 <p>You must set the mode using the JSON file. Refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span class="doc">JSON File Schema</span></a> for information related to the kernels-config property.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/image9.png" src="../../_images/image9.png" />
-</div>
+</figure>
 <p>The vvas_xfilter plug-in takes configuration file as one of the input properties, kernels- config. This configuration file is in JSON format and contains information required by the kernel. During initialization, the vvas_xfilter parses the JSON file and performs the following tasks:</p>
 <ul class="simple">
 <li><p>Finds the VVAS acceleration software library in the path and loads the shared library.</p></li>
 <li><p>Understands the acceleration software library type and prepares the acceleration software library handle (VVASKernel) to be passed to the core APIs.</p></li>
 </ul>
-<div class="section" id="id9">
-<h4>Input and Output<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h4>
+<section id="id9">
+<h4>Input and Output<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h4>
 <p>The vvas_xfilter accepts the buffers with the following color formats on input GstPad and output GstPad.</p>
 <ul class="simple">
 <li><p>GRAY8</p></li>
@@ -1260,20 +1228,12 @@ using OpenCV.</p></td>
 <li><p>ARGB</p></li>
 </ul>
 <p>The formats listed are the Xilinx IP supported color formats. To add other color formats, update the vvas_kernel.h and vvas_xfilter plug-ins.</p>
-</div>
-<div class="section" id="id10">
-<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="id10">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h4>
 <p>The following table lists the GObject properties exposed by the vvas_xfilter. Most of them are only available in PCIe supported platforms.</p>
 <p>Table 6: GObject Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 22%" />
-<col style="width: 8%" />
-<col style="width: 8%" />
-<col style="width: 10%" />
-<col style="width: 36%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Platforms Supported</strong></p></th>
@@ -1327,17 +1287,12 @@ resource manager (XRM).</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="json-format-for-vvas-xfilter-plug-in">
-<h4>JSON Format for vvas_xfilter Plug-in<a class="headerlink" href="#json-format-for-vvas-xfilter-plug-in" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="json-format-for-vvas-xfilter-plug-in">
+<h4>JSON Format for vvas_xfilter Plug-in<a class="headerlink" href="#json-format-for-vvas-xfilter-plug-in" title="Permalink to this heading">¶</a></h4>
 <p>The following table provides the JSON keys accepted by the GStreamer vvas_xfilter plug-in.</p>
 <p>Table 7: Root JSON Object Members</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 28%" />
-<col style="width: 28%" />
-<col style="width: 44%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>JSON Key</strong></p></th>
 <th class="head"><p><strong>Item</strong></p></th>
@@ -1502,11 +1457,6 @@ optional</p></td>
 <p>The information in the following table is specific to the kernel chosen.</p>
 <p id="kernel-json-object">Table 8: Kernel JSON Object Members</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 31%" />
-<col style="width: 37%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>JSON Key</strong></p></th>
 <th class="head"><p><strong>Item</strong></p></th>
@@ -1624,11 +1574,11 @@ embedded platforms.</p></td>
 </tbody>
 </table>
 <p>For <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/filter">vvas_xfilter source code</a></p>
-</div>
-<div class="section" id="example-json-configuration-files">
-<h4>Example JSON Configuration Files<a class="headerlink" href="#example-json-configuration-files" title="Permalink to this headline">¶</a></h4>
-<div class="section" id="json-file-for-vitis-ai-api-based-vvas-acceleration-software-library">
-<h5>JSON File for Vitis AI API-based VVAS Acceleration Software Library<a class="headerlink" href="#json-file-for-vitis-ai-api-based-vvas-acceleration-software-library" title="Permalink to this headline">¶</a></h5>
+</section>
+<section id="example-json-configuration-files">
+<h4>Example JSON Configuration Files<a class="headerlink" href="#example-json-configuration-files" title="Permalink to this heading">¶</a></h4>
+<section id="json-file-for-vitis-ai-api-based-vvas-acceleration-software-library">
+<h5>JSON File for Vitis AI API-based VVAS Acceleration Software Library<a class="headerlink" href="#json-file-for-vitis-ai-api-based-vvas-acceleration-software-library" title="Permalink to this heading">¶</a></h5>
 <p>The following JSON file is for pure software-based acceleration, it does not involve any kernel for acceleration. However, the Vitis AI API based DPU is a special case, where the DPU hardware kernel is controlled by Vitis AI. The acceleration software library calls the Vitis AI API calls and it is implemented as a pure software acceleration software library. There is no need to provide the path of the xclbin in the JSON file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
@@ -1653,9 +1603,9 @@ embedded platforms.</p></td>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="json-file-for-a-hard-kernel">
-<h5>JSON File for a Hard Kernel<a class="headerlink" href="#json-file-for-a-hard-kernel" title="Permalink to this headline">¶</a></h5>
+</section>
+<section id="json-file-for-a-hard-kernel">
+<h5>JSON File for a Hard Kernel<a class="headerlink" href="#json-file-for-a-hard-kernel" title="Permalink to this heading">¶</a></h5>
 <p>The following JSON file uses vvas_xfilter to control multi-scaler IP (hard-kernel). The acceleration software library accessing the register map is libvvas_xcrop.so.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
@@ -1672,33 +1622,33 @@ embedded platforms.</p></td>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="id11">
-<h4>Example Pipelines<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
+</section>
+</section>
+<section id="id11">
+<h4>Example Pipelines<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h4>
 <p>This section covers the GStreamer example pipelines using the <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the vvas_xfilter plug-in.</p>
 <ul class="simple">
 <li><p>The bounding box functionality is implemented in the <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> acceleration software library that is controlled by the <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> plug-in.</p></li>
 <li><p>Machine learning using the DPU is implemented by the <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> acceleration software library that is called by the <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> plug-in.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="bounding-box-example">
-<span id="vvas-xboundingbox"></span><h3>Bounding Box Example<a class="headerlink" href="#bounding-box-example" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="bounding-box-example">
+<span id="vvas-xboundingbox"></span><h3>Bounding Box Example<a class="headerlink" href="#bounding-box-example" title="Permalink to this heading">¶</a></h3>
 <p>This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> and the <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> acceleration software library. The vvas_xboundingbox interprets machine learning inference results from the vvas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-accel-sw-libs/vvas_xboundingbox">vvas_xboundingbox source code</a></p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/X24998-vvas-xboundingbox.png" src="../../_images/X24998-vvas-xboundingbox.png" />
-</div>
-<div class="section" id="prerequisites">
-<h4>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h4>
+</figure>
+<section id="prerequisites">
+<h4>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h4>
 <p>There are a few requirements before start running bounding box examples. Make sure these prerequisites are met.</p>
 <ul class="simple">
 <li><p>Installation of OpenCV: The vvas_xboundingbox uses OpenCV for the graphics back-end library to draw the boxes and labels. Install the libopencv-core-dev package (the preferred version is 3.2.0 or later).</p></li>
 </ul>
-</div>
-<div class="section" id="json-file-for-vvas-xboundingbox">
-<span id="json-vvas-xboundingbox"></span><h4>JSON File for vvas_xboundingbox<a class="headerlink" href="#json-file-for-vvas-xboundingbox" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="json-file-for-vvas-xboundingbox">
+<span id="json-vvas-xboundingbox"></span><h4>JSON File for vvas_xboundingbox<a class="headerlink" href="#json-file-for-vvas-xboundingbox" title="Permalink to this heading">¶</a></h4>
 <p>This section describes the JSON file format and configuration parameters for the bounding box acceleration software library. The GStreamer vvas_xfilter plug-in used in the inplace mode. Bounding box and labels are drawn on identified objects on the incoming frame. Bounding box functionality is implemented in the libvvas_xboundingbox.so acceleration software library.</p>
 <p>The following example is of a JSON file to pass to the vvas_xfilter.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -1744,11 +1694,6 @@ embedded platforms.</p></td>
 <p>Various configuration parameters of the bounding box acceleration software library are described in the following table.</p>
 <p>Table 9: vvas_xboundingbox Parameters</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Parameter</strong></p></th>
 <th class="head"><p><strong>Expected Values</strong></p></th>
@@ -1902,52 +1847,45 @@ level or all levels</p></td>
 </tbody>
 </table>
 <p>An example of using a bounding box along with the machine learning plug-in is shown in the <a class="reference internal" href="../Embedded/Tutorials/MultiChannelML.html"><span class="doc">Multi Channel ML</span></a> Tutorial.</p>
-</div>
-</div>
-<div class="section" id="machine-learning-example">
-<span id="vvas-xdpuinfer"></span><h3>Machine Learning Example<a class="headerlink" href="#machine-learning-example" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="machine-learning-example">
+<span id="vvas-xdpuinfer"></span><h3>Machine Learning Example<a class="headerlink" href="#machine-learning-example" title="Permalink to this heading">¶</a></h3>
 <p>This section discusses how machine learning solutions can be implemented using the VVAS infrastructure <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> plug-in and the <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> acceleration software library.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/image11.png" src="../../_images/image11.png" />
-</div>
+</figure>
 <p>The vvas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The vvas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS meta data structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-accel-sw-libs/vvas_xdpuinfer">vvas_xdpuinfer source code</a></p>
-<div class="section" id="id12">
-<h4>Prerequisites<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h4>
+<section id="id12">
+<h4>Prerequisites<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h4>
 <p>There are a few requirements to be met before you can start running the machine learning examples.</p>
-</div>
-<div class="section" id="model-information">
-<h4>Model Information<a class="headerlink" href="#model-information" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="model-information">
+<h4>Model Information<a class="headerlink" href="#model-information" title="Permalink to this heading">¶</a></h4>
 <p>The model directory name must match with the ELF and prototxt files inside the model directory. The model directory should contain:</p>
 <ul class="simple">
 <li><p>model-name.elf/model-name.xmodel and model-name.prototxt file.</p></li>
 <li><p>label.json file containing the label information, if the models generate labels.</p></li>
 </ul>
 <p>The following is an example of the model directory (yolov2_voc), which contains the yolov2_voc.xmodel and yolov2_voc.prototxt files along with the label.json file.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/model-directory.png" src="../../_images/model-directory.png" />
-</div>
-</div>
-<div class="section" id="xclbin-location">
-<h4>xclbin Location<a class="headerlink" href="#xclbin-location" title="Permalink to this headline">¶</a></h4>
+</figure>
+</section>
+<section id="xclbin-location">
+<h4>xclbin Location<a class="headerlink" href="#xclbin-location" title="Permalink to this heading">¶</a></h4>
 <p>By default, the Vitis AI interface expects xclbin to be located at /usr/lib/ and the xclbin is called dpu.xclbin. Another option is to use the environment variable XLNX_VART_FIRMWARE to change the path and the corresponding path can be updated in the JSON file. That is, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.</p>
-</div>
-<div class="section" id="input-image">
-<h4>Input Image<a class="headerlink" href="#input-image" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="input-image">
+<h4>Input Image<a class="headerlink" href="#input-image" title="Permalink to this heading">¶</a></h4>
 <p>The vvas_xdpuinfer works with raw BGR and RGB images as required by the model. Make sure you have specified correct color format in model-format field in json file. The exact resolution of the image to vvas_xdpuinfer must be provided, it is expected by the model. There is a performance loss if a different resolution of the BGR image is provided to the vvas_xdpuinfer, because resizing is done on the CPU inside the Vitis AI library.</p>
-</div>
-<div class="section" id="json-file-for-vvas-xdpuinfer">
-<span id="json-vvas-dpuinfer"></span><h4>JSON File for vvas_xdpuinfer<a class="headerlink" href="#json-file-for-vvas-xdpuinfer" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="json-file-for-vvas-xdpuinfer">
+<span id="json-vvas-dpuinfer"></span><h4>JSON File for vvas_xdpuinfer<a class="headerlink" href="#json-file-for-vvas-xdpuinfer" title="Permalink to this heading">¶</a></h4>
 <p>The following table shows the JSON file format and configuration parameters for vvas_xdpuinfer.</p>
 <p>Table 10: JSON File for vvas_xdpuinfer</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 4%" />
-<col style="width: 2%" />
-<col style="width: 9%" />
-<col style="width: 3%" />
-<col style="width: 83%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Parameter</p></th>
 <th class="head"><p>Type</p></th>
@@ -2070,20 +2008,20 @@ level or all levels</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="model-parameters">
-<h4>Model Parameters<a class="headerlink" href="#model-parameters" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="model-parameters">
+<h4>Model Parameters<a class="headerlink" href="#model-parameters" title="Permalink to this heading">¶</a></h4>
 <p>The Vitis AI library provides a way to read model parameters by reading the configuration file. It facilitates uniform configuration management of model parameters. The configuration file is located in the model-path of the JSON file with [model_name].prototxt. These parameters are model specific. For more information on model parameters, refer to the Vitis AI Library User Guide (<a class="reference external" href="http://www.xilinx.com/cgi-bin/docs/rdoc?t=vitis_ai%3Bv%3Dlatest%3Bd%3Dug1354-xilinx-ai-sdk.pdf">UG1354</a>).</p>
-</div>
-<div class="section" id="example-gstreamer-pipelines">
-<h4>Example GStreamer Pipelines<a class="headerlink" href="#example-gstreamer-pipelines" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="example-gstreamer-pipelines">
+<h4>Example GStreamer Pipelines<a class="headerlink" href="#example-gstreamer-pipelines" title="Permalink to this heading">¶</a></h4>
 <p>This section describes a few example GStreamer pipelines.</p>
-<div class="section" id="classification-example-using-resnet50">
-<h5>Classification Example Using Resnet50<a class="headerlink" href="#classification-example-using-resnet50" title="Permalink to this headline">¶</a></h5>
+<section id="classification-example-using-resnet50">
+<h5>Classification Example Using Resnet50<a class="headerlink" href="#classification-example-using-resnet50" title="Permalink to this heading">¶</a></h5>
 <p>The following pipeline performs ML using a Resnet50 model. DPU configuration uses kernels- config = ./json_files/kernel_resnet50.json for the vvas_xdpuinfer. The output of the vvas_xfilter is passed to fakesink along with the metadata.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/example-using-resnet50-model.png" src="../../_images/example-using-resnet50-model.png" />
-</div>
+</figure>
 <p>The GStreamer command for the example pipeline:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&quot;&lt;PATH&gt;/001.bgr&quot; blocksize=150528 numbuffers=1
 ! videoparse width=224 height=224 framerate=30/1 format=16
@@ -2118,18 +2056,18 @@ level or all levels</p></td>
 <p>If “need_preprocess” = false, then pre-processing operations like, Normalization, scaling must be
 performed on the frame before feeding to vvas_xfilter/vvas_xdpuinfer otherwise results may not be as expected.</p>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="vvas-xmultisrc">
-<span id="id13"></span><h3>vvas_xmultisrc<a class="headerlink" href="#vvas-xmultisrc" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+</section>
+<section id="vvas-xmultisrc">
+<span id="id13"></span><h3>vvas_xmultisrc<a class="headerlink" href="#vvas-xmultisrc" title="Permalink to this heading">¶</a></h3>
 <p>The GStreamer vvas_xmultisrc plug-in can have one input pad and multiple-output pads. This single plug-in supports multiple acceleration kernels, each controlled by a separate acceleration software library.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">vvas_xmultisrc</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/multisrc">vvas_xmultisrc source code</a></p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/vvas_xmultisrc.png" src="../../_images/vvas_xmultisrc.png" />
-</div>
-<div class="section" id="id14">
-<h4>Input and Output<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h4>
+</figure>
+<section id="id14">
+<h4>Input and Output<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h4>
 <p>Input and output accept buffers with the following color formats on input GstPad and output GstPad.</p>
 <ul class="simple">
 <li><p>GRAY8</p></li>
@@ -2144,18 +2082,11 @@ performed on the frame before feeding to vvas_xfilter/vvas_xdpuinfer otherwise r
 <li><p>ARGB</p></li>
 </ul>
 <p>The formats listed are the Xilinx IP supported color formats. To add other color formats, update the vvas_kernel.h and vvas_xfilter plug-ins.</p>
-</div>
-<div class="section" id="id15">
-<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="id15">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h4>
 <p>Table 11: Plug-in Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 13%" />
-<col style="width: 13%" />
-<col style="width: 13%" />
-<col style="width: 42%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -2182,12 +2113,12 @@ refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span clas
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="json-file-for-vvas-xmultisrc">
-<h4>JSON File for vvas_xmultisrc<a class="headerlink" href="#json-file-for-vvas-xmultisrc" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="json-file-for-vvas-xmultisrc">
+<h4>JSON File for vvas_xmultisrc<a class="headerlink" href="#json-file-for-vvas-xmultisrc" title="Permalink to this heading">¶</a></h4>
 <p>This section covers the format of JSON file/string to be passed to the vvas_xmultisrc plug-in.</p>
-<div class="section" id="example-json-file">
-<h5>Example JSON File<a class="headerlink" href="#example-json-file" title="Permalink to this headline">¶</a></h5>
+<section id="example-json-file">
+<h5>Example JSON File<a class="headerlink" href="#example-json-file" title="Permalink to this heading">¶</a></h5>
 <p>The following example file describes how to specify two kernels that are being controlled by the single instance of the vvas_xmultisrc plug-in. Modify this json file as per your kernels and acceleration software library. The next section describes each field in this example file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/binary_1.xclbin&quot;</span><span class="p">,</span>
@@ -2215,13 +2146,6 @@ refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span clas
 </div>
 <p>Table 12: JSON Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 13%" />
-<col style="width: 13%" />
-<col style="width: 13%" />
-<col style="width: 42%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -2280,17 +2204,17 @@ acceleration software library.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="source-pad-naming-syntax">
-<h5>Source Pad Naming Syntax<a class="headerlink" href="#source-pad-naming-syntax" title="Permalink to this headline">¶</a></h5>
+</section>
+<section id="source-pad-naming-syntax">
+<h5>Source Pad Naming Syntax<a class="headerlink" href="#source-pad-naming-syntax" title="Permalink to this heading">¶</a></h5>
 <p>For single output pad naming is optional. For multiple pads, the source pads names shall be as mentioned below, assuming the name of the plug-in as <cite>sc</cite>.</p>
 <p>sc.src_0, sc.src_1 …..sc.src_n</p>
-</div>
-</div>
-<div class="section" id="id16">
-<h4>Example Pipelines<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h4>
-<div class="section" id="single-output-pad">
-<h5>Single Output Pad<a class="headerlink" href="#single-output-pad" title="Permalink to this headline">¶</a></h5>
+</section>
+</section>
+<section id="id16">
+<h4>Example Pipelines<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h4>
+<section id="single-output-pad">
+<h5>Single Output Pad<a class="headerlink" href="#single-output-pad" title="Permalink to this heading">¶</a></h5>
 <p>The following example demonstrates the vvas_xmultisrc plug-in configured for one input and one output. A test video pattern is generated by the videotestrc plug-in and passed to the vvas_xmultisrc plug-in. Depending on the kernel being used, vvas_xmultisrc uses kernel.json to configure the kernel for processing the input frame before passing it to the fakesink.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc
 ! &quot;video/x-raw, width=1280, height=720, format=BGR&quot;
@@ -2316,9 +2240,9 @@ acceleration software library.</p></td>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="gstvvasbufferpool">
-<h5>GstVvasBufferPool<a class="headerlink" href="#gstvvasbufferpool" title="Permalink to this headline">¶</a></h5>
+</section>
+<section id="gstvvasbufferpool">
+<h5>GstVvasBufferPool<a class="headerlink" href="#gstvvasbufferpool" title="Permalink to this heading">¶</a></h5>
 <p>The GStreamer VVAS buffer pool holds the pool of video frames allocated using the GStreamer allocator object. It is derived from the GStreamer base video buffer pool object (GstVideoBufferPool).</p>
 <p>The VVAS buffer pool:</p>
 <ul class="simple">
@@ -2354,14 +2278,14 @@ acceleration software library.</p></td>
     <span class="kc">None</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="gstvvasallocator">
-<h5>GstVvasAllocator<a class="headerlink" href="#gstvvasallocator" title="Permalink to this headline">¶</a></h5>
+</section>
+<section id="gstvvasallocator">
+<h5>GstVvasAllocator<a class="headerlink" href="#gstvvasallocator" title="Permalink to this heading">¶</a></h5>
 <p>The GStreamer VVAS allocator object is derived from an open source GstAllocator object designed for allocating memory using XRT APIs. The VVAS allocator is the backbone to the VVAS framework achieving zero-copy (wherever possible).</p>
-</div>
-</div>
-<div class="section" id="allocator-apis">
-<h4>Allocator APIs<a class="headerlink" href="#allocator-apis" title="Permalink to this headline">¶</a></h4>
+</section>
+</section>
+<section id="allocator-apis">
+<h4>Allocator APIs<a class="headerlink" href="#allocator-apis" title="Permalink to this heading">¶</a></h4>
 <p>GStreamer plug-in developers can use the following APIs to interact with the VVAS allocator. To allocate memory using XRT, the GStreamer plug-ins and buffer pools require the GstAllocator object provided by the following API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GstAllocator</span><span class="o">*</span> <span class="n">gst_vvas_allocator_new</span> <span class="p">(</span><span class="n">guint</span> <span class="n">dev_idx</span><span class="p">,</span> <span class="n">gboolean</span> <span class="n">need_dma</span><span class="p">)</span>
 
@@ -2405,18 +2329,18 @@ acceleration software library.</p></td>
    <span class="n">valid</span> <span class="n">XRT</span> <span class="n">BO</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="mi">0</span> <span class="n">on</span> <span class="n">failure</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="json-schema">
-<h3>JSON Schema<a class="headerlink" href="#json-schema" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="json-schema">
+<h3>JSON Schema<a class="headerlink" href="#json-schema" title="Permalink to this heading">¶</a></h3>
 <p>This section covers the JSON schema for the configuration files used by the infrastructure plug-ins. For more details, refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span class="doc">JSON Schema</span></a></p>
-</div>
-<div class="section" id="vvas-inference-meta-data">
-<h3>VVAS Inference Meta Data<a class="headerlink" href="#vvas-inference-meta-data" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="vvas-inference-meta-data">
+<h3>VVAS Inference Meta Data<a class="headerlink" href="#vvas-inference-meta-data" title="Permalink to this heading">¶</a></h3>
 <p>This section covers details about inference meta data structure used to store meta data. For more details, refer to <a class="reference internal" href="A-VVAS-Inference-Metadata.html"><span class="doc">VVAS Inference Meta Data</span></a></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

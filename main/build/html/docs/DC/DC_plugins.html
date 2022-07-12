@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -56,6 +57,7 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
@@ -296,6 +298,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
+</ul>
 
             
 			
@@ -366,8 +373,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="vvas-gstreamer-plug-ins-for-pcie-data-center-platforms">
-<h1>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms<a class="headerlink" href="#vvas-gstreamer-plug-ins-for-pcie-data-center-platforms" title="Permalink to this headline">¶</a></h1>
+  <section id="vvas-gstreamer-plug-ins-for-pcie-data-center-platforms">
+<h1>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms<a class="headerlink" href="#vvas-gstreamer-plug-ins-for-pcie-data-center-platforms" title="Permalink to this heading">¶</a></h1>
 <p>VVAS 2.0 Release supports below mentioned plug-ins that are needed for PCIe/Data Center platforms for Transcoding solutions:</p>
 <ol class="arabic simple">
 <li><p>VCU Decoder (<a class="reference internal" href="#vvas-xvcudec"><span class="std std-ref">vvas_xvcudec</span></a>)</p></li>
@@ -376,31 +383,24 @@
 <li><p>ABR Scaler (<a class="reference internal" href="../common/common_plugins.html#vvas-xabrscaler"><span class="std std-ref">vvas_xabrscaler</span></a>)</p></li>
 </ol>
 <p>Following sections details about each plugin.</p>
-<div class="section" id="vvas-xvcudec">
-<span id="id1"></span><h2>vvas_xvcudec<a class="headerlink" href="#vvas-xvcudec" title="Permalink to this headline">¶</a></h2>
+<section id="vvas-xvcudec">
+<span id="id1"></span><h2>vvas_xvcudec<a class="headerlink" href="#vvas-xvcudec" title="Permalink to this heading">¶</a></h2>
 <p>In Zynq UltraScale+ MPSoC devices, there is an IP, VCU, for video decoder and encoder. This IP supports encoding and decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a> for more information on the Xilinx VCU block. This guide provides details about this IP and how to configure it.</p>
 <p>vvas_xvcudec plugin is provided to control the VCU hardened IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in
 <a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a>. For implementation details, refer to <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/vcudec">vvas_xvcudec source code</a></p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/vcu_decoder.png" src="../../_images/vcu_decoder.png" />
-</div>
-<div class="section" id="input-and-output">
-<h3>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h3>
+</figure>
+<section id="input-and-output">
+<h3>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h3>
 <p>This plugin supports H264 and HEVC encoded streams of various profile, level values as input. For complete list of supported profiles and levels, please refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a>
 The native output of this plugin is NV12 format. For any other desired output format, it should be software-converted and will affect performance.</p>
-</div>
-<div class="section" id="control-parameters-and-plug-in-properties">
-<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="control-parameters-and-plug-in-properties">
+<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h3>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xvcudec plug-in.</p>
 <p>Table 1: vvas_xvcudec Plug-in Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 26%" />
-<col style="width: 14%" />
-<col style="width: 16%" />
-<col style="width: 26%" />
-<col style="width: 19%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -531,50 +531,39 @@ xclbin.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="example-pipelines">
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
 <p>The following pipeline takes MP4 file with H264 codec as an input and provides raw decoded output in NV12 format. Please refer above table for other parameters and values.</p>
 <p><cite>dev-idx</cite> represents the zero based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_u30 <span class="p">|</span> wc -l
 </pre></div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc <span class="nv">location</span><span class="o">=</span>&lt;input compressed H264 stream in MP4 container&gt; <span class="se">\</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc <span class="nv">location</span><span class="o">=</span>&lt;input compressed H264 stream <span class="k">in</span> MP4 container&gt; <span class="se">\</span>
 ! qtdemux ! h264parse <span class="se">\</span>
 ! vvas_xvcudec dev-idx<span class="o">=</span><span class="m">3</span>  avoid-output-copy<span class="o">=</span><span class="nb">false</span> xclbin-location<span class="o">=</span>&lt;xclbin file path&gt; <span class="se">\</span>
 ! fpsdisplaysink <span class="nv">name</span><span class="o">=</span>fpssink video-sink<span class="o">=</span>fakesink text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="vvas-xvcuenc">
-<span id="id3"></span><h2>vvas_xvcuenc<a class="headerlink" href="#vvas-xvcuenc" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="vvas-xvcuenc">
+<span id="id3"></span><h2>vvas_xvcuenc<a class="headerlink" href="#vvas-xvcuenc" title="Permalink to this heading">¶</a></h2>
 <p>In Zynq UltraScale+ MPSoC devices, there is an IP, VCU, for video decoder and encoder. This IP supports encoding and decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a> for more information on the Xilinx VCU block. This guide provides details about this IP and how to configure it.</p>
 <p>vvas_xvcuenc plugin is provided to control the VCU hardened IP for Video Encoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in <a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a></p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../../_images/vcu_encoder.png" src="../../_images/vcu_encoder.png" />
-</div>
+</figure>
 <p>For implementation details, refer to <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/vcuenc">vvas_xvcuenc source code</a></p>
-<div class="section" id="id5">
-<h3>Input and Output<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<section id="id5">
+<h3>Input and Output<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
 <p>This plug-in takes 8/10 bit raw input in NV12 format and generates H264/H265 Encoded streams. There are several parameters that affect the encoded stream. Details of each parameter are covered in the table below. These parameters are configured using plug-in properties.</p>
-</div>
-<div class="section" id="id6">
-<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id6">
+<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xvcuenc plug-in.</p>
 <p>Table 2: vvas_xvcuenc Plug-in Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 3%" />
-<col style="width: 8%" />
-<col style="width: 3%" />
-<col style="width: 10%" />
-<col style="width: 3%" />
-<col style="width: 19%" />
-<col style="width: 3%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head" colspan="2"><p><strong>Type</strong></p></th>
@@ -940,10 +929,10 @@ for objective metrics</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="id7">
-<h2>Example Pipelines<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="id7">
+<h2>Example Pipelines<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
 <p><cite>dev-idx</cite> represents the zero based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_u30 <span class="p">|</span> wc -l
 </pre></div>
@@ -970,27 +959,20 @@ h264parse ! <span class="se">\</span>
 fpsdisplaysink video-sink<span class="o">=</span><span class="s2">&quot;filesink location=&lt;output file&gt;&quot;</span> text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="vvas-xlookahead">
-<span id="id8"></span><h2>vvas_xlookahead<a class="headerlink" href="#vvas-xlookahead" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="vvas-xlookahead">
+<span id="id8"></span><h2>vvas_xlookahead<a class="headerlink" href="#vvas-xlookahead" title="Permalink to this heading">¶</a></h2>
 <p>For video quality improvements, Xilinx have developped <code class="docutils literal notranslate"><span class="pre">Lookahead</span></code> IP. This IP performs analysis on several frames and provides few parameters for the encoder to improve the video quality. <code class="docutils literal notranslate"><span class="pre">vvas_xlookahead</span></code> plugin controles this IP. This is an optional plug-in in transcoding pipeline.
 For implementation details, refer to <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/lookahead">vvas_xlookahead source code</a></p>
-<div class="section" id="id9">
-<h3>Input and Output<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<section id="id9">
+<h3>Input and Output<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
 <p>This plugin takes raw video data as input and generates ‘QP’ values which are used during encoding.</p>
-</div>
-<div class="section" id="id10">
-<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id10">
+<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xlookahead plug-in.</p>
 <p>Table 3: vvas_xlookahead Plug-in Properties</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 14%" />
-<col style="width: 16%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -1128,10 +1110,10 @@ xclbin.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="id11">
-<h2>Example Pipelines<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="id11">
+<h2>Example Pipelines<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
 <p>Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_u30 <span class="p">|</span> wc -l
 </pre></div>
@@ -1152,15 +1134,15 @@ temporal-aq, lookahead-depth” to have varied degree of quality. Please refer a
 ! fpsdisplaysink <span class="nv">name</span><span class="o">=</span>sink_xcode_scale_720p60_dev0_0 video-sink<span class="o">=</span>fakesink text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="vvas-xabrscaler">
-<h2>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="vvas-xabrscaler">
+<h2>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this heading">¶</a></h2>
 <p>In several usecases, an input frame needs to be resized/scaled to different resolutions, to be encoded at different bitrates. VVAS has provided hardware accelerated IP, multiscaler, that can resize the input frame in to several different resolutions and formats. <cite>vvas_xabrscaler</cite> plugin controls this IP. This takes one raw input stream as input and produces one or more scaled/resized raw streams.
 This is a common plugin for both DC and Embedded platforms. So,the details are captured in common plugins section.
 For more details on using this plugin, please refer to <a class="reference internal" href="../common/common_plugins.html#vvas-xabrscaler"><span class="std std-ref">vvas_xabrscaler</span></a></p>
 <p>For more information, contact <cite>vvas_discuss&#64;xilinx.com</cite>.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

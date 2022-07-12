@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -56,6 +57,7 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
@@ -273,6 +275,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../freq_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
+</ul>
 
             
 			
@@ -343,18 +350,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="alveo-u30-platform-setup">
-<h1>Alveo U30 Platform setup<a class="headerlink" href="#alveo-u30-platform-setup" title="Permalink to this headline">¶</a></h1>
+  <section id="alveo-u30-platform-setup">
+<h1>Alveo U30 Platform setup<a class="headerlink" href="#alveo-u30-platform-setup" title="Permalink to this heading">¶</a></h1>
 <p>This section covers the steps to prepare setup for Alveo U30 card based platform for PCIe based solutions like Data Center usecases. This setup consists of one or more Alveo U30 cards installed in the PCIe slots of a server.</p>
-<div class="section" id="hardware-requirements">
-<h2>Hardware Requirements<a class="headerlink" href="#hardware-requirements" title="Permalink to this headline">¶</a></h2>
+<section id="hardware-requirements">
+<h2>Hardware Requirements<a class="headerlink" href="#hardware-requirements" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Alveo U30 card (<a class="reference external" href="https://www.xilinx.com/products/boards-and-kits/alveo/u30.html">https://www.xilinx.com/products/boards-and-kits/alveo/u30.html</a>)</p></li>
 <li><p>Compatible/Recommended x86 servers</p></li>
 </ul>
-</div>
-<div class="section" id="software-requirements">
-<h2>Software Requirements<a class="headerlink" href="#software-requirements" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="software-requirements">
+<h2>Software Requirements<a class="headerlink" href="#software-requirements" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Host system with Ubuntu 20.04 kernel 5.10</p></li>
 </ul>
@@ -362,9 +369,9 @@
 <p class="admonition-title">Note</p>
 <p>This platform has been tested on UBuntu 20.04, kernel 5.10 only.</p>
 </div>
-</div>
-<div class="section" id="installation-steps">
-<h2>Installation Steps<a class="headerlink" href="#installation-steps" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="installation-steps">
+<h2>Installation Steps<a class="headerlink" href="#installation-steps" title="Permalink to this heading">¶</a></h2>
 <p>Before starting software installation, make sure U30 cards are installed and detected. Execute the command mentioned below:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>lspci <span class="p">|</span> grep Xilinx
 </pre></div>
@@ -429,8 +436,8 @@ Cold reboot machine to load the new image on device.
 <li><p>Tutorial <a class="reference external" href="../Tutorials/transcoding.rst">Basic Transcoding</a></p></li>
 <li><p>Tutorial <a class="reference external" href="../Tutorials/multi_instance_launch_utilities.rst">Multi-instance Transcoding</a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
