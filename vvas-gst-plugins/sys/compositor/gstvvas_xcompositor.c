@@ -3058,6 +3058,7 @@ xlnx_multiscaler_descriptor_create (GstVvasXCompositor * self)
   MULTI_SCALER_DESC_STRUCT *msPtr;
   guint chan_id;
   guint quad_in_each_row_column = (guint) ceil (sqrt (self->num_request_pads));
+  gfloat in_width_scale_factor = 1, in_height_scale_factor = 1;
   GstVvasXCompositorPrivate *priv = self->priv;
   guint quadrant_height, quadrant_width;
   for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
@@ -3105,7 +3106,7 @@ xlnx_multiscaler_descriptor_create (GstVvasXCompositor * self)
     } else {
       if (pad->width != -1) {
         msPtr->msc_widthOut = pad->width;
-        if (pad->width < -1 || pad->width > meta_out->width) {
+        if (pad->width < -1 || pad->width > meta_out->width || pad->width == 0) {
           GST_ERROR_OBJECT (self, "width of sink_%d is invalid",
               self->priv->pad_of_zorder[chan_id]);
           return false;
@@ -3114,7 +3115,8 @@ xlnx_multiscaler_descriptor_create (GstVvasXCompositor * self)
         msPtr->msc_widthOut = in_width;
       if (pad->height != -1) {
         msPtr->msc_heightOut = pad->height;
-        if (pad->height < -1 || pad->height > meta_out->height) {
+        if (pad->height < -1 || pad->height > meta_out->height
+            || pad->height == 0) {
           GST_ERROR_OBJECT (self, "height of sink_%d is invalid",
               self->priv->pad_of_zorder[chan_id]);
           return false;
@@ -3134,27 +3136,37 @@ xlnx_multiscaler_descriptor_create (GstVvasXCompositor * self)
         return false;
       }
       /* Aligning xpos and ypos as per IP requirement before calculating cropping params */
-      xpos_offset = xlnx_multiscaler_stride_align (xpos_offset, 8 * self->ppc);
-      ypos_offset = xlnx_multiscaler_stride_align (ypos_offset, 2);
+      xpos_offset = (xpos_offset / (8 * self->ppc)) * (8 * self->ppc);
+      ypos_offset = (ypos_offset / 2) * 2;
       /* cropping the image  at right corner if xpos exceeds output width */
-      if (xpos_offset + msPtr->msc_widthIn > meta_out->width
-          || xpos_offset + msPtr->msc_widthOut > meta_out->width) {
-        msPtr->msc_widthIn = meta_out->width - xpos_offset;
+      if (xpos_offset + msPtr->msc_widthOut > meta_out->width) {
+        in_width_scale_factor = ((float) in_width / msPtr->msc_widthOut);
+        msPtr->msc_widthIn =
+            (int) ((meta_out->width - xpos_offset) * in_width_scale_factor);
         msPtr->msc_widthOut = meta_out->width - xpos_offset;
       }
       /* cropping the image  at bottom corner if xpos exceeds output width */
-      if (ypos_offset + msPtr->msc_heightIn > meta_out->height
-          || ypos_offset + msPtr->msc_heightOut > meta_out->height) {
-        msPtr->msc_heightIn = meta_out->height - ypos_offset;
+      if (ypos_offset + msPtr->msc_heightOut > meta_out->height) {
+        in_height_scale_factor = ((float) in_height / msPtr->msc_heightOut);
+        msPtr->msc_heightIn =
+            (int) ((meta_out->height - ypos_offset) * in_height_scale_factor);
         msPtr->msc_heightOut = meta_out->height - ypos_offset;
       }
 
     }
     /* Align values as per the IP requirement */
+    msPtr->msc_widthIn = (msPtr->msc_widthIn / self->ppc) * self->ppc;
+    msPtr->msc_heightIn = (msPtr->msc_heightIn / 2) * 2;
     msPtr->msc_widthOut =
         xlnx_multiscaler_stride_align (msPtr->msc_widthOut, self->ppc);
     msPtr->msc_heightOut =
         xlnx_multiscaler_stride_align (msPtr->msc_heightOut, 2);
+
+    GST_INFO_OBJECT (self,
+        "Height scale factor %f and Width scale factor %f ",
+        in_height_scale_factor, in_width_scale_factor);
+    GST_INFO_OBJECT (self, "Input height %d and width %d ", msPtr->msc_heightIn,
+        msPtr->msc_widthIn);
     GST_INFO_OBJECT (self,
         "Aligned params are for sink_%d xpos %d ypos %d out_width %d out_height %d ",
         self->priv->pad_of_zorder[chan_id], xpos_offset, ypos_offset,
