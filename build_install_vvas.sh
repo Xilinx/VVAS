@@ -1,3 +1,19 @@
+########################################################################
+ # Copyright 2020 - 2022 Xilinx, Inc.
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #     http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+#########################################################################
+
 #!/bin/bash
 
 # This script automates the build and deployment of images to the target/Host. If your
@@ -5,18 +21,41 @@
 #set -o xtrace
 usage()  
 {  
-  echo "Usage: $0 <PCIe/Edge> <enable xrm or not>"
-  echo "Usage: e.g. $0 PCIe 1"
+  echo "Usage: $0 <PCIe/Edge> <enable xrm or not> <build xrm plugins or not>"
+  echo "Usage: e.g. $0 PCIe 1 1"
   exit 1
 }
 
 INSTALL_ACCEL_SW=false
 #INSTALL_ACCEL_SW=true
+BUILD_OVERLAY=disabled
+BUILD_TRACKER=disabled
 
 if [ "$#" -lt 1 ]; then
   usage
   exit 1
 fi
+
+if [ -f "/opt/xilinx/vvas/include/vvas/config.h" ]; then
+  echo -e "\nINFO: Deleting previous build and its configuration\n"
+  sudo ./clean_vvas.sh
+fi
+
+# Update the version in meson.build files if required to be updated
+vvas_version=$(cat VERSION)
+
+root_meson_build_files=( \
+  "./vvas-accel-sw-libs/meson.build" \
+  "./vvas-gst-plugins/meson.build"   \
+  "./vvas-utils/meson.build"         \
+  "./vvas-xcdr/meson.build"          \
+  "./vvas-xrm-plugins/meson.build"   \
+  "./vvas-examples/DC/meson.build"
+)
+
+for file in ${root_meson_build_files[@]}; do
+  sed -i 's!  version :.*!  version : \x27'"$vvas_version"'\x27,!' $file
+done
 
 if [[ ("$1" = "Edge") || ("$1" = "EDGE") || ("$1" = "edge") ]]; then
   echo "Building for Edge"
@@ -31,15 +70,31 @@ elif [[ ("$1" = "Pcie") || ("$1" = "PCIE") || ("$1" = "pcie") || ("$1" = "PCIe")
   LIB="lib"
   PREFIX="/opt/xilinx/vvas/"
   ENABLE_XRM=1
-  ENABLE_PPE=0
+  ENABLE_PPE=1
   if [[ ("$2" = 0) ]]; then
     ENABLE_XRM=0
+  fi
+  ENABLE_XRM_PLG=1
+  if [[ ("$3" = 0) ]]; then
+    ENABLE_XRM_PLG=0
   fi
 else
   usage
 fi
 
+# overlay is not required if infer meta is not their
+if [[ $INSTALL_ACCEL_SW == true ]]; then
+  BUILD_OVERLAY=enabled
+  BUILD_TRACKER=enabled
+else
+  BUILD_OVERLAY=disabled
+  BUILD_TRACKER=disabled
+fi
+
 echo INSTALL_ACCEL_SW = $INSTALL_ACCEL_SW
+echo BUILD_OVERLAY = $BUILD_OVERLAY
+echo BUILD_TRACKER = $BUILD_TRACKER
+
 set -e
 
 if [[ "$TARGET" == "EDGE" ]]; then #TARGET == EDGE
@@ -49,7 +104,7 @@ if [[ "$TARGET" == "EDGE" ]]; then #TARGET == EDGE
   fi
 
   if [ $INSTALL_ACCEL_SW = true ]; then
-    if [ ! -e "$SDKTARGETSYSROOT/usr/lib/libvart-util.so.2.0.0" ]; then
+    if [ ! -e "$SDKTARGETSYSROOT/usr/lib/libvart-util.so.2.5.0" ]; then
       echo "Vitis AI 2.0 is not installed in the target sysroot"
       echo "Please install same and come back"
       exit 1
@@ -57,6 +112,11 @@ if [[ "$TARGET" == "EDGE" ]]; then #TARGET == EDGE
   fi # close [ $INSTALL_ACCEL_SW = true ]
 
   rm -rf install
+
+  # Work-arround the dependancy on meson.native in sysroot
+  if [ ! -f $OECORE_NATIVE_SYSROOT/usr/share/meson/meson.native ]; then
+    touch $OECORE_NATIVE_SYSROOT/usr/share/meson/meson.native;
+  fi
 
   cd vvas-utils
   sed -E 's@<SYSROOT>@'"$SDKTARGETSYSROOT"'@g; s@<NATIVESYSROOT>@'"$OECORE_NATIVE_SYSROOT"'@g' meson.cross.template > meson.cross
@@ -70,7 +130,7 @@ if [[ "$TARGET" == "EDGE" ]]; then #TARGET == EDGE
   cd ../../vvas-gst-plugins
   sed -E 's@<SYSROOT>@'"$SDKTARGETSYSROOT"'@g; s@<NATIVESYSROOT>@'"$OECORE_NATIVE_SYSROOT"'@g' meson.cross.template > meson.cross
   cp meson.cross $OECORE_NATIVE_SYSROOT/usr/share/meson/aarch64-xilinx-linux-meson.cross
-  meson --prefix /usr build --cross-file meson.cross -Denable_ppe=$ENABLE_PPE
+  meson --prefix /usr build --cross-file meson.cross -Denable_ppe=$ENABLE_PPE -Doverlay=$BUILD_OVERLAY -Dtracker=$BUILD_TRACKER
   cd build
   ninja
   DESTDIR=$SDKTARGETSYSROOT ninja install
@@ -108,13 +168,27 @@ else # TARGET == PCIE
   sudo ninja install
 
   cd $BASEDIR/vvas-gst-plugins
-  meson build --prefix $PREFIX --libdir $LIB -Denable_xrm=$ENABLE_XRM
+  meson build --prefix $PREFIX --libdir $LIB -Denable_xrm=$ENABLE_XRM -Denable_ppe=$ENABLE_PPE -Doverlay=$BUILD_OVERLAY -Dtracker=$BUILD_TRACKER
   cd build
   ninja
   sudo ninja install
 
   cd $BASEDIR/vvas-examples/DC
   meson build --prefix $PREFIX --libdir $LIB -Denable_xrm=$ENABLE_XRM
+  cd build
+  ninja
+  sudo ninja install
+
+  if [ $ENABLE_XRM_PLG == 1 ]; then
+    cd $BASEDIR/vvas-xrm-plugins
+    meson build
+    cd build
+    ninja
+    sudo ninja install
+  fi
+
+  cd $BASEDIR/vvas-xcdr
+  meson build
   cd build
   ninja
   sudo ninja install
@@ -128,19 +202,3 @@ else # TARGET == PCIE
   fi # close $INSTALL_ACCEL_SW = true
 
 fi # close TARGET == PCIE
-
-########################################################################
- # Copyright 2020 - 2021 Xilinx, Inc.
- #
- # Licensed under the Apache License, Version 2.0 (the "License");
- # you may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #     http://www.apache.org/licenses/LICENSE-2.0
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
-#########################################################################

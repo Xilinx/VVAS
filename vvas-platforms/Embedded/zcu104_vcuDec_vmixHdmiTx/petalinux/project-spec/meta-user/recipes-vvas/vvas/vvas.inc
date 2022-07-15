@@ -1,6 +1,5 @@
 SRC_URI = "git://github.com/Xilinx/VVAS.git;protocol=https;branch=master"
 SRCREV = "${AUTOREV}"
-PV = "1.0+git${SRCPV}"
+PV = "2.0+git${SRCPV}"
 
-LIC_FILES_CHKSUM = "file://../LICENSE;md5=fe8359dece001aab7f89ca8ed7e478a5"
-
+LIC_FILES_CHKSUM = "file://../LICENSE;md5=f7f07bb28ad41b83efb8c4f06ddbaee9"

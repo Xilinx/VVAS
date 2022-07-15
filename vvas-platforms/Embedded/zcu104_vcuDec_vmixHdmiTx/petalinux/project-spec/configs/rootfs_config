@@ -546,7 +546,7 @@ CONFIG_can-utils=y
 # CONFIG_openssh is not set
 # CONFIG_openssh-ssh is not set
 # CONFIG_openssh-sftp is not set
-CONFIG_openssh-sftp-server=y
+# CONFIG_openssh-sftp-server is not set
 # CONFIG_openssh-keygen is not set
 # CONFIG_openssh-dbg is not set
 # CONFIG_openssh-dev is not set
@@ -1179,7 +1179,7 @@ CONFIG_run-postinsts=y
 #
 # tcl 
 #
-CONFIG_tcl=y
+# CONFIG_tcl is not set
 # CONFIG_tcl-dbg is not set
 # CONFIG_tcl-lib is not set
 # CONFIG_tcl-dev is not set
@@ -3597,6 +3597,13 @@ CONFIG_bridge-utils=y
 # CONFIG_wpa-supplicant-cli is not set
 
 #
+# ntp
+#
+# CONFIG_ntp is not set
+# CONFIG_ntp-dev is not set
+# CONFIG_ntp-dbg is not set
+
+#
 # optional 
 #
 
@@ -4169,21 +4176,20 @@ CONFIG_package-feed-uris=""
 CONFIG_package-feed-archs=""
 CONFIG_imagefeature-debug-tweaks=y
 CONFIG_auto-login=y
+CONFIG_Init-manager-systemd=y
+# CONFIG_Init-manager-sysvinit is not set
 
 #
-# apps 
+# user packages
 #
 # CONFIG_gpio-demo is not set
 # CONFIG_peekpoke is not set
-
-#
-# user packages 
-#
-CONFIG_gstreamer-vcu-examples=y
+# CONFIG_gstreamer-vcu-examples is not set
 # CONFIG_gstreamer-vcu-notebooks is not set
 CONFIG_htop=y
 CONFIG_jansson=y
 # CONFIG_opencl-headers-dev is not set
+# CONFIG_peekpoke is not set
 CONFIG_target-factory=y
 CONFIG_unilog=y
 CONFIG_vart=y
@@ -4196,5 +4202,6 @@ CONFIG_vvas-utils=y
 #
 # PetaLinux RootFS Settings
 #
-CONFIG_ROOTFS_ROOT_PASSWD="root"
-CONFIG_ADD_EXTRA_USERS="petalinux:petalinux;"
+CONFIG_ADD_EXTRA_USERS="root:root;petalinux::passwd-expire;"
+CONFIG_ADD_USERS_TO_AUDIOVIDEO=""
+CONFIG_ADD_USERS_TO_SUDOERS=""

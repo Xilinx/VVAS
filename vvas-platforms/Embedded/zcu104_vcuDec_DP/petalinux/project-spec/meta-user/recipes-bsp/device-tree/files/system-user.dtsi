@@ -8,10 +8,10 @@
 &amba {
 	axi_intc_0: axi-interrupt-ctrl {
 		#interrupt-cells = <2>;
-		compatible = "xlnx,xps-intc-1.00.a";
+		compatible = "xlnx,axi-intc-4.1", "xlnx,xps-intc-1.00.a";
 		interrupt-controller;
 		reg = <0x0 0x80020000 0x0 0x1000>;
-		xlnx,kind-of-intr = <0x0>;
+		xlnx,kind-of-intr = <0x1>;
 		xlnx,num-intr-inputs = <0x20>;
 		interrupt-parent = <&gic>;
 		interrupts = <0 89 4>;
@@ -30,7 +30,7 @@
 			     <24 4>, <25 4>, <26 4>, <27 4>,
 			     <28 4>, <29 4>, <30 4>, <31 4>;
 	};
-	misc_clk_1: misc_clk_1 {
+	misc_clk_0: misc_clk_0 {
 		#clock-cells = <0>;
 		clock-frequency = <33333333>;
 		compatible = "fixed-clock";
@@ -40,8 +40,8 @@
 		#clock-cells = <1>;
 		#address-cells = <2>;
 		#size-cells = <2>;
-		clock-names = "pll_ref", "aclk", "vcu_core_enc", "vcu_core_dec", "vcu_mcu_enc", "vcu_mcu_dec";
-		clocks = <&misc_clk_1>, <&zynqmp_clk 71>, <&vcu_0 1>, <&vcu_0 2>, <&vcu_0 3>, <&vcu_0 4>;
+		clock-names = "pll_ref", "aclk", "vcu_core_enc", "vcu_mcu_enc", "vcu_core_dec", "vcu_mcu_dec";
+	  clocks = <&misc_clk_0>, <&zynqmp_clk 71>, <&vcu_0 0>, <&vcu_0 1>, <&vcu_0 2>, <&vcu_0 3>;
 		compatible = "xlnx,vcu-1.2", "xlnx,vcu";
 		interrupt-names = "vcu_host_interrupt";
 		interrupt-parent = <&gic>;

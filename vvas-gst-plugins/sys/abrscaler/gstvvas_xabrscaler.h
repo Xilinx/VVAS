@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 - 2021 Xilinx, Inc.  All rights reserved.
+ * Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -81,6 +81,10 @@ struct _GstVvasXAbrScaler
   gfloat beta_g;
   gfloat beta_b;
 #endif
+  guint crop_x;
+  guint crop_y;
+  guint crop_width;
+  guint crop_height;
 };
 
 struct _GstVvasXAbrScalerClass

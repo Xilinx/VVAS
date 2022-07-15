@@ -1,3 +1,19 @@
+########################################################################
+ # Copyright 2020 - 2022 Xilinx, Inc.
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #     http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+#########################################################################
+
 sources = [
   'src/vvas_xdpuinfer.cpp'
 ]
@@ -132,7 +148,7 @@ opencvcore_dep = cc.find_library('opencv_core')
 
 vvas_xdpuinfer = library('vvas_xdpuinfer',
   sources,
-  cpp_args : [gst_plugins_vvas_args, '-std=c++17'],
+  cpp_args : [vvas_accel_sw_libs_args, '-std=c++17'],
   include_directories : [configinc],
   dependencies : [gstvideo_dep, gst_dep, xrt_dep, jansson_dep, vvasutils_dep, gstvvas_dep, opencv_dep, opencvcore_dep, vartutil_dep, xnnpp_dep, vitisconfig_dep, dputask_dep, classi_dep, yolov3_dep, facedetect_dep, ssd_dep, tfssd_dep, yolov2_dep, segmentation_dep, refinedet_dep, platedetect_dep, platenum_dep],
   install : true,

@@ -35,8 +35,8 @@ rootfs_config:
 linux:
 	petalinux-build
 
-ifeq ($(COMMON_RFS_KRNL_SYSROOT), TRUE)
 sw_comp:
+ifeq ($(COMMON_RFS_KRNL_SYSROOT), TRUE)
 	mkdir -p $(OUTPUT)
 	cp -rf $(XSA_DIR)/src $(OUTPUT)
 	mkdir -p ${OUTPUT}/src/boot
@@ -47,7 +47,6 @@ sw_comp:
 	cp -f images/linux/u-boot.elf ${OUTPUT}/src/boot/u-boot.elf
 	cp -f images/linux/zynqmp_fsbl.elf ${OUTPUT}/src/boot/fsbl.elf
 else
-sw_comp:
 	mkdir -p $(OUTPUT)
 	cp -rf $(XSA_DIR)/src $(OUTPUT)
 	mkdir -p ${OUTPUT}/src/boot

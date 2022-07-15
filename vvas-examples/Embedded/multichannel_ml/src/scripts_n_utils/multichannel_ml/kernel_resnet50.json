@@ -1,0 +1,21 @@
+{
+  "vvas-library-repo": "/usr/lib/",
+  "inference-level": 1,
+  "inference-max-queue":30,
+  "attach-ppe-outbuf": true,
+  "low-latency":false,
+  "kernel" : {
+    "library-name":"libvvas_xdpuinfer.so",
+    "config": {
+      "batch-size" : 0,
+      "model-name" : "resnet50",
+      "model-class" : "CLASSIFICATION",
+      "model-format" : "BGR",
+      "model-path" : "/usr/share/vitis_ai_library/models/",
+      "run_time_model" : false,
+      "need_preprocess" : false,
+      "performance_test" : false,
+      "debug_level" : 1
+    }
+  }
+}

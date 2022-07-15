@@ -5,8 +5,9 @@ includedir=@includedir@
 
 Name: GStreamer VVAS Utility Library
 Description: VVAS Utility Library Implementation
-Requires: xrt jansson
+Requires: xrt >= 2.11.0 \
+          jansson >= 2.11
 Version: @VERSION@
-Libs: -L${libdir} -lvvasutil -lxrtutil
+Libs: -L${libdir} -lvvasutil-@VERSION@ -lxrtutil-@VERSION@
 Cflags: -I${includedir}
 

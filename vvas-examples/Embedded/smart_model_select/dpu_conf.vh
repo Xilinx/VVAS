@@ -108,48 +108,43 @@
 `define CHANNEL_AUGMENTATION_ENABLE
 
 // |------------------------------------------------------|
-// | DepthWiseConv Configuration
+// | ALU parallel Configuration
 // | It relates to model. if change, must update model
 // +------------------------------------------------------+
-// | Enable  : `define DWCV_ENABLE              
+// | setting 0  : `define ALU_PARALLEL_DEFAULT              
 // +------------------------------------------------------+
-// | Disable : `define DWCV_DISABLE               
+// | setting 1  : `define ALU_PARALLEL_1                
+// |------------------------------------------------------|
+// | setting 2  : `define ALU_PARALLEL_2                
+// |------------------------------------------------------|
+// | setting 3  : `define ALU_PARALLEL_4                
+// |------------------------------------------------------|
+// | setting 4  : `define ALU_PARALLEL_8                
 // |------------------------------------------------------|
 
-`define DWCV_ENABLE
+`define ALU_PARALLEL_DEFAULT 
 
-// |------------------------------------------------------|
-// | Pool Average Configuration
+// +------------------------------------------------------+
+// | CONV RELU Type Configuration
 // | It relates to model. if change, must update model
 // +------------------------------------------------------+
-// | Enable  : `define POOL_AVG_ENABLE              
+// | `define CONV_RELU_RELU6
 // +------------------------------------------------------+
-// | Disable : `define POOL_AVG_DISABLE                
+// | `define CONV_RELU_LEAKYRELU_RELU6
 // |------------------------------------------------------|
 
-`define POOL_AVG_ENABLE
+`define CONV_RELU_LEAKYRELU_RELU6
 
-// |------------------------------------------------------|
-// | support multiplication of two feature maps
+// +------------------------------------------------------+
+// | ALU RELU Type Configuration
 // | It relates to model. if change, must update model
 // +------------------------------------------------------+
-// | Enable  : `define ELEW_MULT_ENABLE           
+// | `define ALU_RELU_RELU6
 // +------------------------------------------------------+
-// | Disable : `define ELEW_MULT_DISABLE               
+// | `define ALU_RELU_LEAKYRELU_RELU6
 // |------------------------------------------------------|
 
-`define ELEW_MULT_DISABLE
-
-// +------------------------------------------------------+
-// | RELU Type Configuration
-// | It relates to model. if change, must update model
-// +------------------------------------------------------+
-// | `define RELU_RELU6
-// +------------------------------------------------------+
-// | `define RELU_LEAKYRELU_RELU6
-// |------------------------------------------------------|
-
-`define RELU_LEAKYRELU_RELU6
+`define ALU_RELU_RELU6
 
 // |------------------------------------------------------|
 // | DSP48 Usage Configuration  
@@ -188,4 +183,3 @@
 
 
 
- 

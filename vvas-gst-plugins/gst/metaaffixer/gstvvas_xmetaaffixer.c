@@ -162,8 +162,7 @@ gst_vvas_xmetaaffixer_class_init (GstVvas_XMetaAffixerClass * klass)
   gst_element_class_set_details_simple (gstelement_class,
       "Xilinx VVAS Metaaffixer Plugin",
       "Filter/Effect/Video",
-      "Scale Meta data as per the resolution",
-      "Xilinx Inc <www.xilinx.com>");
+      "Scale Meta data as per the resolution", "Xilinx Inc <www.xilinx.com>");
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_vvas_xmetaaffixer_request_new_pad);
@@ -193,9 +192,7 @@ gst_vvas_xmetaaffixer_class_init (GstVvas_XMetaAffixerClass * klass)
       g_param_spec_int64 ("timeout", "Timeout for collect pads",
           "Timeout in millisec \
           (-1) Disable timeout \
-          Increase the timeout if debug logs are enabled", -1, G_MAXINT64, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_READY));
+          Increase the timeout if debug logs are enabled", -1, G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
 
   _scale_quark = gst_video_meta_transform_scale_get_quark ();
 }
@@ -344,19 +341,22 @@ gst_vvas_xmetaaffixer_sink_event (GstCollectPads * pads,
     case GST_EVENT_SEGMENT:
       gst_event_copy_segment (event, &segment);
 
-      if (!gst_pad_push_event (pad->srcpad, gst_event_new_segment(&segment))) {
+      if (!gst_pad_push_event (pad->srcpad, gst_event_new_segment (&segment))) {
         GST_WARNING_OBJECT (pad, "Pushing segment event to src pad failed");
       } else {
-        GST_DEBUG_OBJECT (pad, "Pushing segment event to src pad is successful");
+        GST_DEBUG_OBJECT (pad,
+            "Pushing segment event to src pad is successful");
       }
       break;
-    
+
     case GST_EVENT_STREAM_START:
       if (!gst_pad_push_event (pad->srcpad, event)) {
-        GST_WARNING_OBJECT (pad, "Pushing stream start event to src pad failed");
+        GST_WARNING_OBJECT (pad,
+            "Pushing stream start event to src pad failed");
         return FALSE;
       } else {
-        GST_DEBUG_OBJECT (pad, "Pushing stream start event to src pad is successful");
+        GST_DEBUG_OBJECT (pad,
+            "Pushing stream start event to src pad is successful");
         return TRUE;
       }
       break;
@@ -594,13 +594,15 @@ gst_vvas_xmetaaffixer_release_pad (GstElement * element, GstPad * pad)
 
 #if ENABLE_TEST_CODE
 GstMeta *
-create_dummy_infermeta (GstBuffer *buffer, GstVideoInfo *vinfo)
+create_dummy_infermeta (GstBuffer * buffer, GstVideoInfo * vinfo)
 {
   BoundingBox bbox;
   GstInferencePrediction *predict;
   GstInferenceMeta *infer_meta;
 
-  infer_meta = (GstInferenceMeta *) gst_buffer_add_meta (buffer, gst_inference_meta_get_info (), NULL);
+  infer_meta =
+      (GstInferenceMeta *) gst_buffer_add_meta (buffer,
+      gst_inference_meta_get_info (), NULL);
   infer_meta->prediction = gst_inference_prediction_new ();
   infer_meta->prediction->bbox.width = GST_VIDEO_INFO_WIDTH (vinfo);
   infer_meta->prediction->bbox.height = GST_VIDEO_INFO_HEIGHT (vinfo);
@@ -839,7 +841,8 @@ vvas_xmetaaffixer_process (GstVvas_XMetaAffixer * self, GstCollectPads * pads,
       goto exit;
     }
   } else {
-    infer_meta = gst_buffer_get_meta (mbuffer, gst_inference_meta_api_get_type ());
+    infer_meta =
+        gst_buffer_get_meta (mbuffer, gst_inference_meta_api_get_type ());
 #if ENABLE_TEST_CODE
     /* Enable this code if your master buffer does not have meta data and
      * you want to test the plugin. */
@@ -850,7 +853,8 @@ vvas_xmetaaffixer_process (GstVvas_XMetaAffixer * self, GstCollectPads * pads,
         printf ("Temp buffer not Allocated");
         return GST_FLOW_ERROR;
       }
-      infer_meta = create_dummy_infermeta (tmp_buffer, &self->sink_master->vinfo);
+      infer_meta =
+          create_dummy_infermeta (tmp_buffer, &self->sink_master->vinfo);
       GST_ERROR ("infer meta %p", infer_meta);
     }
 #endif
@@ -952,7 +956,9 @@ slave:
         /* more than 50% of the current frame falls in
          * previous master buffer duration */
         if (self->prev_meta_buf) {
-          infer_meta = gst_buffer_get_meta (self->prev_meta_buf, gst_inference_meta_api_get_type ());
+          infer_meta =
+              gst_buffer_get_meta (self->prev_meta_buf,
+              gst_inference_meta_api_get_type ());
           pick_prev_meta = TRUE;
           GST_DEBUG_OBJECT (sink_slave,
               "picking previous master buffer metadata %p", infer_meta);
@@ -965,10 +971,13 @@ slave:
             GST_TIME_ARGS (s_cur_start_ts),
             GST_TIME_ARGS (self->prev_m_end_ts));
         if (self->prev_meta_buf) {
-          infer_meta = gst_buffer_get_meta (self->prev_meta_buf, gst_inference_meta_api_get_type ());
+          infer_meta =
+              gst_buffer_get_meta (self->prev_meta_buf,
+              gst_inference_meta_api_get_type ());
           pick_prev_meta = TRUE;
           GST_DEBUG_OBJECT (sink_slave,
-              "attaching best possible metadata %p as master on EOS", infer_meta);
+              "attaching best possible metadata %p as master on EOS",
+              infer_meta);
         }
       }
     } else {
@@ -988,14 +997,15 @@ slave:
       const GstMetaInfo *info;
 
       GstVideoMetaTransform trans = { &self->sink_master->vinfo,
-            &sink_slave->vinfo };
+        &sink_slave->vinfo
+      };
 
       writable_buffer = gst_buffer_make_writable (sbuffer);
 
       info = infer_meta->info;
 
       GST_LOG_OBJECT (sink_slave, "attaching infer metadata %p to buffer %p",
-            infer_meta, writable_buffer);
+          infer_meta, writable_buffer);
 
       if (!pick_prev_meta)
         info->transform_func (writable_buffer, infer_meta, mbuffer,
@@ -1103,7 +1113,9 @@ slave:
 #if ENABLE_TEST_CODE
       /* Enable this code if your master buffer does not have meta data and
        * you want to test the plugin. */
-      infer_meta = gst_buffer_get_meta (self->prev_meta_buf, gst_inference_meta_api_get_type ());
+      infer_meta =
+          gst_buffer_get_meta (self->prev_meta_buf,
+          gst_inference_meta_api_get_type ());
 
       if (infer_meta == NULL) {
         tmp_buffer = gst_buffer_new ();
@@ -1112,7 +1124,8 @@ slave:
           return GST_FLOW_ERROR;
         }
 
-        infer_meta = create_dummy_infermeta (tmp_buffer, &self->sink_master->vinfo);
+        infer_meta =
+            create_dummy_infermeta (tmp_buffer, &self->sink_master->vinfo);
         gst_buffer_copy_into (self->prev_meta_buf, tmp_buffer,
             GST_BUFFER_COPY_META, 0, -1);
         gst_buffer_unref (tmp_buffer);
@@ -1186,8 +1199,7 @@ timeout_func (gpointer data)
     is_locked = TRUE;
     if (!self->start_thread) {
       end_time = G_MAXINT64;
-    }
-    else {
+    } else {
       end_time = g_get_monotonic_time () + self->retry_timeout;
     }
 
@@ -1198,7 +1210,9 @@ timeout_func (gpointer data)
         g_mutex_unlock (&self->timeout_lock);
         is_locked = FALSE;
       }
+      GST_COLLECT_PADS_STREAM_LOCK (self->collect);
       fret = gst_vvas_xmetaaffixer_collected (self->collect, self);
+      GST_COLLECT_PADS_STREAM_UNLOCK (self->collect);
       g_mutex_lock (&self->timeout_lock);
       is_locked = TRUE;
       self->timeout_issued = FALSE;
@@ -1209,8 +1223,7 @@ timeout_func (gpointer data)
         }
         break;
       }
-    }
-    else if (self->stop_thread) {
+    } else if (self->stop_thread) {
       if (is_locked) {
         g_mutex_unlock (&self->timeout_lock);
         is_locked = FALSE;
@@ -1243,7 +1256,8 @@ gst_vvas_xmetaaffixer_change_state (GstElement * element,
         self->retry_timeout *= G_TIME_SPAN_MILLISECOND;
         g_mutex_unlock (&self->timeout_lock);
         /* start thread to monitor buffer flow */
-        self->timeout_thread = g_thread_new ("metaaffixer watchdog", timeout_func, self);
+        self->timeout_thread =
+            g_thread_new ("metaaffixer watchdog", timeout_func, self);
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -1322,9 +1336,7 @@ vvas_xmetaaffixer_init (GstPlugin * vvas_xmetaaffixer)
 #define PACKAGE "vvas_xmetaaffixer"
 #endif
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    vvas_xmetaaffixer,
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, vvas_xmetaaffixer,
     "Xilinx plugin to Scale and affix Meta data as per resolution",
-    vvas_xmetaaffixer_init, "1.0", "MIT/X11",
+    vvas_xmetaaffixer_init, VVAS_API_VERSION, "MIT/X11",
     "Xilinx VVAS SDK plugin", "http://xilinx.com/")

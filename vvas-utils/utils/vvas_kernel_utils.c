@@ -23,11 +23,9 @@
 #ifdef XLNX_PCIe_PLATFORM
 #include <xrt.h>
 #include <ert.h>
-#include <xclhal2.h>
 #else
 #include <xrt/xrt.h>
 #include <xrt/ert.h>
-#include <xrt/xclhal2.h>
 #endif
 #include <string.h>
 #include <errno.h>
@@ -87,8 +85,8 @@ vvas_alloc_buffer (VVASKernel * handle, uint32_t size, VVASMemoryType mem_type,
 
   if (mem_type == VVAS_INTERNAL_MEMORY) {
     frame->size[0] = size;
-    iret = vvas_xrt_alloc_xrt_buffer (handle->dev_handle, size,
-                                      VVAS_BO_DEVICE_RAM, mem_bank, &buffer);
+    iret = vvas_xrt_alloc_xrt_buffer (handle->dev_handle,
+        size, VVAS_BO_FLAGS_NONE, mem_bank, &buffer);
     if (iret < 0) {
       LOG_MESSAGE (LOG_LEVEL_ERROR, "failed to allocate internal memory");
       goto error;
@@ -134,11 +132,22 @@ vvas_free_buffer (VVASKernel * handle, VVASFrame * vvas_frame)
 {
   xrt_buffer buffer;
 
+  if (!handle) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : handle %p", handle);
+    return;
+  }
+
+  if (!vvas_frame) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : vvas_frame  %p",
+        vvas_frame);
+    return;
+  }
+
   if (vvas_frame->mem_type == VVAS_INTERNAL_MEMORY) {
     buffer.user_ptr = vvas_frame->vaddr[0];
     buffer.bo = vvas_frame->bo[0];
     buffer.size = vvas_frame->size[0];
-    vvas_xrt_free_xrt_buffer (handle, &buffer);
+    vvas_xrt_free_xrt_buffer (&buffer);
   } else {
     if (!handle->free_func) {
       LOG_MESSAGE (LOG_LEVEL_ERROR,
@@ -153,31 +162,20 @@ vvas_free_buffer (VVASKernel * handle, VVASFrame * vvas_frame)
 void
 vvas_register_write (VVASKernel * handle, void *src, size_t size, size_t offset)
 {
-  if (handle->is_multiprocess) {
-    struct ert_start_kernel_cmd *ert_cmd =
-        (struct ert_start_kernel_cmd *) (handle->ert_cmd_buf->user_ptr);
-    uint32_t *src_array = (uint32_t *) src;
-    size_t cur_min = offset;
-    size_t cur_max = offset + size;
-    int32_t entries = size / sizeof (uint32_t);
-    int32_t start = offset / sizeof (uint32_t);
-    int32_t i;
+  if (!handle) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : handle %p", handle);
+    return;
+  }
 
-    for (i = 0; i < entries; i++)
-      ert_cmd->data[start + i] = src_array[i];
-
-    if (cur_max > handle->max_offset)
-      handle->max_offset = cur_max;
-
-    if (cur_min < handle->min_offset)
-      handle->min_offset = cur_min;
-  } else {
+  if (!handle->is_multiprocess) {
     uint32_t *value = (uint32_t *) src;
-    xclRegWrite ((vvasDeviceHandle) handle->dev_handle, handle->cu_idx, offset,
-        value[0]);
+    vvas_xrt_write_reg ((vvasKernelHandle) handle->kern_handle,
+        offset, value[0]);
     LOG_MESSAGE (LOG_LEVEL_DEBUG,
-      "kernel:%s> xclRegWrite wrote 0x%08X at +%lu", handle->name, value[0],
-      offset);
+        "kernel:%s> RegWrite wrote 0x%08X at +%lu", handle->name, value[0],
+        offset);
+  } else {
+    LOG_MESSAGE (LOG_LEVEL_DEBUG, "No need to use this API for multiprocess");
   }
   return;
 }
@@ -186,44 +184,42 @@ void
 vvas_register_read (VVASKernel * handle, void *src, size_t size, size_t offset)
 {
   uint32_t *value = (uint32_t *) src;
-  xclRegRead ((vvasDeviceHandle) handle->dev_handle, handle->cu_idx, offset,
-      &(value[0]));
-  LOG_MESSAGE (LOG_LEVEL_DEBUG, "kernel:%s> xclRegRead read 0x%08X at +%lu",
-    handle->name, value[0], offset);
+
+  if (!handle) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : handle %p", handle);
+    return;
+  }
+
+  vvas_xrt_read_reg ((vvasKernelHandle) handle->kern_handle,
+      offset, &(value[0]));
+  LOG_MESSAGE (LOG_LEVEL_DEBUG, "kernel:%s> RegRead read 0x%08X at +%lu",
+      handle->name, value[0], offset);
 }
 
 int32_t
-vvas_kernel_start (VVASKernel * handle)
+vvas_kernel_start (VVASKernel * handle, const char *format, ...)
 {
-  struct ert_start_kernel_cmd *ert_cmd =
-      (struct ert_start_kernel_cmd *) (handle->ert_cmd_buf->user_ptr);
+  va_list args;
 
-  ert_cmd->state = ERT_CMD_STATE_NEW;
-
-#ifdef XLNX_PCIe_PLATFORM
-  ert_cmd->opcode = handle->is_softkernel ? ERT_SK_START : ERT_START_CU;
-#else
-  ert_cmd->opcode = ERT_START_CU;
-#endif
-  ert_cmd->cu_mask = 1 << handle->cu_idx;
-  ert_cmd->count = (handle->max_offset >> 2) + 1;
-
-#ifdef DUMP_REG
-  {
-    int i;
-    printf ("kernel:%s> Reg dump\n", handle->name);
-    for (i = 0; i < ert_cmd->count; i++)
-      printf ("index 0x%x - 0x%x\n", i * sizeof (uint32_t), ert_cmd->data[i]);
-  }
-#endif
-
-  if (vvas_xrt_exec_buf (handle->dev_handle, handle->ert_cmd_buf->bo)) {
-    LOG_MESSAGE (LOG_LEVEL_ERROR, "kernel:%s> Failed to issue XRT command",
-      handle->name);
+  if (!handle) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : handle %p", handle);
     return -1;
   }
-  LOG_MESSAGE (LOG_LEVEL_DEBUG, "kernel:%s> Submitted command to kernel",
-    handle->name);
+
+  if (!format) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : format %p", format);
+    return -1;
+  }
+
+  va_start (args, format);
+
+  if (vvas_xrt_exec_buf (handle->dev_handle, handle->kern_handle,
+          &handle->run_handle, format, args)) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "failed to issue XRT command");
+    return -1;
+  }
+  LOG_MESSAGE (LOG_LEVEL_DEBUG, "Submitted command to kernel");
+  va_end (args);
 
   return 0;
 }
@@ -231,35 +227,41 @@ vvas_kernel_start (VVASKernel * handle)
 int32_t
 vvas_kernel_done (VVASKernel * handle, int32_t timeout)
 {
-  struct ert_start_kernel_cmd *ert_cmd =
-      (struct ert_start_kernel_cmd *) (handle->ert_cmd_buf->user_ptr);
   int ret;
   int retry_count = MAX_EXEC_WAIT_RETRY_CNT;
 
+  if (!handle) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : handle %p", handle);
+    return -1;
+  }
+
   LOG_MESSAGE (LOG_LEVEL_DEBUG,
-    "kernel:%s> Going to wait for kernel command to finish", handle->name);
+      "kernel:%s> Going to wait for kernel command to finish", handle->name);
 
   do {
-    ret = vvas_xrt_exec_wait (handle->dev_handle, timeout);
-    if (ret < 0) {
-      LOG_MESSAGE (LOG_LEVEL_ERROR,
-        "kernel:%s> ExecWait ret = %d. reason : %s", handle->name, ret,
-        strerror (errno));
-      return -1;
-    } else if (!ret) {
+    ret = vvas_xrt_exec_wait (handle->dev_handle, handle->run_handle, timeout);
+    if (ret == ERT_CMD_STATE_TIMEOUT) {
       LOG_MESSAGE (LOG_LEVEL_WARNING, "kernel=%s : Timeout...retry execwait",
           handle->name);
       if (retry_count-- <= 0) {
         LOG_MESSAGE (LOG_LEVEL_ERROR,
-          "kernel:%s> Max retry count %d reached..returning error",
-          handle->name, MAX_EXEC_WAIT_RETRY_CNT);
+            "kernel:%s> Max retry count %d reached..returning error",
+            handle->name, MAX_EXEC_WAIT_RETRY_CNT);
+        vvas_xrt_free_run_handle (handle->run_handle);
         return -1;
       }
+    } else if (ret == ERT_CMD_STATE_ERROR) {
+      LOG_MESSAGE (LOG_LEVEL_ERROR,
+          "kernel:%s> ExecWait ret = %d", handle->name, ret);
+      vvas_xrt_free_run_handle (handle->run_handle);
+      return -1;
     }
-  } while (ert_cmd->state != ERT_CMD_STATE_COMPLETED);
+  } while (ret != ERT_CMD_STATE_COMPLETED);
+
+  vvas_xrt_free_run_handle (handle->run_handle);
 
   LOG_MESSAGE (LOG_LEVEL_DEBUG,
-    "kernel:%s> Successfully completed kernel command", handle->name);
+      "kernel:%s> Successfully completed kernel command", handle->name);
 
   return 0;
 }
@@ -275,18 +277,17 @@ vvas_sync_data (VVASKernel * handle, VVASSyncDataFlag flag, VVASFrame * frame)
       VVAS_SYNC_DATA_FROM_DEVICE;
 
   for (plane_id = 0; plane_id < frame->n_planes; plane_id++) {
-    LOG_MESSAGE (LOG_LEVEL_DEBUG, "plane %d syncing %s : bo = %d, size = %d",
+    LOG_MESSAGE (LOG_LEVEL_DEBUG, "plane %d syncing %s : bo = %p, size = %d",
         plane_id,
         sync_flag == VVAS_BO_SYNC_BO_TO_DEVICE ? "to device" : "from device",
         frame->bo[plane_id], frame->size[plane_id]);
 
     iret =
-        vvas_xrt_sync_bo (handle->dev_handle, frame->bo[plane_id], sync_flag,
+        vvas_xrt_sync_bo (frame->bo[plane_id], sync_flag,
         frame->size[plane_id], 0);
     if (iret != 0) {
       LOG_MESSAGE (LOG_LEVEL_ERROR, "vvas_xrt_sync_bo failed %d, reason : %s",
-          iret,
-          strerror (errno));
+          iret, strerror (errno));
       return iret;
     }
   }
@@ -310,7 +311,7 @@ vvas_caps_set_pad_nature (VVASKernel * handle, padsnature nature)
 size_t
 vvas_kernel_get_batch_size (VVASKernel * handle)
 {
-    return handle->kernel_batch_sz;
+  return handle->kernel_batch_sz;
 }
 
 padsnature

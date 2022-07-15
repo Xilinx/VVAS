@@ -1,3 +1,19 @@
+########################################################################
+ # Copyright 2020 - 2022 Xilinx, Inc.
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #     http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+#########################################################################
+
 # Feature options for plugins without external deps
 option('enable_xrm', type : 'integer', min : -1, max : 1, value : -1)
 option('enable_ppe', type : 'integer', min : -1, max : 1, value : -1)
@@ -6,9 +22,19 @@ option('metaaffixer', type : 'feature', value : 'auto')
 option('roigen', type : 'feature', value : 'auto')
 option('filter', type : 'feature', value : 'auto')
 option('multisrc', type : 'feature', value : 'auto')
+option('vcudec', type : 'feature', value : 'auto')
+option('vcuenc', type : 'feature', value : 'auto')
 option('abrscaler', type : 'feature', value : 'auto')
+option('metaconvert', type : 'feature', value : 'auto')
+option('lookahead', type : 'feature', value : 'auto')
 option('infer', type : 'feature', value : 'auto')
-option('processinferdata', type : 'feature', value : 'auto')
+option('funnel', type : 'feature', value : 'auto')
+option('defunnel', type : 'feature', value : 'auto')
+option('overlay', type : 'feature', value : 'auto')
+option('optflow', type : 'feature', value : 'auto')
+option('multicrop', type : 'feature', value : 'auto')
+option('compositor', type : 'feature', value : 'auto')
+option('tracker', type : 'feature', value : 'auto')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)

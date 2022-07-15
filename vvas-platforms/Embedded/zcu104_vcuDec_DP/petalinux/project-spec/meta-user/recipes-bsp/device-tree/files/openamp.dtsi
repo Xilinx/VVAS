@@ -28,6 +28,7 @@
 		phandle = <0x40>;
 		status = "okay";
 		compatible = "mmio-sram";
+		power-domain = <&zynqmp_firmware 15>;
 	};
 
 	tcm_0b@ffe20000 {
@@ -36,6 +37,7 @@
 		phandle = <0x41>;
 		status = "okay";
 		compatible = "mmio-sram";
+		power-domain = <&zynqmp_firmware 16>;
 	};
 
 
@@ -54,7 +56,7 @@
 			ranges;
 			sram = <0x40 0x41>;
 			memory-region = <&rproc_0_reserved>, <&rpu0vdev0buffer>, <&rpu0vdev0vring0>, <&rpu0vdev0vring1>;
-			power-domain = <0x7>;
+			power-domain = <&zynqmp_firmware 7>;
 			mboxes = <&ipi_mailbox_rpu0 0>, <&ipi_mailbox_rpu0 1>;
 			mbox-names = "tx", "rx";
 		};

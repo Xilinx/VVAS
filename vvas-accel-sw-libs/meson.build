@@ -1,10 +1,26 @@
-project('vvas-video-libs', 'c', 'cpp',
-  version : '1.0.0',
+########################################################################
+ # Copyright 2020 - 2022 Xilinx, Inc.
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #     http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+#########################################################################
+
+project('vvas-accel-sw-libs', 'c', 'cpp',
+  version : '2.0.0',
   meson_version : '>= 0.54.1',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
-gst_version = '1.16.2'
+gst_version = '1.18.5'
 version_arr = gst_version.split('.')
 gst_version_major = version_arr[0].to_int()
 gst_version_minor = version_arr[1].to_int()
@@ -23,11 +39,10 @@ xrt_req = '>= 2.6' #XRT 2020.1
 glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
              dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 
-gst_plugins_vvas_args = ['-DHAVE_CONFIG_H']
+vvas_accel_sw_libs_args = ['-DHAVE_CONFIG_H']
 
 configinc = include_directories('.')
 
-api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
@@ -123,7 +138,6 @@ if host_machine.cpu_family() == 'aarch64'
 endif
 if host_machine.cpu_family() == 'x86_64'
   opencv_dep = dependency('opencv', version : '>=3.4.0', required: true)
-  mongoc_dep = dependency('libmongoc-1.0')
 endif
 
 glog_dep = cc.find_library('glog', dirs : ['/usr/lib/x86_64-linux-gnu/'])
@@ -141,7 +155,7 @@ pkgconfig = import('pkgconfig')
 
 if host_machine.cpu_family() == 'x86_64'
   # common kernel libraries for PCIe platforms
-  foreach kernel : ['vvas_xdpuinfer', 'vvas_xboundingbox', 'vvas_xpp_pipeline', 'vvas_xmongodblib', 'vvas_xpreprocessor']
+  foreach kernel : ['vvas_xdpuinfer', 'vvas_xboundingbox', 'vvas_xpreprocessor']
     if not get_option(kernel).disabled()
       subdir(kernel)
     endif
@@ -158,4 +172,3 @@ endif
 
 configure_file(output : 'config.h', configuration : cdata)
 
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

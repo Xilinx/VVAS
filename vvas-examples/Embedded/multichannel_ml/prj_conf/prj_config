@@ -40,13 +40,15 @@ misc=:solution_name=link
 
 param=compiler.addOutputTypes=sd_card
 #Following switch will ignore the timing violations during xclbin creation
-param=compiler.skipTimingCheckAndFrequencyScaling=1
+#param=compiler.skipTimingCheckAndFrequencyScaling=1
 
 [vivado]
+# Timing closed using 2022.1 Vitis release (SW Build : 3526262,
+# IP Build : 3524634). RQS suggestion file is unique to this specific
+# Vitis version and may not work with any other version.
 prop=run.impl_1.STEPS.PLACE_DESIGN.TCL.PRE=prj_conf/preplace.tcl
-prop=run.impl_1.STEPS.OPT_DESIGN.ARGS.DIRECTIVE=Explore
-prop=run.impl_1.STEPS.PLACE_DESIGN.ARGS.DIRECTIVE=Explore
+prop=run.impl_1.STEPS.OPT_DESIGN.ARGS.DIRECTIVE=ExploreArea
+prop=run.impl_1.STEPS.PLACE_DESIGN.ARGS.DIRECTIVE=AltSpreadLogic_high
 prop=run.impl_1.STEPS.PHYS_OPT_DESIGN.IS_ENABLED=true
-prop=run.impl_1.STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE=Explore
-prop=run.impl_1.STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE=Explore
-
+prop=run.impl_1.STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE=AggressiveExplore
+prop=run.impl_1.STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE=NoTimingRelaxation

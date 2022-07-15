@@ -81,7 +81,7 @@ gst_vvas_xroigen_roi_type (void)
     {VVAS_XROIGEN_ROI_TYPE_QP_DELTA, "roi enc QP delta", "qp_delta"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -116,7 +116,7 @@ gst_vvas_xroigen_roi_quality_type (void)
         "Region all LCU encoded with intra prediction mode", "intra"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -595,9 +595,6 @@ vvas_xroigen_init (GstPlugin * vvas_xroigen)
 #define PACKAGE "vvas_xroigen"
 #endif
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    vvas_xroigen,
-    "Xilinx VVAS SDK plugin to generate ROI metadata",
-    vvas_xroigen_init, "1.0", "MIT/X11",
-    "Xilinx VVAS SDK plugin", "http://xilinx.com/")
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, vvas_xroigen,
+    "Xilinx VVAS SDK plugin to generate ROI metadata", vvas_xroigen_init,
+    VVAS_API_VERSION, "MIT/X11", "Xilinx VVAS SDK plugin", "http://xilinx.com/")

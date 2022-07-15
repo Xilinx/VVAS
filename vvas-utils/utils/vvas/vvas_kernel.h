@@ -100,7 +100,7 @@ struct _vvas_frame_props
 
 struct _vvas_frame
 {
-  uint32_t bo[VIDEO_MAX_PLANES];
+  void* bo[VIDEO_MAX_PLANES];
   void *vaddr[VIDEO_MAX_PLANES];
   uint64_t paddr[VIDEO_MAX_PLANES];
   uint32_t size[VIDEO_MAX_PLANES];
@@ -159,7 +159,7 @@ typedef struct vvaspads
 
 typedef struct buffer
 {
-  unsigned int bo;
+  void* bo;
   void *user_ptr;
   uint64_t phy_addr;
   unsigned int size;
@@ -167,12 +167,13 @@ typedef struct buffer
 
 struct _vvas_kernel
 {
-  void *dev_handle;
+  void* dev_handle;
+  void* kern_handle;
+  void* run_handle;
   uint32_t cu_idx;
   json_t *kernel_config;
   json_t *kernel_dyn_config;
   void *kernel_priv;
-  xrt_buffer *ert_cmd_buf;
   size_t min_offset;
   size_t max_offset;
   VVASBufAllocCBFunc alloc_func;
@@ -197,7 +198,24 @@ void vvas_register_write (VVASKernel * handle, void *src, size_t size,
     size_t offset);
 void vvas_register_read (VVASKernel * handle, void *src, size_t size,
     size_t offset);
-int32_t vvas_kernel_start (VVASKernel * handle);
+/* ========================================================================
+Please follow below format specifiers for kernel arguments for "format" argument
+
+"i" : Signed int argument.
+"u" : Unsigned int argument.
+"l" : Unsigned long long argument.
+"p" : Any pointer argument.
+"b" : Buffer Object argument.
+"s" : If you want to skip the argument.
+
+Ex : For passing 3 arguments of types int, unsigned int and a pointer,
+     then the format specifier string would be "iup"
+	 
+	 If you want to skip the middler argument in the above case, then
+	 the format specifier string would be "isp"
+==========================================================================
+*/
+int32_t vvas_kernel_start (VVASKernel * handle, const char *format, ...);
 int32_t vvas_kernel_done (VVASKernel * handle, int32_t timeout);
 
 #ifdef XLNX_PCIe_PLATFORM

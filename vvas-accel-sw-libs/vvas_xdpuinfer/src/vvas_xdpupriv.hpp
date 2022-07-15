@@ -64,7 +64,7 @@ struct labels
   int label;
   std::string display_name;
 };
-typedef struct lables lables;
+typedef struct labels labels;
 
 enum
 {

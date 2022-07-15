@@ -20,9 +20,8 @@
 GType
 gst_vvas_hdr_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
-  static const gchar *tags[] =
-      { GST_META_TAG_VIDEO_STR, NULL };
+  static GType type = 0;
+  static const gchar *tags[] = { GST_META_TAG_VIDEO_STR, NULL };
 
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstVvasHDRMetaAPI", tags);
@@ -37,7 +36,7 @@ gst_vvas_hdr_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
 {
   GstVvasHdrMeta *vvasmeta = (GstVvasHdrMeta *) meta;
 
-  memset(&vvasmeta->hdr_metadata, 0, sizeof(vcu_hdr_data));
+  memset (&vvasmeta->hdr_metadata, 0, sizeof (vcu_hdr_data));
   return TRUE;
 }
 
@@ -62,7 +61,7 @@ gst_vvas_hdr_meta_transform (GstBuffer * dest, GstMeta * meta,
 
     GST_LOG ("copy metadata from %p -> %p buffer %p -> %p", smeta, dmeta,
         buffer, dest);
-    memcpy(&dmeta->hdr_metadata, &smeta->hdr_metadata, sizeof(vcu_hdr_data));
+    memcpy (&dmeta->hdr_metadata, &smeta->hdr_metadata, sizeof (vcu_hdr_data));
   } else {
     GST_ERROR ("Unsupported transform type : %s", g_quark_to_string (type));
     return FALSE;
@@ -79,7 +78,8 @@ gst_vvas_hdr_meta_get_info (void)
   if (g_once_init_enter ((GstMetaInfo **) & vvas_hdr_meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_VVAS_HDR_META_API_TYPE, "GstVvasHDRMeta",
-        sizeof (GstVvasHdrMeta), (GstMetaInitFunction) gst_vvas_hdr_meta_init,
+        sizeof (GstVvasHdrMeta),
+        (GstMetaInitFunction) gst_vvas_hdr_meta_init,
         (GstMetaFreeFunction) gst_vvas_hdr_meta_free,
         gst_vvas_hdr_meta_transform);
     g_once_init_leave ((GstMetaInfo **) & vvas_hdr_meta_info,

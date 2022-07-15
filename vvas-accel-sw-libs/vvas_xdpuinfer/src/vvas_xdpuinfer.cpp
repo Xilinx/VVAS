@@ -208,7 +208,7 @@ readlabel (vvas_xkpriv * kpriv, char *json_file)
     goto error;
   } else {
     num_labels = json_integer_value (value);
-    labelptr = (labels *) calloc (num_labels, sizeof (labels));
+    labelptr =  new labels[num_labels * sizeof (labels)];
     kpriv->max_labels = num_labels;
   }
 
@@ -276,10 +276,12 @@ readlabel (vvas_xkpriv * kpriv, char *json_file)
 
   }
   kpriv->num_labels = num_labels;
+  json_decref(root);
   return labelptr;
 error:
   if (labelptr)
-    free (labelptr);
+    delete []labelptr;
+  json_decref(root);
   return NULL;
 }
 
@@ -554,20 +556,17 @@ vvas_xinitmodel (vvas_xkpriv * kpriv, int modelclass)
 
     default:
       LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level, "Not supported model");
-      free (kpriv);
+      delete kpriv;
       return NULL;
   }
 
   if ((kpriv->labelflags & VVAS_XLABEL_REQUIRED)
       && (kpriv->labelflags & VVAS_XLABEL_NOT_FOUND)) {
-    kpriv->model->close ();
-    delete kpriv->model;
-    kpriv->model = NULL;
+    model->close ();
+    delete model;
     kpriv->modelclass = VVAS_XCLASS_NOTFOUND;
-
-    if (kpriv->labelptr != NULL)
-      free (kpriv->labelptr);
-
+    if(kpriv->labelptr != NULL)
+      delete kpriv->labelptr;
     return NULL;
   }
 
@@ -613,6 +612,8 @@ vvas_xrunmodel (vvas_xkpriv * kpriv, VVASFrame *inputs[MAX_NUM_OBJECT])
   i = 0;
   while (inputs[i]) {
     GstInferenceMeta *infer_meta = NULL;
+    GstVideoMeta *vmeta = NULL;
+    GstVideoAlignment padding;
 
     if (i == kpriv->batch_size) {
       // TODO: we can handle then in next iteration, but considering as error to simplify the functionality
@@ -622,9 +623,22 @@ vvas_xrunmodel (vvas_xkpriv * kpriv, VVASFrame *inputs[MAX_NUM_OBJECT])
     }
 
     cur_frame = inputs[i];
-    cv::Mat image (cur_frame->props.height, cur_frame->props.width, CV_8UC3,
+
+    vmeta = gst_buffer_get_video_meta ((GstBuffer *) cur_frame->app_priv);
+    if(vmeta) {
+      padding = vmeta->alignment;
+
+      uchar *data_ptr = (uchar *)cur_frame->vaddr[0];
+      cv::Mat image (cur_frame->props.height, cur_frame->props.width, CV_8UC3,
+        (void *)(data_ptr + padding.padding_top * padding.stride_align[0] + padding.padding_left * 3), padding.stride_align[0]);
+
+      images.push_back(image);
+    }
+    else {
+      cv::Mat image (cur_frame->props.height, cur_frame->props.width, CV_8UC3,
         cur_frame->vaddr[0], cur_frame->props.stride);
-    images.push_back(image);
+      images.push_back(image);
+    }
 
     /* if inference metadata is available, attach prediction in current instance to it */
     infer_meta = ((GstInferenceMeta *) gst_buffer_get_meta ((GstBuffer *) inputs[i]->app_priv, gst_inference_meta_api_get_type ()));
@@ -708,7 +722,7 @@ extern "C"
 
   int32_t xlnx_kernel_init (VVASKernel * handle)
   {
-    vvas_xkpriv *kpriv = (vvas_xkpriv *) calloc (1, sizeof (vvas_xkpriv));
+    vvas_xkpriv *kpriv = new vvas_xkpriv;
       kpriv->handle = handle;
 
     json_t *jconfig = handle->kernel_config;
@@ -722,7 +736,7 @@ extern "C"
       kpriv->log_level = LOG_LEVEL_WARNING;
     else
       kpriv->log_level = json_integer_value (val);
-      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "enter");
+    LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "enter");
 
     val = json_object_get (jconfig, "run_time_model");
     if (!val || !json_is_boolean (val))
@@ -893,7 +907,7 @@ extern "C"
     return true;
 
   err:
-    free (kpriv);
+    delete kpriv;
     return -1;
   }
 
@@ -936,11 +950,11 @@ extern "C"
       delete kpriv->model;
       kpriv->model = NULL;
     }
-    if (kpriv->labelptr != NULL)
-      free (kpriv->labelptr);
+    if(kpriv->labelptr != NULL)
+      delete []kpriv->labelptr;
 
     vvas_caps_free (handle);
-    free (kpriv);
+    delete kpriv;
 
     return true;
   }

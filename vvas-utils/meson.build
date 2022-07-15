@@ -1,13 +1,31 @@
+########################################################################
+ # Copyright 2020 - 2022 Xilinx, Inc.
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #     http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+#########################################################################
+
 project('vvas-utils', 'c', 'cpp',
-  version : '1.0',
+  version : '2.0.0',
   meson_version : '>= 0.54.1',
-  default_options : [ 'warning_level=1',
+  default_options : [ 'warning_level=1', 'cpp_std=c++14',
                       'buildtype=debugoptimized' ])
 
-utils_version = meson.project_version()
-version_arr = utils_version.split('.')
+project_version = meson.project_version()
+version_arr = project_version.split('.')
 utils_version_major = version_arr[0].to_int()
 utils_version_minor = version_arr[1].to_int()
+
+utils_version = '@0@.@1@'.format(utils_version_major, utils_version_minor)
 
 xrt_req = '>= 2.6' #XRT 2020.1
 
@@ -16,7 +34,6 @@ vvas_utils_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 utilsinc = include_directories('utils')
 
-api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
@@ -33,7 +50,7 @@ cdata.set_quoted('VERSION', utils_version)
 cdata.set_quoted('PACKAGE', 'vvas-utils')
 cdata.set_quoted('PACKAGE_VERSION', utils_version)
 cdata.set_quoted('PACKAGE_NAME', 'VVAS Utility package')
-cdata.set_quoted('GETTEXT_PACKAGE', 'vvas-utils-1.0')
+cdata.set_quoted('GETTEXT_PACKAGE', 'vvas-utils-' + utils_version)
 
 #TODO: currently proprietary until release
 cdata.set_quoted('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
@@ -114,4 +131,3 @@ configure_file(output : 'config.h', configuration : cdata)
 subdir('utils')
 subdir('pkgconfig')
 
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

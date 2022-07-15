@@ -1,0 +1,41 @@
+{
+      "config": {
+        "font_size" : 0.5,
+        "font" : 3,
+        "thickness" : 2,
+        "mask_level" : 0,
+        "label_color" : { "blue" : 0, "green" : 0, "red" : 0 },
+        "y_offset" : 0,
+        "label_filter" : [ "class", "probability" ],
+        "classes" : [
+          {
+            "name" : "car",
+            "blue" : 255,
+            "green" : 0,
+            "red"  : 0,
+            "masking"  : 0
+          },
+          {
+            "name" : "person",
+            "blue" : 0,
+            "green" : 255,
+            "red"  : 0,
+            "masking"  : 0
+          },
+          {
+            "name" : "bus",
+            "blue" : 0,
+            "green" : 0,
+            "red"  : 255,
+            "masking"  : 0
+          },
+          {
+            "name" : "bicycle",
+            "blue" : 0,
+            "green" : 0,
+            "red"  : 255,
+            "masking"  : 0
+          }
+        ]
+      }
+}

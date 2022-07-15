@@ -24,7 +24,8 @@ all: hw
 
 hw:
 	mkdir -p $(HW_PATH)
-	$(VIVADO) -mode batch -notrace -source $(PLATFORM)_xsa.tcl
+	$(VIVADO) -mode batch -notrace -source xilinx_zcu104_vcuDec_vmixHdmiTx_xsa.tcl
+	echo ${PLATFORM} > src/a53/xrt/image/platform_desc.txt
 
 clean:
 	$(RM) -r vivado.* $(PLATFORM) $(PLATFORM).xsa .Xil *log *jou

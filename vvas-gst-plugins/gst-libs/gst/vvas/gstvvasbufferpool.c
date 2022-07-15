@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Xilinx, Inc.
+ * Copyright 2020 - 2022 Xilinx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,6 +161,13 @@ fill_planes_vals (GstVideoInfo * info, GstBufferPool * pool, planes_vals *plane)
       plane->offset[1] = plane->stride[0] * (plane->align_elevation);
       plane->offset[2] = plane->offset[1] + plane->stride[1] * (plane->align_elevation / 2);
       plane->align_size = plane->offset[2] + plane->stride[2] * (plane->align_elevation / 2);
+      break;
+    case GST_VIDEO_FORMAT_GBR:
+      plane->stride[0] = plane->stride[1] = plane->stride[2] = plane->align_stride0;
+      plane->align_size = plane->align_stride0 * plane->align_elevation;
+      plane->offset[0] = 0;
+      plane->offset[1] = plane->offset[0] + plane->stride[0] * plane->align_elevation;
+      plane->offset[2] = plane->offset[1] + plane->stride[1] * plane->align_elevation;
       break;
     default:
       GST_ERROR_OBJECT (pool, "not yet supporting format %d", GST_VIDEO_INFO_FORMAT (info));

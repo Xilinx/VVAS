@@ -37,13 +37,13 @@ dpu_HDLSRCS= ${DIR_PRJ}/kernel_xml/dpu/kernel.xml\
 	     ${DPU_TRD_PATH}/dpu_ip/DPUCZDX8G_*/inc/function.vh\
 	     ${DPU_TRD_PATH}/dpu_ip/DPUCZDX8G_*/inc/arch_para.vh
 
-multiscaler_SRCS= ${HW_ACCEL_PATH}/multiscaler/v_multi_scaler.cpp\
-	     ${HW_ACCEL_PATH}/multiscaler/v_hresampler.cpp\
-	     ${HW_ACCEL_PATH}/multiscaler/v_hscaler.cpp\
-	     ${HW_ACCEL_PATH}/multiscaler/v_dma.cpp\
-	     ${HW_ACCEL_PATH}/multiscaler/v_csc.cpp\
-	     ${HW_ACCEL_PATH}/multiscaler/v_vresampler.cpp\
-	     ${HW_ACCEL_PATH}/multiscaler/v_vscaler.cpp
+multiscaler_SRCS= ${HW_ACCEL_PATH}/multiscaler/src/v_multi_scaler.cpp\
+	     ${HW_ACCEL_PATH}/multiscaler/src/v_hresampler.cpp\
+	     ${HW_ACCEL_PATH}/multiscaler/src/v_hscaler.cpp\
+	     ${HW_ACCEL_PATH}/multiscaler/src/v_dma.cpp\
+	     ${HW_ACCEL_PATH}/multiscaler/src/v_csc.cpp\
+	     ${HW_ACCEL_PATH}/multiscaler/src/v_vresampler.cpp\
+	     ${HW_ACCEL_PATH}/multiscaler/src/v_vscaler.cpp
 
 dpu_TCL=${DIR_PRJ}/scripts/gen_dpu_xo.tcl
 
@@ -51,7 +51,7 @@ dpu_TCL=${DIR_PRJ}/scripts/gen_dpu_xo.tcl
 DPU_KERN_NAME = DPUCZDX8G
 MS_KERN_NAME = v_multi_scaler
 
-MULTISCALER_FLAGS := --kernel $(MS_KERN_NAME) -I. -I${HW_ACCEL_PATH}/multiscaler/hls
+MULTISCALER_FLAGS := --kernel $(MS_KERN_NAME) -I. -I${HW_ACCEL_PATH}/multiscaler/src/hls
 
 kernel_xo = binary_container_1/dpu.xo binary_container_1/v_multi_scaler.xo
 

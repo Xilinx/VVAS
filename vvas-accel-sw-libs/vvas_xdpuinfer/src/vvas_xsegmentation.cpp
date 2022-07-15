@@ -26,18 +26,18 @@ vvas_xsegmentation::vvas_xsegmentation (vvas_xkpriv * kpriv,
 }
 
 int
-vvas_xsegmentation::run (vvas_xkpriv * kpriv, std::vector<cv::Mat>& images,
-    GstInferencePrediction **predictions)
+vvas_xsegmentation::run (vvas_xkpriv * kpriv, std::vector < cv::Mat > &images,
+    GstInferencePrediction ** predictions)
 {
-  std::vector<vitis::ai::SegmentationResult> results;
+  std::vector < vitis::ai::SegmentationResult > results;
 
   LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "enter");
   if (kpriv->segoutfmt == VVAS_VFMT_BGR8)
     results = model->run_8UC3 (images);
   else if (kpriv->segoutfmt == VVAS_VFMT_Y8) {
     results = model->run_8UC1 (images);
-    for (auto i = 0u; i < results.size(); i++) {
-      if ( !(kpriv->segoutfactor == 0 || kpriv->segoutfactor == 1)) {
+    for (auto i = 0u; i < results.size (); i++) {
+      if (!(kpriv->segoutfactor == 0 || kpriv->segoutfactor == 1)) {
         for (auto y = 0; y < results[i].segmentation.rows; y++) {
           for (auto x = 0; x < results[i].segmentation.cols; x++) {
             results[i].segmentation.at < uchar > (y, x) *= kpriv->segoutfactor;
@@ -49,7 +49,7 @@ vvas_xsegmentation::run (vvas_xkpriv * kpriv, std::vector<cv::Mat>& images,
     LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level, "unsupported fmt");
     return false;
   }
-  for (auto i = 0u; i < results.size(); i++) {
+  for (auto i = 0u; i < results.size (); i++) {
     BoundingBox parent_bbox;
     GstInferencePrediction *parent_predict = NULL;
     int cols = results[i].segmentation.cols;
@@ -69,7 +69,7 @@ vvas_xsegmentation::run (vvas_xkpriv * kpriv, std::vector<cv::Mat>& images,
       Segmentation *seg;
       GstInferencePrediction *predict;
       predict = gst_inference_prediction_new ();
-      char *pstr;                   /* prediction string */
+      char *pstr;               /* prediction string */
 
       seg = &predict->segmentation;
       seg->width = cols;
@@ -81,9 +81,9 @@ vvas_xsegmentation::run (vvas_xkpriv * kpriv, std::vector<cv::Mat>& images,
       else
         size = (seg->width * seg->height);
 
-      seg->data = g_memdup ((void *) (results[i].segmentation.data), size);
-      seg->buffer = gst_buffer_new_wrapped_full ((GstMemoryFlags)0, seg->data,
-	  size, 0, size, seg->data, g_free);
+      seg->data = g_memdup2 ((void *) (results[i].segmentation.data), size);
+      seg->buffer = gst_buffer_new_wrapped_full ((GstMemoryFlags) 0, seg->data,
+          size, 0, size, seg->data, g_free);
 
       LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
           "gstBuffer = %p append to metadata", seg->buffer);

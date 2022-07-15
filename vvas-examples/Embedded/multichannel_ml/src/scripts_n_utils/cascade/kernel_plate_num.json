@@ -1,0 +1,20 @@
+{
+  "vvas-library-repo": "/usr/lib/",
+  "inference-level": 3,
+  "attach-ppe-outbuf": false,
+  "kernel" : {
+    "library-name":"libvvas_xdpuinfer.so",
+    "config": {
+      "batch-size" : 0,
+      "model-name" : "plate_num",
+      "model-class" : "PLATENUM",
+      "model-format" : "BGR",
+      "model-path" : "/usr/share/vitis_ai_library/models/",
+      "run_time_model" : false,
+      "need_preprocess" : false,
+      "performance_test" : false,
+      "debug_level" : 1,
+      "max-objects":3
+    }
+  }
+}

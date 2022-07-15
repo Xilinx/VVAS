@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Xilinx, Inc.
+ * Copyright 2020-2022 Xilinx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -520,15 +520,6 @@ extern "C"
   {
     LOG_MESSAGE (LOG_LEVEL_DEBUG, "enter");
     vvas_xoverlaypriv *kpriv = (vvas_xoverlaypriv *) handle->kernel_priv;
-    struct overlayframe_info *frameinfo = &(kpriv->frameinfo);
-
-    if (frameinfo->lumaImg.data) {
-      frameinfo->lumaImg.release ();
-      frameinfo->chromaImg.release ();
-    }
-    if (frameinfo->image.data) {
-      frameinfo->image.release ();
-    }
 
     if (kpriv)
       free (kpriv);
@@ -576,22 +567,20 @@ extern "C"
 
     if (frameinfo->inframe->props.fmt == VVAS_VFMT_Y_UV8_420) {
       LOG_MESSAGE (LOG_LEVEL_DEBUG, "Input frame is in NV12 format\n");
-      frameinfo->lumaImg.create (input[0]->props.height, input[0]->props.stride,
-          CV_8UC1);
-      frameinfo->lumaImg.data = (unsigned char *) lumaBuf;
-      frameinfo->chromaImg.create (input[0]->props.height / 2,
-          input[0]->props.stride / 2, CV_16UC1);
-      frameinfo->chromaImg.data = (unsigned char *) chromaBuf;
+
+      frameinfo->lumaImg = Mat (input[0]->props.height,
+             input[0]->props.width, CV_8UC1, lumaBuf, input[0]->props.stride);
+
+      frameinfo->chromaImg = Mat (input[0]->props.height / 2,
+       input[0]->props.width / 2, CV_16UC1, chromaBuf, input[0]->props.stride);
     } else if (frameinfo->inframe->props.fmt == VVAS_VFMT_BGR8) {
       LOG_MESSAGE (LOG_LEVEL_DEBUG, "Input frame is in BGR format\n");
-      frameinfo->image.create (input[0]->props.height,
-          input[0]->props.stride / 3, CV_8UC3);
-      frameinfo->image.data = (unsigned char *) indata;
+      frameinfo->image = Mat (input[0]->props.height,
+              input[0]->props.width, CV_8UC3, indata, input[0]->props.stride);;
     } else {
       LOG_MESSAGE (LOG_LEVEL_WARNING, "Unsupported color format\n");
       return 0;
     }
-
 
     /* Print the entire prediction tree */
     pstr = gst_inference_prediction_to_string (infer_meta->prediction);
@@ -600,6 +589,14 @@ extern "C"
 
     g_node_traverse (infer_meta->prediction->predictions, G_PRE_ORDER,
         G_TRAVERSE_ALL, -1, overlay_node_foreach, kpriv);
+
+    if (frameinfo->inframe->props.fmt == VVAS_VFMT_Y_UV8_420) {
+      frameinfo->lumaImg.~Mat();
+      frameinfo->chromaImg.~Mat();
+    }
+    else {
+      frameinfo->image.~Mat();
+    }
 
     return 0;
   }

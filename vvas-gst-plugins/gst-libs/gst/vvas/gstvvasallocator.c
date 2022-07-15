@@ -18,8 +18,8 @@
 #include "config.h"
 #endif
 
-#include "gstvvasallocator.h"
 #include <vvas/xrt_utils.h>
+#include "gstvvasallocator.h"
 #include <sys/mman.h>
 #include <string.h>
 #include <gst/allocators/gstdmabuf.h>
@@ -38,6 +38,7 @@ enum
   PROP_DEVICE_INDEX,
   PROP_NEED_DMA,
   PROP_MEM_BANK,
+  PROP_KERNEL_HANDLE
 };
 
 enum
@@ -52,6 +53,7 @@ struct _GstVvasAllocatorPrivate
   gboolean need_dma;
   guint mem_bank;
   vvasDeviceHandle handle;
+  vvasKernelHandle kern_handle;
   GstAllocator *dmabuf_alloc;
   gboolean active;
   GstAtomicQueue *free_queue;
@@ -65,7 +67,7 @@ typedef struct _GstVvasMemory
 {
   GstMemory parent;
   gpointer data;                /* used in non-dma mode */
-  unsigned int bo;
+  vvasBOHandle bo;
   gsize size;
   GstVvasAllocator *alloc;
   GstMapFlags mmapping_flags;
@@ -198,9 +200,9 @@ pop_now:
   vvasmem->sync_flags = VVAS_SYNC_NONE;
 #endif
 
-  vvasmem->bo = vvas_xrt_alloc_bo (priv->handle, size,
-		                   VVAS_BO_DEVICE_RAM, priv->mem_bank);
-  if (vvasmem->bo == NULLBO) {
+  vvasmem->bo = vvas_xrt_alloc_bo (priv->handle, size, VVAS_BO_FLAGS_NONE,
+                                   priv->mem_bank);
+  if (vvasmem->bo == NULL) {
     GST_ERROR_OBJECT (vvas_alloc, "failed to allocate Device BO. reason %s(%d)",
         strerror (errno), errno);
     return NULL;
@@ -210,35 +212,37 @@ pop_now:
 
   if (params->flags & GST_VVAS_ALLOCATOR_FLAG_MEM_INIT) {
     GST_LOG_OBJECT (vvas_alloc, "Doing memset for created buffer");
-    data = vvas_xrt_map_bo (priv->handle, vvasmem->bo, true);
+    data = vvas_xrt_map_bo (vvasmem->bo, true);
     if (data) {
       memset(data, 0, size);
-      iret = vvas_xrt_sync_bo (priv->handle, vvasmem->bo,
+      iret = vvas_xrt_sync_bo (vvasmem->bo,
                                VVAS_BO_SYNC_BO_TO_DEVICE, size, 0);
       if (iret != 0) {
         GST_ERROR_OBJECT (vvas_alloc,
                           "failed to sync output buffer. reason : %d, %s",
                           iret, strerror (errno));
-        vvas_xrt_unmap_bo(priv->handle, vvasmem->bo, data);
+        //vvas_xrt_unmap_bo(priv->handle, vvasmem->bo, data);
         return NULL;
       }
-      vvas_xrt_unmap_bo(priv->handle, vvasmem->bo, data);
+      //vvas_xrt_unmap_bo(priv->handle, vvasmem->bo, data);
     }
   }
 
   if (priv->need_dma) {
-    prime_fd = vvas_xrt_export_bo (priv->handle, vvasmem->bo);
+    prime_fd = vvas_xrt_export_bo (vvasmem->bo);
     if (prime_fd < 0) {
       GST_ERROR_OBJECT (vvas_alloc, "failed to get dmafd...");
-      vvas_xrt_free_bo (priv->handle, vvasmem->bo);
+      vvas_xrt_free_bo (vvasmem->bo);
       vvasmem->bo = 0;
       return NULL;
     }
 
     GST_DEBUG_OBJECT (vvas_alloc,
-        "exported xrt bo %u as dmafd %d", vvasmem->bo, prime_fd);
+        "exported xrt bo %p as dmafd %d", vvasmem->bo, prime_fd);
 
-    mem = gst_dmabuf_allocator_alloc (priv->dmabuf_alloc, prime_fd, size);
+    mem =
+        gst_dmabuf_allocator_alloc_with_flags (priv->dmabuf_alloc, prime_fd,
+        size, GST_FD_MEMORY_FLAG_DONT_CLOSE);
 
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
         g_quark_from_static_string ("vvasmem"), vvasmem,
@@ -277,7 +281,7 @@ gst_vvas_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 #endif
 
   vvasmem->data =
-      vvas_xrt_map_bo (alloc->priv->handle, vvasmem->bo, flags & GST_MAP_WRITE);
+      vvas_xrt_map_bo (vvasmem->bo, flags & GST_MAP_WRITE);
   GST_DEBUG_OBJECT (alloc, "mapped pointer %p with size %lu do_write %d",
       vvasmem->data, maxsize, flags & GST_MAP_WRITE);
 
@@ -343,14 +347,13 @@ gst_vvas_mem_unmap (GstMemory * mem)
 
   g_mutex_lock (&vvasmem->lock);
   if (vvasmem->data && !(--vvasmem->mmap_count)) {
-    //ret = vvas_xrt_unmap_bo (alloc->priv->handle, vvasmem->bo, vvasmem->data);
-    ret = munmap (vvasmem->data, vvasmem->size);
+    ret = vvas_xrt_unmap_bo (vvasmem->bo, vvasmem->data);
     if (ret) {
       GST_ERROR ("failed to unmap %p", vvasmem->data);
     }
     vvasmem->data = NULL;
     vvasmem->mmapping_flags = 0;
-    GST_DEBUG_OBJECT (alloc, "%p: bo %d unmapped", vvasmem, vvasmem->bo);
+    GST_DEBUG_OBJECT (alloc, "%p: bo %p unmapped", vvasmem, vvasmem->bo);
   }
   g_mutex_unlock (&vvasmem->lock);
 }
@@ -361,8 +364,8 @@ gst_vvas_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GstVvasMemory *vvasmem = (GstVvasMemory *) mem;
   GstVvasAllocator *alloc = GST_VVAS_ALLOCATOR (allocator);
 
-  if (vvasmem->bo != NULLBO && mem->parent == NULL)
-    vvas_xrt_free_bo (alloc->priv->handle, vvasmem->bo);
+  if (vvasmem->bo != NULL && mem->parent == NULL)
+    vvas_xrt_free_bo (vvasmem->bo);
 
   g_mutex_clear (&vvasmem->lock);
   g_slice_free (GstVvasMemory, vvasmem);
@@ -403,6 +406,9 @@ gst_vvas_allocator_set_property (GObject * object, guint prop_id,
     case PROP_MEM_BANK:
       alloc->priv->mem_bank = g_value_get_int (value);
       break;
+    case PROP_KERNEL_HANDLE:
+      alloc->priv->kern_handle = g_value_get_pointer (value);
+      break; 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -439,6 +445,11 @@ gst_vvas_allocator_class_init (GstVvasAllocatorClass * klass)
           "DDR Memory bank to allocate memory", 0, G_MAXINT,
           DEFAULT_MEM_BANK, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_KERNEL_HANDLE,
+     g_param_spec_pointer ("kernel-handle", "VVAS Kernel handle",
+           "VVAS Kernel handle",
+           (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
   gst_vvas_allocator_signals[VVAS_MEM_RELEASED] = g_signal_new ("vvas-mem-released",
       G_TYPE_FROM_CLASS (gobject_class), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_MEMORY);
@@ -468,13 +479,14 @@ gst_vvas_allocator_init (GstVvasAllocator * allocator)
 }
 
 GstAllocator *
-gst_vvas_allocator_new (guint dev_idx, gboolean need_dma, guint mem_bank)
+gst_vvas_allocator_new (guint dev_idx, gboolean need_dma, guint mem_bank,
+                        vvasKernelHandle kern_handle)
 {
   GstAllocator *alloc = NULL;
 
   alloc = (GstAllocator *) g_object_new (GST_TYPE_VVAS_ALLOCATOR,
       "device-index", dev_idx, "need-dma", need_dma,
-      "mem-bank", mem_bank, NULL);
+      "mem-bank", mem_bank, "kernel-handle", kern_handle, NULL); 
   gst_object_ref_sink (alloc);
   return alloc;
 }
@@ -588,8 +600,6 @@ guint64
 gst_vvas_allocator_get_paddr (GstMemory * mem)
 {
   GstVvasMemory *vvasmem;
-  GstVvasAllocator *alloc;
-  struct xclBOProperties p;
 
   g_return_val_if_fail (mem != NULL, FALSE);
 
@@ -599,17 +609,10 @@ gst_vvas_allocator_get_paddr (GstMemory * mem)
     return 0;
   }
 
-  alloc = vvasmem->alloc;
-
-  if (!vvas_xrt_get_bo_properties (alloc->priv->handle, vvasmem->bo, &p)) {
-    return p.paddr;
-  } else {
-    GST_ERROR_OBJECT (alloc, "failed to get physical address...");
-    return 0;
-  }
+  return vvas_xrt_get_bo_phy_addres (vvasmem->bo);
 }
 
-guint
+void*
 gst_vvas_allocator_get_bo (GstMemory * mem)
 {
   GstVvasMemory *vvasmem;
@@ -680,13 +683,13 @@ gst_vvas_memory_sync_with_flags (GstMemory * mem, GstMapFlags flags)
     int iret = 0;
 
     GST_LOG_OBJECT (alloc,
-        "sync from device %p : bo = %u, size = %lu, handle = %p", vvasmem,
+        "sync from device %p : bo = %p, size = %lu, handle = %p", vvasmem,
         vvasmem->bo, vvasmem->size, alloc->priv->handle);
 
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, alloc,
         "slow copy data from device");
 
-    iret = vvas_xrt_sync_bo (alloc->priv->handle, vvasmem->bo,
+    iret = vvas_xrt_sync_bo (vvasmem->bo,
                              VVAS_BO_SYNC_BO_FROM_DEVICE,
                              vvasmem->size, 0);
     if (iret != 0) {
@@ -720,7 +723,7 @@ gst_vvas_memory_sync_bo (GstMemory * mem)
 
   alloc = vvasmem->alloc;
 
-  GST_LOG_OBJECT (alloc, "sync bo %u of size %lu, handle = %p, flags %d",
+  GST_LOG_OBJECT (alloc, "sync bo %p of size %lu, handle = %p, flags %d",
       vvasmem->bo, vvasmem->size, alloc->priv->handle, vvasmem->sync_flags);
 
   if ((vvasmem->sync_flags & VVAS_SYNC_TO_DEVICE)
@@ -732,7 +735,7 @@ gst_vvas_memory_sync_bo (GstMemory * mem)
   if (vvasmem->sync_flags & VVAS_SYNC_TO_DEVICE) {
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, alloc, "slow copy data to device");
 
-    iret = vvas_xrt_sync_bo (alloc->priv->handle, vvasmem->bo,
+    iret = vvas_xrt_sync_bo (vvasmem->bo,
                              VVAS_BO_SYNC_BO_TO_DEVICE,
                              vvasmem->size, 0);
     if (iret != 0) {

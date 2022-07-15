@@ -19,4 +19,6 @@ limitations under the License.
 This product will also download various third party sources during run time.
 All these sources and their corrosponding copy right information is downloadable
 from www.xilinx.com at the following location:
-https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_1_1_thirdparty_sources.zip
+
+Below mentioned link is not enabled currently. Will be updated when the pre-built binaries will be available. 
+https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Xilinx, Inc.
+ * Copyright 2021 - 2022 Xilinx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #include <errno.h>
 
 //#define DEBUG
-#define DEFAULT_XCLBIN_PATH "/media/sd-mmcblk0p1/dpu.xclbin"
+#define DEFAULT_XCLBIN_PATH "/run/media/mmcblk0p1/dpu.xclbin"
 
 char dpu_template_json[40] = "./jsons/kernel_dpu.json";
 char bbox_template_json[40] = "./jsons/kernel_bbox.json";

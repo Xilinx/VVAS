@@ -1,10 +1,31 @@
-project('gst-plugins-vvas', 'c', 'cpp',
-  version : '1.16.2',
+########################################################################
+ # Copyright 2020 - 2022 Xilinx, Inc.
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #     http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+#########################################################################
+
+project('vvas-gst-plugins', 'c', 'cpp',
+  version : '2.0.0',
   meson_version : '>= 0.54.1',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
-gst_version = meson.project_version()
+project_version = meson.project_version()
+project_version_arr = project_version.split('.')
+vvas_version = '@0@.@1@'.format(project_version_arr[0].to_int(),
+                                project_version_arr[1].to_int())
+
+gst_version = '1.18.5'
 version_arr = gst_version.split('.')
 gst_version_major = version_arr[0].to_int()
 gst_version_minor = version_arr[1].to_int()
@@ -29,7 +50,6 @@ gst_plugins_vvas_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
 
-api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
@@ -45,10 +65,10 @@ cc = meson.get_compiler('c')
 cdata.set_quoted('VERSION', gst_version)
 cdata.set_quoted('PACKAGE', 'gst-plugins-vvas')
 cdata.set_quoted('PACKAGE_VERSION', gst_version)
-cdata.set_quoted('PACKAGE_BUGREPORT', 'https://gitenterprise.xilinx.com/IPS-SSW/gst-plugins-vvas/issues')
+cdata.set_quoted('PACKAGE_BUGREPORT', 'https://github.com/Xilinx/VVAS/issues')
 cdata.set_quoted('PACKAGE_NAME', 'GStreamer VVAS Plug-ins')
-cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-vvas-1.0')
-cdata.set_quoted('GST_API_VERSION', api_version)
+cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-vvas-' + vvas_version)
+cdata.set_quoted('VVAS_API_VERSION', vvas_version)
 #TODO: currently proprietary until release
 cdata.set_quoted('GST_LICENSE', 'proprietary')
 cdata.set_quoted('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
@@ -172,4 +192,7 @@ subdir('pkgconfig')
 
 configure_file(output : 'config.h', configuration : cdata)
 
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
+vvas_config_headers = ['build/config.h', '../VERSION']
+install_headers(vvas_config_headers, subdir : 'vvas/')
+
+run_command(python3, '-c', 'import shutil; shutil.copy("../hooks/pre-commit.hook", "../.git/hooks/pre-commit")', check:true)

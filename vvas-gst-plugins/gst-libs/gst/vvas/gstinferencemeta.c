@@ -58,7 +58,7 @@ static gboolean gst_classification_meta_copy (GstBuffer * transbuf,
 GType
 gst_inference_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { GST_META_TAG_VIDEO_STR, NULL
   };
 
@@ -89,7 +89,7 @@ gst_inference_meta_get_info (void)
 GType
 gst_embedding_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { GST_META_TAG_VIDEO_STR, NULL };
 
   if (g_once_init_enter (&type)) {
@@ -120,7 +120,7 @@ gst_embedding_meta_get_info (void)
 GType
 gst_classification_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { GST_META_TAG_VIDEO_STR, NULL };
 
   if (g_once_init_enter (&type)) {
@@ -150,7 +150,7 @@ gst_classification_meta_get_info (void)
 GType
 gst_detection_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { GST_META_TAG_VIDEO_STR, NULL
   };
 

@@ -20,7 +20,7 @@
 GType
 gst_vvas_inp_infer_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] =
       { GST_META_TAG_VIDEO_STR, GST_META_TAG_VIDEO_SIZE_STR,
     GST_META_TAG_VIDEO_ORIENTATION_STR, NULL
@@ -35,7 +35,8 @@ gst_vvas_inp_infer_meta_api_get_type (void)
 }
 
 static gboolean
-gst_vvas_inp_infer_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
+gst_vvas_inp_infer_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buffer)
 {
   GstVvasInpInferMeta *vvasmeta = (GstVvasInpInferMeta *) meta;
 
@@ -51,11 +52,11 @@ gst_vvas_inp_infer_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
   GstVvasInpInferMeta *vvasmeta = (GstVvasInpInferMeta *) meta;
 
-  if(vvasmeta->model_name) {
+  if (vvasmeta->model_name) {
     g_free (vvasmeta->model_name);
     vvasmeta->model_name = NULL;
   }
-  
+
   return TRUE;
 }
 
@@ -68,7 +69,7 @@ gst_vvas_inp_infer_meta_transform (GstBuffer * dest, GstMeta * meta,
 
   smeta = (GstVvasInpInferMeta *) meta;
   gst_buffer_add_vvas_inp_infer_meta (dest, smeta->ml_class, smeta->model_name);
-  
+
   return TRUE;
 }
 
@@ -79,24 +80,27 @@ gst_vvas_inp_infer_meta_get_info (void)
 
   if (g_once_init_enter ((GstMetaInfo **) & vvas_inp_infer_meta_info)) {
     const GstMetaInfo *meta =
-        gst_meta_register (GST_VVAS_INP_INFER_META_API_TYPE, "GstVvasInpInferMeta",
-        sizeof (GstVvasInpInferMeta), 
+        gst_meta_register (GST_VVAS_INP_INFER_META_API_TYPE,
+        "GstVvasInpInferMeta",
+        sizeof (GstVvasInpInferMeta),
         (GstMetaInitFunction) gst_vvas_inp_infer_meta_init,
         (GstMetaFreeFunction) gst_vvas_inp_infer_meta_free,
         gst_vvas_inp_infer_meta_transform);
-    g_once_init_leave ((GstMetaInfo **) & vvas_inp_infer_meta_info, (GstMetaInfo *) meta);
+    g_once_init_leave ((GstMetaInfo **) & vvas_inp_infer_meta_info,
+        (GstMetaInfo *) meta);
   }
   return vvas_inp_infer_meta_info;
 }
 
 GstVvasInpInferMeta *
-gst_buffer_add_vvas_inp_infer_meta (GstBuffer *buffer, VvasClass ml_class, gchar *model_name)
+gst_buffer_add_vvas_inp_infer_meta (GstBuffer * buffer, VvasClass ml_class,
+    gchar * model_name)
 {
   GstVvasInpInferMeta *meta;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
   meta = (GstVvasInpInferMeta *) gst_buffer_add_meta (buffer,
-  GST_VVAS_INP_INFER_EXAMPLE_META_INFO, NULL);
+      GST_VVAS_INP_INFER_EXAMPLE_META_INFO, NULL);
 
   meta->ml_class = ml_class;
   meta->model_name = g_strdup (model_name);

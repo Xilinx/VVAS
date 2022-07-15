@@ -62,7 +62,8 @@ struct _GstVvasAllocatorClass {
 GST_EXPORT
 GType gst_vvas_allocator_get_type (void) G_GNUC_CONST;
 GST_EXPORT
-GstAllocator* gst_vvas_allocator_new (guint dev_idx, gboolean need_dma, guint mem_bank);
+GstAllocator* gst_vvas_allocator_new (guint dev_idx, gboolean need_dma,
+                                 guint mem_bank, void* kern_handle);
 GST_EXPORT
 gboolean gst_vvas_allocator_start (GstVvasAllocator * allocator, guint min_mem,
     guint max_mem, gsize size, GstAllocationParams * params);
@@ -73,7 +74,7 @@ gboolean gst_is_vvas_memory (GstMemory *mem);
 GST_EXPORT
 guint64  gst_vvas_allocator_get_paddr (GstMemory *mem);
 GST_EXPORT
-guint  gst_vvas_allocator_get_bo (GstMemory *mem);
+void*  gst_vvas_allocator_get_bo (GstMemory *mem);
 GST_EXPORT
 gboolean gst_vvas_memory_can_avoid_copy (GstMemory *mem, guint cur_devid, guint req_mem_bank);
 GST_EXPORT

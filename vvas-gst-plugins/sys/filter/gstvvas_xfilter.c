@@ -33,7 +33,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/base.h>
 #include <gst/vvas/gstvvasallocator.h>
 #include <gst/vvas/gstvvasbufferpool.h>
 #include <gst/allocators/gstdmabuf.h>
@@ -55,7 +54,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 pthread_mutex_t count_mutex;
 
-static const int ERT_CMD_SIZE = 4096;
 #define CMD_EXEC_TIMEOUT 1000   // 1 sec
 #define MIN_POOL_BUFFERS 2
 #define DEFAULT_VVAS_LIB_PATH "/usr/lib/"
@@ -89,6 +87,7 @@ typedef struct
 typedef struct
 {
   gchar *name;
+  bool shared_access;
   json_t *config;
   gchar *vvas_lib_path;
   void *lib_fd;
@@ -135,6 +134,7 @@ struct _GstVvas_XFilterPrivate
 {
   gint dev_idx;
   vvasDeviceHandle dev_handle;
+  vvasKernelHandle kern_handle;
   gchar *xclbin_loc;
   json_t *root;
   Vvas_XFilter *kernel;
@@ -145,7 +145,6 @@ struct _GstVvas_XFilterPrivate
   GstVideoInfo *out_vinfo;
   GstVideoInfo *internal_out_vinfo;
   uuid_t xclbinId;
-  xrt_buffer *ert_cmd_buf;
   GstBufferPool *input_pool;
   gboolean need_copy;
   GstBufferPool *priv_pools[MAX_PRIV_POOLS];
@@ -166,13 +165,13 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{GRAY8, NV12, BGR, RGB, YUY2,"
-        "r210, v308, GRAY10_LE32, ABGR, ARGB}")));
+            "r210, v308, GRAY10_LE32, ABGR, ARGB}")));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{GRAY8, NV12, BGR, RGB, YUY2,"
-        "r210, v308, GRAY10_LE32, ABGR, ARGB}")));
+            "r210, v308, GRAY10_LE32, ABGR, ARGB}")));
 
 #define gst_vvas_xfilter_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstVvas_XFilter, gst_vvas_xfilter,
@@ -188,10 +187,11 @@ static void gst_vvas_xfilter_set_property (GObject * object, guint prop_id,
 static void gst_vvas_xfilter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstFlowReturn
-gst_vvas_xfilter_submit_input_buffer (GstBaseTransform *trans,
-    gboolean is_discont, GstBuffer *inbuf);
+gst_vvas_xfilter_submit_input_buffer (GstBaseTransform * trans,
+    gboolean is_discont, GstBuffer * inbuf);
 static GstFlowReturn
-gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf);
+gst_vvas_xfilter_generate_output (GstBaseTransform * trans,
+    GstBuffer ** outbuf);
 
 static GstFlowReturn gst_vvas_xfilter_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
@@ -386,6 +386,7 @@ vvas_buffer_alloc (VVASKernel * handle, VVASFrame * vvas_frame, void *data)
   GstMemory *out_mem = NULL;
   GstFlowReturn fret;
   guint64 phy_addr;
+  vvasBOHandle bo_handle = NULL;
   guint plane_id;
   GstVideoMeta *vmeta;
   GstVideoInfo out_info, max_info;
@@ -459,10 +460,11 @@ vvas_buffer_alloc (VVASKernel * handle, VVASFrame * vvas_frame, void *data)
     pool_buf_size = ALIGN (pool_buf_size, 4096);
     GST_INFO_OBJECT (self, "allocated internal private pool %p with size %lu",
         priv_pool, pool_buf_size);
+
     /* Here frame buffer is required from in_mem_bank as it is expected that
      * input port is attached the bank where IP access internal data too */
     allocator = gst_vvas_allocator_new (self->priv->dev_idx,
-		                        USE_DMABUF, handle->in_mem_bank);
+        USE_DMABUF, handle->in_mem_bank, self->priv->kern_handle);
 
     config = gst_buffer_pool_get_config (priv_pool);
     gst_buffer_pool_config_set_params (config, caps, pool_buf_size, 2, 0);
@@ -508,21 +510,35 @@ vvas_buffer_alloc (VVASKernel * handle, VVASFrame * vvas_frame, void *data)
   }
 
   phy_addr = gst_vvas_allocator_get_paddr (out_mem);
+  bo_handle = gst_vvas_allocator_get_bo (out_mem);
 
   vmeta = gst_buffer_get_video_meta (outbuf);
   if (vmeta == NULL) {
     GST_ERROR_OBJECT (self, "video meta not present in buffer");
     goto error;
   }
-
   // TODO: check whether we can use buffer pool memory size with requested size
   // return error when size > pool_mem_size
 
   for (plane_id = 0; plane_id < GST_VIDEO_INFO_N_PLANES (&out_info); plane_id++) {
+    size_t plane_size;
+    guint plane_height;
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+
     vvas_frame->paddr[plane_id] = phy_addr + vmeta->offset[plane_id];
     GST_LOG_OBJECT (self,
         "outbuf plane[%d] : paddr = %p, offset = %lu", plane_id,
         (void *) vvas_frame->paddr[plane_id], vmeta->offset[plane_id]);
+
+    /* Convert plane index to component index */
+    gst_video_format_info_component (out_info.finfo, plane_id, comp);
+    plane_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_info.finfo,
+        comp[0], GST_VIDEO_INFO_FIELD_HEIGHT (&out_info));
+    plane_size = plane_height *
+        GST_VIDEO_INFO_PLANE_STRIDE (&out_info, plane_id);
+
+    vvas_frame->bo[plane_id] = vvas_xrt_create_sub_bo (bo_handle,
+        plane_size, vmeta->offset[plane_id]);
   }
 
 #ifdef XLNX_PCIe_PLATFORM
@@ -549,9 +565,16 @@ error:
 void
 vvas_buffer_free (VVASKernel * handle, VVASFrame * vvas_frame, void *data)
 {
+  guint plane_id = 0;
+
   if (vvas_frame->app_priv) {
     gst_buffer_unref ((GstBuffer *) vvas_frame->app_priv);
   }
+
+  for (plane_id = 0; plane_id < vvas_frame->n_planes; plane_id++) {
+    vvas_xrt_free_bo (vvas_frame->bo[plane_id]);
+  }
+
   memset (vvas_frame, 0x0, sizeof (VVASFrame));
 }
 
@@ -631,7 +654,8 @@ vvas_xfilter_allocate_sink_internal_pool (GstVvas_XFilter * self)
   pool = gst_video_buffer_pool_new ();
 
   allocator = gst_vvas_allocator_new (self->priv->dev_idx,
-		                      USE_DMABUF, vvas_handle->in_mem_bank);
+      USE_DMABUF, vvas_handle->in_mem_bank, self->priv->kern_handle);
+
   gst_allocation_params_init (&alloc_params);
   alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
 
@@ -723,7 +747,8 @@ gst_vvas_xfilter_propose_allocation (GstBaseTransform * trans,
       gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
     } else {
       allocator = gst_vvas_allocator_new (self->priv->dev_idx,
-		                          USE_DMABUF, vvas_handle->in_mem_bank);
+          USE_DMABUF, vvas_handle->in_mem_bank, self->priv->kern_handle);
+
       gst_query_add_allocation_param (query, allocator, &params);
     }
 
@@ -915,7 +940,7 @@ gst_vvas_xfilter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     gst_object_unref (pool);
     pool = NULL;
     GST_DEBUG_OBJECT (self, "pool deos not have the KMSPrimeExport option, \
-				unref the pool and create sdx allocator");
+        unref the pool and create sdx allocator");
   }
 #endif
 
@@ -933,8 +958,10 @@ gst_vvas_xfilter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
       gst_object_unref (allocator);
       gst_allocation_params_init (&params);
       allocator = NULL;
-    } else if (gst_vvas_allocator_get_device_idx (allocator) != self->priv->dev_idx) {
-      GST_INFO_OBJECT (self, "downstream allocator (%d) and filter (%d) are on different devices",
+    } else if (gst_vvas_allocator_get_device_idx (allocator) !=
+        self->priv->dev_idx) {
+      GST_INFO_OBJECT (self,
+          "downstream allocator (%d) and filter (%d) are on different devices",
           gst_vvas_allocator_get_device_idx (allocator), self->priv->dev_idx);
       gst_object_unref (allocator);
       gst_allocation_params_init (&params);
@@ -948,11 +975,10 @@ gst_vvas_xfilter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   if (!allocator) {
     /* making sdx allocator for the HW mode without dmabuf */
     allocator = gst_vvas_allocator_new (self->priv->dev_idx,
-		                        USE_DMABUF, vvas_handle->out_mem_bank);
+        USE_DMABUF, vvas_handle->out_mem_bank, self->priv->kern_handle);
     //params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
     // TODO: Need to add XRT related flags here
   }
-
 #ifdef XLNX_EMBEDDED_PLATFORM
 next:
 #endif
@@ -976,9 +1002,10 @@ next:
           (vvas_handle), 1 /*TODO get from kernel */ );
       GST_INFO_OBJECT (self, "created new pool %p %" GST_PTR_FORMAT, pool,
           pool);
-      GST_INFO_OBJECT (self, "kernel stride = %d",vvas_xfilter_cal_stride (GST_VIDEO_INFO_WIDTH (&info),
-		GST_VIDEO_INFO_FORMAT (&info),
-		vvas_caps_get_src_stride_align (vvas_handle)));
+      GST_INFO_OBJECT (self, "kernel stride = %d",
+          vvas_xfilter_cal_stride (GST_VIDEO_INFO_WIDTH (&info),
+              GST_VIDEO_INFO_FORMAT (&info),
+              vvas_caps_get_src_stride_align (vvas_handle)));
 
       config = gst_buffer_pool_get_config (pool);
       video_align.padding_top = 0;
@@ -1053,105 +1080,105 @@ vvas_xfilter_xrm_softkernel_alloc (GstVvas_XFilter * self)
   size_t num_hard_cus = -1;
 
   if (getenv ("XRM_RESERVE_ID") || self->reservation_id) {      /* use reservation_id to allocate scaler */
-     guint64 xrm_reserve_id = 0;
-     xrmCuListPropertyV2 cu_list_prop;
-     xrmCuListResourceV2 *xrm_list_resources;
+    guint64 xrm_reserve_id = 0;
+    xrmCuListPropertyV2 cu_list_prop;
+    xrmCuListResourceV2 *xrm_list_resources;
 
-     if (!priv->xrm_list_resources) {
-       xrm_list_resources = (xrmCuListResourceV2 *) calloc (1, sizeof (xrmCuListResourceV2));
-       if (!xrm_list_resources) {
-         GST_ERROR_OBJECT (self, "failed to allocate memory");
-         return FALSE;
-       }
-     } else {
-       xrm_list_resources = priv->xrm_list_resources;
-     }
+    if (!priv->xrm_list_resources) {
+      xrm_list_resources =
+          (xrmCuListResourceV2 *) calloc (1, sizeof (xrmCuListResourceV2));
+      if (!xrm_list_resources) {
+        GST_ERROR_OBJECT (self, "failed to allocate memory");
+        return FALSE;
+      }
+    } else {
+      xrm_list_resources = priv->xrm_list_resources;
+    }
 
-     memset(&cu_list_prop, 0, sizeof(xrmCuListPropertyV2));
+    memset (&cu_list_prop, 0, sizeof (xrmCuListPropertyV2));
 
-     /* element property value takes higher priority than env variable */
-     if (self->reservation_id)
-       xrm_reserve_id = self->reservation_id;
-     else
-       xrm_reserve_id = atoi(getenv("XRM_RESERVE_ID"));
+    /* element property value takes higher priority than env variable */
+    if (self->reservation_id)
+      xrm_reserve_id = self->reservation_id;
+    else
+      xrm_reserve_id = atoi (getenv ("XRM_RESERVE_ID"));
 
-     GST_INFO_OBJECT (self, "going to request load using xrm with "
-         "reservation id %lu", xrm_reserve_id);
+    GST_INFO_OBJECT (self, "going to request load using xrm with "
+        "reservation id %lu", xrm_reserve_id);
 
-     cu_list_prop.cuNum = 2;
-     kernel_name = g_strdup (priv->kernel->name);
-     strcpy(cu_list_prop.cuProps[0].kernelName, strtok (kernel_name, ":"));
-     cu_list_prop.cuProps[0].devExcl = false;
-     cu_list_prop.cuProps[0].requestLoad = 100;
-     cu_list_prop.cuProps[0].poolId = xrm_reserve_id;
-     g_free (kernel_name);
+    cu_list_prop.cuNum = 2;
+    kernel_name = g_strdup (priv->kernel->name);
+    strcpy (cu_list_prop.cuProps[0].kernelName, strtok (kernel_name, ":"));
+    cu_list_prop.cuProps[0].devExcl = false;
+    cu_list_prop.cuProps[0].requestLoad = 100;
+    cu_list_prop.cuProps[0].poolId = xrm_reserve_id;
+    g_free (kernel_name);
 
-     kernel_name = g_strdup (priv->kernel->skinfo->skname);
-     strcpy(cu_list_prop.cuProps[1].kernelName, kernel_name);
-     cu_list_prop.cuProps[1].devExcl = false;
-     cu_list_prop.cuProps[1].requestLoad = 100;
-     cu_list_prop.cuProps[1].poolId = xrm_reserve_id;
-     g_free (kernel_name);
+    kernel_name = g_strdup (priv->kernel->skinfo->skname);
+    strcpy (cu_list_prop.cuProps[1].kernelName, kernel_name);
+    cu_list_prop.cuProps[1].devExcl = false;
+    cu_list_prop.cuProps[1].requestLoad = 100;
+    cu_list_prop.cuProps[1].poolId = xrm_reserve_id;
+    g_free (kernel_name);
 
-     if (priv->dev_idx != -1) {
-       uint64_t deviceInfoContraintType = XRM_DEVICE_INFO_CONSTRAINT_TYPE_HARDWARE_DEVICE_INDEX;
-       uint64_t deviceInfoDeviceIndex = priv->dev_idx;
+    if (priv->dev_idx != -1) {
+      uint64_t deviceInfoContraintType =
+          XRM_DEVICE_INFO_CONSTRAINT_TYPE_HARDWARE_DEVICE_INDEX;
+      uint64_t deviceInfoDeviceIndex = priv->dev_idx;
 
-       cu_list_prop.cuProps[0].deviceInfo = (deviceInfoDeviceIndex << XRM_DEVICE_INFO_DEVICE_INDEX_SHIFT) |
-			       (deviceInfoContraintType << XRM_DEVICE_INFO_CONSTRAINT_TYPE_SHIFT);
-       cu_list_prop.cuProps[1].deviceInfo = (deviceInfoDeviceIndex << XRM_DEVICE_INFO_DEVICE_INDEX_SHIFT) |
-			       (deviceInfoContraintType << XRM_DEVICE_INFO_CONSTRAINT_TYPE_SHIFT);
-     }
+      cu_list_prop.cuProps[0].deviceInfo =
+          (deviceInfoDeviceIndex << XRM_DEVICE_INFO_DEVICE_INDEX_SHIFT) |
+          (deviceInfoContraintType << XRM_DEVICE_INFO_CONSTRAINT_TYPE_SHIFT);
+      cu_list_prop.cuProps[1].deviceInfo =
+          (deviceInfoDeviceIndex << XRM_DEVICE_INFO_DEVICE_INDEX_SHIFT) |
+          (deviceInfoContraintType << XRM_DEVICE_INFO_CONSTRAINT_TYPE_SHIFT);
+    }
 
-     iret = xrmCuListAllocV2(priv->xrm_ctx, &cu_list_prop, xrm_list_resources);
-     if (iret != XRM_SUCCESS) {
-       GST_ERROR_OBJECT (self, "failed to do CU list allocation using XRM");
-       GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-           ("failed to allocate resources from reservation id %lu",
-               xrm_reserve_id), NULL);
-       return FALSE;
-     }
+    iret = xrmCuListAllocV2 (priv->xrm_ctx, &cu_list_prop, xrm_list_resources);
+    if (iret != XRM_SUCCESS) {
+      GST_ERROR_OBJECT (self, "failed to do CU list allocation using XRM");
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+          ("failed to allocate resources from reservation id %lu",
+              xrm_reserve_id), NULL);
+      return FALSE;
+    }
 
-     num_hard_cus = utils_get_num_compute_units(xrm_list_resources->cuResources[0].xclbinFileName);
+    num_hard_cus =
+        vvas_xrt_get_num_compute_units (xrm_list_resources->
+        cuResources[0].xclbinFileName);
 
-     if (num_hard_cus == -1) {
-       GST_ERROR_OBJECT (self, "failed to get number of cus in xclbin: %s",
-       xrm_list_resources->cuResources[0].xclbinFileName);
-       return FALSE;
-     }
+    if (num_hard_cus == -1) {
+      GST_ERROR_OBJECT (self, "failed to get number of cus in xclbin: %s",
+          xrm_list_resources->cuResources[0].xclbinFileName);
+      return FALSE;
+    }
 
-     GST_DEBUG_OBJECT(self, "Total Number of Compute Units: %ld in xclbin:%s",
-		      num_hard_cus, xrm_list_resources->cuResources[0].xclbinFileName);
+    GST_DEBUG_OBJECT (self, "Total Number of Compute Units: %ld in xclbin:%s",
+        num_hard_cus, xrm_list_resources->cuResources[0].xclbinFileName);
 
-     priv->xrm_list_resources = xrm_list_resources;
-     priv->dev_idx = xrm_list_resources->cuResources[0].deviceId;
-     priv->kernel->cu_idx = xrm_list_resources->cuResources[0].cuId;
-     priv->sk_cur_idx = xrm_list_resources->cuResources[1].cuId - num_hard_cus;
-     uuid_copy (priv->xclbinId, xrm_list_resources->cuResources[0].uuid);
+    priv->xrm_list_resources = xrm_list_resources;
+    priv->dev_idx = xrm_list_resources->cuResources[0].deviceId;
+    priv->kernel->cu_idx = xrm_list_resources->cuResources[0].cuId;
+    priv->sk_cur_idx = xrm_list_resources->cuResources[1].cuId - num_hard_cus;
+    uuid_copy (priv->xclbinId, xrm_list_resources->cuResources[0].uuid);
 
-     GST_INFO_OBJECT (self, "xrm CU list allocation success: dev-idx = %d, "
-         "sk-cur-idx = %d and softkernel plugin name %s",
-         priv->dev_idx, priv->sk_cur_idx,
-         priv->xrm_list_resources->cuResources[0].kernelPluginFileName);
+    GST_INFO_OBJECT (self, "xrm CU list allocation success: dev-idx = %d, "
+        "sk-cur-idx = %d and softkernel plugin name %s",
+        priv->dev_idx, priv->sk_cur_idx,
+        priv->xrm_list_resources->cuResources[0].kernelPluginFileName);
 
   } else {
     xrmCuProperty cu_hw_prop, cu_sw_prop;
     xrmCuResource *cu_hw_resource, *cu_sw_resource;
 
-    if (priv->dev_idx >= vvas_xrt_probe ()) {
-      GST_ERROR_OBJECT (self, "Cannot find device index %d", priv->dev_idx);
-      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-          ("failed to find device index %d", priv->dev_idx), NULL);
-      return FALSE;
-    }
-
-    memset(&cu_hw_prop, 0, sizeof(xrmCuProperty));
-    memset(&cu_sw_prop, 0, sizeof(xrmCuProperty));
+    memset (&cu_hw_prop, 0, sizeof (xrmCuProperty));
+    memset (&cu_sw_prop, 0, sizeof (xrmCuProperty));
 
     if (!priv->cu_res[0]) {
       cu_hw_resource = (xrmCuResource *) calloc (1, sizeof (xrmCuResource));
       if (!cu_hw_resource) {
-        GST_ERROR_OBJECT (self, "failed to allocate memory for hardCU resource");
+        GST_ERROR_OBJECT (self,
+            "failed to allocate memory for hardCU resource");
         return FALSE;
       }
     } else {
@@ -1161,26 +1188,28 @@ vvas_xfilter_xrm_softkernel_alloc (GstVvas_XFilter * self)
     if (!priv->cu_res[1]) {
       cu_sw_resource = (xrmCuResource *) calloc (1, sizeof (xrmCuResource));
       if (!cu_sw_resource) {
-        GST_ERROR_OBJECT (self, "failed to allocate memory for softCU resource");
+        GST_ERROR_OBJECT (self,
+            "failed to allocate memory for softCU resource");
         return FALSE;
       }
     } else {
       cu_sw_resource = priv->cu_res[1];
     }
 
-    GST_INFO_OBJECT (self, "going to request load from device %d", priv->dev_idx);
+    GST_INFO_OBJECT (self, "going to request load from device %d",
+        priv->dev_idx);
 
-    strcpy(cu_hw_prop.kernelName, "decoder");
-    strcpy(cu_hw_prop.kernelAlias, "DECODER_MPSOC");
+    strcpy (cu_hw_prop.kernelName, "decoder");
+    strcpy (cu_hw_prop.kernelAlias, "DECODER_MPSOC");
     cu_hw_prop.devExcl = false;
     cu_hw_prop.requestLoad = 100;
 
-    strcpy(cu_sw_prop.kernelName, "kernel_vcu_decoder");
+    strcpy (cu_sw_prop.kernelName, "kernel_vcu_decoder");
     cu_sw_prop.devExcl = false;
     cu_sw_prop.requestLoad = 100;
 
     /* allocate hardware resource */
-    iret = xrmCuAllocFromDev(priv->xrm_ctx, priv->dev_idx, &cu_hw_prop,
+    iret = xrmCuAllocFromDev (priv->xrm_ctx, priv->dev_idx, &cu_hw_prop,
         cu_hw_resource);
     if (iret != XRM_SUCCESS) {
       GST_ERROR_OBJECT (self, "failed to do hard CU allocation using XRM");
@@ -1201,16 +1230,17 @@ vvas_xfilter_xrm_softkernel_alloc (GstVvas_XFilter * self)
       return FALSE;
     }
 
-    num_hard_cus = utils_get_num_compute_units(cu_hw_resource->xclbinFileName);
+    num_hard_cus =
+        vvas_xrt_get_num_compute_units (cu_hw_resource->xclbinFileName);
 
     if (num_hard_cus == -1) {
       GST_ERROR_OBJECT (self, "failed to get number of cus in xclbin: %s",
-	         cu_hw_resource->xclbinFileName);
+          cu_hw_resource->xclbinFileName);
       return FALSE;
     }
 
-    GST_DEBUG_OBJECT(self, "Total Number of Compute Units: %ld in xclbin:%s",
-		     num_hard_cus, cu_hw_resource->xclbinFileName);
+    GST_DEBUG_OBJECT (self, "Total Number of Compute Units: %ld in xclbin:%s",
+        num_hard_cus, cu_hw_resource->xclbinFileName);
 
     priv->cu_res[0] = cu_hw_resource;
     priv->cu_res[1] = cu_sw_resource;
@@ -1225,7 +1255,7 @@ vvas_xfilter_xrm_softkernel_alloc (GstVvas_XFilter * self)
         cu_hw_resource->kernelPluginFileName);
   }
   return TRUE;
-} 
+}
 
 static gboolean
 vvas_xfilter_xrm_hardkernel_alloc (GstVvas_XFilter * self)
@@ -1263,7 +1293,7 @@ vvas_xfilter_xrm_hardkernel_alloc (GstVvas_XFilter * self)
     kernel_name = g_strdup (priv->kernel->name);
     strcpy (cu_prop.kernelName, strtok (kernel_name, ":"));
     cu_prop.devExcl = false;
-    cu_prop.requestLoad = 100;      /* Requesting the full load */
+    cu_prop.requestLoad = 100;  /* Requesting the full load */
 
     if (priv->dev_idx != -1) {
       uint64_t deviceInfoContraintType =
@@ -1303,13 +1333,6 @@ vvas_xfilter_xrm_hardkernel_alloc (GstVvas_XFilter * self)
       return FALSE;
     }
 
-    if (priv->dev_idx >= vvas_xrt_probe ()) {
-      GST_ERROR_OBJECT (self, "Cannot find device index %d", priv->dev_idx);
-      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-          ("failed to find device index %d", priv->dev_idx), NULL);
-      return FALSE;
-    }
-
     kernel_name = g_strdup (priv->kernel->name);
     strcpy (cu_prop.kernelName, strtok (kernel_name, ":"));
     cu_prop.devExcl = false;
@@ -1337,7 +1360,7 @@ vvas_xfilter_xrm_hardkernel_alloc (GstVvas_XFilter * self)
     g_free (kernel_name);
   }
   return TRUE;
-} 
+}
 
 static gboolean
 vvas_xfilter_xrm_resource_alloc (GstVvas_XFilter * self)
@@ -1367,61 +1390,36 @@ vvas_xfilter_init (GstVvas_XFilter * self)
 {
   GstVvas_XFilterPrivate *priv = self->priv;
   int iret;
-  struct ert_start_kernel_cmd *ert_cmd = NULL;
   VVASKernel *vvas_handle = priv->kernel->vvas_handle;
   int i;
 
-#ifndef USE_XRM /* XRM will download xclbin */
+  /* TODO: Need to uncomment after CR-1122125 is resolved */
+//#ifndef USE_XRM /* XRM will download xclbin */
+  /* We have to download the xclbin irrespective of XRM or not as there
+   * mismatch of UUID between XRM and XRT Native. CR-1122125 raised */
   if (priv->kernel->name || priv->kernel->is_softkernel) {
     /* xclbin need to be downloaded only when hardkernel or softkernel is used */
-    if (vvas_xrt_download_xclbin (self->priv->xclbin_loc, self->priv->dev_idx,
-                         NULL,
-                         self->priv->dev_handle, &self->priv->xclbinId))
-      return FALSE; 
+    if (vvas_xrt_download_xclbin (self->priv->xclbin_loc,
+            self->priv->dev_handle, &self->priv->xclbinId))
+      return FALSE;
   }
-#endif
+//#endif
+
 
   if (priv->kernel->name) {
-    priv->kernel->cu_idx =
-        vvas_xrt_ip_name2_index (priv->dev_handle, priv->kernel->name);
-    if (priv->kernel->cu_idx < 0) {
-      GST_ERROR_OBJECT (self, "failed to get cu index for IP name %s",
-          priv->kernel->name);
-      return FALSE;
-    }
-
-    GST_INFO_OBJECT (self, "cu_idx for kernel %s is %d", priv->kernel->name,
-        priv->kernel->cu_idx);
-  }
-  
-  if (priv->kernel->cu_idx >= 0) {
     iret = vvas_xrt_open_context (priv->dev_handle, priv->xclbinId,
-                                  priv->kernel->cu_idx, true);
+        &priv->kern_handle, priv->kernel->name, priv->kernel->shared_access);
     if (iret) {
       GST_ERROR_OBJECT (self, "failed to open XRT context ...:%d", iret);
       return FALSE;
     }
-  }
-
-  if (priv->kernel->name || priv->kernel->is_softkernel) {
-    /* allocate ert command buffer only when hardkernel or softkernel is used */
-    iret =
-        vvas_xrt_alloc_xrt_buffer (priv->dev_handle, ERT_CMD_SIZE,
-        VVAS_BO_SHARED_VIRTUAL,
-        VVAS_BO_FLAGS_EXECBUF | DEFAULT_MEM_BANK, vvas_handle->ert_cmd_buf);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self, "failed to allocate ert command buffer..");
-      return FALSE;
-    }
-
-    ert_cmd =
-      (struct ert_start_kernel_cmd *) (vvas_handle->ert_cmd_buf->user_ptr);
-    memset (ert_cmd, 0x0, ERT_CMD_SIZE);
+    /* Assigning kernel handle */
+    vvas_handle->kern_handle = priv->kern_handle;
   }
 
   /* Populate the kernel name */
   vvas_handle->name =
-      (uint8_t *)g_strdup_printf("libkrnl_%s", GST_ELEMENT_NAME (self));
+      (uint8_t *) g_strdup_printf ("libkrnl_%s", GST_ELEMENT_NAME (self));
 
   vvas_handle->dev_handle = priv->dev_handle;
 #if defined(XLNX_PCIe_PLATFORM)
@@ -1484,15 +1482,9 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
     }
 
     if (priv->kernel->vvas_handle) {
-      if (priv->kernel->vvas_handle->ert_cmd_buf) {
-        vvas_xrt_free_xrt_buffer (priv->dev_handle,
-            priv->kernel->vvas_handle->ert_cmd_buf);
-        free (priv->kernel->vvas_handle->ert_cmd_buf);
-      }
-
       /* De-allocate the name */
-      if(priv->kernel->vvas_handle->name) {
-        g_free(priv->kernel->vvas_handle->name);
+      if (priv->kernel->vvas_handle->name) {
+        g_free (priv->kernel->vvas_handle->name);
       }
 
       free (priv->kernel->vvas_handle);
@@ -1532,9 +1524,9 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
     free (priv->xclbin_loc);
 
   if (priv->dev_handle) {
-    if (cu_idx >= 0) {
+    if (priv->kern_handle) {
       GST_INFO_OBJECT (self, "closing context for cu_idx %d", cu_idx);
-      vvas_xrt_close_context (priv->dev_handle, priv->xclbinId, cu_idx);
+      vvas_xrt_close_context (priv->kern_handle);
     }
     vvas_xrt_close_device (priv->dev_handle);
   }
@@ -1549,7 +1541,7 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
     }
 
 
-    free(priv->xrm_resources_v2);
+    free (priv->xrm_resources_v2);
     priv->xrm_resources_v2 = NULL;
     GST_INFO_OBJECT (self, "released CU and destroyed xrm context");
   }
@@ -1563,14 +1555,14 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
       has_error = TRUE;
     }
 
-    free(priv->xrm_resources);
+    free (priv->xrm_resources);
     priv->xrm_resources = NULL;
     GST_INFO_OBJECT (self, "released CU and destroyed xrm context");
   }
 
   if (priv->xrm_list_resources) {
     gboolean bret;
-    bret = xrmCuListReleaseV2(priv->xrm_ctx, priv->xrm_list_resources);
+    bret = xrmCuListReleaseV2 (priv->xrm_ctx, priv->xrm_list_resources);
     if (!bret) {
       GST_ERROR_OBJECT (self, "failed to release resource");
       has_error = TRUE;
@@ -1581,7 +1573,7 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
 
   if (priv->cu_res[0]) {
     gboolean bret;
-    bret = xrmCuRelease(priv->xrm_ctx, priv->cu_res[0]);
+    bret = xrmCuRelease (priv->xrm_ctx, priv->cu_res[0]);
     if (!bret) {
       GST_ERROR_OBJECT (self, "failed to release hardCU resource");
       has_error = TRUE;
@@ -1593,7 +1585,7 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
 
   if (priv->cu_res[1]) {
     gboolean bret;
-    bret = xrmCuRelease(priv->xrm_ctx, priv->cu_res[1]);
+    bret = xrmCuRelease (priv->xrm_ctx, priv->cu_res[1]);
     if (!bret) {
       GST_ERROR_OBJECT (self, "failed to release softCU resource");
       has_error = TRUE;
@@ -1608,7 +1600,6 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
     GST_ERROR_OBJECT (self, "failed to destroy xrm context");
     has_error = TRUE;
   }
-
 #endif
   return has_error ? FALSE : TRUE;
 }
@@ -1626,7 +1617,6 @@ gst_vvas_xfilter_start (GstBaseTransform * trans)
 
   self->priv = priv;
   priv->dev_idx = DEFAULT_DEVICE_INDEX;
-  priv->ert_cmd_buf = NULL;
   priv->in_vinfo = gst_video_info_new ();
   priv->out_vinfo = gst_video_info_new ();
   priv->element_mode = VVAS_ELEMENT_MODE_NOT_SUPPORTED;
@@ -1714,7 +1704,7 @@ gst_vvas_xfilter_start (GstBaseTransform * trans)
     GST_ERROR_OBJECT (self, "failed to get kernel object");
     goto error;
   }
-  
+
   priv->kernel = (Vvas_XFilter *) calloc (1, sizeof (Vvas_XFilter));
   if (!priv->kernel) {
     GST_ERROR_OBJECT (self, "failed to allocate memory");
@@ -1772,6 +1762,28 @@ gst_vvas_xfilter_start (GstBaseTransform * trans)
     priv->kernel->is_softkernel = TRUE;
   }
 #endif
+  /* get kernel access type */
+  value = json_object_get (kernel, "kernel-access-mode");
+  if (value) {
+    if (!json_is_string (value)) {
+      GST_WARNING_OBJECT (self, "kernel-access-mode is not of string type, \
+                               it can be \"shared\" or \"exclusive\", \
+                               considering \"shared\" as default");
+      /* Lets go with default "shared" */
+      priv->kernel->shared_access = true;
+    } else {
+      /* check what access type user has seleced, "shared" or "exclusive" */
+      if (!strcmp (json_string_value (value), "shared")) {
+        priv->kernel->shared_access = true;
+      } else {
+        priv->kernel->shared_access = false;
+      }
+    }
+  } else {
+    GST_INFO_OBJECT (self, "kernel-access-mode not set, using \"shared\" mode");
+    /* Lets go with defalt "shared" */
+    priv->kernel->shared_access = true;
+  }
 
   /* get vvas kernel lib internal configuration */
   value = json_object_get (kernel, "config");
@@ -1798,22 +1810,16 @@ gst_vvas_xfilter_start (GstBaseTransform * trans)
     vvas_handle->out_mem_bank = DEFAULT_MEM_BANK;
   }
 
-  vvas_handle->ert_cmd_buf = (xrt_buffer *) calloc (1, sizeof (xrt_buffer));
-  if (vvas_handle->ert_cmd_buf == NULL) {
-    GST_ERROR_OBJECT (self, "failed to allocate ert cmd memory");
-    goto error;
-  }
-
   priv->kernel->vvas_handle = vvas_handle;
 
   if (priv->do_init) {
 #if defined(XLNX_PCIe_PLATFORM) && defined (USE_XRM)
-  if (priv->kernel->name || priv->kernel->is_softkernel) {
-    if (!vvas_xfilter_xrm_resource_alloc (self))
-      goto error;
-  }
+    if (priv->kernel->name || priv->kernel->is_softkernel) {
+      if (!vvas_xfilter_xrm_resource_alloc (self))
+        goto error;
+    }
 #endif
-    if(!vvas_xrt_open_device (self->priv->dev_idx, &self->priv->dev_handle))
+    if (!vvas_xrt_open_device (self->priv->dev_idx, &self->priv->dev_handle))
       goto error;
 
     if (!vvas_xfilter_init (self))
@@ -1858,8 +1864,8 @@ gst_vvas_xfilter_stop (GstBaseTransform * trans)
 {
   GstVvas_XFilter *self = GST_VVAS_XFILTER (trans);
   GST_DEBUG_OBJECT (self, "stopping");
-  gst_video_info_free(self->priv->out_vinfo);
-  gst_video_info_free(self->priv->in_vinfo);
+  gst_video_info_free (self->priv->out_vinfo);
+  gst_video_info_free (self->priv->in_vinfo);
   vvas_xfilter_deinit (self);
   return TRUE;
 }
@@ -2068,7 +2074,8 @@ gst_vvas_xfilter_transform_caps (GstBaseTransform * trans,
             "width", "height", "pixel-aspect-ratio", NULL);
     }
 
-    gst_caps_append_structure_full (othercaps, st, gst_caps_features_copy (feature));
+    gst_caps_append_structure_full (othercaps, st,
+        gst_caps_features_copy (feature));
   }
 
   if (filter) {
@@ -2090,7 +2097,8 @@ static GstCaps *
 gst_vvas_xfilter_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-  return gst_vvas_utils_fixate_caps(GST_ELEMENT(trans), direction, caps, othercaps);
+  return gst_vvas_utils_fixate_caps (GST_ELEMENT (trans), direction, caps,
+      othercaps);
 }
 
 static void
@@ -2137,8 +2145,8 @@ gst_vvas_xfilter_class_init (GstVvas_XFilterClass * klass)
 #if defined(XLNX_PCIe_PLATFORM)
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("dev-idx", "Device index",
-          "Index of the device on which IP/kernel resides", 0, 31, DEFAULT_DEVICE_INDEX,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Index of the device on which IP/kernel resides", 0, 31,
+          DEFAULT_DEVICE_INDEX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #if defined (USE_XRM)
   g_object_class_install_property (gobject_class, PROP_RESERVATION_ID,
@@ -2186,11 +2194,11 @@ gst_vvas_xfilter_init (GstVvas_XFilter * self)
   GstVvas_XFilterPrivate *priv = GST_VVAS_XFILTER_PRIVATE (self);
   self->priv = priv;
   priv->dev_idx = DEFAULT_DEVICE_INDEX;
-  priv->ert_cmd_buf = NULL;
   priv->element_mode = VVAS_ELEMENT_MODE_NOT_SUPPORTED;
   priv->do_init = TRUE;
   priv->need_copy = FALSE;
   priv->dyn_json_config = NULL;
+  priv->kern_handle = NULL;
 }
 
 static void
@@ -2218,10 +2226,11 @@ gst_vvas_xfilter_set_property (GObject * object, guint prop_id,
       if (self->priv->dyn_json_config) {
         json_decref (self->priv->dyn_json_config);
       }
-      self->priv->dyn_json_config = json_loads (self->dyn_config, JSON_DECODE_ANY, NULL);
+      self->priv->dyn_json_config =
+          json_loads (self->dyn_config, JSON_DECODE_ANY, NULL);
       break;
 #if defined(XLNX_PCIe_PLATFORM)
-#ifndef USE_XRM 
+#ifndef USE_XRM
     case PROP_SK_CURRENT_INDEX:
       self->priv->sk_cur_idx = g_value_get_int (value);
       break;
@@ -2322,8 +2331,8 @@ vvas_xfilter_copy_input_buffer (GstVvas_XFilter * self, GstBuffer * inbuf,
   GST_LOG_OBJECT (self, "acquired buffer %p from own pool", new_inbuf);
 
   /* map internal buffer in write mode */
-  if (!gst_video_frame_map (&new_vframe, self->priv->internal_in_vinfo, new_inbuf,
-          GST_MAP_WRITE)) {
+  if (!gst_video_frame_map (&new_vframe, self->priv->internal_in_vinfo,
+          new_inbuf, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (self, "failed to map internal input buffer");
     goto error;
   }
@@ -2357,7 +2366,8 @@ error:
 }
 
 static gboolean
-vvas_xfilter_validate_inbuf (GstVvas_XFilter * self, GstBuffer * inbuf, guint *stride)
+vvas_xfilter_validate_inbuf (GstVvas_XFilter * self, GstBuffer * inbuf,
+    guint * stride)
 {
   GstStructure *in_config = NULL;
   GstVideoAlignment in_align = { 0, };
@@ -2443,11 +2453,13 @@ vvas_xfilter_validate_inbuf (GstVvas_XFilter * self, GstBuffer * inbuf, guint *s
 
 static gboolean
 vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
-    GstBuffer ** new_inbuf, VVASFrame *vvas_frame, GstVideoFrame *in_vframe)
+    GstBuffer ** new_inbuf, VVASFrame * vvas_frame, GstVideoFrame * in_vframe)
 {
   GstVvas_XFilterPrivate *priv = self->priv;
   VVASKernel *vvas_handle = priv->kernel->vvas_handle;
   guint64 phy_addr = 0;
+  vvasBOHandle bo_handle = NULL;
+  gboolean free_bo = FALSE;
   guint plane_id;
   gboolean bret = FALSE;
   GstVideoMeta *vmeta = NULL;
@@ -2460,7 +2472,7 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
   GST_LOG_OBJECT (self, "use inpool = %d and stride = %d", use_inpool, stride);
 
 //  vvas_frame = priv->kernel->input[0];
-  if (priv->kernel->name || priv->kernel->is_softkernel) { /*HW IP/softkernel */
+  if (priv->kernel->name || priv->kernel->is_softkernel) {      /*HW IP/softkernel */
     in_mem = gst_buffer_get_memory (inbuf, 0);
     if (in_mem == NULL) {
       GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
@@ -2476,7 +2488,7 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
 
     if (gst_is_vvas_memory (in_mem)
         && gst_vvas_memory_can_avoid_copy (in_mem, priv->dev_idx,
-					   vvas_handle->in_mem_bank)) {
+            vvas_handle->in_mem_bank)) {
 
       if (use_inpool == TRUE) {
         bret = vvas_xfilter_copy_input_buffer (self, inbuf, new_inbuf);
@@ -2496,6 +2508,7 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
           GST_ERROR_OBJECT (self, "failed to get physical address");
           goto error;
         }
+        bo_handle = gst_vvas_allocator_get_bo (in_mem);
         inbuf = *new_inbuf;
 #ifdef XLNX_PCIe_PLATFORM
         /* syncs data when VVAS_SYNC_TO_DEVICE flag is enabled */
@@ -2504,12 +2517,12 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
           goto error;
 #endif
 
-      } else
+      } else {
         phy_addr = gst_vvas_allocator_get_paddr (in_mem);
+        bo_handle = gst_vvas_allocator_get_bo (in_mem);
+      }
     } else if (gst_is_dmabuf_memory (in_mem)) {
-      guint bo = NULLBO;
       gint dma_fd = -1;
-      struct xclBOProperties p;
 
       dma_fd = gst_dmabuf_memory_get_fd (in_mem);
       if (dma_fd < 0) {
@@ -2518,25 +2531,18 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
       }
 
       /* dmabuf but not from vvas allocator */
-      bo = vvas_xrt_import_bo (priv->dev_handle, dma_fd, 0);
-      if (bo == NULLBO) {
+      bo_handle = vvas_xrt_import_bo (priv->dev_handle, dma_fd);
+      if (bo_handle == NULL) {
         GST_WARNING_OBJECT (self,
             "failed to get XRT BO...fall back to copy input");
       }
+      /* Lets free the bo_handle after sub bo creation */
+      free_bo = TRUE;
 
-      GST_DEBUG_OBJECT (self, "received dma fd %d and its xrt BO = %u", dma_fd,
-          bo);
+      GST_DEBUG_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
+          bo_handle);
 
-      if (!vvas_xrt_get_bo_properties (priv->dev_handle, bo, &p)) {
-        phy_addr = p.paddr;
-      } else {
-        GST_WARNING_OBJECT (self,
-            "failed to get physical address...fall back to copy input");
-      }
-
-      if (bo != NULLBO)
-        vvas_xrt_free_bo(priv->dev_handle, bo);
-
+      phy_addr = vvas_xrt_get_bo_phy_addres (bo_handle);
     }
 
     if (!phy_addr || use_inpool == TRUE) {
@@ -2559,6 +2565,7 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
         GST_ERROR_OBJECT (self, "failed to get physical address");
         goto error;
       }
+      bo_handle = gst_vvas_allocator_get_bo (in_mem);
       inbuf = *new_inbuf;
     }
 #ifdef XLNX_PCIe_PLATFORM
@@ -2603,9 +2610,9 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
     if (priv->element_mode == VVAS_ELEMENT_MODE_IN_PLACE)
       map_flags = map_flags | GST_MAP_WRITE;
 
-    memset (in_vframe, 0x0, sizeof(GstVideoFrame));
+    memset (in_vframe, 0x0, sizeof (GstVideoFrame));
     if (!gst_video_frame_map (in_vframe, self->priv->in_vinfo,
-          inbuf, map_flags)) {
+            inbuf, map_flags)) {
       GST_ERROR_OBJECT (self, "failed to map input buffer");
       goto error;
     }
@@ -2631,6 +2638,9 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
     for (plane_id = 0;
         plane_id < GST_VIDEO_INFO_N_PLANES (self->priv->in_vinfo); plane_id++) {
       gsize offset;
+      size_t plane_size;
+      guint plane_height;
+      gint comp[GST_VIDEO_MAX_COMPONENTS];
 
       if (use_inpool) {
         /* TODO offset set as per new stride and size */
@@ -2641,12 +2651,30 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
         offset = GST_VIDEO_INFO_PLANE_OFFSET (self->priv->in_vinfo, plane_id);
       }
       vvas_frame->paddr[plane_id] = phy_addr + offset;
+
+      /* Convert plane index to component index */
+      gst_video_format_info_component (self->priv->in_vinfo->finfo,
+          plane_id, comp);
+      plane_height =
+          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (self->priv->in_vinfo->finfo,
+          comp[0], GST_VIDEO_INFO_FIELD_HEIGHT (self->priv->in_vinfo));
+      plane_size =
+          plane_height * GST_VIDEO_INFO_PLANE_STRIDE (self->priv->in_vinfo,
+          plane_id);
+      vvas_frame->bo[plane_id] =
+          vvas_xrt_create_sub_bo (bo_handle, plane_size, offset);
+
       GST_LOG_OBJECT (self,
           "inbuf plane[%d] : paddr = %p, offset = %lu, stride = %d", plane_id,
           (void *) vvas_frame->paddr[plane_id], offset,
           vvas_frame->props.stride);
     }
   }
+
+  if (free_bo && bo_handle) {
+    vvas_xrt_free_bo (bo_handle);
+  }
+
   GST_LOG_OBJECT (self, "successfully prepared input vvas frame");
   return TRUE;
 
@@ -2659,11 +2687,13 @@ error:
 
 static gboolean
 vvas_xfilter_prepare_output_frame (GstVvas_XFilter * self, GstBuffer * outbuf,
-    VVASFrame *vvas_frame, GstVideoFrame *out_vframe)
+    VVASFrame * vvas_frame, GstVideoFrame * out_vframe)
 {
   GstVvas_XFilterPrivate *priv = self->priv;
   GstMemory *out_mem = NULL;
   guint64 phy_addr = -1;
+  vvasBOHandle bo_handle = NULL;
+  gboolean free_bo = FALSE;
   guint plane_id;
   GstVideoMeta *vmeta = NULL;
   gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
@@ -2685,10 +2715,9 @@ vvas_xfilter_prepare_output_frame (GstVvas_XFilter * self, GstBuffer * outbuf,
 
   if (gst_is_vvas_memory (out_mem)) {
     phy_addr = gst_vvas_allocator_get_paddr (out_mem);
+    bo_handle = gst_vvas_allocator_get_bo (out_mem);
   } else if (gst_is_dmabuf_memory (out_mem)) {
-    guint bo = NULLBO;
     gint dma_fd = -1;
-    struct xclBOProperties p;
 
     dma_fd = gst_dmabuf_memory_get_fd (out_mem);
     if (dma_fd < 0) {
@@ -2697,24 +2726,18 @@ vvas_xfilter_prepare_output_frame (GstVvas_XFilter * self, GstBuffer * outbuf,
     }
 
     /* dmabuf but not from xrt */
-    bo = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd, 0);
-    if (bo == NULLBO) {
+    bo_handle = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd);
+    if (bo_handle == NULL) {
       GST_WARNING_OBJECT (self,
-        "failed to get XRT BO...fall back to copy input");
+          "failed to get XRT BO...fall back to copy input");
     }
+    /* Lets free the bo_handle after sub bo creation */
+    free_bo = TRUE;
 
-    GST_INFO_OBJECT (self, "received dma fd %d and its xrt BO = %u", dma_fd,
-        bo);
+    GST_INFO_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
+        bo_handle);
 
-    if (!vvas_xrt_get_bo_properties (self->priv->dev_handle, bo, &p)) {
-      phy_addr = p.paddr;
-    } else {
-      GST_WARNING_OBJECT (self,
-        "failed to get physical address...fall back to copy input");
-    }
-
-    if (bo != NULLBO)
-      vvas_xrt_free_bo(self->priv->dev_handle, bo);
+    phy_addr = vvas_xrt_get_bo_phy_addres (bo_handle);
   } else {
     GST_ERROR_OBJECT (self, "Unsupported mem");
     goto error;
@@ -2728,7 +2751,7 @@ vvas_xfilter_prepare_output_frame (GstVvas_XFilter * self, GstBuffer * outbuf,
       offset[plane_id] = offset[plane_id] + vmeta->offset[plane_id];
     }
   } else {
-     GST_ERROR_OBJECT (self, "video meta not present in output buffer");
+    GST_ERROR_OBJECT (self, "video meta not present in output buffer");
     for (plane_id = 0;
         plane_id < GST_VIDEO_INFO_N_PLANES (self->priv->internal_out_vinfo);
         plane_id++) {
@@ -2755,10 +2778,10 @@ vvas_xfilter_prepare_output_frame (GstVvas_XFilter * self, GstBuffer * outbuf,
   vvas_frame->app_priv = outbuf;
 
   if (!(priv->kernel->name || priv->kernel->is_softkernel)) {
-    memset (out_vframe, 0x0, sizeof(GstVideoFrame));
+    memset (out_vframe, 0x0, sizeof (GstVideoFrame));
     /* software lib mode */
     if (!gst_video_frame_map (out_vframe, self->priv->out_vinfo,
-        outbuf, GST_MAP_WRITE)) {
+            outbuf, GST_MAP_WRITE)) {
       GST_ERROR_OBJECT (self, "failed to map output buffer");
       goto error;
     }
@@ -2775,12 +2798,33 @@ vvas_xfilter_prepare_output_frame (GstVvas_XFilter * self, GstBuffer * outbuf,
 
   for (plane_id = 0;
       plane_id < GST_VIDEO_INFO_N_PLANES (self->priv->out_vinfo); plane_id++) {
+    size_t plane_size;
+    guint plane_height;
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+
     vvas_frame->paddr[plane_id] = phy_addr + offset[plane_id];
 
     GST_LOG_OBJECT (self,
         "outbuf plane[%d] : paddr = %p, offset = %lu, stride = %d", plane_id,
         (void *) vvas_frame->paddr[plane_id], offset[plane_id],
         vvas_frame->props.stride);
+
+    /* Convert plane index to component index */
+    gst_video_format_info_component (self->priv->out_vinfo->finfo,
+        plane_id, comp);
+    plane_height =
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (self->priv->out_vinfo->finfo,
+        comp[0], GST_VIDEO_INFO_FIELD_HEIGHT (self->priv->out_vinfo));
+    plane_size =
+        plane_height * GST_VIDEO_INFO_PLANE_STRIDE (self->priv->out_vinfo,
+        plane_id);
+    vvas_frame->bo[plane_id] =
+        vvas_xrt_create_sub_bo (bo_handle, plane_size, offset[plane_id]);
+
+  }
+
+  if (free_bo && bo_handle) {
+    vvas_xrt_free_bo (bo_handle);
   }
 
   gst_memory_unref (out_mem);
@@ -2796,19 +2840,19 @@ error:
 }
 
 static GstFlowReturn
-gst_vvas_xfilter_submit_input_buffer (GstBaseTransform *trans,
-    gboolean is_discont, GstBuffer *inbuf)
+gst_vvas_xfilter_submit_input_buffer (GstBaseTransform * trans,
+    gboolean is_discont, GstBuffer * inbuf)
 {
   GstVvas_XFilter *self = GST_VVAS_XFILTER (trans);
 
-  GST_LOG_OBJECT (self, "received %"GST_PTR_FORMAT, inbuf);
+  GST_LOG_OBJECT (self, "received %" GST_PTR_FORMAT, inbuf);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->submit_input_buffer (trans,
       is_discont, inbuf);
 }
 
 static GstFlowReturn
-gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
+gst_vvas_xfilter_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
 {
   GstVvas_XFilter *self = GST_VVAS_XFILTER (trans);
   GstVvas_XFilterPrivate *priv = self->priv;
@@ -2819,6 +2863,7 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
   gboolean bret = FALSE;
   GstBuffer *inbuf = NULL;
   GstBuffer *cur_outbuf = NULL;
+  guint plane_id = 0;
 
   *outbuf = NULL;
 
@@ -2830,7 +2875,9 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
   if (inbuf == NULL)
     return GST_FLOW_OK;
 
-  fret = GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans, inbuf, &cur_outbuf);
+  fret =
+      GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
+      inbuf, &cur_outbuf);
   if (fret != GST_FLOW_OK)
     goto exit;
 
@@ -2843,7 +2890,9 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
     }
   }
 
-  bret = vvas_xfilter_prepare_input_frame (self, inbuf, &new_inbuf, kernel->input[0], &kernel->in_vframe);
+  bret =
+      vvas_xfilter_prepare_input_frame (self, inbuf, &new_inbuf,
+      kernel->input[0], &kernel->in_vframe);
   if (!bret) {
     fret = GST_FLOW_ERROR;
     goto exit;
@@ -2855,12 +2904,13 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
   }
 
   if (priv->element_mode == VVAS_ELEMENT_MODE_TRANSFORM) {
-    bret = vvas_xfilter_prepare_output_frame (self, cur_outbuf, kernel->output[0], &kernel->out_vframe);
+    bret =
+        vvas_xfilter_prepare_output_frame (self, cur_outbuf, kernel->output[0],
+        &kernel->out_vframe);
     if (!bret) {
       fret = GST_FLOW_ERROR;
       goto exit;
     }
-
 #ifdef XLNX_PCIe_PLATFORM
     {
       GstMemory *outmem = NULL;
@@ -2875,10 +2925,10 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
         bret = gst_vvas_memory_sync_bo (outmem);
         if (!bret)
           goto exit;
-        } else
-	  gst_vvas_memory_set_sync_flag (outmem, VVAS_SYNC_FROM_DEVICE);
+      } else
+        gst_vvas_memory_set_sync_flag (outmem, VVAS_SYNC_FROM_DEVICE);
 
-	gst_memory_unref (outmem);
+      gst_memory_unref (outmem);
     }
 #endif
   }
@@ -2887,7 +2937,7 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
   kernel->vvas_handle->kernel_dyn_config = priv->dyn_json_config;
 
   ret = kernel->kernel_start_func (kernel->vvas_handle, 0, kernel->input,
-    kernel->output);
+      kernel->output);
   if (ret < 0) {
     GST_ERROR_OBJECT (self, "kernel start failed");
     fret = GST_FLOW_ERROR;
@@ -2900,13 +2950,11 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
     fret = GST_FLOW_ERROR;
     goto exit;
   }
-
 #ifdef XLNX_PCIe_PLATFORM
   /* If Hard IP/Soft kernel is accessing the buffer in place, then
      sync the buffer from device as the buffer has been modified by the IP */
   if ((priv->element_mode == VVAS_ELEMENT_MODE_IN_PLACE) &&
-      ((self->priv->kernel->name || self->priv->kernel->is_softkernel)))
-  {
+      ((self->priv->kernel->name || self->priv->kernel->is_softkernel))) {
     GstMemory *outmem = NULL;
     outmem = gst_buffer_get_memory (cur_outbuf, 0);
 
@@ -2920,7 +2968,7 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
 
   if (!(priv->kernel->name || priv->kernel->is_softkernel)) {
     if (kernel->in_vframe.data[0]) {
-        gst_video_frame_unmap (&kernel->in_vframe);
+      gst_video_frame_unmap (&kernel->in_vframe);
     }
 
     if (priv->element_mode == VVAS_ELEMENT_MODE_TRANSFORM &&
@@ -2929,46 +2977,56 @@ gst_vvas_xfilter_generate_output (GstBaseTransform *trans, GstBuffer **outbuf)
     }
   }
 
-    if (priv->need_copy) {
-      GstBuffer *new_outbuf;
-      GstVideoFrame new_frame, out_frame;
+  for (plane_id = 0; plane_id < priv->kernel->input[0]->n_planes; plane_id++) {
+    vvas_xrt_free_bo (priv->kernel->input[0]->bo[plane_id]);
+  }
+
+  if (priv->element_mode == VVAS_ELEMENT_MODE_TRANSFORM) {
+    for (plane_id = 0; plane_id < priv->kernel->output[0]->n_planes; plane_id++) {
+      vvas_xrt_free_bo (priv->kernel->output[0]->bo[plane_id]);
+    }
+  }
+
+  if (priv->need_copy) {
+    GstBuffer *new_outbuf;
+    GstVideoFrame new_frame, out_frame;
 #ifdef XLNX_PCIe_PLATFORM
-      if ((self->priv->kernel->name || self->priv->kernel->is_softkernel)) {
-        GstMemory *outmem;
-        outmem = gst_buffer_get_memory (cur_outbuf, 0);
-        /* when plugins/app request to map this memory, sync will occur */
-        gst_vvas_memory_set_sync_flag (outmem, VVAS_SYNC_FROM_DEVICE);
-        gst_memory_unref (outmem);
-      }
+    if ((self->priv->kernel->name || self->priv->kernel->is_softkernel)) {
+      GstMemory *outmem;
+      outmem = gst_buffer_get_memory (cur_outbuf, 0);
+      /* when plugins/app request to map this memory, sync will occur */
+      gst_vvas_memory_set_sync_flag (outmem, VVAS_SYNC_FROM_DEVICE);
+      gst_memory_unref (outmem);
+    }
 #endif
 
-      new_outbuf =
-          gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (priv->out_vinfo));
-      if (!new_outbuf) {
-        GST_ERROR_OBJECT (self, "failed to allocate output buffer");
-        return GST_FLOW_ERROR;
-      }
+    new_outbuf =
+        gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (priv->out_vinfo));
+    if (!new_outbuf) {
+      GST_ERROR_OBJECT (self, "failed to allocate output buffer");
+      return GST_FLOW_ERROR;
+    }
 
-      gst_video_frame_map (&out_frame, self->priv->internal_out_vinfo, cur_outbuf,
-          GST_MAP_READ);
-      gst_video_frame_map (&new_frame, priv->out_vinfo, new_outbuf,
-          GST_MAP_WRITE);
-      GST_LOG_OBJECT (self, "slow copy data to output");
-      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, self,
-          "slow copy data from %p to %p", cur_outbuf, new_outbuf);
-      gst_video_frame_copy (&new_frame, &out_frame);
-      gst_video_frame_unmap (&out_frame);
-      gst_video_frame_unmap (&new_frame);
+    gst_video_frame_map (&out_frame, self->priv->internal_out_vinfo, cur_outbuf,
+        GST_MAP_READ);
+    gst_video_frame_map (&new_frame, priv->out_vinfo, new_outbuf,
+        GST_MAP_WRITE);
+    GST_LOG_OBJECT (self, "slow copy data to output");
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, self,
+        "slow copy data from %p to %p", cur_outbuf, new_outbuf);
+    gst_video_frame_copy (&new_frame, &out_frame);
+    gst_video_frame_unmap (&out_frame);
+    gst_video_frame_unmap (&new_frame);
 
-      gst_buffer_copy_into (new_outbuf, cur_outbuf, GST_BUFFER_COPY_FLAGS, 0, -1);
+    gst_buffer_copy_into (new_outbuf, cur_outbuf, GST_BUFFER_COPY_FLAGS, 0, -1);
 //      gst_buffer_unref (*outbuf);
 
-      *outbuf = new_outbuf;
-    } else
-      *outbuf = cur_outbuf;
-    if (priv->element_mode == VVAS_ELEMENT_MODE_TRANSFORM)
-      gst_buffer_unref (inbuf);
-  GST_LOG_OBJECT (self, "pushing output %"GST_PTR_FORMAT, *outbuf);
+    *outbuf = new_outbuf;
+  } else
+    *outbuf = cur_outbuf;
+  if (priv->element_mode == VVAS_ELEMENT_MODE_TRANSFORM)
+    gst_buffer_unref (inbuf);
+  GST_LOG_OBJECT (self, "pushing output %" GST_PTR_FORMAT, *outbuf);
 
 exit:
   return fret;
@@ -3022,9 +3080,8 @@ gst_vvas_xfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
         GST_ERROR_OBJECT (self, "failed to get memory from internal buffer");
         goto error;
       }
-
 #ifdef XLNX_PCIe_PLATFORM
-      /* sync internal buffer buffer data*/
+      /* sync internal buffer buffer data */
       gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_FROM_DEVICE);
       gst_vvas_memory_sync_with_flags (mem, GST_MAP_READ);
 #endif
@@ -3178,9 +3235,6 @@ plugin_init (GstPlugin * vvas_xfilter)
       GST_TYPE_VVAS_XFILTER);
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    vvas_xfilter,
-    "GStreamer VVAS plug-in for filters",
-    plugin_init, "1.0", "MIT/X11",
-    "Xilinx VVAS SDK plugin", "http://xilinx.com/")
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, vvas_xfilter,
+    "GStreamer VVAS plug-in for filters", plugin_init, VVAS_API_VERSION,
+    "MIT/X11", "Xilinx VVAS SDK plugin", "http://xilinx.com/")

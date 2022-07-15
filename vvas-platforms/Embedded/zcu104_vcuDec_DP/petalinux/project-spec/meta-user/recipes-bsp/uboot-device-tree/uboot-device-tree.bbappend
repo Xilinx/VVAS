@@ -1,13 +1,13 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:${SYSCONFIG_PATH}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:${SYSCONFIG_PATH}:"
 
-SRC_URI_append = " file://config file://system-user.dtsi"
+SRC_URI:append = " file://config file://system-user.dtsi"
 
 python () {
     if d.getVar("CONFIG_DISABLE"):
         d.setVarFlag("do_configure", "noexec", "1")
 }
 export PETALINUX
-do_configure_append () {
+do_configure:append () {
         script="${PETALINUX}/etc/hsm/scripts/petalinux_hsm_bridge.tcl"
         data=${PETALINUX}/etc/hsm/data/
         eval xsct -sdx -nodisp ${script} -c ${WORKDIR}/config \

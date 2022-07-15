@@ -30,8 +30,8 @@
 
 /* Below parameters are coming from user selection */
 #define HSC_SAMPLES_PER_CLOCK       2  // 1, 2, 4
-#define HSC_MAX_WIDTH               1920           // Determines BRAM usage
-#define HSC_MAX_HEIGHT              1080           // No impact on resources
+#define HSC_MAX_WIDTH               3840           // Determines BRAM usage
+#define HSC_MAX_HEIGHT              2160           // No impact on resources
 #define HSC_BITS_PER_COMPONENT      8     // 8, 10
 #define HSC_SCALE_MODE              0         // 0 - Bilinear 1 - Bicubic  2 - Polyphase
 #if (HSC_SCALE_MODE==HSC_BILINEAR)

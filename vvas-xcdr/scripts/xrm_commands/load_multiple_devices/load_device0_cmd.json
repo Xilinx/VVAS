@@ -1,0 +1,12 @@
+{
+    "request": {
+        "name": "load",
+        "requestId": 1,
+        "parameters": [
+            {
+            "device": 0,
+            "xclbin": "/opt/xilinx/xcdr/xclbins/transcode.xclbin"
+            }
+        ]
+    }
+}
