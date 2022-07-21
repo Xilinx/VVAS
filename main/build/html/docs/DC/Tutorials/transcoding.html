@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+		<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
@@ -368,22 +368,18 @@
             
   <section id="basic-transcoding-pipelines">
 <h1>Basic Transcoding pipelines<a class="headerlink" href="#basic-transcoding-pipelines" title="Permalink to this heading">¶</a></h1>
-<p>This section covers how to build and launch basic transcoding pipelines using VVAS. There are different types of transcoding usecases and each one is covered in details. VVAS plug-ins supports H264 and H265 (HEVC) encoding formats only. For improving quality, VVAS also supports <code class="docutils literal notranslate"><span class="pre">Lookahead</span></code> feature through <code class="docutils literal notranslate"><span class="pre">vvas_xlookahead</span></code> plug-in and kernel on U30 platform.</p>
+<p>This section covers how to build and launch basic transcoding pipelines using VVAS. There are different types of transcoding use cases and each one is covered in detail. VVAS plug-ins supports H264 and H265 (HEVC) encoding formats only. For improving quality, VVAS also supports <code class="docutils literal notranslate"><span class="pre">Lookahead</span></code> feature through <code class="docutils literal notranslate"><span class="pre">vvas_xlookahead</span></code> plug-in and kernel on U30 platform.</p>
 <section id="pre-requisite">
 <h2>Pre-requisite<a class="headerlink" href="#pre-requisite" title="Permalink to this heading">¶</a></h2>
 <p>Before start executing the Transcoding usecases, make sure the setup is ready:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li><p>Required Alveo U30 cards are installed in the PCIe slots of the server machine.</p></li>
 <li><p>VVAS 2.0 Package has been installed and the Alveo U30 cards are flashed with the required image. If not, follow the section <a class="reference internal" href="../u30_platform/u30_setup.html"><span class="doc">Alveo U30 setup for VVAS 2.0</span></a></p></li>
 </ul>
-</div></blockquote>
 <p>If your setup is re-booted, or you have opened a fresh terminal, perform the following steps.</p>
-<blockquote>
-<div><div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>/opt/xilinx/xcdr/setup.sh
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>/opt/xilinx/xcdr/setup.sh
 </pre></div>
 </div>
-</div></blockquote>
 </section>
 <section id="basic-transcode-pipeline">
 <h2>Basic transcode pipeline<a class="headerlink" href="#basic-transcode-pipeline" title="Permalink to this heading">¶</a></h2>
@@ -427,7 +423,7 @@ For detailed information about the available configuration parameters, refer to 
 </section>
 <section id="abr-ladder-pipeline">
 <h2>ABR ladder pipeline<a class="headerlink" href="#abr-ladder-pipeline" title="Permalink to this heading">¶</a></h2>
-<p>ABR (Adaptive Bitrate) Enoding is required in scenarios where one needs to transmit the streams at different bitrate and resolutions. In this case one input stream is transcoded with different resolutions and encoding parameters as needed. This is very useful use case.</p>
+<p>ABR (Adaptive Bitrate) Encoding is required in scenarios where one needs to transmit the streams at different bitrate and resolutions. In this case one input stream is transcoded with different resolutions and encoding parameters as needed. This is very useful use case.</p>
 <p>Input stream is decoded using ‘vvas_xvcudec’ plug-in. ‘vvas_xabrscaler’ plug-in is used to resize the input frame into several output resolutions. Each output resolution from vvas_xabrscaler will be encoded into a separate output stream. Each encoding session can be of different configurations, as captured in the example below:</p>
 <figure class="align-default">
 <img alt="docs/DC/images/abr_ladder.png" src="docs/DC/images/abr_ladder.png" />
@@ -476,12 +472,12 @@ For detailed information about the available configuration parameters, refer to 
 </pre></div>
 </div>
 <p>In the above example, one <a class="reference external" href="mailto:1080p&#37;&#52;&#48;60fps">1080p<span>&#64;</span>60fps</a> stream is decoded to NV12 raw data (by default) and is given as input to vvas_xabrscaler plugin. This plug-in resizes the input frame into multiple resolutions. In this case, it is 720p, 480p, 360p, 160p resolutions. It should be noted that, <a class="reference external" href="mailto:720p&#37;&#52;&#48;60">720p<span>&#64;</span>60</a> stream is passed to encoder via
-‘videorate’ plugin which changes framerate from 60 to 30 and also the same <a class="reference external" href="mailto:720p&#37;&#52;&#48;60">720p<span>&#64;</span>60</a> is also passed to encoder to generate <a class="reference external" href="mailto:720p&#37;&#52;&#48;60">720p<span>&#64;</span>60</a> encoded stream. This is achieved with the help of ‘tee’ plugin  functionality of gstreamer.
-Similarly, with the help of ‘videorate’ plugin, all the remaining scaler output streams are encoded at 30fps.</p>
+<code class="docutils literal notranslate"><span class="pre">videorate</span></code> plug-in which changes framerate from 60 to 30 and the same <a class="reference external" href="mailto:720p&#37;&#52;&#48;60">720p<span>&#64;</span>60</a> is also passed to encoder to generate <a class="reference external" href="mailto:720p&#37;&#52;&#48;60">720p<span>&#64;</span>60</a> encoded stream. This is achieved with the help of <code class="docutils literal notranslate"><span class="pre">tee</span></code> plug-in.
+Similarly, with the help of ‘videorate’ plug-in, all the remaining scaler output streams are encoded at 30fps.</p>
 </section>
 <section id="transcoding-with-lookahead">
 <h2>Transcoding with lookahead<a class="headerlink" href="#transcoding-with-lookahead" title="Permalink to this heading">¶</a></h2>
-<p>AMD has developped an IP, Lookahead, for visual quality improvements. Example of pipeline with lookahead is mentioned below:</p>
+<p>AMD has developed an IP, Lookahead, for visual quality improvements. Example of pipeline with lookahead is mentioned below:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc <span class="nv">location</span><span class="o">=</span>&lt;input h264 file&gt; <span class="se">\</span>
 ! queue <span class="se">\</span>
 ! h264parse <span class="se">\</span>

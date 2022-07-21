@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+		<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
@@ -389,7 +389,7 @@
             
   <section id="acceleration-software-library-development-guide">
 <h1>Acceleration Software Library Development Guide<a class="headerlink" href="#acceleration-software-library-development-guide" title="Permalink to this heading">¶</a></h1>
-<p>One of the objectives of VVAS is to provide a framework for the advanced developers that enables them to develop their own kernel and integrate it into GStreamer-based applications. Kernel developers may not be experts in software development and there is always a learning curve to understand the frameworks like Xilinx Run Time (XRT), GStreamer etc. This framework abstracts the complexities of the XRT and GStreamer framework and provides simple and easy to understand  APIs to hook their kernels developed on Xilinx FPGA into complex applications. Developers need to implement these interfaces and make them available in the form of a library, called as acceleration software library.</p>
+<p>One of the objectives of VVAS is to provide a framework for the advanced developers that enables them to develop their own kernel and integrate it into GStreamer-based applications. Kernel developers may not be experts in software development and there is always a learning curve to understand the frameworks like Xilinx Run Time (XRT), GStreamer etc. This framework abstracts the complexities of the XRT and GStreamer framework and provides simple and easy to understand APIs to hook their kernels developed on Xilinx FPGA into complex applications. Developers need to implement these interfaces and make them available in the form of a library, called as acceleration software library.</p>
 <p>This section covers the details about developing an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application.</p>
 <p>There are different types of acceleration kernels supported by VVAS and details about these are covered below.</p>
 <section id="types-of-kernels">
@@ -422,7 +422,7 @@
 </section>
 <section id="interfaces-for-acceleration-software-libraries">
 <h2>Interfaces for Acceleration Software Libraries<a class="headerlink" href="#interfaces-for-acceleration-software-libraries" title="Permalink to this heading">¶</a></h2>
-<p>VVAS has defined a simplified, easy to use interface so that developer can easliy hook their Kernels into GStreamer based applications. The interface has been divided into two parts, core APIs and utility APIs. Core APIs are mandatory APIs, to be implemented by the acceleration softeare libraries so that these can be controlled from the GStreamere Infrastructure plug-ins as well as applications. Utility APIs are provided to abstract the Xilinx Run Time (XRT) interface from the developer and provide easy to use interface to interact with the kernel.</p>
+<p>VVAS has defined a simplified, easy to use interface so that developer can easily hook their Kernels into GStreamer based applications. The interface has been divided into two parts, core APIs and utility APIs. Core APIs are mandatory APIs, to be implemented by the acceleration software libraries so that these can be controlled from the GStreamer Infrastructure plug-ins as well as applications. Utility APIs are provided to abstract the Xilinx Run Time (XRT) interface from the developer and provide easy to use interface to interact with the kernel.</p>
 <section id="core-api">
 <h3>Core API<a class="headerlink" href="#core-api" title="Permalink to this heading">¶</a></h3>
 <p>Each acceleration software library must implement these Core APIs. The GStreamer VVAS infrastructure plug-ins (vvas_xfilter and vvas_xmultisrc) call these core APIs to perform operations on the kernel. The following is a list of core APIs.</p>
@@ -431,7 +431,7 @@
 </figure>
 <section id="xlnx-kernel-init">
 <h4>xlnx_kernel_init<a class="headerlink" href="#xlnx-kernel-init" title="Permalink to this heading">¶</a></h4>
-<p>This API is called by the VVAS infrastructure plug-in only once at the time of plug-in initialization. Acceleration software library can perform all the one time initialization in this function.</p>
+<p>This API is called by the VVAS infrastructure plug-in only once at the time of plug-in initialization. Acceleration software library can perform all the one-time initialization in this function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_init</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
 <span class="n">Parameters</span><span class="p">:</span>
     <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
@@ -443,7 +443,7 @@
 <section id="xlnx-kernel-start">
 <h4>xlnx_kernel_start<a class="headerlink" href="#xlnx-kernel-start" title="Permalink to this heading">¶</a></h4>
 <p>This API is called by infrastructure plug-in for each input frame/buffer it has received for further processing by the kernel.
-The acceleration software library can perform per frame operations like updating the state machine, reading/writing the registers of the IP and then instructing the kernel to process the input. Steps to start the kernel depends on the type of the kernel and are covered in details later in this section.</p>
+The acceleration software library can perform per frame operations like updating the state machine, reading/writing the registers of the IP and then instructing the kernel to process the input. Steps to start the kernel depends on the type of the kernel and are covered in detail later in this section.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>int32_t xlnx_kernel_start (VVASKernel * handle, int start, VVASFrame *
 input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT])
 
@@ -468,7 +468,7 @@ Note:
 <section id="xlnx-kernel-done">
 <h4>xlnx_kernel_done<a class="headerlink" href="#xlnx-kernel-done" title="Permalink to this heading">¶</a></h4>
 <p>To know whether the kernel has finished processing the current frame/buffer, infrastructure plug-in or an application will call this API. The acceleration software library can implement the logic to know the status of kernel in this API.</p>
-<p>In case Kernel is being used in XRT managed mode, then developer must call <code class="docutils literal notranslate"><span class="pre">vvas_kernel_done</span></code> utility API to know if kernel has finished processing th ecurrent job. This API takes <strong>time-out</strong>  value for the maximum amount of time this API will wait before returning from this function.</p>
+<p>In case Kernel is being used in XRT managed mode, then developer must call <code class="docutils literal notranslate"><span class="pre">vvas_kernel_done</span></code> utility API to know if kernel has finished processing the current job. This API takes <strong>time-out</strong> svalue for the maximum amount of time this API will wait before returning from this function.</p>
 <p>In case Kernel is being used in user managed mode then developer may implement the logic where it can monitor the status of AP_DONE bit of the kernel in polling mode to know the status of the current kernel task.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
 
@@ -532,7 +532,7 @@ Return:
 </section>
 <section id="read-write-register-apis">
 <h4>Read/Write Register APIs<a class="headerlink" href="#read-write-register-apis" title="Permalink to this heading">¶</a></h4>
-<p>These APIs can be used only if kernel object is created in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode. Moreover developer must ensure that “is_multiprocess” parameter is set to “false” in VVASKernel object in acceleration software library.</p>
+<p>These APIs can be used only if kernel object is created in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode. Moreover, developer must ensure that “is_multiprocess” parameter is set to “false” in VVASKernel object in acceleration software library.</p>
 <p>In case developer has decided to go for the option of programing the kernel using register programming, then the only option to start a kernel is to set the “ap_start” bit by writing into the control register.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_write (VVASKernel *handle, void *src, size_t size,
 size_t offset)
@@ -609,7 +609,8 @@ the format specifier string would be “isp”</p>
 </section>
 <section id="vvas-data-structures">
 <h2>VVAS Data structures<a class="headerlink" href="#vvas-data-structures" title="Permalink to this heading">¶</a></h2>
-<p>The following sections list the core structures and enumerations used in VVAS framework.</p>
+<p>;
+The following sections list the core structures and enumerations used in VVAS framework.</p>
 <section id="vvaskernel">
 <h3>VVASKernel<a class="headerlink" href="#vvaskernel" title="Permalink to this heading">¶</a></h3>
 <p>The VVASKernel is a structure to hold the kernel context and is created and passed to the core APIs by the GStreamer infrastructure plug-ins (for example: the vvas_xfilter).</p>

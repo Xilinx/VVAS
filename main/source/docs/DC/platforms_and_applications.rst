@@ -13,5 +13,5 @@ For more information about the Transcoding solution using Alveo U30 Cards, refer
 
    Alveo U30 Transcoding Solution <./u30_platform/u30_platform>
  
-For more information, contact `vvas_discuss@xilinx.com`.
+For more information, contact `vvas_discuss@amd.com`.
 

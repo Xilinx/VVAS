@@ -11,7 +11,7 @@ Smart Model Select application design is built on ``zcu104`` development board w
 * Acceleration Pipelines
 * Output Pipelines
 
-Smart Model Select design doesn't support Capture Pipeline.
+Smart Model Select design does not support Capture Pipeline.
 
 *********
 Features
@@ -95,7 +95,12 @@ Ready to use Prebuilt binaries are provided with this VVAS release. You can down
 
 Create a folder, say `PREBUILT_BINARIES`, where pre-built binaries are to be downloaded.
 
-Click on `Smart Model Select Prebuilt Binaries <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2022.1_zcu104.zip>`_. This will ask for few credentials and then start downloading. 
+Click on `Smart Model Select Prebuilt Binaries COMING SOON`
+
+.. Note:: 
+
+    Pre-built binaries for this example designs will be available soon. You may also build the complete example design following the steps mentioned in **Build Design** section. For more information, you may contact vvas_discuss@amd.com.
+
 
 Unzip the downloaded package `vvas_smart_model_select_2022.1_zcu104.zip`.
 
@@ -107,7 +112,7 @@ Unzip the downloaded package `vvas_smart_model_select_2022.1_zcu104.zip`.
 Prebuilt binaries package includes
 
 * ``sd_card.img``: Image to be flashed on the SD Card on the zcu104 board.
-* ``sdk.sh``: This is required to generate sysroot. Sysroot is required  **only** if one wants to build the VVAS plugins and 
+* ``sdk.sh``: This is required to generate sysroot. Sysroot is required **only** if one wants to build the VVAS plugins and 
   libraries. You do not need this if you simply want to execute the pre-built application.
 * ``models``: Supported DPU models on this platform.
 * ``app``: Contains application executable and input configuration/json files.
@@ -115,12 +120,12 @@ Prebuilt binaries package includes
 
 .. Note::
 
-   The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
+   The pre-buit binaries available for download from the link mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
 
-Open Source Licenses and Source code - VVAS 2.0
+Open-Source Licenses and Source code - VVAS 2.0
 ------------------------------------------------
 
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip>`_ that contain the Open Source Licenses and source code.
+In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip>`_ that contain the Open-Source Licenses and source code.
 
 Once you have downloaded the prebuilt binaries, you need to prepare the setup to execute the application, as shown in the next section.
 
@@ -130,7 +135,7 @@ Once you have downloaded the prebuilt binaries, you need to prepare the setup to
 Preparing the setup
 ********************
 
-It is assumed that all the pre-requisites are fulfilled and we are ready to setup the board and execute the example application. There are few steps that are required only for the first time when the ``zcu104`` board is not flashed with the sd_card image for ``smart_model_select`` application. You may skip these steps if ``zcu104`` board has already been flashed with the required sd_card image.
+It is assumed that all the pre-requisites are fulfilled, and we are ready to setup the board and execute the example application. There are few steps that are required only for the first time when the ``zcu104`` board is not flashed with the sd_card image for ``smart_model_select`` application. You may skip these steps if ``zcu104`` board has already been flashed with the required sd_card image.
 
 One time setup
 ===============
@@ -193,7 +198,7 @@ Every time the board is booted, execute the steps mentioned below
       cd /home/root/app/
       ./setup.sh
 
-*  Export the environment variable “XCLBIN_PATH” with path pointing to xclbin. If it's not exported, `/media/sd-mmcblk0p1/dpu.xclbin` will be the default xclbin path.
+*  Export the environment variable “XCLBIN_PATH” with path pointing to xclbin. If it is not exported, `/media/sd-mmcblk0p1/dpu.xclbin` will be the default xclbin path.
 
 *  Run the command to execute the application
    .. code-block::
@@ -225,7 +230,7 @@ Below command line prompt will appear on console/command prompt when the applica
 
 .. note::
 
-        If performance mode is enabled, then the sink type should always be ``fakesink``. Otherwise pipeline will not execute.
+        If performance mode is enabled, then the sink type should always be ``fakesink``. Otherwise, pipeline will not execute.
         
         If performance mode is enabled, there will be 4 ML pipelines executed simultaneously feeding DPU from multiple threads. This results in improved performance compared to when using DPU from single thread.
 
@@ -247,7 +252,7 @@ Create the folder ``/home/root/app/videos`` and copy the video files here with n
        +-- YOLOV2.mp4
        +-- YOLOV3.mp4
 
-If the file is not available in this folder then application will prompt for the input file. All files must be named after ML model type as given below.
+If the file is not available in this folder, then application will prompt for the input file. All files must be named after ML model type as given below.
 User has to enter the input file location in response to the below message prompt. 
 
 .. code-block::
@@ -301,7 +306,7 @@ The Design consists of a base platform and integrated accelerator functions (Ker
 Base Platform
 ==============
 
-``Smart Model Select`` application requires video decoding, resizing the decoded frames, Machine Learning and finally display the output. Hence, we need a platform that fulfills these requirement. This VVAS release has ``zcu104_vcuDec_DP`` base platform that meets the requirements of decode and display. This platform has hardware accelerated video decoding IP, Video Codec Unit ``VCU``. For display, this platform supports ``Display Port``. The design also include two DPU 4096 cores for Machine Learning.
+``Smart Model Select`` application requires video decoding, resizing the decoded frames, Machine Learning and finally display the output. Hence, we need a platform that fulfills these requirements. This VVAS release has ``zcu104_vcuDec_DP`` base platform that meets the requirements of decode and display. This platform has hardware accelerated video decoding IP, Video Codec Unit ``VCU``. For display, this platform supports ``Display Port``. The design also includes two DPU 4096 cores for Machine Learning.
 
 In addition to the above-mentioned hardware components, ``zcu104_vcuDec_DP`` supports following software components
 
@@ -318,7 +323,7 @@ Complete sources along with workspace to build the platform is provided as part 
 Follow the steps mentioned below to compile the platform.
 
 
-1. Navigate to the folder, such as ``VVAS_SOURCES``,  where you want to clone the VVAS source tree.
+1. Navigate to the folder, such as ``VVAS_SOURCES``, where you want to clone the VVAS source tree.
 
 2. Clone VVAS repo::
    
@@ -363,11 +368,11 @@ The sources for hardware accelerators required for ``Smart Model Select`` applic
 
   * Open the `reference_design <https://github.com/Xilinx/Vitis-AI/tree/master/reference_design#readme>`__ readme page from Vitis-AI release repo.
 
-  * Copy the ``Download Link`` for ``IP Name`` corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table::
+  * Copy the **Download Link** for **IP Name** corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table::
 
       wget -O DPUCZDX8G.tar.gz '<Download Link>'
 
-  * Uarchive ``DPUCZDX8G.tar.gz`` ::
+  * Unarchive ``DPUCZDX8G.tar.gz`` ::
 
       tar -xf DPUCZDX8G.tar.gz
 
@@ -455,7 +460,7 @@ Build Plugins and Libraries
 
 Get the VVAS Sources if not done already. Follow the steps mentioned below.
 
-* Navigate to the folder, say ``VVAS_SOURCES``,  where you want to clone the VVAS source tree.
+* Navigate to the folder, say ``VVAS_SOURCES``, where you want to clone the VVAS source tree.
 
 * Clone VVAS repo::
   
@@ -516,5 +521,5 @@ The example application (smart_model_select) is available in the “vvas-example
 Known Issues
 *************
 
-1.  When we are executing 3 level cascade pipeline in a loop, by re-starting the pipeline after EOS, we start seeing shift in images. This issue is seen only in 3 stage ML cascading pipeline and only when we do start/stop in a loop. This is random in nature. The issue is not seen when we kept the same 3 stage cascade pipeline running continuously for 12 hrs.
+* On zcu104 boards, Cascaded pipelines OR several ML instances running simultaneously are sending board into bad state and needs reboot to recover from it. The default value of IOUT_OC_FAULT_LIMIT on PMIC chip irps5401 is too low and that is causing the temperature fault limit getting crossed. Workaround is to increase this limit. But there is risk of board getting damaged if running for long time.
 

@@ -12,7 +12,7 @@ SOM Examples
 There are three Application specific SOM platforms supported. Click on the link below to know more about these.
 
 .. note::
-        Currently KV260 SOM example designs mentioned below are based on VVAS 1.0 and Vitis AI 1.4 release. These designs will be upgraded to VVAS 1.1 and Vitis AI 2.0 soon.
+        Currently KV260 SOM example designs mentioned below may be based on VVAS 1.0 and Vitis AI 1.4 release. These designs will be upgraded to VVAS 2.0 and Vitis AI 2.5 soon.
 
 Smart Camera
    Smart Camera Application with face detection and display functionality. For more details refer to `Smart Camera <https://www.xilinx.com/products/app-store/kria/smart-camera.html>`_

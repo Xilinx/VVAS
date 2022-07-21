@@ -13,5 +13,5 @@ Once setup is ready you may go through the tutorials to execute Transcode pipeli
 * Tutorial `Basic Transcoding <../Tutorials/transcoding.rst>`_
 * Tutorial `Multi-instance Transcoding <../Tutorials/multi_instance_launch_utilities.rst>`_
 
-For more information, contact `vvas_discuss@xilinx.com`.
+For more information, contact `vvas_discuss@amd.com`.
 

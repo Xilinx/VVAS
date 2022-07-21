@@ -2,14 +2,14 @@
 Multi-instance High density Transcoding 
 ########################################
 
-Each ``Zynq UltraScale+ MPSoc`` device has a decoder and an encoder with max capacity of encoding/decoding @4Kp60. So there can be more number of ecoder/encoder instances running simultaneously in case the the total required capacity is less than 4Kp60. For example, we can launch 4x transcode pipelines of capacity 1080p60 resolution.  
+Each ``Zynq UltraScale+ MPSoc`` device has a decoder and an encoder with max capacity of encoding/decoding @4Kp60. So, there can be more number of decoder/encoder instances running simultaneously in case the the total required capacity is less than 4Kp60. For example, we can launch 4x transcode pipelines of capacity 1080p60 resolution.  
 
-There are two ``Zynq UltraScale+ MPSoC`` devices inside ``Alveo U30`` card and each is capable of transcoding @4Kp60. If there are more such cards connected to the server, then this capacity is increased and we can launch more transcode pipelines in parallel.
+There are two ``Zynq UltraScale+ MPSoC`` devices inside ``Alveo U30`` card and each is capable of transcoding @4Kp60. If there are more such cards connected to the server, then this capacity is increased, and we can launch more transcode pipelines in parallel.
 
 Pre-requisite
 ---------------
 
-Before start executing the Transcoding usecases, make sure the setup is ready:
+Before start executing the Transcoding use cases, make sure the setup is ready:
 
  * Required Alveo U30 cards are installed in the PCIe slots of the server machine.
  * VVAS 2.0 Package has been installed and the Alveo U30 cards are flashed with the required image. If not, follow the section :doc:`Alveo U30 setup for VVAS 2.0 <../u30_platform/u30_setup>`
@@ -23,7 +23,7 @@ If your setup is re-booted, or you have opened a fresh terminal, perform the fol
 Resource Management
 -------------------
 
-When there are several devices/cards, connected to the server, then it is important to select correct device to launch each new instance of the transcode pipeline. Selection of device depends on how much capacity is left on that device and how much load new instance needs. This has been simplified by ``XRM`` (Xilinc Resource Manager). User need not know details about how xrm works. XRM keeps on checking the available capacity on each device and launches the transcode pipeline on a device only when it has capacity. If current device doesn't have the required capacity, then it goes to next device and launch the new pipeline instance if it has the capacity. User need not know details about how xrm works. There are two applications provided that will interact with XRM and manage the resource allocation.
+When there are several devices/cards, connected to the server, then it is important to select correct device to launch each new instance of the transcode pipeline. Selection of device depends on how much capacity is left on that device and how much load new instance needs. This has been simplified by ``XRM`` (Xilinc Resource Manager). User need not know details about how XRM works. XRM keeps on checking the available capacity on each device and launches the transcode pipeline on a device only when it has capacity. If current device does not have the required capacity, then it goes to next device and launch the new pipeline instance if it has the capacity. User need not know details about how XRM works. There are two applications provided that will interact with XRM and manage the resource allocation.
 
 Following XRM based applications are provided with varied ease-of-use to support the same:
 
@@ -35,12 +35,12 @@ jobSlotReservation
 
 Each pipeline, be it simple decode, or simple transcode or and ABR ladder, is a JOB for jobSlotReservation application. Each compute unit and its load capacity in such pipeline is described in a json file and this json file is known as job descriptor. Sample job description files are located at : /opt/xilinx/launcher/scripts/describe_job
 
-Based on the input resolution and type of use-case, the load requirement of compute units(CUs) within a JOB varies which inturn determines how many instances of each JOB can be launched on the available devices at a time.
+Based on the input resolution and type of use-case, the load requirement of compute units (CUs) within a JOB varies which in turn determines how many instances of each JOB can be launched on the available devices at a time.
 
 
 Steps to use:
 
-1.  Once the device and host boots up, setup the environment:
+1.  Once the device and host boot up, setup the environment:
 
 .. code-block:: shell
 
@@ -103,7 +103,7 @@ on which command needs to be run.
 Launcher
 ^^^^^^^^^
 
-'Launcher' is another application which makes it much more easier to run maximum multiple instances of a use-case without the knowledge of
+'Launcher' is another application which makes it much easier to run maximum multiple instances of a use-case without the knowledge of
 number of devices available and how many are free to use. This is achieved with the help of XRM based 'launcher' application.
 
 Steps to use:

@@ -2,19 +2,19 @@
 Basic Transcoding pipelines
 ############################
 
-This section covers how to build and launch basic transcoding pipelines using VVAS. There are different types of transcoding usecases and each one is covered in details. VVAS plug-ins supports H264 and H265 (HEVC) encoding formats only. For improving quality, VVAS also supports ``Lookahead`` feature through ``vvas_xlookahead`` plug-in and kernel on U30 platform.
+This section covers how to build and launch basic transcoding pipelines using VVAS. There are different types of transcoding use cases and each one is covered in detail. VVAS plug-ins supports H264 and H265 (HEVC) encoding formats only. For improving quality, VVAS also supports ``Lookahead`` feature through ``vvas_xlookahead`` plug-in and kernel on U30 platform.
 
 Pre-requisite
 ---------------
 
 Before start executing the Transcoding usecases, make sure the setup is ready:
 
- * Required Alveo U30 cards are installed in the PCIe slots of the server machine.
- * VVAS 2.0 Package has been installed and the Alveo U30 cards are flashed with the required image. If not, follow the section :doc:`Alveo U30 setup for VVAS 2.0 <../u30_platform/u30_setup>`
+* Required Alveo U30 cards are installed in the PCIe slots of the server machine.
+* VVAS 2.0 Package has been installed and the Alveo U30 cards are flashed with the required image. If not, follow the section :doc:`Alveo U30 setup for VVAS 2.0 <../u30_platform/u30_setup>`
 
 If your setup is re-booted, or you have opened a fresh terminal, perform the following steps.
 
- .. code-block:: shell
+.. code-block:: shell
 
     /opt/xilinx/xcdr/setup.sh
 
@@ -72,7 +72,7 @@ In below example, 1080p stream is decoded, scaled down to 720p and then encoded 
 ABR ladder pipeline
 -------------------
 
-ABR (Adaptive Bitrate) Enoding is required in scenarios where one needs to transmit the streams at different bitrate and resolutions. In this case one input stream is transcoded with different resolutions and encoding parameters as needed. This is very useful use case.
+ABR (Adaptive Bitrate) Encoding is required in scenarios where one needs to transmit the streams at different bitrate and resolutions. In this case one input stream is transcoded with different resolutions and encoding parameters as needed. This is very useful use case.
 
 Input stream is decoded using 'vvas_xvcudec' plug-in. 'vvas_xabrscaler' plug-in is used to resize the input frame into several output resolutions. Each output resolution from vvas_xabrscaler will be encoded into a separate output stream. Each encoding session can be of different configurations, as captured in the example below:
 
@@ -123,13 +123,13 @@ Input stream is decoded using 'vvas_xvcudec' plug-in. 'vvas_xabrscaler' plug-in 
     ! fpsdisplaysink name=sink_xcode_scale_160p30_dev3_0 video-sink=fakesink text-overlay=false sync=false -v
 
 In the above example, one 1080p@60fps stream is decoded to NV12 raw data (by default) and is given as input to vvas_xabrscaler plugin. This plug-in resizes the input frame into multiple resolutions. In this case, it is 720p, 480p, 360p, 160p resolutions. It should be noted that, 720p@60 stream is passed to encoder via
-'videorate' plugin which changes framerate from 60 to 30 and also the same 720p@60 is also passed to encoder to generate 720p@60 encoded stream. This is achieved with the help of 'tee' plugin  functionality of gstreamer.
-Similarly, with the help of 'videorate' plugin, all the remaining scaler output streams are encoded at 30fps.
+``videorate`` plug-in which changes framerate from 60 to 30 and the same 720p@60 is also passed to encoder to generate 720p@60 encoded stream. This is achieved with the help of ``tee`` plug-in.
+Similarly, with the help of 'videorate' plug-in, all the remaining scaler output streams are encoded at 30fps.
 
 Transcoding with lookahead
 ---------------------------
 
-AMD has developped an IP, Lookahead, for visual quality improvements. Example of pipeline with lookahead is mentioned below:
+AMD has developed an IP, Lookahead, for visual quality improvements. Example of pipeline with lookahead is mentioned below:
 
 .. code-block:: shell
 

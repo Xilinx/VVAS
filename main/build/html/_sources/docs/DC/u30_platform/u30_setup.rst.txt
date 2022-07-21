@@ -15,6 +15,16 @@ Software Requirements
 
 .. Note:: This platform has been tested on UBuntu 20.04, kernel 5.10 only.
 
+Release Package
+---------------
+
+Complete VVAS DC/PCIe based Transcoding solution for Alveo U30 card has been provided as a release package and can be downloaded from **Coming Soon**. 
+
+ .. Note::
+
+     Pre-built binaries for this example designs will be available soon. For more information, you may contact vvas_discuss@amd.com
+
+
 Installation Steps
 --------------------
 
@@ -26,7 +36,7 @@ Before starting software installation, make sure U30 cards are installed and det
 
 If the messages as a result of above command on console shows "Processing accelerators: Xilinx Corporation" then devices are detected and you may continue with the installation following the steps mentioned below.
 
-1.  On the host server, get the release package (vvas-2.0_dc.zip) from <Add release path>.
+1.  On the host server, navigate to the folder where release package (vvas-2.0_dc.zip) has been downloaded.
 
 2.  Install the release packages
 

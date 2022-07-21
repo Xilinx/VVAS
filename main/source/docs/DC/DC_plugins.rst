@@ -34,7 +34,7 @@ vvas_xvcudec
 In Zynq UltraScale+ MPSoC devices, there is an IP, VCU, for video decoder and encoder. This IP supports encoding and decoding of H264/HEVC formats. Please refer to `VCU PG252 <https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf>`_ for more information on the Xilinx VCU block. This guide provides details about this IP and how to configure it.
 
 vvas_xvcudec plugin is provided to control the VCU hardened IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in 
-:ref:`omx_encoder_decoder`. For implementation details, refer to `vvas_xvcudec source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/vcudec>`_
+:ref:`omx_encoder_decoder`. For implementation details, refer to `vvas_xvcudec source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vcudec>`_
 
 
 .. figure:: ../images/vcu_decoder.png
@@ -150,7 +150,7 @@ vvas_xvcuenc plugin is provided to control the VCU hardened IP for Video Encodin
 
 .. figure:: ../images/vcu_encoder.png
 
-For implementation details, refer to `vvas_xvcuenc source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/vcuenc>`_
+For implementation details, refer to `vvas_xvcuenc source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vcuenc>`_
 
 Input and Output
 =================
@@ -360,7 +360,7 @@ Table 2: vvas_xvcuenc Plug-in Properties
 Example Pipelines
 -----------------
 
-`dev-idx` represents the zero based index of the device on which this decoder to be launched. Please note that 'dev-idx' parameter range can vary from 0 to N where N can be obtained with below command:
+`dev-idx` represents the zero-based index of the device on which this decoder to be launched. Please note that 'dev-idx' parameter range can vary from 0 to N where N can be obtained with below command:
 
 .. code-block:: shell
 
@@ -374,7 +374,7 @@ Example Pipelines
     ! vvas_xvcuenc xclbin-location=<xclbin file path> dev-idx=3 target-bitrate=600 \
     ! h264parse ! fpsdisplaysink video-sink=fakesink text-overlay=false sync=false
 
-2.  The following pipeline reads raw/uncompressed data, the properties of which should be known to user. These are provided in the command line such width(1920), height(height), format(NV12), framerate(30). The configurable properties are for encoder plugin (vvas_xvcuenc) such as b-frames (0), num-cores(4) and num-slices(4). When no parameter values are mentioned, default values are considered.
+2.  The following pipeline reads raw/uncompressed data, the properties of which should be known to user. These are provided in the command line such width, height, format, framerate. The configurable properties for encoder plug-in, ``vvas_xvcuenc`` are b-frames (0), num-cores(4) and num-slices(4). When no parameter values are mentioned, default values are considered.
 
 Please refer above table for other parameters and corresponding default/range values/ for encoder plugin.
 
@@ -394,8 +394,8 @@ Please refer above table for other parameters and corresponding default/range va
 vvas_xlookahead
 ----------------
 
-For video quality improvements, Xilinx have developped ``Lookahead`` IP. This IP performs analysis on several frames and provides few parameters for the encoder to improve the video quality. ``vvas_xlookahead`` plugin controles this IP. This is an optional plug-in in transcoding pipeline.
-For implementation details, refer to `vvas_xlookahead source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/lookahead>`_
+For video quality improvements, Xilinx have developed ``Lookahead`` IP. This IP performs analysis on several frames and provides few parameters for the encoder to improve the video quality. ``vvas_xlookahead`` plugin controls this IP. This is an optional plug-in in transcoding pipeline.
+For implementation details, refer to `vvas_xlookahead source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/lookahead>`_
 
 Input and Output
 ================
@@ -513,8 +513,8 @@ temporal-aq, lookahead-depth" to have varied degree of quality. Please refer abo
 vvas_xabrscaler 
 ----------------
 
-In several usecases, an input frame needs to be resized/scaled to different resolutions, to be encoded at different bitrates. VVAS has provided hardware accelerated IP, multiscaler, that can resize the input frame in to several different resolutions and formats. `vvas_xabrscaler` plugin controls this IP. This takes one raw input stream as input and produces one or more scaled/resized raw streams.
+In several usecases, an input frame needs to be resized/scaled to different resolutions, to be encoded at different bitrates. VVAS has provided hardware accelerated IP, multiscaler, that can resize the input frame into several different resolutions and formats. `vvas_xabrscaler` plugin controls this IP. This takes one raw input stream as input and produces one or more scaled/resized raw streams.
 This is a common plugin for both DC and Embedded platforms. So,the details are captured in common plugins section.
 For more details on using this plugin, please refer to :ref:`vvas_xabrscaler`
 
-For more information, contact `vvas_discuss@xilinx.com`.
+For more information, contact `vvas_discuss@amd.com`.

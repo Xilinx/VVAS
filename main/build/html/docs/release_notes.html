@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+		<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
@@ -259,10 +259,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#known-limitations">Known Limitations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#known-issues">Known Issues</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#data-center">Data Center</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pcie-data-center">PCIe/Data Center</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#embedded-platforms">Embedded Platforms</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#patches">Patches</a></li>
 </ul>
 </li>
 </ul>
@@ -402,17 +402,17 @@
 <li><p><strong>vvas_xcompositor</strong>: Hardware accelerated composition of frames from up to 16 input sources.</p></li>
 <li><p><strong>vvas_xmulticrop</strong>: Hardware accelerate cropping of multiple ROI from a frame.</p></li>
 <li><p><strong>vvas_xopticleflow</strong>: To detect motion using optical flow algorithm.</p></li>
-<li><p><strong>vvas_xoverlay</strong>: To draw text, rectangle, polygone, arrows, circles on a frame</p></li>
+<li><p><strong>vvas_xoverlay</strong>: To draw text, rectangle, polygon, arrows, circles on a frame</p></li>
 <li><p><strong>vvas_xmetaconvert</strong>: plug-in to translate inference meta data in to overlay meta data</p></li>
 <li><p><strong>vvas_xtracker</strong>: Implements tracking algorithms to track objects in multiple frames</p></li>
 <li><p><strong>vvas_xfunnel</strong>: Multiplex streams on multiple input pads and output onto a single pad</p></li>
-<li><p><strong>vvas_xdefunnel</strong>: Send buffetrs received on input pad on different output pads corresponding to the stream id information associated with the buffer.</p></li>
+<li><p><strong>vvas_xdefunnel</strong>: Send buffers received on input pad on different output pads corresponding to the stream id information associated with the buffer.</p></li>
 </ul>
 </li>
 <li><p>Migrated to XRT native APIs
 - Development of acceleration software libraries simplified with this change. This is not backward compatible.</p></li>
 <li><p>Tutorial for cascaded Machine Learning</p></li>
-<li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygone etc.</p></li>
+<li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygon etc.</p></li>
 </ul>
 </section>
 <section id="features">
@@ -444,7 +444,7 @@
 </li>
 <li><p>Hardware accelerated Resize and color space conversion</p></li>
 <li><p>Region Of Interest based encoding</p></li>
-<li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygone etc.</p></li>
+<li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygon etc.</p></li>
 <li><p>HDMI Tx and Display Port interface for displaying the contents</p></li>
 </ul>
 </section>
@@ -452,26 +452,26 @@
 <h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Multiscaler kernel require minimum cropping width and height to be 64. In case the cropping width or height is less than 64, then cropping is not performed.</p></li>
-<li><p>Due to the above limitation, during cascadded ML inferencing, in case the first stage ML inference generates- objects with region of interest having width and/height less than 64, then the object is not cropped and the ML inference for that object in next stages will not be correct.</p></li>
+<li><p>Due to the above limitation, during cascaded ML inferencing, in case the first stage ML inference generates- objects with region of interest having width and/height less than 64, then the object is not cropped and the ML inference for that object in next stages will not be correct.</p></li>
 <li><p>All inputs to the <code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> shall have same frame rate otherwise the processing will be controlled by the slowest frame rate input stream.</p></li>
 </ul>
 <p>For platform/example specific known limitations, refer to the example/application design.</p>
 </section>
 <section id="known-issues">
 <h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this heading">¶</a></h2>
-<section id="data-center">
-<h3>Data Center<a class="headerlink" href="#data-center" title="Permalink to this heading">¶</a></h3>
+<section id="pcie-data-center">
+<h3>PCIe/Data Center<a class="headerlink" href="#pcie-data-center" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>High density transcoding performance is less than real time as XRT is being configured in polling mode instead of interrupt mode because of a known issue in XRT on U30 platform.</p></li>
 </ul>
 <p>For known issues, refer to the example/application design for specific issues, if any.</p>
 </section>
-</section>
-<section id="patches">
-<h2>Patches<a class="headerlink" href="#patches" title="Permalink to this heading">¶</a></h2>
+<section id="embedded-platforms">
+<h3>Embedded Platforms<a class="headerlink" href="#embedded-platforms" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>None</p></li>
+<li><p>On zcu104 boards, Cascaded pipelines OR several ML instances running simultaneously are sending board into bad state and needs reboot to recover from it. The default value of IOUT_OC_FAULT_LIMIT on PMIC chip irps5401 is too low and that is causing the temperature fault limit getting crossed. Workaround is to increase this limit. But there is risk of board getting damaged if running for long time.</p></li>
 </ul>
+</section>
 </section>
 </section>
 

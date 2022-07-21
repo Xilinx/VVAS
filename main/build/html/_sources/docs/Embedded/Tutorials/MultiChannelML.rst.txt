@@ -52,7 +52,11 @@ System Requirements
 Pre-built binaries
 *******************
 
-`Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip>`_ provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.
+Release package COMING SOON provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.
+
+ .. Note::
+
+     Pre-built binaries for this example designs will be available soon. You may also build this complete example design following the steps mentioned in **Building Blocks** section. For more information, you may contact vvas_discuss@amd.com.
 
 Download the release package. Let the path where release package is downloaded be represented as ``<RELEASE_PATH>``.
 
@@ -835,7 +839,7 @@ Steps for building Vitis example project:
 
   ::
 
-      wget -o DPUCZDX8G.tar.gz '<Download Link>'
+      wget -O DPUCZDX8G.tar.gz '<Download Link>'
 
   * Uarchive ``DPUCZDX8G.tar.gz``
 
@@ -854,7 +858,7 @@ Steps for building Vitis example project:
 
 ::
 
-  make PLATFORM=<PLATFORM_PATH>/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1.xpfm DPU_TRD_PATH=<VITIS_AI_REPO>/Vitis-AI/DPUCZDX8G HW_ACCEL_PATH=<VVAS_REPO>/VVAS/vvas-accel-hw/
+  make PLATFORM=<PLATFORM_PATH>/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1.xpfm DPU_TRD_PATH=<VITIS_AI_REPO>/DPUCZDX8G HW_ACCEL_PATH=<VVAS_REPO>/VVAS/vvas-accel-hw/
 
 
 .. Note:: *Depending on the build machine capacity, building this example project can take about 3 or more hours to compile*.
@@ -913,11 +917,8 @@ You can now see the 4-channel mixed video on the HDMI monitor.
 Known Issues
 *************
 
-1. In Multi Channel ML design, the design is congested due to having multiple logic blocks including 2 DPU IPs and it is not able to meet timing with few slack violations. They are ignored using vItis compiler switch "skipTimingCheckAndFrequencyScaling".
+* On zcu104 boards, Cascaded pipelines OR several ML instances running simultaneously are sending board into bad state and needs reboot to recover from it. The default value of IOUT_OC_FAULT_LIMIT on PMIC chip irps5401 is too low  and that is causing the temperature fault limit getting crossed. Workaround is to increase this limit. But there is risk of board getting damaged if running for long time.
 
-2.  In MultichannelML design, on rebooting the board lead to crash dump. The crash dump is during turning off board, but booting of board is succesful without any issue.
-
-3. When we are executing 3 level cascade pipeline in a loop, by re-starting the pipeline after EOS, we start seeing shift in images. This issue is seen only in 3 stage ML cascading pipeline and only when we do start/stop in a loop. This is random in nature. The issue is not seen when we kept the same 3 stage cascade pipeline running continuously for 12 hrs. 
 
 ********************
 References

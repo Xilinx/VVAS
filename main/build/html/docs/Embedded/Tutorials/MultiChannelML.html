@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+		<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
@@ -413,7 +413,13 @@
 </section>
 <section id="pre-built-binaries">
 <h2>Pre-built binaries<a class="headerlink" href="#pre-built-binaries" title="Permalink to this heading">¶</a></h2>
-<p><a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip">Release package</a> provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.</p>
+<p>Release package COMING SOON provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pre-built binaries for this example designs will be available soon. You may also build this complete example design following the steps mentioned in <strong>Building Blocks</strong> section. For more information, you may contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
+</div>
+</div></blockquote>
 <p>Download the release package. Let the path where release package is downloaded be represented as <code class="docutils literal notranslate"><span class="pre">&lt;RELEASE_PATH&gt;</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -437,10 +443,10 @@ Refer to <a class="reference external" href="https://www.xilinx.com/support/docu
 <a class="reference internal image-reference" href="../../../_images/omxh264dec_plugin.png"><img alt="../../../_images/omxh264dec_plugin.png" class="align-center" src="../../../_images/omxh264dec_plugin.png" style="width: 949.1999999999999px; height: 205.79999999999998px;" /></a>
 <p>VVAS solution for VCU block</p>
 <p>Standalone VCU block can be tested with following pipeline:</p>
-<figure class="align-center" id="id3">
+<figure class="align-center" id="id2">
 <a class="reference internal image-reference" href="../../../_images/decode_pipeline.png"><img alt="../../../_images/decode_pipeline.png" src="../../../_images/decode_pipeline.png" style="width: 1010.0999999999999px; height: 371.7px;" /></a>
 <figcaption>
-<p><span class="caption-text">Sample video pipeline for VCU block</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Sample video pipeline for VCU block</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p><em>GStreamer command</em>:</p>
@@ -461,10 +467,10 @@ You need to set the <code class="docutils literal notranslate"><span class="pre"
 Here, x, y represents the starting position of the image on screen,
 width represents width of the video image, and height represents height of the video image.</p>
 <p>Sample video pipeline for adding HDMI Tx is shown as below</p>
-<figure class="align-center" id="id4">
+<figure class="align-center" id="id3">
 <a class="reference internal image-reference" href="../../../_images/decode_hdmitx_pipeline.png"><img alt="../../../_images/decode_hdmitx_pipeline.png" src="../../../_images/decode_hdmitx_pipeline.png" style="width: 1045.8px; height: 371.7px;" /></a>
 <figcaption>
-<p><span class="caption-text">Sample video pipeline adding Decoder and HDMI Tx blocks</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Sample video pipeline adding Decoder and HDMI Tx blocks</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p><em>GStreamer command</em>:</p>
@@ -491,17 +497,17 @@ VVAS supports the DPU libraries released with <a class="reference external" href
 The beauty of this VVAS solution is that user need not figure out the resolution required for various DPU supported models.
 vvas_xinfer plug-in gets this information from the requested model and perform resize, color space conversion operation on the input image as per the requirement of the model using preprocessor block (vvas_xpreprocessor). The output of the vvas_xinfer is the original input image along with the scaled metadata for that resolution.</p>
 <p>The information for the ML model to be used must be provided in the JSON file, that is passed to vvas_xfilter’s plug-in property <strong>infer-config</strong>.</p>
-<figure class="align-center" id="id5">
+<figure class="align-center" id="id4">
 <a class="reference internal image-reference" href="../../../_images/xfilter_plugin.png"><img alt="../../../_images/xfilter_plugin.png" src="../../../_images/xfilter_plugin.png" style="width: 695.4px; height: 444.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">VVAS solution for ML block</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">VVAS solution for ML block</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>ML block can be tested with following pipeline:</p>
-<figure class="align-center" id="id6">
+<figure class="align-center" id="id5">
 <a class="reference internal image-reference" href="../../../_images/ML_pipeline.png"><img alt="../../../_images/ML_pipeline.png" src="../../../_images/ML_pipeline.png" style="width: 1019.9px; height: 371.7px;" /></a>
 <figcaption>
-<p><span class="caption-text">Sample Video Pipeline adding ML block</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Sample Video Pipeline adding ML block</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p><em>GStreamer command</em>:</p>
@@ -581,6 +587,13 @@ The sample log output is shown below.</p>
 These properties are tested in the context of this tutorial only.</p>
 <p>Table 1: preprocessing parameters in JSON format to configure mean and scale values</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 15%" />
+<col style="width: 18%" />
+<col style="width: 23%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -697,10 +710,10 @@ but we should see the input image getting displayed in monitor by this pipeline.
 The <a class="reference internal" href="../../common/common_plugins.html#vvas-xboundingbox"><span class="std std-ref">vvas_xboundingbox</span></a> software acceleration library comes in handy in this case.
 This library along with VVAS infrastructure plug-in <a class="reference internal" href="../../common/common_plugins.html#vvas-xfilter"><span class="std std-ref">vvas_xfilter</span></a> can provide the bounding box functionality.</p>
 <p>Sample video pipeline for adding bounding box block is shown as below</p>
-<figure class="align-center" id="id7">
+<figure class="align-center" id="id6">
 <a class="reference internal image-reference" href="../../../_images/single_channel_pipeline.png"><img alt="../../../_images/single_channel_pipeline.png" src="../../../_images/single_channel_pipeline.png" style="width: 1009.4px; height: 371.7px;" /></a>
 <figcaption>
-<p><span class="caption-text">Sample Video Pipeline adding Bounding Box block</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Sample Video Pipeline adding Bounding Box block</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p><em>GStreamer command</em>:</p>
@@ -1105,7 +1118,7 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 <li><p>Open the <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/tree/master/reference_design#readme">reference_design</a> readme page from Vitis-AI release repo.</p></li>
 <li><p>Copy the <code class="docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Link</span></code> for <code class="docutils literal notranslate"><span class="pre">IP</span> <span class="pre">Name</span></code> corresponding to <code class="docutils literal notranslate"><span class="pre">DPUCZDX8G</span></code> from <code class="docutils literal notranslate"><span class="pre">Edge</span> <span class="pre">IP</span></code> Table</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="o">-</span><span class="n">o</span> <span class="n">DPUCZDX8G</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="s1">&#39;&lt;Download Link&gt;&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="o">-</span><span class="n">O</span> <span class="n">DPUCZDX8G</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="s1">&#39;&lt;Download Link&gt;&#39;</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -1124,7 +1137,7 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 <ol class="arabic simple" start="3">
 <li><p>Compile the project</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">PLATFORM</span><span class="o">=&lt;</span><span class="n">PLATFORM_PATH</span><span class="o">&gt;/</span><span class="n">xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1</span><span class="o">.</span><span class="n">xpfm</span> <span class="n">DPU_TRD_PATH</span><span class="o">=&lt;</span><span class="n">VITIS_AI_REPO</span><span class="o">&gt;/</span><span class="n">Vitis</span><span class="o">-</span><span class="n">AI</span><span class="o">/</span><span class="n">DPUCZDX8G</span> <span class="n">HW_ACCEL_PATH</span><span class="o">=&lt;</span><span class="n">VVAS_REPO</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span><span class="o">/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">PLATFORM</span><span class="o">=&lt;</span><span class="n">PLATFORM_PATH</span><span class="o">&gt;/</span><span class="n">xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1</span><span class="o">.</span><span class="n">xpfm</span> <span class="n">DPU_TRD_PATH</span><span class="o">=&lt;</span><span class="n">VITIS_AI_REPO</span><span class="o">&gt;/</span><span class="n">DPUCZDX8G</span> <span class="n">HW_ACCEL_PATH</span><span class="o">=&lt;</span><span class="n">VVAS_REPO</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span><span class="o">/</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -1194,11 +1207,9 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 </section>
 <section id="known-issues">
 <h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this heading">¶</a></h2>
-<ol class="arabic simple">
-<li><p>In Multi Channel ML design, the design is congested due to having multiple logic blocks including 2 DPU IPs and it is not able to meet timing with few slack violations. They are ignored using vItis compiler switch “skipTimingCheckAndFrequencyScaling”.</p></li>
-<li><p>In MultichannelML design, on rebooting the board lead to crash dump. The crash dump is during turning off board, but booting of board is succesful without any issue.</p></li>
-<li><p>When we are executing 3 level cascade pipeline in a loop, by re-starting the pipeline after EOS, we start seeing shift in images. This issue is seen only in 3 stage ML cascading pipeline and only when we do start/stop in a loop. This is random in nature. The issue is not seen when we kept the same 3 stage cascade pipeline running continuously for 12 hrs.</p></li>
-</ol>
+<ul class="simple">
+<li><p>On zcu104 boards, Cascaded pipelines OR several ML instances running simultaneously are sending board into bad state and needs reboot to recover from it. The default value of IOUT_OC_FAULT_LIMIT on PMIC chip irps5401 is too low  and that is causing the temperature fault limit getting crossed. Workaround is to increase this limit. But there is risk of board getting damaged if running for long time.</p></li>
+</ul>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading">¶</a></h2>

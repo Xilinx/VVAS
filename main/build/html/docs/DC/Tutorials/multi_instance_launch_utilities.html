@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+		<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
@@ -369,11 +369,11 @@
             
   <section id="multi-instance-high-density-transcoding">
 <h1>Multi-instance High density Transcoding<a class="headerlink" href="#multi-instance-high-density-transcoding" title="Permalink to this heading">¶</a></h1>
-<p>Each <code class="docutils literal notranslate"><span class="pre">Zynq</span> <span class="pre">UltraScale+</span> <span class="pre">MPSoc</span></code> device has a decoder and an encoder with max capacity of encoding/decoding &#64;4Kp60. So there can be more number of ecoder/encoder instances running simultaneously in case the the total required capacity is less than 4Kp60. For example, we can launch 4x transcode pipelines of capacity 1080p60 resolution.</p>
-<p>There are two <code class="docutils literal notranslate"><span class="pre">Zynq</span> <span class="pre">UltraScale+</span> <span class="pre">MPSoC</span></code> devices inside <code class="docutils literal notranslate"><span class="pre">Alveo</span> <span class="pre">U30</span></code> card and each is capable of transcoding &#64;4Kp60. If there are more such cards connected to the server, then this capacity is increased and we can launch more transcode pipelines in parallel.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">Zynq</span> <span class="pre">UltraScale+</span> <span class="pre">MPSoc</span></code> device has a decoder and an encoder with max capacity of encoding/decoding &#64;4Kp60. So, there can be more number of decoder/encoder instances running simultaneously in case the the total required capacity is less than 4Kp60. For example, we can launch 4x transcode pipelines of capacity 1080p60 resolution.</p>
+<p>There are two <code class="docutils literal notranslate"><span class="pre">Zynq</span> <span class="pre">UltraScale+</span> <span class="pre">MPSoC</span></code> devices inside <code class="docutils literal notranslate"><span class="pre">Alveo</span> <span class="pre">U30</span></code> card and each is capable of transcoding &#64;4Kp60. If there are more such cards connected to the server, then this capacity is increased, and we can launch more transcode pipelines in parallel.</p>
 <section id="pre-requisite">
 <h2>Pre-requisite<a class="headerlink" href="#pre-requisite" title="Permalink to this heading">¶</a></h2>
-<p>Before start executing the Transcoding usecases, make sure the setup is ready:</p>
+<p>Before start executing the Transcoding use cases, make sure the setup is ready:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Required Alveo U30 cards are installed in the PCIe slots of the server machine.</p></li>
@@ -389,7 +389,7 @@
 </section>
 <section id="resource-management">
 <h2>Resource Management<a class="headerlink" href="#resource-management" title="Permalink to this heading">¶</a></h2>
-<p>When there are several devices/cards, connected to the server, then it is important to select correct device to launch each new instance of the transcode pipeline. Selection of device depends on how much capacity is left on that device and how much load new instance needs. This has been simplified by <code class="docutils literal notranslate"><span class="pre">XRM</span></code> (Xilinc Resource Manager). User need not know details about how xrm works. XRM keeps on checking the available capacity on each device and launches the transcode pipeline on a device only when it has capacity. If current device doesn’t have the required capacity, then it goes to next device and launch the new pipeline instance if it has the capacity. User need not know details about how xrm works. There are two applications provided that will interact with XRM and manage the resource allocation.</p>
+<p>When there are several devices/cards, connected to the server, then it is important to select correct device to launch each new instance of the transcode pipeline. Selection of device depends on how much capacity is left on that device and how much load new instance needs. This has been simplified by <code class="docutils literal notranslate"><span class="pre">XRM</span></code> (Xilinc Resource Manager). User need not know details about how XRM works. XRM keeps on checking the available capacity on each device and launches the transcode pipeline on a device only when it has capacity. If current device does not have the required capacity, then it goes to next device and launch the new pipeline instance if it has the capacity. User need not know details about how XRM works. There are two applications provided that will interact with XRM and manage the resource allocation.</p>
 <p>Following XRM based applications are provided with varied ease-of-use to support the same:</p>
 <ol class="arabic simple">
 <li><p>jobSlotReservation</p></li>
@@ -398,10 +398,10 @@
 <section id="jobslotreservation">
 <h3>jobSlotReservation<a class="headerlink" href="#jobslotreservation" title="Permalink to this heading">¶</a></h3>
 <p>Each pipeline, be it simple decode, or simple transcode or and ABR ladder, is a JOB for jobSlotReservation application. Each compute unit and its load capacity in such pipeline is described in a json file and this json file is known as job descriptor. Sample job description files are located at : /opt/xilinx/launcher/scripts/describe_job</p>
-<p>Based on the input resolution and type of use-case, the load requirement of compute units(CUs) within a JOB varies which inturn determines how many instances of each JOB can be launched on the available devices at a time.</p>
+<p>Based on the input resolution and type of use-case, the load requirement of compute units (CUs) within a JOB varies which in turn determines how many instances of each JOB can be launched on the available devices at a time.</p>
 <p>Steps to use:</p>
 <ol class="arabic simple">
-<li><p>Once the device and host boots up, setup the environment:</p></li>
+<li><p>Once the device and host boot up, setup the environment:</p></li>
 </ol>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> /opt/xilinx/xcdr/setup.sh
 </pre></div>
@@ -455,7 +455,7 @@ on which command needs to be run.</p>
 </section>
 <section id="launcher">
 <h3>Launcher<a class="headerlink" href="#launcher" title="Permalink to this heading">¶</a></h3>
-<p>‘Launcher’ is another application which makes it much more easier to run maximum multiple instances of a use-case without the knowledge of
+<p>‘Launcher’ is another application which makes it much easier to run maximum multiple instances of a use-case without the knowledge of
 number of devices available and how many are free to use. This is achieved with the help of XRM based ‘launcher’ application.</p>
 <p>Steps to use:</p>
 <ol class="arabic simple">

@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+		<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
@@ -370,7 +370,7 @@
             
   <section id="gstreamer-abr-ladder-application">
 <span id="gst-abrladder"></span><h1>GStreamer ABR Ladder Application<a class="headerlink" href="#gstreamer-abr-ladder-application" title="Permalink to this heading">¶</a></h1>
-<nav class="contents local" id="table-of-contents">
+<div class="contents local topic" id="table-of-contents">
 <p class="topic-title">Table of Contents</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#introduction" id="id1">Introduction</a></p></li>
@@ -378,9 +378,9 @@
 <li><p><a class="reference internal" href="#usage" id="id3">Usage</a></p></li>
 <li><p><a class="reference internal" href="#examples" id="id4">Examples</a></p></li>
 </ul>
-</nav>
+</div>
 <section id="introduction">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id1">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
 <p>The <strong class="program">vvas_xabrladder</strong> application is a command line utility which implements the GStreamer video transcoding pipeline described in the diagram below. This application expects an input video file (mp4 with H.264/H.265 or H.264/H.265 elementary stream) and produces 5 different H.264/H.265 elementary streams. The resolution of each output stream is configured using a JSON file (by default: <code class="file docutils literal notranslate"><span class="pre">/opt/xilinx/vvas/share/vvas-examples/abrladder.json</span></code>). The output streams produced by this application are saved in the <code class="file docutils literal notranslate"><span class="pre">/tmp/ladder_outputs/</span></code> folder.</p>
 <a class="reference internal image-reference" href="../../../_images/gst_xabrladder.png"><img alt="GStreamer pipeline of the vvas_xabrladder application" class="align-center" src="../../../_images/gst_xabrladder.png" style="width: 1024px;" /></a>
 <div class="admonition note">
@@ -389,7 +389,7 @@
 </div>
 </section>
 <section id="host-system-requirement">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Host System Requirement</a><a class="headerlink" href="#host-system-requirement" title="Permalink to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id2">Host System Requirement</a><a class="headerlink" href="#host-system-requirement" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>GStreamer 1.18.5</p></li>
 <li><p>gst-plugins-good</p></li>
@@ -410,9 +410,14 @@
 </ul>
 </section>
 <section id="usage">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Usage</a><a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">Usage</a><a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h2>
 <p>Below are the input parameters required to run the application.</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 13%" />
+<col style="width: 60%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Parameter</p></th>
 <th class="head"><p>Short Form</p></th>
@@ -676,6 +681,10 @@ The default json file that showcase basic ladder configuration (without run time
 </div>
 <p>The JSON entries are explained in table below.</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 88%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>JSON Key</p></th>
 <th class="head"><p>Description</p></th>
@@ -741,7 +750,7 @@ The default json file that showcase basic ladder configuration (without run time
 </section>
 </section>
 <section id="examples">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Examples</a><a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h2>
 <p>Below are example commands for the ABR ladder use case. The output files are stored in <code class="file docutils literal notranslate"><span class="pre">/tmp/ladder_outputs/</span></code> folder. Ensure that enough space is availabe in this folder.</p>
 <ol class="arabic">
 <li><p>Running one ABR ladder on one device with lookahead (enabled by default):</p>

@@ -2,7 +2,7 @@
 Plug-ins
 ###################
 
-VVAS is based on the GStreamer framework. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``vvas-gst-plugins`` folder of the VVAS source tree. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. Infrastructure plug-ins are developed to enable developers to integrate their kernel into GStreamer based applications without having understanding about GStreamer framework. Infrastructure plug-ins encapsulates most of the basic GStreamer plug-in requirements/features, like memory management, kernel configuration, caps negotiation etc. Same Infrastructure plug-ins can be used for integrating different kernels to realize different functionalities. Custom plug-ins implements a specific functionality, like encode, decode, overlay etc. that can't be implemented using Infrastructure plug-ins in an optimized way. 
+VVAS is based on the GStreamer framework. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the ``vvas-gst-plugins`` folder of the VVAS source tree. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. Infrastructure plug-ins are developed to enable developers to integrate their kernel into GStreamer based applications without having understanding about GStreamer framework. Infrastructure plug-ins encapsulates most of the basic GStreamer plug-in requirements/features, like memory management, kernel configuration, caps negotiation etc. Same Infrastructure plug-ins can be used for integrating different kernels to realize different functionalities. Custom plug-ins implement a specific functionality, like encode, decode, overlay etc. that can't be implemented using Infrastructure plug-ins in an optimized way. 
 
 This section covers the plug-in that are common for Edge (Embedded) as well as cloud (PCI basede) solutions. There are few plug-ins that are specific to Edge/Embedded platforms and are covered in :doc:`Plugins for Embedded platforms <../Embedded/embedded-plugins>`. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in :doc:`Plugins for Data Center Platform <../DC/DC_plugins>`. The following table lists the VVAS GStreamer plug-ins.
 
@@ -28,13 +28,13 @@ Table 1: GStreamer Plug-ins
      - A generic infrastructure plug-in: 1 input, 1 output, supporting pass-through, in-place, and transform processing.
 
    * - :ref:`vvas_xinfer`
-     - An inference plug-in using vvas_xdpuinfer acceleration software library and attaches inference output as GstInferenceMeta to input buffer. Also, this plug-in does optinal pre-processing required for inference using vvas_xpreprocess acceleration software library.
+     - An inference plug-in using vvas_xdpuinfer acceleration software library and attaches inference output as GstInferenceMeta to input buffer. Also, this plug-in does optional pre-processing required for inference using vvas_xpreprocess acceleration software library.
 
    * - :ref:`vvas_xoptflow`
      - Plug-in to estimate optical flow using previous and current frame.
 
    * - :ref:`vvas_xoverlay`
-     - Plug-in to draw text, boxes, lines, arrows, circles, polygons and time stamp on frames.
+     - Plug-in to draw text, boxes, lines, arrows, circles, polygons, and time stamp on frames.
 
    * - :ref:`vvas_xtracker`
      - Plug-in to track objects of interest detected during infer.  This plug-in tracks the previously detected objects during the time interval when infer information is not available.
@@ -49,7 +49,7 @@ Table 1: GStreamer Plug-ins
      - Plug-in to de-serialize data serialized using `vvas_xfunnel` plug-in
 
    * - :ref:`vvas_xmulticrop`
-     - Hardware accelerated plug-in for doing static and dynamic cropping, pre-processing, scaling and color space conversion.
+     - Hardware accelerated plug-in for doing static and dynamic cropping, pre-processing, scaling, and color space conversion.
 
    * - :ref:`vvas_xcompositor`
      - Hardware accelerated N input, 1 output plug-in that combines two or more video frames into a single frame.
@@ -61,7 +61,7 @@ Table 1: GStreamer Plug-ins
 Custom Plug-ins
 *****************
 
-There are specific functions, like video decoder, encoder, and meta affixer where the requirements are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.
+There are specific functions, like video decoder, encoder, and meta-affixer where the requirements are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.
 
 .. _vvas_xmetaaffixer:
 
@@ -160,9 +160,9 @@ This section covers the example pipelines using the metaaffixer plug-in.
 vvas_xabrscaler
 ======================
 
-There are severa use cases where the available frame resolution and color formats may not be suitable for the consumption by the next component. For example in case of Machine Learning applications, input can be from different sources, resolutions, but ML models work on a fixed resolution. In such cases, the input image needs to be re-sized to a different resolution. Also the input image color format may be YUV/NV12, but the ML models require impage to be in BGR format. In this case we need to do the color space conversion as well. ML model may also require some pre-processing, like Mean Subtraction, Normalization etc. on the input image. 
+There are severa use cases where the available frame resolution and color formats may not be suitable for the consumption by the next component. For example, in case of Machine Learning applications, input can be from different sources, resolutions, but ML models work on a fixed resolution. In such cases, the input image needs to be re-sized to a different resolution. Also, the input image color format may be YUV/NV12, but the ML models require image to be in BGR format. In this case we need to do the color space conversion as well. ML model may also require some pre-processing, like Mean Subtraction, Normalization etc. on the input image. 
 
-In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. vvas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ``vvas_xabrscaler`` is a GStreamer plug-in developed to accelerate the resize and color space conversion, Mean Subtraction, Normalization and cropping. For more implementation details, refer to `vvas_xabrscaler source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/abrscaler>`_.
+In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. vvas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ``vvas_xabrscaler`` is a GStreamer plug-in developed to accelerate the resize and color space conversion, Mean Subtraction, Normalization, and cropping. For more implementation details, refer to `vvas_xabrscaler source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/abrscaler>`_.
 
 This plug-in supports:
 
@@ -180,7 +180,7 @@ This plug-in supports:
 
 .. important:: Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application. 
 
-As a reference, maximum resolution supported by multi-scaler kernel in ``Smart Model Select`` example design can be found in  `multi-scaler kernel config <https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_config.h#L33>`_
+As a reference, maximum resolution supported by multi-scaler kernel in ``Smart Model Select`` example design can be found in `multi-scaler kernel config <https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_config.h#L33>`_
 
 Prerequisite
 ----------------
@@ -346,7 +346,7 @@ Table 3: vvas_xabrscaler Plug-in Properties
 
 .. note::
 
-       MultiScaler IP has some alignment requirement, hence user given parameters for crop are aligned as per the IP requirement, alignment insures that it covers the region of crop specified by user, hence final cropped image may have extra pixels cropped.
+       MultiScaler IP has some alignment requirement, hence user given parameters for crop are aligned as per the IP requirement, alignment ensures that it covers the region of crop specified by user, hence final cropped image may have extra pixels cropped.
 
 
 Example Pipelines
@@ -424,7 +424,7 @@ Cropped input is scaled and converted to below format:
 vvas_xinfer
 ============
 
-GStreamer inference plug-in, ``vvas_xinfer``, performs inferencing on video frames/imges with the help of ``Vitis AI`` library and prepares tree like metadata in ``GstInferenceMeta`` object and attaches the same to input GstBuffer. This plug-in triggers optional preprocessing (scale/crop & etc.) operations with the help of ``vvas_xpreprocessor``  kernel library (which is on top of Xilinx's multiscaler IP) on incoming video frames before calling ``vvas_xdpuinfer`` kernel library. vvas_xinfer plug-in's input capabilities are influenced by vvas_xpreprocessor library input capabilities and Vitis AI library capabilities (Vitis-AI does software scaling). If preprocessing is enabled and vvas_xinfer plug-in is receiving non-CMA memory frames, then data copy will be made to ensure CMA frames goes to preprocessing engine. The main advantage of this plug-in is users/customers can realize inference cascading use cases with ease.
+GStreamer inference plug-in, ``vvas_xinfer``, performs inferencing on video frames/images with the help of ``Vitis AI`` library and prepares tree like metadata in ``GstInferenceMeta`` object and attaches the same to input GstBuffer. This plug-in triggers optional preprocessing (scale/crop & etc.) operations with the help of ``vvas_xpreprocessor``  kernel library (which is on top of Xilinx's multiscaler IP) on incoming video frames before calling ``vvas_xdpuinfer`` kernel library. vvas_xinfer plug-in's input capabilities are influenced by vvas_xpreprocessor library input capabilities and Vitis AI library capabilities (Vitis-AI does software scaling). If preprocessing is enabled and vvas_xinfer plug-in is receiving non-CMA memory frames, then data copy will be made to ensure CMA frames goes to preprocessing engine. The main advantage of this plug-in is users/customers can realize inference cascading use cases with ease.
 For implementation details, refer to `vvas_xinfer source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/infer>`_
 
 .. figure:: ../images/vvas_xinfer_blockdiagram.png
@@ -698,12 +698,12 @@ This json file captures the parameters for the pre-processing kernel.
 
 .. note::
 
-   When user wants to perform hardware accelerated pre-processing on input frame using ``vvas_xinfer`` plug-in, then the pre-processing parameters provided in **preprocess-config** json file must be checked for correctness. The pre-processing parameters for the models are provided in the prototxt file for the models. For few models these parameters needs to be modified from what it is in the prototxt file. User must provide these modified values in the preprocess-config json file.
+   When user wants to perform hardware accelerated pre-processing on input frame using ``vvas_xinfer`` plug-in, then the pre-processing parameters provided in **preprocess-config** json file must be checked for correctness. The pre-processing parameters for the models are provided in the prototxt file for the models. For few models these parameters need to be modified from what it is in the prototxt file. User must provide these modified values in the preprocess-config json file.
    There are few steps mentioned below to know which models need changes.
 
 To determine the pre-processing parameters for a model, follow the steps mentioned below:
 
-* Get the algorithmic scale vector, i.e. "scale" fields for each channel R,G,B mentioned in the model prototxt file. If the model expects input image in RGB format, then the first field will corresponds to Channel R, next will corresponds to Channel G, and the last one will be for Channel B. Example prototxt file contents are mentioned below:
+* Get the algorithmic scale vector, i.e. "scale" fields for each channel R,G,B mentioned in the model prototxt file. If the model expects input image in RGB format, then the first field will corresponds to Channel R, next will correspond to Channel G, and the last one will be for Channel B. Example prototxt file contents are mentioned below:
 
 
 .. code-block::
@@ -758,7 +758,7 @@ To determine the pre-processing parameters for a model, follow the steps mention
 
 .. code-block::
 
-  If the model expects input image in RGB format, then the first scale value in prototxt file will corresponds to channel R. So after multiplying with the "inner scale" value, assign this first value to "beta_r" in  preprocess-config json file. Repeat the same for other channels.
+  If the model expects input image in RGB format, then the first scale value in prototxt file will corresponds to channel R. So after multiplying with the "inner scale" value, assign this first value to "beta_r" in preprocess-config json file. Repeat the same for other channels.
 
 
 * Example Simple inference (YOLOv3) pipeline which takes NV12 YUV file (test.nv12) as input is described below:
@@ -782,10 +782,10 @@ To determine the pre-processing parameters for a model, follow the steps mention
 vvas_xoptflow
 ==============
 
-Optical flow is one of the key function used in many image processing and computer vision applications like object tracking, motion based segmentation, depth estimation, stitching and video frame rate conversion etc. Optical flow is estimated using previous and current frame pixel information.
+Optical flow is one of the key functions used in many image processing and computer vision applications like object tracking, motion based segmentation, depth estimation, stitching and video frame rate conversion etc. Optical flow is estimated using previous and current frame pixel information.
 
-For optical flow estimation this plug-in uses hardware accelerator of xfopencv non-pyramid optical flow. This non-pyramid optical flow function takes current and previous frame as input and generates two floating point buffers of x and y direction displacements. Optical flow plug-in attaches these displacement buffers as gstvvasofmeta.
-For implementation details, refer to `vvas_xoptflow source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/optflow>`_
+For optical flow estimation this plug-in uses hardware accelerator of xfopencv non-pyramid optical flow. This non-pyramid optical flow function takes current and previous frame as input and generates two floating point buffers of x and y direction displacements. Optical flow plug-in attaches these displacement buffers as **gstvvasofmeta**.
+For implementation details, refer to `vvas_xoptflow source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/optflow>`_
 
 .. figure:: ../images/vvas_optflow_blockdiagram.png
    :align: center
@@ -850,7 +850,7 @@ Forr drawing objects like bounding box, lines, arrows etc., the information abou
 
 For converting metadata generated from upstream plug-in like infer, opticalflow, segmentation etc., to gstvvasoverlaymeta an intermediate plug-in, :ref:`vvas_xmetaconvert` is to be used before ``vvas_xoverlay`` plug-in.
 
-For implementation details, refer to `vvas_xoverlay source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/overlay>`_
+For implementation details, refer to `vvas_xoverlay source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/overlay>`_
 
 .. figure:: ../images/vvas_overlay_blockdiagram.png
    :align: center
@@ -936,7 +936,7 @@ Table 7: vvas_xoverlay Plug-in Properties
 Example Pipelines
 ---------------------
 
-The following example demonstrates use of vvas_xoverlay plug-in with xinfter and vvas_xmetaconvert for drawing bounding boxes. ``vvas_xinfer`` plug-in produces inference result and stores in VVAS_GstInference data structuer. This metadata is parsed and translated into a different metadata structure that understood by ``vvas_xmetaconvert`` plug-in to draw the bounding box. This transcaltion of meta data is done by ``vvas_xmetaconvert`` plug-in. 
+The following example demonstrates use of ``vvas_xoverlay`` plug-in with ``vvas_xxinfer`` and ``vvas_xmetaconvert`` plug-ins for drawing bounding boxes. ``vvas_xinfer`` plug-in produces inference result and stores in VVAS_GstInference data structure. This metadata is parsed and translated into a different metadata structure that understood by ``vvas_xmetaconvert`` plug-in to draw the bounding box. This translation of meta data is done by ``vvas_xmetaconvert`` plug-in. 
 
 .. code-block::
 
@@ -957,7 +957,7 @@ The tracker plug-in tracks detected objects in a sequence of video frames. Becau
 Each tracker element in the frame is given a unique ID and is initialized with the coordinates of the object detected by ML block. The object is snipped from the frame and taken as a template. Afterward, the tracker element updates the filter every time that there is an object hit, adapting itself to the possible changes which an object might have during the video. 
 
 The tracker plug-in supports three types of object tracking algorithms, namely **Intersection-Over-Union (IOU), Kernelized Correlation Filters (KCF) and Minimum Output Sum of Squared Error (MOSSE)**.  IOU algorithm is used when detection output is available for every frame.  Kernelized Correlation Filters (KCF) algorithm or Minimum Output Sum of Squared Error (MOSSE) filter algorithm implemented completely in software using optimizations for the host processor.
-For implementation details, refer to `vvas_xtracker source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/gst/tracker>`_
+For implementation details, refer to `vvas_xtracker source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/tracker>`_
 
 Tracker plug-in supports detecting 16 objects supporting tracker Id from 0 to 15. Beyond these, the tracker Ids restarts from 0.
 
@@ -967,7 +967,7 @@ Tracker plug-in supports detecting 16 objects supporting tracker Id from 0 to 15
    :scale: 80
 
 
-In the above pipeline, preprocessor generates two outputs, one in the resolution and color format required by the object detection model and the other one in the resolution required by the model in NV12 format. One output is provided to ML block to detect the object in the frame. Since the tracker is used in the pipeline, ML block can be run at lower framerate using videorate plug-in. The detection co-ordinates of the frames detected by the ML block are used by tracker plug-in to initialize the objects to track by tracker plug-in. For the frames that are skipped by ML block, tracker plug-in tracks and updates the tracked co-ordinates in the metadata for the next plug-in to draw the bounding boxes.
+In the above pipeline, preprocessor generates two outputs, one in the resolution and color format required by the object detection model and the other one in the resolution required by the model in NV12 format. One output is provided to ML block to detect the object in the frame. Since the tracker is used in the pipeline, ML block can be run at lower framerate using ``videorate`` plug-in. The detection co-ordinates of the frames detected by the ML block are used by tracker plug-in to initialize the objects to track by tracker plug-in. For the frames that are skipped by ML block, tracker plug-in tracks and updates the tracked co-ordinates in the metadata for the next plug-in to draw the bounding boxes.
 
 
 Input and Output
@@ -1176,7 +1176,7 @@ vvas_xmetaconvert
 =================
 
 GStreamer vvas_xmetaconvert plug-in converts VVAS ML inference metadata (GstInferenceMeta) into overlay metadata structure needed by vvas_overlay plug-in. Configuration parameters which are frequently used are added as plug-in properties as well (Ex: "font", "font-size", "thickness" etc).
-For implementation details, refer to `vvas_xmetaconvert source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/gst/metaconvert>`_
+For implementation details, refer to `vvas_xmetaconvert source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaconvert>`_
 
 JSON File for vvas_xmetaconvert
 -------------------------------
@@ -1413,7 +1413,7 @@ Metadata on each buffer is attached to enable ``vvas_xdefunnel`` plug-in to deci
 ``vvas_xfunnel`` supports all caps.
 
 Refer ``vvas_xdefunnel`` plug-in which de-serializes these serialized data and pushes them to the output pads.
-For ``vvas_xfunnel`` implementation details, refer to `vvas_xfunnel source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/gst/funnel>`_
+For ``vvas_xfunnel`` implementation details, refer to `vvas_xfunnel source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/funnel>`_
 
 This plug-in supports:
 
@@ -1473,7 +1473,7 @@ vvas_xdefunnel
 
 vvas_xdefunnel gstreamer plug-in de-serializes data coming from ``vvas_xfunnel`` plug-in.
 This plug-in creates and destroys source pads based on the events from the ``vvas_xfunnel`` plug-in.
-For ``vvas_xdefunnel`` implementation details, refer to `vvas_xdefunnel source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/gst/defunnel>`_
+For ``vvas_xdefunnel`` implementation details, refer to `vvas_xdefunnel source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/defunnel>`_
 
 This plug-in supports:
 
@@ -1539,7 +1539,7 @@ If user wants to get cropped buffer directly on the output pad, he can use stati
 If user wants to crop more than one objects, s/he must go with dynamic cropping, dynamically cropped objects/buffers will not be sent onto the output pad, they will be attached as metadata into the output buffer.
 Both static and dynamic cropping can be performed simultaneously.
 
-For more implementation details, refer to `vvas_xmulticrop source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/multicrop>`_.
+For more implementation details, refer to `vvas_xmulticrop source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/multicrop>`_.
 
 This plug-in supports:
 
@@ -1564,7 +1564,8 @@ Static Cropping: For cropping only one object. The cropped object/buffer will be
 
 
 Dynamic Cropping: For cropping more than one objects from the input buffer. To use dynamic crop feature user must send crop coordinates attached to the buffer in GstVideoRegionOfInterestMeta metadata and GstVideoRegionOfInterestMeta->roi_type must be set to "roi-crop-meta". One instance of GstVideoRegionOfInterestMeta in buffer represents one object for dynamic crop. `vvas_xmulticrop` will dynamically crop the object and attach the cropped objects/buffers to output buffer in GstVideoRegionOfInterestMeta->params. GstVideoRegionOfInterestMeta->params is a GList * of GstStructure. Dynamically cropped buffer is attached into this field, The name of GstStructure is "roi-buffer", and this GstStructure has only one field "sub-buffer" of type GST_TYPE_BUFFER. User should extract this cropped buffer use it and unref it.
-User can choose to resize these cropped buffers to one width and height by setting `d-height` and `d-width` properties. If these properties are not set then cropped buffers will not be resized.
+User can choose to resize these cropped buffers to one width and height by setting `d-height` and `d-width` properties. If these properties are not set, then cropped buffers will not be resized.
+
 If user wants cropped buffers to be of different format than the input format, he can specify this by setting `d-format` gstreamer property. If this property is not set all cropped buffers will have format same as input buffer.
 
 User specified pre-processing will be applied to dynamically cropped buffers only, if user wants it to be applied on output buffer/static crop buffers also, he can set `ppe-on-main buffer` gstreamer property.
@@ -1572,7 +1573,7 @@ User specified pre-processing will be applied to dynamically cropped buffers onl
 Static and dynamic cropping both is possible simultaneously. As explained statically cropped buffer will be sent on the output pad and dynamically cropped buffers will be attached into that output buffer.
 
 `vvas_xmulticrop` supports at max 39 dynamic crops.
-Memory for dynamically cropped buffers are allocated from a Gstreamer buffer pool, there is no upper limit on this buffer pool. So if buffers are not freed, new buffers will be allocated which may lead to more memory consumption.
+Memory for dynamically cropped buffers is allocated from a Gstreamer buffer pool, there is no upper limit on this buffer pool. So, if buffers are not freed, new buffers will be allocated which may lead to more memory consumption.
 
 .. important:: The `vvas_xmulticrop` plug-in controls the multiscaler kernel. If your application uses this plug-in, then make sure that multi-scaler kernel is included in your hardware design.
 
@@ -1769,12 +1770,12 @@ Table 12: vvas_xmulticrop Plug-in Properties
 
 .. note::
 
-       MultiScaler IP has some alignment requirement, hence user given parameters for crop are aligned as per the IP requirement, alignment insures that it covers the region of crop specified by user, hence final cropped image may have extra pixels cropped. Crop width and height must be atleast 64.
+       MultiScaler IP has some alignment requirement, hence user given parameters for crop are aligned as per the IP requirement, alignment ensures that it covers the region of crop specified by user, hence final cropped image may have extra pixels cropped. Crop width and height must be at least 64.
 
 Example Pipelines
 --------------------
 
-The pipeline mentioned below is for PCIe/Data Center platform. In cese you want to execute this pipeline on Embedded platform, then remove **dev-idx** property in the pipelines mentioned below.
+The pipeline mentioned below is for PCIe/Data Center platform. In case you want to execute this pipeline on Embedded platform, then remove **dev-idx** property in the pipelines mentioned below.
 
 * Below pipeline converts NV12 to RGB and performs scaling from 1920x1080 to 640x480. The pipeline mentioned below is for PCIe/Data Center platform.
 
@@ -1919,10 +1920,10 @@ vvas_xcompositor
 ================
 
 vvas_xcompositor is a hardware accelerated N input, 1 output Gstreamer plugin that combines two or more video frames into a single frame.
-It can accept the below mentioned video formats. For each of the requested sink pads it will compare the incoming geometry and framerate to define the output parameters. Indeed output video frames will have the geometry of the biggest incoming video stream and the framerate of the fastest incoming one.
+It can accept the below mentioned video formats. For each of the requested sink pads it will compare the incoming geometry and framerate to define the output parameters. Indeed, output video frames will have the geometry of the biggest incoming video stream and the framerate of the fastest incoming one.
 
-In case input and output formats are different, then the colorspace conversion will be hardware accelerated by vvas_xcompositor.
-For implementation details, refer to `vvas_xcompositor source code <https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/compositor>`_
+In case input and output formats are different, then the color space conversion will be hardware accelerated by vvas_xcompositor.
+For implementation details, refer to `vvas_xcompositor source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/compositor>`_
 
 Input and Output
 ------------------------
@@ -2096,7 +2097,7 @@ Table 14: vvas_xcompositor Pad Properties
 
 The example pipeline with vvas_xcompositor plug-in is as mentioned below.
 
-The pipeline mentioned below is using omxh264dec and this plug-in is supported on embedded platform only. For PCIe/Data center platform, use vvas_xvcudec.
+The pipeline mentioned below is using ``omxh264dec`` plug-in and this plug-in is supported on embedded platforms only. For PCIe/Data center platform, use ``vvas_xvcudec`` plug-in.
 
 .. code-block::
 
@@ -2180,7 +2181,7 @@ Table 16: Acceleration Software Libraries
 +----------------------------------------+----------------------------------+
 
 
-The GStreamer infrastructure plug-ins are available in the vvas-gst-plugins repository/ folder. The following section describes each infrastructure plug-in.
+GStreamer infrastructure plug-ins are available in the ``vvas-gst-plugins`` folder in the vvas source code tree. The following section describes each infrastructure plug-in.
 
 .. _vvas_xfilter:
 
@@ -2233,7 +2234,7 @@ The formats listed are the Xilinx IP supported color formats. To add other color
 Control Parameters and Plug-in Properties
 -----------------------------------------
 
-The following table lists the GObject properties exposed by the vvas_xfilter. Most of them are only available in PCIe supported platforms.
+The following table lists the GObject properties exposed by the vvas_xfilter. Most of them are only available in PCIe based platforms.
 
 Table 17: GObject Properties
 
@@ -2583,7 +2584,7 @@ There are a few requirements before start running bounding box examples. Make su
 JSON File for vvas_xboundingbox
 """"""""""""""""""""""""""""""""
 
-This section describes the JSON file format and configuration parameters for the bounding box acceleration software library. The GStreamer vvas_xfilter plug-in used in the inplace mode. Bounding box and labels are drawn on identified objects on the incoming frame. Bounding box functionality is implemented in the libvvas_xboundingbox.so acceleration software library.
+This section describes the JSON file format and configuration parameters for the bounding box acceleration software library. The GStreamer vvas_xfilter plug-in used in the in-place mode. Bounding box and labels are drawn on identified objects on the incoming frame. Bounding box functionality is implemented in the libvvas_xboundingbox.so acceleration software library.
 
 The following example is of a JSON file to pass to the vvas_xfilter.
 
@@ -2799,13 +2800,13 @@ The following is an example of the model directory (yolov2_voc), which contains 
 xclbin Location
 """""""""""""""
    
-By default, the Vitis AI interface expects ``xclbin`` to be located at **/usr/lib/** and the xclbin is called **dpu.xclbin**. Another option is to use the environment variable **XLNX_VART_FIRMWARE** to speccify the path of xclbin using export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.
+By default, the Vitis AI interface expects ``xclbin`` to be located at **/usr/lib/** and the xclbin is called **dpu.xclbin**. Another option is to use the environment variable **XLNX_VART_FIRMWARE** to specify the path of xclbin using export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.
 
 
 Input Image
 """"""""""""
 
-The vvas_xdpuinfer works with raw BGR and RGB images as required by the model. Make sure you have specified correct color format in model-format field in json file. The exact resolution of the image to vvas_xdpuinfer must be provided, it is expected by the model. There is a performance loss if a different resolution of the BGR image is provided to the vvas_xdpuinfer, because resizing is done on the CPU inside the Vitis AI library.
+The vvas_xdpuinfer works with raw BGR and RGB images as required by the model. Make sure you have specified correct color format in model-format field in json file. The exact resolution of the image to vvas_xdpuinfer must be provided, it is expected by the model. There is a performance loss if a different resolution of the BGR image is provided to the vvas_xdpuinfer because resizing is done on the CPU inside the Vitis AI library.
 
 .. _json-vvas-dpuinfer:
 
@@ -2903,7 +2904,7 @@ The GStreamer command for the example pipeline:
       ! vvas_xfilter name="kernel1" kernels-config="<PATH>/kernel_resnet50.json" 
       ! fakesink
   
-The JSON file for the vvas_xdpuinfer to execute ``resnet50`` model based classification pipeline is described below.
+The JSON file for the vvas_xdpuinfer to execute ``resnet50`` model-based classification pipeline is described below.
 
 .. code-block::
 
@@ -3193,7 +3194,7 @@ Use the following API to check if a particular GstMemory object is allocated usi
          true if memory is allocated using VVAS Allocator or false
 
 
-When GStreamer plug-ins are interacting with hard-kernel IP or soft-kernel, the plug-ins need physical memory addresses on an FPGA using the following API.
+When GStreamer plug-ins are interacting with hard-kernel/IP or soft-kernel, the plug-ins need physical memory addresses on an FPGA using the following API.
 
 .. code-block::
 

@@ -359,7 +359,7 @@ Refer to `Vitis AI 2.5 documentation <https://docs.xilinx.com/access/sources/dit
    <details>
    <summary>How do I build plugins?</summary>
 
-Refer to :ref:`Building VVAS Plugins and Libraries <build_vvas_plugins_and_libs>`.
+For Embedded platforms, refer to :ref:`Building VVAS Plugins and Libraries <build_vvas_plugins_and_libs>`.
 
 .. raw:: html
 

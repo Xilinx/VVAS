@@ -2,7 +2,7 @@
 Acceleration Software Library Development Guide
 ################################################
 
-One of the objectives of VVAS is to provide a framework for the advanced developers that enables them to develop their own kernel and integrate it into GStreamer-based applications. Kernel developers may not be experts in software development and there is always a learning curve to understand the frameworks like Xilinx Run Time (XRT), GStreamer etc. This framework abstracts the complexities of the XRT and GStreamer framework and provides simple and easy to understand  APIs to hook their kernels developed on Xilinx FPGA into complex applications. Developers need to implement these interfaces and make them available in the form of a library, called as acceleration software library.
+One of the objectives of VVAS is to provide a framework for the advanced developers that enables them to develop their own kernel and integrate it into GStreamer-based applications. Kernel developers may not be experts in software development and there is always a learning curve to understand the frameworks like Xilinx Run Time (XRT), GStreamer etc. This framework abstracts the complexities of the XRT and GStreamer framework and provides simple and easy to understand APIs to hook their kernels developed on Xilinx FPGA into complex applications. Developers need to implement these interfaces and make them available in the form of a library, called as acceleration software library.
  
 This section covers the details about developing an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application. 
 
@@ -51,7 +51,7 @@ It is strongly recommended to use kernel in XRT managed mode by opening kernel i
 Interfaces for Acceleration Software Libraries
 ***********************************************
 
-VVAS has defined a simplified, easy to use interface so that developer can easliy hook their Kernels into GStreamer based applications. The interface has been divided into two parts, core APIs and utility APIs. Core APIs are mandatory APIs, to be implemented by the acceleration softeare libraries so that these can be controlled from the GStreamere Infrastructure plug-ins as well as applications. Utility APIs are provided to abstract the Xilinx Run Time (XRT) interface from the developer and provide easy to use interface to interact with the kernel.
+VVAS has defined a simplified, easy to use interface so that developer can easily hook their Kernels into GStreamer based applications. The interface has been divided into two parts, core APIs and utility APIs. Core APIs are mandatory APIs, to be implemented by the acceleration software libraries so that these can be controlled from the GStreamer Infrastructure plug-ins as well as applications. Utility APIs are provided to abstract the Xilinx Run Time (XRT) interface from the developer and provide easy to use interface to interact with the kernel.
 
 
 Core API
@@ -66,7 +66,7 @@ Each acceleration software library must implement these Core APIs. The GStreamer
 xlnx_kernel_init
 ----------------
 
-This API is called by the VVAS infrastructure plug-in only once at the time of plug-in initialization. Acceleration software library can perform all the one time initialization in this function.
+This API is called by the VVAS infrastructure plug-in only once at the time of plug-in initialization. Acceleration software library can perform all the one-time initialization in this function.
 
 
 .. code-block::
@@ -82,7 +82,7 @@ xlnx_kernel_start
 -----------------
 
 This API is called by infrastructure plug-in for each input frame/buffer it has received for further processing by the kernel.
-The acceleration software library can perform per frame operations like updating the state machine, reading/writing the registers of the IP and then instructing the kernel to process the input. Steps to start the kernel depends on the type of the kernel and are covered in details later in this section.
+The acceleration software library can perform per frame operations like updating the state machine, reading/writing the registers of the IP and then instructing the kernel to process the input. Steps to start the kernel depends on the type of the kernel and are covered in detail later in this section.
 
 .. code-block::
 
@@ -111,7 +111,7 @@ xlnx_kernel_done
 
 To know whether the kernel has finished processing the current frame/buffer, infrastructure plug-in or an application will call this API. The acceleration software library can implement the logic to know the status of kernel in this API. 
 
-In case Kernel is being used in XRT managed mode, then developer must call ``vvas_kernel_done`` utility API to know if kernel has finished processing th ecurrent job. This API takes **time-out**  value for the maximum amount of time this API will wait before returning from this function.
+In case Kernel is being used in XRT managed mode, then developer must call ``vvas_kernel_done`` utility API to know if kernel has finished processing the current job. This API takes **time-out** svalue for the maximum amount of time this API will wait before returning from this function.
 
 In case Kernel is being used in user managed mode then developer may implement the logic where it can monitor the status of AP_DONE bit of the kernel in polling mode to know the status of the current kernel task.
 
@@ -194,7 +194,7 @@ The following API is to free the memory that is allocated using the vvas_alloc_b
 Read/Write Register APIs
 ---------------------------
 
-These APIs can be used only if kernel object is created in ``exclusive`` mode. Moreover developer must ensure that "is_multiprocess" parameter is set to "false" in VVASKernel object in acceleration software library.
+These APIs can be used only if kernel object is created in ``exclusive`` mode. Moreover, developer must ensure that "is_multiprocess" parameter is set to "false" in VVASKernel object in acceleration software library.
 
 In case developer has decided to go for the option of programing the kernel using register programming, then the only option to start a kernel is to set the "ap_start" bit by writing into the control register.
     
@@ -284,7 +284,7 @@ Use the following API to check whether the IP or kernel has finished execution. 
 *********************
 VVAS Data structures
 *********************
-
+;
 The following sections list the core structures and enumerations used in VVAS framework.
 
 

@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+		<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
@@ -387,7 +387,7 @@
 <span id="id1"></span><h2>vvas_xvcudec<a class="headerlink" href="#vvas-xvcudec" title="Permalink to this heading">¶</a></h2>
 <p>In Zynq UltraScale+ MPSoC devices, there is an IP, VCU, for video decoder and encoder. This IP supports encoding and decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a> for more information on the Xilinx VCU block. This guide provides details about this IP and how to configure it.</p>
 <p>vvas_xvcudec plugin is provided to control the VCU hardened IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in
-<a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a>. For implementation details, refer to <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/vcudec">vvas_xvcudec source code</a></p>
+<a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a>. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vcudec">vvas_xvcudec source code</a></p>
 <figure class="align-default">
 <img alt="../../_images/vcu_decoder.png" src="../../_images/vcu_decoder.png" />
 </figure>
@@ -401,6 +401,13 @@ The native output of this plugin is NV12 format. For any other desired output fo
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xvcudec plug-in.</p>
 <p>Table 1: vvas_xvcudec Plug-in Properties</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 14%" />
+<col style="width: 16%" />
+<col style="width: 26%" />
+<col style="width: 19%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -554,7 +561,7 @@ xclbin.</p></td>
 <figure class="align-default">
 <img alt="../../_images/vcu_encoder.png" src="../../_images/vcu_encoder.png" />
 </figure>
-<p>For implementation details, refer to <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/vcuenc">vvas_xvcuenc source code</a></p>
+<p>For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vcuenc">vvas_xvcuenc source code</a></p>
 <section id="id5">
 <h3>Input and Output<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
 <p>This plug-in takes 8/10 bit raw input in NV12 format and generates H264/H265 Encoded streams. There are several parameters that affect the encoded stream. Details of each parameter are covered in the table below. These parameters are configured using plug-in properties.</p>
@@ -564,6 +571,17 @@ xclbin.</p></td>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xvcuenc plug-in.</p>
 <p>Table 2: vvas_xvcuenc Plug-in Properties</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 3%" />
+<col style="width: 8%" />
+<col style="width: 3%" />
+<col style="width: 10%" />
+<col style="width: 3%" />
+<col style="width: 19%" />
+<col style="width: 3%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head" colspan="2"><p><strong>Type</strong></p></th>
@@ -933,7 +951,7 @@ for objective metrics</p></td>
 </section>
 <section id="id7">
 <h2>Example Pipelines<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
-<p><cite>dev-idx</cite> represents the zero based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
+<p><cite>dev-idx</cite> represents the zero-based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_u30 <span class="p">|</span> wc -l
 </pre></div>
 </div>
@@ -946,7 +964,7 @@ for objective metrics</p></td>
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>The following pipeline reads raw/uncompressed data, the properties of which should be known to user. These are provided in the command line such width(1920), height(height), format(NV12), framerate(30). The configurable properties are for encoder plugin (vvas_xvcuenc) such as b-frames (0), num-cores(4) and num-slices(4). When no parameter values are mentioned, default values are considered.</p></li>
+<li><p>The following pipeline reads raw/uncompressed data, the properties of which should be known to user. These are provided in the command line such width, height, format, framerate. The configurable properties for encoder plug-in, <code class="docutils literal notranslate"><span class="pre">vvas_xvcuenc</span></code> are b-frames (0), num-cores(4) and num-slices(4). When no parameter values are mentioned, default values are considered.</p></li>
 </ol>
 <p>Please refer above table for other parameters and corresponding default/range values/ for encoder plugin.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>Note: <span class="nv">BLOCKSIZE</span> <span class="o">=</span> width * height * <span class="m">1</span>.5  as only NV12 input format is specified.
@@ -962,8 +980,8 @@ fpsdisplaysink video-sink<span class="o">=</span><span class="s2">&quot;filesink
 </section>
 <section id="vvas-xlookahead">
 <span id="id8"></span><h2>vvas_xlookahead<a class="headerlink" href="#vvas-xlookahead" title="Permalink to this heading">¶</a></h2>
-<p>For video quality improvements, Xilinx have developped <code class="docutils literal notranslate"><span class="pre">Lookahead</span></code> IP. This IP performs analysis on several frames and provides few parameters for the encoder to improve the video quality. <code class="docutils literal notranslate"><span class="pre">vvas_xlookahead</span></code> plugin controles this IP. This is an optional plug-in in transcoding pipeline.
-For implementation details, refer to <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas/tree/master/vvas-gst-plugins/sys/lookahead">vvas_xlookahead source code</a></p>
+<p>For video quality improvements, Xilinx have developed <code class="docutils literal notranslate"><span class="pre">Lookahead</span></code> IP. This IP performs analysis on several frames and provides few parameters for the encoder to improve the video quality. <code class="docutils literal notranslate"><span class="pre">vvas_xlookahead</span></code> plugin controls this IP. This is an optional plug-in in transcoding pipeline.
+For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/lookahead">vvas_xlookahead source code</a></p>
 <section id="id9">
 <h3>Input and Output<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
 <p>This plugin takes raw video data as input and generates ‘QP’ values which are used during encoding.</p>
@@ -973,6 +991,13 @@ For implementation details, refer to <a class="reference external" href="https:/
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xlookahead plug-in.</p>
 <p>Table 3: vvas_xlookahead Plug-in Properties</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 14%" />
+<col style="width: 16%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
 <th class="head"><p><strong>Type</strong></p></th>
@@ -1137,10 +1162,10 @@ temporal-aq, lookahead-depth” to have varied degree of quality. Please refer a
 </section>
 <section id="vvas-xabrscaler">
 <h2>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this heading">¶</a></h2>
-<p>In several usecases, an input frame needs to be resized/scaled to different resolutions, to be encoded at different bitrates. VVAS has provided hardware accelerated IP, multiscaler, that can resize the input frame in to several different resolutions and formats. <cite>vvas_xabrscaler</cite> plugin controls this IP. This takes one raw input stream as input and produces one or more scaled/resized raw streams.
+<p>In several usecases, an input frame needs to be resized/scaled to different resolutions, to be encoded at different bitrates. VVAS has provided hardware accelerated IP, multiscaler, that can resize the input frame into several different resolutions and formats. <cite>vvas_xabrscaler</cite> plugin controls this IP. This takes one raw input stream as input and produces one or more scaled/resized raw streams.
 This is a common plugin for both DC and Embedded platforms. So,the details are captured in common plugins section.
 For more details on using this plugin, please refer to <a class="reference internal" href="../common/common_plugins.html#vvas-xabrscaler"><span class="std std-ref">vvas_xabrscaler</span></a></p>
-<p>For more information, contact <cite>vvas_discuss&#64;xilinx.com</cite>.</p>
+<p>For more information, contact <cite>vvas_discuss&#64;amd.com</cite>.</p>
 </section>
 </section>
 
