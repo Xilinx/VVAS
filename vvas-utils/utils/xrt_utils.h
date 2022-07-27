@@ -91,13 +91,18 @@ extern "C"
 /* Kernel APIs */
 /* ========================================================================
 Please follow below format specifiers for kernel arguments for "format" argument
-
+"c" : Char argument.
+"C" : Unsigned char argument.
+"S" : Short argument.
+"U" : Unsigned short argument.
 "i" : Signed int argument.
 "u" : Unsigned int argument.
 "l" : Unsigned long long argument.
 "d" : long long argument.
 "p" : Any pointer argument.
 "b" : Buffer Object argument.
+"f" : Float argument.
+"F" : Double argument.
 "s" : If you want to skip the argument.
 
 Ex : For passing 3 arguments of types int, unsigned int and a pointer,

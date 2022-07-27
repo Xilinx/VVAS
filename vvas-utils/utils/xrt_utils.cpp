@@ -94,6 +94,56 @@ int32_t
         arg_index++;
       }
       break;
+      case 'f':
+      {
+        double d_value;
+        /* va_arg doesn't support float.
+         * If float is passed it will be automatically promoted to double */
+        d_value = va_arg(args, double);
+        run->set_arg(arg_index, d_value);
+        arg_index++;
+      }
+      break;
+      case 'F':
+      {
+        double d_value;
+        d_value = va_arg(args, double);
+        run->set_arg(arg_index, d_value);
+        arg_index++;
+      }
+      break;
+      case 'c':
+      {
+        char c_value;
+        c_value = va_arg(args, char);
+        run->set_arg(arg_index, c_value);
+        arg_index++;
+      }
+      break;
+      case 'C':
+      {
+        unsigned char c_value;
+        c_value = va_arg(args, unsigned char);
+        run->set_arg(arg_index, c_value);
+        arg_index++;
+      }
+      break;
+      case 'S':
+      {
+        short s_value;
+        s_value = va_arg(args, short);
+        run->set_arg(arg_index, s_value);
+        arg_index++;
+      }
+      break;
+      case 'U':
+      {
+        unsigned short s_value;
+        s_value = va_arg(args, unsigned short);
+        run->set_arg(arg_index, s_value);
+        arg_index++;
+      }
+      break;
       case 'l':
       {
         unsigned long long l_value;
