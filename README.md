@@ -14,6 +14,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 git clone https://gitenterprise.xilinx.com/IPS-SSW/vvas-dev
 ```
 
+## View the [Documentation](https://xilinx.github.io/VVAS/)
+
 ## Folder Structure
 
 - **vvas-utils** core contains infrastructure libraries for VVAS gstreamer plugins and kernel libraries
