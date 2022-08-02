@@ -96,11 +96,11 @@ int32_t
       break;
       case 'f':
       {
-        double d_value;
+        float f_value;
         /* va_arg doesn't support float.
          * If float is passed it will be automatically promoted to double */
-        d_value = va_arg(args, double);
-        run->set_arg(arg_index, d_value);
+        f_value = (float) va_arg(args, double);
+        run->set_arg(arg_index, f_value);
         arg_index++;
       }
       break;
@@ -115,7 +115,7 @@ int32_t
       case 'c':
       {
         char c_value;
-        c_value = va_arg(args, char);
+        c_value = (char)va_arg(args, int);
         run->set_arg(arg_index, c_value);
         arg_index++;
       }
@@ -123,7 +123,7 @@ int32_t
       case 'C':
       {
         unsigned char c_value;
-        c_value = va_arg(args, unsigned char);
+        c_value = (unsigned char)va_arg(args, unsigned int);
         run->set_arg(arg_index, c_value);
         arg_index++;
       }
@@ -131,7 +131,7 @@ int32_t
       case 'S':
       {
         short s_value;
-        s_value = va_arg(args, short);
+        s_value = (short)va_arg(args, int);
         run->set_arg(arg_index, s_value);
         arg_index++;
       }
@@ -139,7 +139,7 @@ int32_t
       case 'U':
       {
         unsigned short s_value;
-        s_value = va_arg(args, unsigned short);
+        s_value = (unsigned short)va_arg(args, unsigned int);
         run->set_arg(arg_index, s_value);
         arg_index++;
       }
