@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>Acceleration Hardware &mdash; Vitis™ Video Analytics SDK 1.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Platforms And Applications" href="../Embedded/platforms_and_applications.html" />
+    <link rel="prev" title="Acceleration Software Library Development Guide" href="6-common-Acceleration-Software-Library-Development.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">For Advanced Developers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="6-common-Acceleration-Software-Library-Development.html">Acceleration s/w Library Developement Guide</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration H/W Kernels</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kernel-build-steps">Kernel Build Steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiscaler-kernel">Multiscaler Kernel</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kernel-configuration">Kernel Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#steps-to-build-kernel">Steps to Build Kernel</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="for_developers.html">Development Guide</a> &raquo;</li>
+      <li>Acceleration Hardware</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/docs/common/Acceleration-Hardware.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="acceleration-hardware">
+<h1>Acceleration Hardware<a class="headerlink" href="#acceleration-hardware" title="Permalink to this heading">¶</a></h1>
+<p>This section covers details about the HLS/RTL acceleration kernels. The kernels are HLS code that can be built using Vitis HLS and the compiled kernels are provided as <code class="docutils literal notranslate"><span class="pre">.xo</span></code> files. These compiled kernels then can be used with any Vitis platform.</p>
+<div class="section" id="kernel-build-steps">
+<h2>Kernel Build Steps<a class="headerlink" href="#kernel-build-steps" title="Permalink to this heading">¶</a></h2>
+<p>The following steps are used to build the kernel.</p>
+<ol class="arabic simple">
+<li><p>Setup the Vitis HLS 2021.2 software. Refer to <a class="reference external" href="https://www.xilinx.com/html_docs/xilinx2021.2/vitis_doc/gnq1597858079367.html">Vitis Software Development Platform 2021.2</a>.</p></li>
+<li><p>Edit the makefile to point the PLATFORM_FILE to any Vitis 2021.2 platform.</p></li>
+<li><p>Edit the options in &lt;kernel_folder&gt;/kernel_config.h.</p></li>
+<li><p>Make &lt;kernel name&gt;.</p></li>
+</ol>
+</div>
+<div class="section" id="multiscaler-kernel">
+<span id="id1"></span><h2>Multiscaler Kernel<a class="headerlink" href="#multiscaler-kernel" title="Permalink to this heading">¶</a></h2>
+<p>VVAS releases the full HLS source code of the Multiscaler 2.0 IP, it is based on the descriptor approach for programming. This kernel produces a multiscaler kernel xo/v_multi_scaler.xo.</p>
+<div class="section" id="kernel-configuration">
+<h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this heading">¶</a></h3>
+<p>The multiscaler kernel configuration can be edited by changing the <cite>&lt;VVAS_SOURCES&gt;/ivas-accel-hw/multiscaler/v_multi_scaler_config.h</cite> file. The parameters in the following table can be changed as required.
+i
+Table 14: Multiscaler Kernel Configuration</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Parameter Macro</strong></p></th>
+<th class="head"><p><strong>Possible Values</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>H
+SC_SAMPLES_PER_CLOCK</p></td>
+<td><p>1, 2, 4</p></td>
+<td><p>Pixels per clock</p></td>
+</tr>
+<tr class="row-odd"><td><p>HSC_MAX_WIDTH</p></td>
+<td><p>64 to 7680</p></td>
+<td><p>Maximum width of the
+resolution supported</p></td>
+</tr>
+<tr class="row-even"><td><p>HSC_MAX_HEIGHT</p></td>
+<td><p>64 to 4320</p></td>
+<td><p>Maximum height of
+the resolution
+supported</p></td>
+</tr>
+<tr class="row-odd"><td><p>HS
+C_BITS_PER_COMPONENT</p></td>
+<td><p>8, 10</p></td>
+<td><p>Bits per component</p></td>
+</tr>
+<tr class="row-even"><td><p>HSC_SCALE_MODE</p></td>
+<td><p>0: Bilinear</p>
+<p>1: Bicubic</p>
+<p>2: Polyphase</p>
+</td>
+<td><p>Scaling algorithm</p></td>
+</tr>
+<tr class="row-odd"><td><p>HAS_RGBX8_YUVX8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>RGBX8 and YUVX8
+color format support</p></td>
+</tr>
+<tr class="row-even"><td><p>HAS_YUYV8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>YUYV8 color format
+support</p></td>
+</tr>
+<tr class="row-odd"><td><p>HAS_RGBA8_YUVA8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>RGBA8 and YUVA8
+color format support</p></td>
+</tr>
+<tr class="row-even"><td><p>HAS_RGBX10_YUVX10</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>RGBX10 and YUVX10
+color format support</p></td>
+</tr>
+<tr class="row-odd"><td><p>HAS_Y_UV8_Y_UV8_420</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>Y_UV8 and Y_UV8_420
+color format support</p></td>
+</tr>
+<tr class="row-even"><td><p>HAS_RGB8_YUV8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>RGB8 and YUV8 color
+format support</p></td>
+</tr>
+<tr class="row-odd"><td><p>H
+AS_Y_UV10_Y_UV10_420</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>Y_UV10 and
+Y_UV10_420 color
+format support</p></td>
+</tr>
+<tr class="row-even"><td><p>HAS_Y8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>Y8 color format
+support</p></td>
+</tr>
+<tr class="row-odd"><td><p>HAS_Y10</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>Y10 color format
+support</p></td>
+</tr>
+<tr class="row-even"><td><p>HAS_BGRA8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>BGRA8 color format
+support</p></td>
+</tr>
+<tr class="row-odd"><td><p>HAS_BGRX8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>BGRX8 color format
+support</p></td>
+</tr>
+<tr class="row-even"><td><p>HAS_UYVY8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>UYVY8 color format
+support</p></td>
+</tr>
+<tr class="row-odd"><td><p>HAS_BGR8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>BGR8 color format
+support</p></td>
+</tr>
+<tr class="row-even"><td><p>HAS_R_G_B8</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>R_G_B8 color format
+support</p></td>
+</tr>
+<tr class="row-odd"><td><p>HAS_Y_U_V8_420</p></td>
+<td><p>0: Disable</p>
+<p>1: Enable</p>
+</td>
+<td><p>Y_U_V8_420 color
+format support</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="steps-to-build-kernel">
+<h2>Steps to Build Kernel<a class="headerlink" href="#steps-to-build-kernel" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Source the Vitis HLS 2021.2 software.</p></li>
+<li><p>Edit the makefile to point the PLATFORM_FILE, <cite>(.xpfm)</cite> file, to any Vitis 2021.2 platform (tested using the ZCU104 base platform).</p></li>
+<li><p>Edit the options in the multiscaler/v_multi_scaler_config.h.</p></li>
+<li><p>Make v_multi_scaler.xo. The generated output will be in the xo folder as xo/ v_multi_scaler.xo.</p></li>
+</ol>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="6-common-Acceleration-Software-Library-Development.html" class="btn btn-neutral float-left" title="Acceleration Software Library Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../Embedded/platforms_and_applications.html" class="btn btn-neutral float-right" title="Platforms And Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 11, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>
