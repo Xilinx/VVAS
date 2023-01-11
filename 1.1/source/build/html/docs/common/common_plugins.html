@@ -1,0 +1,2366 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>Plug-ins &mdash; Vitis™ Video Analytics SDK 1.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Development Guide" href="for_developers.html" />
+    <link rel="prev" title="Vitis Video Analytics SDK Release V1.1" href="../release_notes.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Plugins</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#custom-plug-ins">Custom Plug-ins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-xmetaaffixer">vvas_xmetaaffixer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#input-and-output">Input and Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#control-parameters-and-plug-in-properties">Control Parameters and Plug-in Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pad-naming-syntax">Pad naming syntax</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-pipelines">Example Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-xabrscaler">vvas_xabrscaler</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisite">Prerequisite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Input and Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Control Parameters and Plug-in Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Example Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-xinfer">vvas_xinfer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Input and Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#control-parameters">Control Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#infer-config-json-members">infer-config json members</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#infer-config-kernel-json-members">infer-config::kernel json members</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#preprocess-config-json-members">preprocess-config json members</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#preprocess-config-kernel-json-members">preprocess-config::kernel json members</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#infrastructure-plug-ins-and-acceleration-software-libraries">Infrastructure Plug-ins and Acceleration Software Libraries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-xfilter">vvas_xfilter</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id9">Input and Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id10">Control Parameters and Plug-in Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#json-format-for-vvas-xfilter-plug-in">JSON Format for vvas_xfilter Plug-in</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-json-configuration-files">Example JSON Configuration Files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id11">Example Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bounding-box-example">Bounding Box Example</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#json-file-for-vvas-xboundingbox">JSON File for vvas_xboundingbox</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#machine-learning-example">Machine Learning Example</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id12">Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model-information">Model Information</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#xclbin-location">xclbin Location</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-image">Input Image</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#json-file-for-vvas-xdpuinfer">JSON File for vvas_xdpuinfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model-parameters">Model Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-gstreamer-pipelines">Example GStreamer Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-xmultisrc">vvas_xmultisrc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id14">Input and Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id15">Control Parameters and Plug-in Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#json-file-for-vvas-xmultisrc">JSON File for vvas_xmultisrc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id16">Example Pipelines</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#allocator-apis">Allocator APIs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#json-schema">JSON Schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-inference-meta-data">VVAS Inference Meta Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/6-embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Plattforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../DC/6-DC-plugins.html">Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Plug-ins</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/docs/common/common_plugins.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="plug-ins">
+<h1>Plug-ins<a class="headerlink" href="#plug-ins" title="Permalink to this heading">¶</a></h1>
+<p>VVAS is based on the GStreamer framework. The two types of VVAS GStreamer plug-ins are custom plug-ins and infrastructure plug-ins. This section describes the VVAS GStreamer plug-ins, their input, outputs, and control parameters. The plug-ins source code is available in the <code class="docutils literal notranslate"><span class="pre">vvas-gst-plugins</span></code> folder of the VVAS source tree. This section covers the plug-in that are common for Edge as well as cloud solutions. There are few plug-ins that are specific to Edge/Embedded platforms and are covered in <a class="reference internal" href="../Embedded/6-embedded-plugins.html"><span class="doc">Plugins for Embedded platforms</span></a>. Similarly there are few plug-ins that are specific to Cloud/Data Center platforms and these are covered in <a class="reference internal" href="../DC/6-DC-plugins.html"><span class="doc">Plugins for Data Center Platform</span></a>. The following table lists the VVAS GStreamer plug-ins.</p>
+<p>Table 1: GStreamer Plug-ins</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Plug-in Name</p></th>
+<th class="head"><p>Functionality</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#vvas-xmetaaffixer"><span class="std std-ref">vvas_xmetaaffixer</span></a></p></td>
+<td><p>Plug-in to scale and attach metadata to the frame of different resolutions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vvas-xabrscaler"><span class="std std-ref">vvas_xabrscaler</span></a></p></td>
+<td><p>Hardware accelerated scaling and color space conversion.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#vvas-xmultisrc"><span class="std std-ref">vvas_xmultisrc</span></a></p></td>
+<td><p>A generic infrastructure plug-in: 1 input, N output, supporting transform processing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vvas-xfilter"><span class="std std-ref">vvas_xfilter</span></a></p></td>
+<td><p>A generic infrastructure plug-in: 1 input, 1 output, supporting pass-through, in-place, and transform processing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a></p></td>
+<td><p>An inference plug-in using vvas_xdpuinfer acceleration software library and attaches inference output as GstInferenceMeta to input buffer. Also, this plug-in does optinal pre-processing required for inference using vvas_xpreprocess acceleration software library.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="custom-plug-ins">
+<span id="custom-plugins-label"></span><h2>Custom Plug-ins<a class="headerlink" href="#custom-plug-ins" title="Permalink to this heading">¶</a></h2>
+<p>There are specific functions, like video decoder, encoder, and meta affixer where the requirements are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.</p>
+<div class="section" id="vvas-xmetaaffixer">
+<span id="id1"></span><h3>vvas_xmetaaffixer<a class="headerlink" href="#vvas-xmetaaffixer" title="Permalink to this heading">¶</a></h3>
+<p>The metaaffixer plug-in, <code class="docutils literal notranslate"><span class="pre">vvas_xmetaaffixer</span></code>, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The vvas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaaffixer">vvas_xmetaaffixer source code</a></p>
+<div class="figure align-default">
+<img alt="../../_images/image5.png" src="../../_images/image5.png" />
+</div>
+<div class="section" id="input-and-output">
+<h4>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h4>
+<p>This plug-in is format agnostic and can accept any input format. It operates only on the metadata. The vvas_xmetaaffixer plug-in supports the GstInferenceMeta data structure. For details about this structure, refer to the <a class="reference internal" href="A-VVAS-Inference-Metadata.html"><span class="doc">VVAS Inference Metadata</span></a> section.</p>
+</div>
+<div class="section" id="control-parameters-and-plug-in-properties">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h4>
+<p>Table 2: vvas_xmetaaffixer Plug-in Properties</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 11%" />
+<col style="width: 15%" />
+<col style="width: 11%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>sync</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>True</p></td>
+<td><p>This property is to enable the synchronization
+between master and slave pads buffers.
+If sync=true is set, then the metadata is scaled
+and attached to buffers on slave pads that have
+matching PTS or PTS falls within frame duration of the
+buffer on the master sink pad.
+If sync=false is set on the element, then the
+metadata is scaled and attached to all the
+buffers on the slave pads. If this option is used,
+there is possibility that the metadata is not
+suitable for the frames/buffers that are not
+corresponding to the frames/buffers on the master
+pad.</p></td>
+</tr>
+<tr class="row-odd"><td><p>timeout</p></td>
+<td><p>Int64</p></td>
+<td><p>-1 to
+9223372036854</p></td>
+<td><p>2000</p></td>
+<td><p>Timeout in millisec.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="pad-naming-syntax">
+<h4>Pad naming syntax<a class="headerlink" href="#pad-naming-syntax" title="Permalink to this heading">¶</a></h4>
+<p>The pad naming syntax is listed, and the following image shows the syntax:</p>
+<ul class="simple">
+<li><p>MetaAffixer master input pad should be named sink_master.</p></li>
+<li><p>MetaAffixer master output pad should be named src_master.</p></li>
+<li><p>MetaAffixer slave input pad should be named sink_slave_0, sink_slave_1.</p></li>
+<li><p>MetaAffixer slave output pad should be named src_slave_0, src_slave_1, src_slave_2.</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="../../_images/image6.png" src="../../_images/image6.png" />
+</div>
+</div>
+<div class="section" id="example-pipelines">
+<h4>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h4>
+<p>This section covers the example pipelines using the metaaffixer plug-in.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc num-buffers=1 \
+! video/x-raw, width=1920, height=1080, format=NV12 \
+! queue \
+! videoconvert \
+! queue \
+! ima.sink_master vvas_xmetaaffixer name=ima ima.src_master \
+! queue \
+! fakesink videotestsrc num-buffers=1 \
+! video/x-raw, width=1920, height=1080, format=NV12 \
+! queue \
+! videoconvert \
+! video/x-raw, width=1920, height=1080, format=YUY2 \
+! ima.sink_slave_0 ima.src_slave_0 \
+! queue \
+! fakesink -v
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="vvas-xabrscaler">
+<span id="id2"></span><h3>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this heading">¶</a></h3>
+<p>In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. vvas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The vvas_xabrscaler is a GStreamer plug- in developed to accelerate the resize and color space conversion functionality. For more implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/abrscaler">vvas_xabrscaler source code</a>.</p>
+<p>This plug-in supports:</p>
+<ul class="simple">
+<li><p>Single input, multiple output pads</p></li>
+<li><p>Color space conversion</p></li>
+<li><p>Resize</p></li>
+<li><p>Each output pad has independent resolution and color space conversion capability.</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The <cite>vvas_xabrscaler</cite> plug-in controls the multiscaler kernel. If your application uses this plug-in, then make sure that multi-scaler kernel is included in your hardware design.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Make sure that the multi-scaler hardware kernel supports maximum resolution required by your application.</p>
+</div>
+<p>As a reference, maximum resolution supported by multi-scaler kernel in <code class="docutils literal notranslate"><span class="pre">Smart</span> <span class="pre">Model</span> <span class="pre">Select</span></code> example design can be found in  <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h#L33">multi-scaler kernel config</a></p>
+<div class="section" id="prerequisite">
+<h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this heading">¶</a></h4>
+<p>This plug-in requires the multiscaler kernel to be available in the hardware design. See <a class="reference internal" href="Acceleration-Hardware.html#multiscaler-kernel"><span class="std std-ref">Multiscaler Kernel</span></a></p>
+</div>
+<div class="section" id="id3">
+<h4>Input and Output<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h4>
+<p>This plug-in accepts buffers with the following color format standards:</p>
+<ul class="simple">
+<li><p>RGBx</p></li>
+<li><p>YUY2</p></li>
+<li><p>r210</p></li>
+<li><p>Y410</p></li>
+<li><p>NV16</p></li>
+<li><p>NV12</p></li>
+<li><p>RGB</p></li>
+<li><p>v308</p></li>
+<li><p>I422_10LE</p></li>
+<li><p>GRAY8</p></li>
+<li><p>NV12_10LE32</p></li>
+<li><p>BGRx</p></li>
+<li><p>GRAY10_LE32</p></li>
+<li><p>BGRx</p></li>
+<li><p>UYVY</p></li>
+<li><p>BGR</p></li>
+<li><p>RGBA</p></li>
+<li><p>BGRA</p></li>
+<li><p>I420</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Make sure that the color formats needed for your application are supported by the multi-scaler hardware kernel.</p>
+</div>
+<p>As a reference, multi-scaler configuration for <code class="docutils literal notranslate"><span class="pre">smart</span> <span class="pre">model</span> <span class="pre">select</span></code> example design can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/v_multi_scaler_user_config.h">multi-scaler configuration</a></p>
+</div>
+<div class="section" id="id4">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h4>
+<p>The following table lists the GStreamer plug-in properties supported by the vvas_xabrscaler plug-in.</p>
+<p>Table 3: vvas_xabrscaler Plug-in Properties</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 14%" />
+<col style="width: 17%" />
+<col style="width: 27%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>avoid-output-copy</p></td>
+<td><p>Boolean</p></td>
+<td><p>true/false</p></td>
+<td><p>False</p></td>
+<td><p>Avoid output
+frames copy on
+all source pads
+even when
+downstream does
+not support
+GstVideoMeta
+metadata</p></td>
+</tr>
+<tr class="row-odd"><td><p>enable-pipeline</p></td>
+<td><p>Boolean</p></td>
+<td><p>true/false</p></td>
+<td><p>false</p></td>
+<td><p>Enable buffer
+pipelining to
+improve
+performance in
+non zero-copy
+use cases</p></td>
+</tr>
+<tr class="row-even"><td><p>in-mem-bank</p></td>
+<td><p>Unsigned int</p></td>
+<td><p>0 - 65535</p></td>
+<td><p>0</p></td>
+<td><p>VVAS input memory
+bank to allocate
+memory</p></td>
+</tr>
+<tr class="row-odd"><td><p>out-mem-bank</p></td>
+<td><p>Unsigned int</p></td>
+<td><p>0 - 65535</p></td>
+<td><p>0</p></td>
+<td><p>VVAS o/p memory
+bank to allocate
+memory</p></td>
+</tr>
+<tr class="row-even"><td><p>xclbin-location</p></td>
+<td><p>string</p></td>
+<td><p>N/A</p></td>
+<td><p>./binary_container_1
+xclbin</p></td>
+<td><p>The
+location of
+xclbin.</p></td>
+</tr>
+<tr class="row-odd"><td><p>kernel-name</p></td>
+<td><p>string</p></td>
+<td><p>N/A</p></td>
+<td><p>v_multi_scaler:
+multi_scaler_1</p></td>
+<td><p>Kernel name
+and
+instance
+separated
+by a colon.</p></td>
+</tr>
+<tr class="row-even"><td><p>dev-idx</p></td>
+<td><p>integer</p></td>
+<td><p>0 to 31</p></td>
+<td><p>0</p></td>
+<td><p>Device index
+This is valid
+only in PCIe/
+Data Center
+platforms.</p></td>
+</tr>
+<tr class="row-odd"><td><p>ppc</p></td>
+<td><p>integer</p></td>
+<td><p>1, 2, 4</p></td>
+<td><p>2</p></td>
+<td><p>Pixel per
+clock
+supported
+by a multi-
+scaler
+kernel</p></td>
+</tr>
+<tr class="row-even"><td><p>scale-mode</p></td>
+<td><p>integer</p></td>
+<td><p>0, 1, 2</p></td>
+<td><p>0</p></td>
+<td><p>Scale algorithm
+to use:
+0:BILINEAR
+1:BICUBIC
+2:POLYPHASE</p></td>
+</tr>
+<tr class="row-odd"><td><p>coef-load-type</p></td>
+<td><p>integer</p></td>
+<td><p>0 =&gt; Fixed
+1 =&gt; Auto</p></td>
+<td><p>1</p></td>
+<td><p>Type of filter
+Coefficients to
+be used: Fixed
+or Auto
+generated</p></td>
+</tr>
+<tr class="row-even"><td><p>num-taps</p></td>
+<td><p>integer</p></td>
+<td><p>6=&gt;6 taps
+8=&gt;8 taps
+10=&gt;10 taps
+12=&gt;12 taps</p></td>
+<td><p>1</p></td>
+<td><p>Number of filter
+taps to be used
+for scaling</p></td>
+</tr>
+<tr class="row-odd"><td><p>alpha-b</p></td>
+<td><p>float</p></td>
+<td><p>0 to 128</p></td>
+<td><p>0</p></td>
+<td><p>Mean subreaction
+for blue channel</p></td>
+</tr>
+<tr class="row-even"><td><p>alpha-g</p></td>
+<td><p>float</p></td>
+<td><p>0 to 128</p></td>
+<td><p>0</p></td>
+<td><p>Mean subreaction
+for green channel</p></td>
+</tr>
+<tr class="row-odd"><td><p>alpha-r</p></td>
+<td><p>float</p></td>
+<td><p>0 to 128</p></td>
+<td><p>0</p></td>
+<td><p>Mean subreaction
+for red  channel</p></td>
+</tr>
+<tr class="row-even"><td><p>beta-b</p></td>
+<td><p>float</p></td>
+<td><p>0 to 1</p></td>
+<td><p>1</p></td>
+<td><p>Scaling for blue
+channel</p></td>
+</tr>
+<tr class="row-odd"><td><p>beta-g</p></td>
+<td><p>float</p></td>
+<td><p>0 to 1</p></td>
+<td><p>1</p></td>
+<td><p>scaling for green
+channel</p></td>
+</tr>
+<tr class="row-even"><td><p>beta-r</p></td>
+<td><p>float</p></td>
+<td><p>0 to 1</p></td>
+<td><p>1</p></td>
+<td><p>scaling for red
+channel</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id5">
+<h4>Example Pipelines<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h4>
+<div class="section" id="one-input-one-output">
+<h5>One input one output<a class="headerlink" href="#one-input-one-output" title="Permalink to this heading">¶</a></h5>
+<p>The following example configures vvas_xabrscaler in one input and one output mode. The input to the scaler is 1280 x 720, NV12 frames that are resized to 640 x 360 resolution, and the color format is changed from NV12 to BGR.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc num-buffers=100 \
+! &quot;video/x-raw, width=1280, height=720, format=NV12&quot; \
+! vvas_xabrscaler xclbin-location=&quot;/usr/lib/dpu.xclbin&quot; kernel-name=v_multi_scaler:v_multi_scaler_1 \
+! &quot;video/x-raw, width=640, height=360, format=BGR&quot; ! fakesink -v
+</pre></div>
+</div>
+</div>
+<div class="section" id="one-input-multiple-output">
+<h5>One input multiple output<a class="headerlink" href="#one-input-multiple-output" title="Permalink to this heading">¶</a></h5>
+<p>The following example configures vvas_xabrscaler for one input and three outputs. The input is 1920 x 1080 resolution in NV12 format. There are three output formats:</p>
+<ul class="simple">
+<li><p>1280 x 720 in BGR format</p></li>
+<li><p>300 x 300 in RGB format</p></li>
+<li><p>640 x 480 in NV12 format</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc num-buffers=100 \
+! &quot;video/x-raw, width=1920, height=1080, format=NV12, framerate=60/1&quot; \
+! vvas_xabrscaler xclbin-location=&quot;/usr/lib/dpu.xclbin&quot; kernel-name=v_multi_scaler:v_multi_scaler_1 name=sc sc.src_0 \
+! queue \
+! &quot;video/x-raw, width=1280, height=720, format=BGR&quot; \
+! fakesink sc.src_1 \
+! queue \
+! &quot;video/x-raw, width=300, height=300, format=RGB&quot; \
+! fakesink sc.src_2 \
+! queue \
+! &quot;video/x-raw, width=640, height=480, format=NV12&quot; \
+! fakesink -v
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="vvas-xinfer">
+<span id="id6"></span><h3>vvas_xinfer<a class="headerlink" href="#vvas-xinfer" title="Permalink to this heading">¶</a></h3>
+<p>GStreamer inference vvas_xinfer plugin performs inferencing on video frames with the help of Vitis AI library and prepares tree like metadata in GstInferenceMeta object and attaches the same to input GstBuffer. This plugin triggers optional preprocessing (scale/crop &amp; etc.) operations with the help of VVAS scaler kernel library (which is on top of Xilinx’s multiscaler IP) on incoming video frames before calling VVAS inference kernel library. vvas_xinfer plugin’s input capabilities are influenced by preprocessing library input capabilities and Vitis AI library capabilities (Vitis-AI does software scaling). This plugin disables preprocessing whenever the input resolution &amp; color format is same as inference engine’s resolution &amp; color format. If preprocessing is enabled and vvas_xinfer plugin is receiving non-CMA memory frames, then data copy will be made to ensure CMA frames goes to preprocessing engine. The main advantage of this plugin is users/customers can realize inference cascading use cases with ease.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/vvas_xinfer_blockdiagram.png"><img alt="../../_images/vvas_xinfer_blockdiagram.png" src="../../_images/vvas_xinfer_blockdiagram.png" style="width: 927.2px; height: 592.8000000000001px;" /></a>
+</div>
+<div class="section" id="id7">
+<h4>Input and Output<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h4>
+<blockquote>
+<div><ul class="simple">
+<li><p>Accepts buffers with GRAY8/ NV12/ BGR/ RGB/ YUY2/ r210/ v308/ GRAY10_LE32/ ABGR/ ARGB color formats on input GstPad &amp; output GstPad.</p></li>
+<li><p>Attaches GstInferenceMeta metadata to output GstBuffer</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="control-parameters">
+<h4>Control Parameters<a class="headerlink" href="#control-parameters" title="Permalink to this heading">¶</a></h4>
+<table class="colwidths-given docutils align-default" id="id17">
+<caption><span class="caption-text">Control Parameters</span><a class="headerlink" href="#id17" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Property Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Range</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>dynamic-config</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>Null</p></td>
+<td><p>String contains dynamic json configuration of inference accelration library</p></td>
+</tr>
+<tr class="row-odd"><td><p>infer-config</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>Null</p></td>
+<td><p>location of the inference kernel library configuration file in json format</p></td>
+</tr>
+<tr class="row-even"><td><p>preprocess-config</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>Null</p></td>
+<td><p>location of the kernels config file in json format</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="infer-config-json-members">
+<h4>infer-config json members<a class="headerlink" href="#infer-config-json-members" title="Permalink to this heading">¶</a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 9%" />
+<col style="width: 81%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Json key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Item description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p>vvas-library-repo</p></td>
+<td><p>Description</p></td>
+<td><p>VVAS libraries repository path to look for kernel libraries by VVAS GStreamer plugin</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>/usr/lib in Embedded platforms
+/opt/xilinx/vvas/lib in PCIe platforms</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>inference-level</p></td>
+<td><p>Description</p></td>
+<td><p>Inference level in cascaded inference use case. e.g. Object detection ML (level-1) followed by object classification (level-2) on detected objects</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Integer</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>low-latency</p></td>
+<td><p>Description</p></td>
+<td><p>Parameter to enable/disable low-latency mode in vvas_xinfer and it is useful only when inference-level &gt; 1.
+If enabled, then vvas_xinfer plugin will not wait for batch-size frames to be accumulated to reduce latency. If disabled, inference engine can work at maximum throughput.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Boolean</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>inference-max-queue</p></td>
+<td><p>Description</p></td>
+<td><p>Maximum number of input frames those can be queued inside the plugin.
+When low-latency is disabled, vvas_xinfer plugin will wait for inference-max-queue buffers until batch-size is accumulated</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Integer</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>batch-size</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>attach-ppe-outbuf</p></td>
+<td><p>Description</p></td>
+<td><p>Attaches output of preprocessing library to GstInferenceMeta to avoid redoing of the preprocessing if required.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Boolean</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td rowspan="5"><p>kernel</p></td>
+<td><p>Description</p></td>
+<td><p>Kernel object provides information about an VVAS kernel library configuration and kernel library name</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON Object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object Members</p></td>
+<td><p>members of kernel JSON object are mentioned below</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="infer-config-kernel-json-members">
+<h4>infer-config::kernel json members<a class="headerlink" href="#infer-config-kernel-json-members" title="Permalink to this heading">¶</a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 13%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>JSON key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p>library-name</p></td>
+<td><p>Description</p></td>
+<td><p>Name of inference kernel library to be loaded for inferencing</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>NULL</p></td>
+</tr>
+<tr class="row-even"><td rowspan="5"><p>config</p></td>
+<td><p>Description</p></td>
+<td><p>Inference kernel specific configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object members</p></td>
+<td><p>Contains members specific to inference kernel library. See vvas_xdpuinfer acceleration library for more information</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="preprocess-config-json-members">
+<h4>preprocess-config json members<a class="headerlink" href="#preprocess-config-json-members" title="Permalink to this heading">¶</a></h4>
+<p>Table 5 preprocess-config json members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 14%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Json key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Item description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p>xclbin-location</p></td>
+<td><p>Description</p></td>
+<td><p>Location of xclbin which contains scaler IP to program FPGA device based on device-index property</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>NULL</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>vvas-library-repo</p></td>
+<td><p>Description</p></td>
+<td><p>VVAS libraries repository path to look for kernel libraries by VVAS GStreamer plugin</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>/usr/lib in Embedded platforms
+/opt/xilinx/vvas/lib in PCIe platforms</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>device-index</p></td>
+<td><p>Description</p></td>
+<td><p>Device index on which scaler IP is present</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Integer</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory in PCIe platforms
+In embedded platforms, device-index is not an applicable option as it is always zero</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>-1 in PCIe platforms
+0 in Embedded platforms</p></td>
+</tr>
+<tr class="row-even"><td rowspan="5"><p>kernel</p></td>
+<td><p>Description</p></td>
+<td><p>Kernel object provides information about an VVAS kernel library configuration and kernel library name</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON Object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object Members</p></td>
+<td><p>members of kernel JSON object are mentioned below</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="preprocess-config-kernel-json-members">
+<h4>preprocess-config::kernel json members<a class="headerlink" href="#preprocess-config-kernel-json-members" title="Permalink to this heading">¶</a></h4>
+<p>Table 6: preprocess-config::kernel json members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 18%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>JSON key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p>library-name</p></td>
+<td><p>Description</p></td>
+<td><p>Name of kernel library to be loaded for inferencing</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>NULL</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>kernel-name</p></td>
+<td><p>Description</p></td>
+<td><p>Name of the preprocessing kernel. Syntax : “&lt;kernel_name&gt;:&lt;instance_name&gt;”</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>NULL</p></td>
+</tr>
+<tr class="row-even"><td rowspan="5"><p>config</p></td>
+<td><p>Description</p></td>
+<td><p>preprocess kernel specific configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object members</p></td>
+<td><p>Contains members specific to preprocess kernel library</p></td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li><p>Example infer-json file:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+   <span class="s2">&quot;inference-max-queue&quot;</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span>
+   <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+   <span class="s2">&quot;low-latency&quot;</span><span class="p">:</span><span class="n">false</span><span class="p">,</span>
+   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+       <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
+       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+           <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;yolov3_voc_tf&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;YOLOV3&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;batch-size&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+           <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+           <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+           <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+           <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+       <span class="p">}</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Example preprocess-config json file:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+       <span class="p">{</span>
+           <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;v_multi_scaler:v_multi_scaler_1&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xpreprocessor.so&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+              <span class="s2">&quot;alpha_r&quot;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+              <span class="s2">&quot;alpha_g&quot;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+              <span class="s2">&quot;alpha_b&quot;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+              <span class="s2">&quot;beta_r&quot;</span> <span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+              <span class="s2">&quot;beta_g&quot;</span> <span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+              <span class="s2">&quot;beta_b&quot;</span> <span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+              <span class="s2">&quot;cascade&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+              <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+           <span class="p">}</span>
+       <span class="p">}</span>
+   <span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When user wants to perform hardware accelerated pre-processing on input frame using <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in, then the pre-processing parameters provided in preprocess-config json file must be checked for correctness. The pre-processing parameters for the models are provided in the prototxt file for the models. For few models these parameters needs to be modified from what it is in the prototxt file. User must provide these modified values in the preprocess-config json file.
+There are few steps mentioned below to know which models need changes.</p>
+</div>
+<p>To determine the pre-processing parameters for a model, follow the steps mentioned below:</p>
+<ul class="simple">
+<li><p>Get the algorithmic scale vector, i.e. “scale” fields for each channel R,G,B mentioned in the model prototxt file. If the model expects input image in RGB format, then the first field will corresponds to Channel R, next will corresponds to Channel G, and the last one will be for Channel B. Example prototxt file contents are mentioned below:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="s2">&quot;yolov3_voc_416&quot;</span>
+        <span class="n">kernel</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="s2">&quot;yolov3_voc_416&quot;</span>
+            <span class="n">mean</span><span class="p">:</span> <span class="mf">0.0</span>
+            <span class="n">mean</span><span class="p">:</span> <span class="mf">0.0</span>
+            <span class="n">mean</span><span class="p">:</span> <span class="mf">0.0</span>
+            <span class="n">scale</span><span class="p">:</span> <span class="mf">0.00390625</span>
+            <span class="n">scale</span><span class="p">:</span> <span class="mf">0.00390625</span>
+            <span class="n">scale</span><span class="p">:</span> <span class="mf">0.00390625</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Calculate the <code class="docutils literal notranslate"><span class="pre">inner</span> <span class="pre">scale</span></code> value from the “fixpos” field of the “input_tensor” by executing the command at command prompt on the target board in case of Embedded platform.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xdputil</span> <span class="n">xmodel</span> <span class="o">-</span><span class="n">l</span> <span class="n">path</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">xmodel</span><span class="o">.</span><span class="n">xmodel</span>
+
+<span class="n">you</span> <span class="n">can</span> <span class="n">get</span> <span class="n">something</span> <span class="n">like</span><span class="p">:</span>
+
+<span class="p">{</span>
+ <span class="s2">&quot;subgraphs&quot;</span><span class="p">:[</span>
+     <span class="p">{</span>
+         <span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;subgraph_data&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;device&quot;</span><span class="p">:</span><span class="s2">&quot;USER&quot;</span>
+     <span class="p">},</span>
+     <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;subgraph_conv1_1&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;device&quot;</span><span class="p">:</span><span class="s2">&quot;DPU&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;fingerprint&quot;</span><span class="p">:</span><span class="s2">&quot;0x1000020f6014407&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;DPU Arch&quot;</span><span class="p">:</span><span class="s2">&quot;DPUCZDX8G_ISA0_B4096_MAX_BG2&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;input_tensor&quot;</span><span class="p">:[</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;data_fixed&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;shape&quot;</span><span class="p">:</span><span class="s2">&quot;[1, 360, 480, 3]&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;fixpos&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span>
+             <span class="p">}</span>
+         <span class="p">],</span>
+
+
+ <span class="n">inner</span> <span class="n">scale</span> <span class="o">=</span> <span class="mi">2</span><span class="o">^</span><span class="n">fixpos</span>
+             <span class="o">=</span> <span class="mi">2</span><span class="o">^-</span><span class="mi">1</span>
+             <span class="o">=</span> <span class="mf">0.5</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Multiply the “scale” vector values from prototxt file with the inner scale calculated above. Provide these values in the preprocess-config json file. User need to be careful while assigning the value to the correct channel field.</p></li>
+</ul>
+<ul class="simple">
+<li><p>Example Simple inference (YOLOv3) pipeline which takes NV12 YUV file (test.nv12) as input is described below:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&lt;test.nv12&gt; ! videoparse width=1920 height=1080 format=nv12 ! \
+vvas_xinfer preprocess-config=yolo_preproc.json infer-config=yolov3_voc.json ! fakesink -v
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Example cascade inference (YOLOv3+Resnet18) pipeline which takes NV12 YUV file (test.nv12) as input is described below:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&lt;test.nv12&gt; ! videoparse width=1920 height=1080 format=nv12 ! \
+vvas_xinfer preprocess-config=yolo_preproc.json infer-config=yolov3_voc.json ! queue ! \
+vvas_xinfer preprocess-config=resnet_preproc.json infer-config=resnet18.json ! fakesink -v
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="infrastructure-plug-ins-and-acceleration-software-libraries">
+<span id="infra-plugins-label"></span><h2>Infrastructure Plug-ins and Acceleration Software Libraries<a class="headerlink" href="#infrastructure-plug-ins-and-acceleration-software-libraries" title="Permalink to this heading">¶</a></h2>
+<p>Infrastructure plug-ins are generic plug-ins that interact with the acceleration kernel through a set of APIs exposed by an acceleration software library corresponding to that kernel. Infrastructure plug-ins abstract the core/common functionality of the GStreamer framework (for example: caps negotiation and buffer management).</p>
+<p>Table 5: Infrastructure Plug-ins</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 54%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Infrastructure Plug-ins</strong></p></th>
+<th class="head"><p><strong>Function</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>vvas_xfilter</p></td>
+<td><p>Plug-in has one input, one output
+Support Transform, passthrough
+and inplace transform operations</p></td>
+</tr>
+<tr class="row-odd"><td><p>vvas_xmultisrc</p></td>
+<td><p>Plug-in support one input and
+multiple output pads.
+Support transform operation</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Though one input and one output kernel can be integrated using any of the two infrastructure plug-ins, we recommend using vvas_xfilter plugin for one input and one output kernels.</p>
+</div>
+<p>Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel. The following table lists the acceleration software libraries developed to implement specific functionality. These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.</p>
+<p>Table 6: Acceleration Software Libraries</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 54%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Acceleration Software Library</strong></p></th>
+<th class="head"><p><strong>Function</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>vvas_xdpuinfer</p></td>
+<td><p>Library based on Vitis AI to
+control DPU kernels for
+machine learning.</p></td>
+</tr>
+<tr class="row-odd"><td><p>vvas_xboundingbox</p></td>
+<td><p>Library to draw a bounding
+box and labels on the frame
+using OpenCV.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The GStreamer infrastructure plug-ins are available in the vvas-gst-plugins repository/ folder. The following section describes each infrastructure plug-in.</p>
+<div class="section" id="vvas-xfilter">
+<span id="id8"></span><h3>vvas_xfilter<a class="headerlink" href="#vvas-xfilter" title="Permalink to this heading">¶</a></h3>
+<p>The GStreamer vvas_xfilter is an infrastructure plug-in that is derived from GstBaseTransform. It supports one input pad and one output pad. The vvas_xfilter efficiently works with hard-kernel/soft-kernel/software (user-space) acceleration software library types as shown in the following figure.</p>
+<div class="figure align-default">
+<img alt="../../_images/image8.png" src="../../_images/image8.png" />
+</div>
+<p>This plug-in can operate in the following three modes.</p>
+<ul class="simple">
+<li><p><strong>Passthrough:</strong> Useful when the acceleration software library does not need to alter the input buffer.</p></li>
+<li><p><strong>In-place:</strong> Useful when the acceleration software library needs to alter the input buffer.</p></li>
+<li><p><strong>Transform:</strong> In this mode, for each input buffer, a new output buffer is produced.</p></li>
+</ul>
+<p>You must set the mode using the JSON file. Refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span class="doc">JSON File Schema</span></a> for information related to the kernels-config property.</p>
+<div class="figure align-default">
+<img alt="../../_images/image9.png" src="../../_images/image9.png" />
+</div>
+<p>The vvas_xfilter plug-in takes configuration file as one of the input properties, kernels- config. This configuration file is in JSON format and contains information required by the kernel. During initialization, the vvas_xfilter parses the JSON file and performs the following tasks:</p>
+<ul class="simple">
+<li><p>Finds the VVAS acceleration software library in the path and loads the shared library.</p></li>
+<li><p>Understands the acceleration software library type and prepares the acceleration software library handle (VVASKernel) to be passed to the core APIs.</p></li>
+</ul>
+<div class="section" id="id9">
+<h4>Input and Output<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h4>
+<p>The vvas_xfilter accepts the buffers with the following color formats on input GstPad and output GstPad.</p>
+<ul class="simple">
+<li><p>GRAY8</p></li>
+<li><p>NV12</p></li>
+<li><p>BGR</p></li>
+<li><p>RGB</p></li>
+<li><p>YUY2</p></li>
+<li><p>r210</p></li>
+<li><p>v308</p></li>
+<li><p>GRAY10_LE32</p></li>
+<li><p>ABGR</p></li>
+<li><p>ARGB</p></li>
+</ul>
+<p>The formats listed are the Xilinx IP supported color formats. To add other color formats, update the vvas_kernel.h and vvas_xfilter plug-ins.</p>
+</div>
+<div class="section" id="id10">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h4>
+<p>The following table lists the GObject properties exposed by the vvas_xfilter. Most of them are only available in PCIe supported platforms.</p>
+<p>Table 6: GObject Properties</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 22%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 10%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
+<th class="head"><p><strong>Platforms Supported</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>dynamic-config</p></td>
+<td><p>PCIe and Embedded</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>Null</p></td>
+<td><p>JSON formatted string contains kernel
+specific configuration for run time changes</p></td>
+</tr>
+<tr class="row-odd"><td><p>dev-idx</p></td>
+<td><p>PCIe only</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to 31</p></td>
+<td><p>0</p></td>
+<td><p>Device used for kernel processing,
+xclbin download.</p></td>
+</tr>
+<tr class="row-even"><td><p>kernels-config</p></td>
+<td><p>PCIe and Embedded</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td><p>JSON configuration file path based on VVAS
+acceleration software library requirements.
+Refer to the <a class="reference internal" href="B-JSON-File-Schema.html"><span class="doc">JSON File Schema</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>sk-cur-idx</p></td>
+<td><p>PCIe only</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to 31</p></td>
+<td><p>0</p></td>
+<td><p>Softkernel current index to be used for
+executing job on device.</p></td>
+</tr>
+<tr class="row-even"><td><p>reservation-id</p></td>
+<td><p>PCIe only</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to 1024</p></td>
+<td><p>0</p></td>
+<td><p>Reservation ID provided by the Xilinx
+resource manager (XRM).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="json-format-for-vvas-xfilter-plug-in">
+<h4>JSON Format for vvas_xfilter Plug-in<a class="headerlink" href="#json-format-for-vvas-xfilter-plug-in" title="Permalink to this heading">¶</a></h4>
+<p>The following table provides the JSON keys accepted by the GStreamer vvas_xfilter plug-in.</p>
+<p>Table 7: Root JSON Object Members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>JSON Key</strong></p></th>
+<th class="head"><p><strong>Item</strong></p></th>
+<th class="head"><p><strong>Item Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>xclbin-location</p></td>
+<td><p>Description</p></td>
+<td><p>The location of
+the xclbin that
+is used to
+program the FPGA
+device.</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Conditionally
+mandatory:</p>
+<ul class="simple">
+<li><p>If the VVAS
+acceleration
+software
+library is
+developed for
+hard-kernel IP
+and
+soft-kernel,
+then the
+xclbin-location
+is mandatory.</p></li>
+<li><p>If the VVAS
+acceleration
+software
+library is
+developed for
+a software
+library (e.g.,
+OpenCV), then
+the xclbin-location
+is not required</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Default value</p></td>
+<td><p>NULL</p></td>
+</tr>
+<tr class="row-even"><td><p>vvas-library-repo</p></td>
+<td><p>Description</p></td>
+<td><p>This is the VVAS
+libraries repository
+path to look for
+acceleration
+software libraries
+by the VVAS
+GStreamer plug-in.</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Default value</p></td>
+<td><p>/usr/lib</p></td>
+</tr>
+<tr class="row-even"><td><p>element-mode</p></td>
+<td><p>Description</p></td>
+<td><p>GStreamer element
+mode to operate.
+Based on your
+requirement, choose
+one of the following
+modes:</p>
+<ol class="arabic simple">
+<li><p>Passthrough: In
+this mode,
+element does
+not want to
+alter the
+input buffer.</p></li>
+<li><p>Inplace: In this
+mode, element
+wants to alter
+the input
+buffer itself
+instead of
+producing new
+output
+buffers.</p></li>
+<li><p>Transform: In
+this mode,
+element
+produces a
+output buffer
+for each input
+buffer.</p></li>
+</ol>
+</td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Value type</p></td>
+<td><p>Enum</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>kernels</p></td>
+<td><p>Description</p></td>
+<td><p>This is the array of
+kernel objects. Each
+kernel object
+provides information
+about an VVAS
+acceleration
+software library
+configuration. The
+vvas_xfilter only
+takes the first
+kernel object in the
+kernel array.</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Value type</p></td>
+<td><p>Array of objects</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Minimum value</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Maximum value</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Object members</p></td>
+<td><p>Refer to <a class="reference internal" href="#kernel-json-object"><span class="std std-ref">Kernel JSON Object</span></a></p></td>
+</tr>
+</tbody>
+</table>
+<p>The information in the following table is specific to the kernel chosen.</p>
+<p id="kernel-json-object">Table 8: Kernel JSON Object Members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 31%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>JSON Key</strong></p></th>
+<th class="head"><p><strong>Item</strong></p></th>
+<th class="head"><p><strong>Item Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>library-name</p></td>
+<td><p>Description</p></td>
+<td><p>The name of the VVAS
+acceleration
+software library to
+be loaded by the
+VVAS GStreamer
+plug-ins. The
+absolute path of the
+kernel library is
+formed by the
+pre-pending
+vvas-library-repo
+path.</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>kernel-name</p></td>
+<td><p>Description</p></td>
+<td><p>The name of the
+IP/kernel in the
+form of &lt;kernel
+name&gt;:&lt;instance
+name&gt;</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>config</p></td>
+<td><p>Description</p></td>
+<td><p>Holds the
+configuration
+specific to the VVAS
+acceleration
+software library.
+VVAS GStreamer
+plug-ins do not
+parse this JSON
+object, instead it
+is sent to the
+acceleration
+software library.</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Value type</p></td>
+<td><p>Object</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>softkernel</p></td>
+<td><p>Description</p></td>
+<td><p>Contains the
+information specific
+to the soft-kernel.
+This JSON object is
+valid only for the
+PCIe based
+platforms.</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Value type</p></td>
+<td><p>Object</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Mandatory or
+optional</p></td>
+<td><p>Mandatory if kernel
+library is written
+for soft-kernel.</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Members</p></td>
+<td><p>Not required for
+embedded platforms.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/filter">vvas_xfilter source code</a></p>
+</div>
+<div class="section" id="example-json-configuration-files">
+<h4>Example JSON Configuration Files<a class="headerlink" href="#example-json-configuration-files" title="Permalink to this heading">¶</a></h4>
+<div class="section" id="json-file-for-vitis-ai-api-based-vvas-acceleration-software-library">
+<h5>JSON File for Vitis AI API-based VVAS Acceleration Software Library<a class="headerlink" href="#json-file-for-vitis-ai-api-based-vvas-acceleration-software-library" title="Permalink to this heading">¶</a></h5>
+<p>The following JSON file is for pure software-based acceleration, it does not involve any kernel for acceleration. However, the Vitis AI API based DPU is a special case, where the DPU hardware kernel is controlled by Vitis AI. The acceleration software library calls the Vitis AI API calls and it is implemented as a pure software acceleration software library. There is no need to provide the path of the xclbin in the JSON file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;FACEDETECT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-format&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="n">BGR</span><span class="s2">&quot;,</span>
+            <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+            <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;max_num&quot;</span> <span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;prob_cutoff&quot;</span> <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span>
+         <span class="p">}</span>
+      <span class="p">}</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="json-file-for-a-hard-kernel">
+<h5>JSON File for a Hard Kernel<a class="headerlink" href="#json-file-for-a-hard-kernel" title="Permalink to this heading">¶</a></h5>
+<p>The following JSON file uses vvas_xfilter to control multi-scaler IP (hard-kernel). The acceleration software library accessing the register map is libvvas_xcrop.so.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;passthrough&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+       <span class="p">{</span>
+          <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;v_multi_scaler:v_multi_scaler_1&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xcrop.so&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="p">}</span>
+       <span class="p">}</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id11">
+<h4>Example Pipelines<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h4>
+<p>This section covers the GStreamer example pipelines using the <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> infrastructure plug-in and several acceleration software libraries. This section covers the bounding box functionality and the machine learning functions using the vvas_xfilter plug-in.</p>
+<ul class="simple">
+<li><p>The bounding box functionality is implemented in the <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> acceleration software library that is controlled by the <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> plug-in.</p></li>
+<li><p>Machine learning using the DPU is implemented by the <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> acceleration software library that is called by the <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> plug-in.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="bounding-box-example">
+<span id="vvas-xboundingbox"></span><h3>Bounding Box Example<a class="headerlink" href="#bounding-box-example" title="Permalink to this heading">¶</a></h3>
+<p>This section describes how to draw a bounding box and label information using the VVAS infrastructure plug-in <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> and the <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> acceleration software library. The vvas_xboundingbox interprets machine learning inference results from the vvas_xdpuinfer acceleration software library and uses an OpenCV library to draw the bounding box and label on the identified objects.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-accel-sw-libs/vvas_xboundingbox">vvas_xboundingbox source code</a></p>
+<div class="figure align-default">
+<img alt="../../_images/X24998-vvas-xboundingbox.png" src="../../_images/X24998-vvas-xboundingbox.png" />
+</div>
+<div class="section" id="prerequisites">
+<h4>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h4>
+<p>There are a few requirements before start running bounding box examples. Make sure these prerequisites are met.</p>
+<ul class="simple">
+<li><p>Installation of OpenCV: The vvas_xboundingbox uses OpenCV for the graphics back-end library to draw the boxes and labels. Install the libopencv-core-dev package (the preferred version is 3.2.0 or later).</p></li>
+</ul>
+</div>
+<div class="section" id="json-file-for-vvas-xboundingbox">
+<span id="json-vvas-xboundingbox"></span><h4>JSON File for vvas_xboundingbox<a class="headerlink" href="#json-file-for-vvas-xboundingbox" title="Permalink to this heading">¶</a></h4>
+<p>This section describes the JSON file format and configuration parameters for the bounding box acceleration software library. The GStreamer vvas_xfilter plug-in used in the inplace mode. Bounding box and labels are drawn on identified objects on the incoming frame. Bounding box functionality is implemented in the libvvas_xboundingbox.so acceleration software library.</p>
+<p>The following example is of a JSON file to pass to the vvas_xfilter.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/local/lib/vvas&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xboundingbox.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;font_size&quot;</span> <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;label_color&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span> <span class="p">},</span>
+            <span class="s2">&quot;label_filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;probability&quot;</span> <span class="p">],</span>
+            <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
+               <span class="p">{</span>
+                  <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+                  <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+               <span class="p">},</span>
+               <span class="p">{</span>
+                  <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+                  <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+               <span class="p">},</span>
+               <span class="p">{</span>
+                  <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">255</span>
+               <span class="p">}</span>
+            <span class="p">]</span>
+         <span class="p">}</span>
+      <span class="p">}</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Various configuration parameters of the bounding box acceleration software library are described in the following table.</p>
+<p>Table 9: vvas_xboundingbox Parameters</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Parameter</strong></p></th>
+<th class="head"><p><strong>Expected Values</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>debug_level</p></td>
+<td><p>0:
+LOG_LEVEL_ERROR</p>
+<p>1:
+LOG_LEVEL_WARNING</p>
+<p>2: LOG_LEVEL_INFO</p>
+<p>3:
+LOG_LEVEL_DEBUG</p>
+</td>
+<td><p>Enables the log
+levels. There are
+four log levels
+listed in the
+expected values
+column.</p></td>
+</tr>
+<tr class="row-odd"><td><p>font</p></td>
+<td><p>0 to 7</p></td>
+<td><p>Font for the
+label text. 0:
+Hershey Simplex</p>
+<p>1: Hershey Plain</p>
+<p>2: Hershey Duplex</p>
+<p>3: Hershey
+Complex</p>
+<p>4: Hershey
+Triplex</p>
+<p>5: Hershey
+Complex Small 6:
+Hershey Script
+Simplex 7:
+Hershey Script
+Complex</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>font_size</p></td>
+<td><p>0.5 to 1</p></td>
+<td><p>Font fraction
+scale factor that
+is multiplied by
+the font-specific
+base size.</p></td>
+</tr>
+<tr class="row-odd"><td><p>thickness</p></td>
+<td><p>Integer 1 to 3</p></td>
+<td><p>The thickness of the
+line that makes up
+the rectangle.
+Negative values,
+like -1, signify
+that the function
+draws a filled
+rectangle.</p>
+<p>The recommended
+value is between 1
+and 3.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>label_color</p></td>
+<td><p>{ “blue” : 0,
+“green” : 0,
+“red” : 0 }</p></td>
+<td><p>The color of the
+label is specified.</p></td>
+</tr>
+<tr class="row-odd"><td><p>label_filter</p></td>
+<td><p>[ “class”,
+“probability” ]</p></td>
+<td><p>This field indicates
+that all information
+printed is the label
+string. Using
+“class” alone adds
+the ML
+classification name.
+For example, car,
+person, etc.</p>
+<p>The addition of
+“probability” in the
+array adds the
+probability of a
+positive object
+identification.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>classes</p></td>
+<td><p>{ “name” : “car”,</p>
+<p>“blue” : 255,
+“green” :</p>
+<p>0, “red” : 0 }</p>
+</td>
+<td><p>This is a filtering
+option when using
+the
+vvas_xboundingbox.
+The bounding box is
+only drawn for the
+classes that are
+listed in this
+configuration. Other
+classes are ignored.
+For instance, if
+“car”, “person”,
+“bicycle” is
+entered under
+“classes”, then the
+bounding box is only
+drawn for these
+three classes, and
+other classes like
+horse, motorbike,
+etc. are ignored.</p>
+<p>The expected value
+columns show an
+example of how each
+class should be
+described. All
+objects in this
+example, by class,
+are drawn using the
+color combination
+listed.</p>
+<p>The class names in
+this list matches the
+class names assigned
+by the
+vvas_xdpuinfer.
+Otherwise, the
+bounding box is not
+drawn.</p>
+<p>For face detect,
+keep the “classes”
+array empty.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>display_level</p></td>
+<td><p>Integer 0 to N
+0 =&gt; all levels
+N =&gt; specific level</p></td>
+<td><p>display bounding box
+of one particular
+level or all levels</p></td>
+</tr>
+</tbody>
+</table>
+<p>An example of using a bounding box along with the machine learning plug-in is shown in the <a class="reference internal" href="../Embedded/Tutorials/MultiChannelML.html"><span class="doc">Multi Channel ML</span></a> Tutorial.</p>
+</div>
+</div>
+<div class="section" id="machine-learning-example">
+<span id="vvas-xdpuinfer"></span><h3>Machine Learning Example<a class="headerlink" href="#machine-learning-example" title="Permalink to this heading">¶</a></h3>
+<p>This section discusses how machine learning solutions can be implemented using the VVAS infrastructure <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> plug-in and the <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> acceleration software library.</p>
+<div class="figure align-default">
+<img alt="../../_images/image11.png" src="../../_images/image11.png" />
+</div>
+<p>The vvas_xdpuinfer is the acceleration software library that controls the DPU through the Vitis AI interface. The vvas_xdpuinfer does not modify the contents of the input buffer. The input buffer is passed to the Vitis AI model library that generates the inference data. This inference data is then mapped into the VVAS meta data structure and attached to the input buffer. The same input buffer is then pushed to the downstream plug-in.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-accel-sw-libs/vvas_xdpuinfer">vvas_xdpuinfer source code</a></p>
+<div class="section" id="id12">
+<h4>Prerequisites<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h4>
+<p>There are a few requirements to be met before you can start running the machine learning examples.</p>
+</div>
+<div class="section" id="model-information">
+<h4>Model Information<a class="headerlink" href="#model-information" title="Permalink to this heading">¶</a></h4>
+<p>The model directory name must match with the ELF and prototxt files inside the model directory. The model directory should contain:</p>
+<ul class="simple">
+<li><p>model-name.elf/model-name.xmodel and model-name.prototxt file.</p></li>
+<li><p>label.json file containing the label information, if the models generate labels.</p></li>
+</ul>
+<p>The following is an example of the model directory (yolov2_voc), which contains the yolov2_voc.xmodel and yolov2_voc.prototxt files along with the label.json file.</p>
+<div class="figure align-default">
+<img alt="../../_images/model-directory.png" src="../../_images/model-directory.png" />
+</div>
+</div>
+<div class="section" id="xclbin-location">
+<h4>xclbin Location<a class="headerlink" href="#xclbin-location" title="Permalink to this heading">¶</a></h4>
+<p>By default, the Vitis AI interface expects xclbin to be located at /usr/lib/ and the xclbin is called dpu.xclbin. Another option is to use the environment variable XLNX_VART_FIRMWARE to change the path and the corresponding path can be updated in the JSON file. That is, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.</p>
+</div>
+<div class="section" id="input-image">
+<h4>Input Image<a class="headerlink" href="#input-image" title="Permalink to this heading">¶</a></h4>
+<p>The vvas_xdpuinfer works with raw BGR and RGB images as required by the model. Make sure you have specified correct color format in model-format field in json file. The exact resolution of the image to vvas_xdpuinfer must be provided, it is expected by the model. There is a performance loss if a different resolution of the BGR image is provided to the vvas_xdpuinfer, because resizing is done on the CPU inside the Vitis AI library.</p>
+</div>
+<div class="section" id="json-file-for-vvas-xdpuinfer">
+<span id="json-vvas-dpuinfer"></span><h4>JSON File for vvas_xdpuinfer<a class="headerlink" href="#json-file-for-vvas-xdpuinfer" title="Permalink to this heading">¶</a></h4>
+<p>The following table shows the JSON file format and configuration parameters for vvas_xdpuinfer.</p>
+<p>Table 10: JSON File for vvas_xdpuinfer</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 4%" />
+<col style="width: 2%" />
+<col style="width: 9%" />
+<col style="width: 3%" />
+<col style="width: 83%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Expected Values</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>xclbin-location</p></td>
+<td><p>string</p></td>
+<td><p>This field is not needed for dpuinfer</p></td>
+<td><p>NULL</p></td>
+<td><p>By default, Vitis AI expects xclbin to be located at /usr/lib/ and xclbin is called “dpu.xclbin”.</p>
+<p>The environment variable XLNX_VART_FIRMWARE could also be used to change the path. For example, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin. Alternatively, you may also provide the xclbin path in <code class="docutils literal notranslate"><span class="pre">/etc/vart.conf</span></code>. In this release, <code class="docutils literal notranslate"><span class="pre">/etc/vart.conf</span></code> has “/media/sd-mmcblk0p1/dpu.xclbin”</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>vvas-library-repo</p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/usr/local/lib/vvas/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">usr/lib/</span></code></p></td>
+<td><p>This is the path where the vvas_xfilter will search the acceleration software library. The kernel name is specified in the library-name parameter of the JSON file.</p></td>
+</tr>
+<tr class="row-even"><td><p>element-mode</p></td>
+<td><p>string</p></td>
+<td><p>inplace</p></td>
+<td><p>None</p></td>
+<td><p>Because the input buffer is not modified by the ML operation, but the metadata generated out of an inference operation needs to be added/appended to the input buffer, the GstBuffer is writable. The vvas_xfilter is configured in inplace mode</p></td>
+</tr>
+<tr class="row-odd"><td><p>kernels</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>The JSON tag for starting the kernel specific configurations.</p></td>
+</tr>
+<tr class="row-even"><td><p>kernel-name</p></td>
+<td><p>string</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td><p>The name and instance of a kernel separated by “:”</p></td>
+</tr>
+<tr class="row-odd"><td><p>library-name</p></td>
+<td><p>string</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td><p>Acceleration software library name for the kernel. It is appended to the vvas-l ibrary-repo for an absolute path.</p></td>
+</tr>
+<tr class="row-even"><td><p>config</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>The JSON tag for kernel-specific configurations depending on the acceleration software library.</p></td>
+</tr>
+<tr class="row-odd"><td><p>model-name</p></td>
+<td><p>string</p></td>
+<td><p>resnet50</p></td>
+<td><p>N/A</p></td>
+<td><p>Name string of the machine learning model to be executed. The name string should be same as the name of the directory available in model -path parameter file. If the name of the model ELF file is resnet50.elf, then the model-name is resnet50 in the JSON file. The ELF file present in the specified path model-path of the JSON file.</p></td>
+</tr>
+<tr class="row-even"><td><p>model-class</p></td>
+<td><p>string</p></td>
+<td><p>YOLOV3</p>
+<p>FACEDETECT</p>
+<p>CLASSIFICATION</p>
+<p>SSD</p>
+<p>REFINEDET</p>
+<p>TFSSD</p>
+<p>YOLOV2</p>
+</td>
+<td><p>N/A</p></td>
+<td><p>Class of some model corresponding to model. Some examples are shown below:</p>
+<ul class="simple">
+<li><p><strong>YOLOV3</strong>: yolov3_adas_pruned_0_9, yolov3_voc, yolov3_voc_tf</p></li>
+<li><p><strong>FACEDETECT</strong>: densebox_320_320, densebox_640_360</p></li>
+<li><p><strong>CLASSIFICATION</strong>: resnet18, resnet50, resnet_v1_50_tf</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>model-format</p></td>
+<td><p>string</p></td>
+<td><p>RGB/BGR</p></td>
+<td><p>N/A</p></td>
+<td><p>Image color format required by model.</p></td>
+</tr>
+<tr class="row-even"><td><p>model-path</p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/usr/share/vitis_ai_library/models/</span></code></p></td>
+<td><p>N/A</p></td>
+<td><p>Path of the folder where the model to be executed is stored.</p></td>
+</tr>
+<tr class="row-odd"><td><p>run_time_model</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>False</p></td>
+<td><p>If there is a requirement to change the ML model at the frame level, then set this flag to true. If this parameter is set to true then vvas_xdpuinfer will read the model name and class from the incoming input metadata and execute the same model found in the path specified in the model-path. The model-name and model-class parameter of the JSON file are not required when enabling this parameter.</p></td>
+</tr>
+<tr class="row-even"><td><p>need_preprocess</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>True</p></td>
+<td><p>If need_preprocess = true: Normalize with mean/scale through the Vitis AI Library If need_preprocess = false: Normalize with mean/scale is performed before feeding the frame to vvas_xdpuinfer. The Vitis AI library does not perform these operations.</p></td>
+</tr>
+<tr class="row-odd"><td><p>performance_test</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>False</p></td>
+<td><p>Enable performance test and corresponding flops per second (f/s) display logs. Calculates and displays the f/s of the standalone DPU after every second.</p></td>
+</tr>
+<tr class="row-even"><td><p>debug_level</p></td>
+<td><p>integer</p></td>
+<td><p>0 to 3</p></td>
+<td><p>1</p></td>
+<td><p>Used to enable log levels.</p>
+<p>There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a log-level lower than it, (therefore messages with an higher severity) are displayed.</p>
+<p>0: This is the highest level in order of severity: it is used for messages about critical errors, both hardware and software related.</p>
+<p>1: This level is used in situations where you attention is immediately required.</p>
+<p>2: This is the log level used for information messages about the action performed by the kernel and output of model.</p>
+<p>3: This level is used for debugging.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="model-parameters">
+<h4>Model Parameters<a class="headerlink" href="#model-parameters" title="Permalink to this heading">¶</a></h4>
+<p>The Vitis AI library provides a way to read model parameters by reading the configuration file. It facilitates uniform configuration management of model parameters. The configuration file is located in the model-path of the JSON file with [model_name].prototxt. These parameters are model specific. For more information on model parameters, refer to the Vitis AI Library User Guide (<a class="reference external" href="http://www.xilinx.com/cgi-bin/docs/rdoc?t=vitis_ai%3Bv%3Dlatest%3Bd%3Dug1354-xilinx-ai-sdk.pdf">UG1354</a>).</p>
+</div>
+<div class="section" id="example-gstreamer-pipelines">
+<h4>Example GStreamer Pipelines<a class="headerlink" href="#example-gstreamer-pipelines" title="Permalink to this heading">¶</a></h4>
+<p>This section describes a few example GStreamer pipelines.</p>
+<div class="section" id="classification-example-using-resnet50">
+<h5>Classification Example Using Resnet50<a class="headerlink" href="#classification-example-using-resnet50" title="Permalink to this heading">¶</a></h5>
+<p>The following pipeline performs ML using a Resnet50 model. DPU configuration uses kernels- config = ./json_files/kernel_resnet50.json for the vvas_xdpuinfer. The output of the vvas_xfilter is passed to fakesink along with the metadata.</p>
+<div class="figure align-default">
+<img alt="../../_images/example-using-resnet50-model.png" src="../../_images/example-using-resnet50-model.png" />
+</div>
+<p>The GStreamer command for the example pipeline:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&quot;&lt;PATH&gt;/001.bgr&quot; blocksize=150528 numbuffers=1
+! videoparse width=224 height=224 framerate=30/1 format=16
+! vvas_xfilter name=&quot;kernel1&quot; kernels-config=&quot;&lt;PATH&gt;/kernel_resnet50.json&quot;
+! fakesink
+</pre></div>
+</div>
+<p>The JSON file for the vvas_xdpuinfer to execute <code class="docutils literal notranslate"><span class="pre">resnet50</span></code> model based classification pipeline is described below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/local/lib/vvas/&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;resnet50&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;CLASSIFICATION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model-format : &quot;</span><span class="n">BGR</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+            <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+            <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">2</span>
+         <span class="p">}</span>
+      <span class="p">}</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If “need_preprocess” = false, then pre-processing operations like, Normalization, scaling must be
+performed on the frame before feeding to vvas_xfilter/vvas_xdpuinfer otherwise results may not be as expected.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="vvas-xmultisrc">
+<span id="id13"></span><h3>vvas_xmultisrc<a class="headerlink" href="#vvas-xmultisrc" title="Permalink to this heading">¶</a></h3>
+<p>The GStreamer vvas_xmultisrc plug-in can have one input pad and multiple-output pads. This single plug-in supports multiple acceleration kernels, each controlled by a separate acceleration software library.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">vvas_xmultisrc</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/multisrc">vvas_xmultisrc source code</a></p>
+<div class="figure align-default">
+<img alt="../../_images/vvas_xmultisrc.png" src="../../_images/vvas_xmultisrc.png" />
+</div>
+<div class="section" id="id14">
+<h4>Input and Output<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h4>
+<p>Input and output accept buffers with the following color formats on input GstPad and output GstPad.</p>
+<ul class="simple">
+<li><p>GRAY8</p></li>
+<li><p>NV12</p></li>
+<li><p>BGR</p></li>
+<li><p>RGB</p></li>
+<li><p>YUY2</p></li>
+<li><p>r210</p></li>
+<li><p>v308</p></li>
+<li><p>GRAY10_LE32</p></li>
+<li><p>ABGR</p></li>
+<li><p>ARGB</p></li>
+</ul>
+<p>The formats listed are the Xilinx IP supported color formats. To add other color formats, update the vvas_kernel.h and vvas_xfilter plug-ins.</p>
+</div>
+<div class="section" id="id15">
+<h4>Control Parameters and Plug-in Properties<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h4>
+<p>Table 11: Plug-in Properties</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>kconfig</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td><p>Path of the JSON configuration file based
+on the VVAS acceleration software library
+requirements. For further information,
+refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span class="doc">JSON File Schema</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>dynamic-config</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="json-file-for-vvas-xmultisrc">
+<h4>JSON File for vvas_xmultisrc<a class="headerlink" href="#json-file-for-vvas-xmultisrc" title="Permalink to this heading">¶</a></h4>
+<p>This section covers the format of JSON file/string to be passed to the vvas_xmultisrc plug-in.</p>
+<div class="section" id="example-json-file">
+<h5>Example JSON File<a class="headerlink" href="#example-json-file" title="Permalink to this heading">¶</a></h5>
+<p>The following example file describes how to specify two kernels that are being controlled by the single instance of the vvas_xmultisrc plug-in. Modify this json file as per your kernels and acceleration software library. The next section describes each field in this example file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/binary_1.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;resize:resize_1&quot;</span><span class="p">,</span> <span class="o">&lt;------------------</span> <span class="n">kernel</span> <span class="mi">1</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xresize.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">x</span> <span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">y</span> <span class="p">:</span> <span class="mi">7</span>
+         <span class="p">}</span>
+      <span class="p">}</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;cvt_rgb:cvt_rgb_1&quot;</span><span class="p">,</span> <span class="o">&lt;--------------</span> <span class="n">kernel</span> <span class="mi">2</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libcvt_bgr.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;xilinx&quot;</span><span class="p">,</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="mf">98.34</span>
+         <span class="p">}</span>
+      <span class="p">}</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Table 12: JSON Properties</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>xclbin-location</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td><p>The path of xclbin including the xclbin
+name. The plug-in downloads this xclbin
+and creates an XRT handle for memory
+allocation and programming kernels.</p></td>
+</tr>
+<tr class="row-odd"><td><p>vvas-library-repo</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>/usr/lib</p></td>
+<td><p>The library path for the VVAS repository
+for all the acceleration software
+libraries.</p></td>
+</tr>
+<tr class="row-even"><td><p>kernels</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>The JSON tag for starting the kernel
+specific configurations.</p></td>
+</tr>
+<tr class="row-odd"><td><p>kernel-name</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td><p>Name and instance of a kernel separated
+by “:” as mentioned in xclbin.</p></td>
+</tr>
+<tr class="row-even"><td><p>library-name</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>NULL</p></td>
+<td><p>The acceleration software library name
+for the kernel. This is appended to
+vvas-library-repo for an absolute path.</p></td>
+</tr>
+<tr class="row-odd"><td><p>config</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>The JSON tag for kernel specific
+configurations that depends on the
+acceleration software library.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="source-pad-naming-syntax">
+<h5>Source Pad Naming Syntax<a class="headerlink" href="#source-pad-naming-syntax" title="Permalink to this heading">¶</a></h5>
+<p>For single output pad naming is optional. For multiple pads, the source pads names shall be as mentioned below, assuming the name of the plug-in as <cite>sc</cite>.</p>
+<p>sc.src_0, sc.src_1 …..sc.src_n</p>
+</div>
+</div>
+<div class="section" id="id16">
+<h4>Example Pipelines<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h4>
+<div class="section" id="single-output-pad">
+<h5>Single Output Pad<a class="headerlink" href="#single-output-pad" title="Permalink to this heading">¶</a></h5>
+<p>The following example demonstrates the vvas_xmultisrc plug-in configured for one input and one output. A test video pattern is generated by the videotestrc plug-in and passed to the vvas_xmultisrc plug-in. Depending on the kernel being used, vvas_xmultisrc uses kernel.json to configure the kernel for processing the input frame before passing it to the fakesink.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc
+! &quot;video/x-raw, width=1280, height=720, format=BGR&quot;
+! vvas_xmultisrc kconfig=&quot;/root/jsons/&lt;kernel.json&gt;&quot;
+! &quot;video/x-raw, width=640, height=360, format=BGR&quot;
+! fakesink -v
+</pre></div>
+</div>
+<p>The following is an example kernel.json file having <cite>mean_value</cite> and <cite>use_mean</cite> as kernel configuration parameters. Modify this as per your kernel requirements.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/vvas&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;kernels&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+         <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;kernel-name&gt;&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xresize_bgr.so&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;use_mean&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+         <span class="s2">&quot;mean_value&quot;</span><span class="p">:</span> <span class="mi">128</span>
+         <span class="p">}</span>
+      <span class="p">}</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gstvvasbufferpool">
+<h5>GstVvasBufferPool<a class="headerlink" href="#gstvvasbufferpool" title="Permalink to this heading">¶</a></h5>
+<p>The GStreamer VVAS buffer pool holds the pool of video frames allocated using the GStreamer allocator object. It is derived from the GStreamer base video buffer pool object (GstVideoBufferPool).</p>
+<p>The VVAS buffer pool:</p>
+<ul class="simple">
+<li><p>Allocates buffers with stride and height alignment requirements. (e.g., the video codec unit (VCU) requires the stride to be aligned with 256 bytes and the height aligned with 64 bytes)</p></li>
+<li><p>Provides a callback to the GStreamer plug-in when the buffer comes back to the pool after it is used.</p></li>
+</ul>
+<p>The following API is used to create the buffer pool.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GstBufferPool</span> <span class="o">*</span><span class="n">gst_vvas_buffer_pool_new</span> <span class="p">(</span><span class="n">guint</span> <span class="n">stride_align</span><span class="p">,</span> <span class="n">guint</span>
+<span class="n">elevation_align</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+   <span class="n">stride_align</span> <span class="o">-</span> <span class="n">stride</span> <span class="n">alignment</span> <span class="n">required</span>
+   <span class="n">elevation_align</span> <span class="o">-</span> <span class="n">height</span> <span class="n">alignment</span> <span class="n">required</span>
+
+<span class="n">Return</span><span class="p">:</span>
+   <span class="n">GstBufferPool</span> <span class="nb">object</span> <span class="n">handle</span>
+</pre></div>
+</div>
+<p>Plug-ins can use the following API to set the callback function on the VVAS buffer pool and the callback function is called when the buffer arrives back to the pool after it is used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Buffer</span> <span class="n">release</span> <span class="n">callback</span> <span class="n">function</span> <span class="n">pointer</span> <span class="n">declaration</span><span class="p">:</span>
+<span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">ReleaseBufferCallback</span><span class="p">)(</span><span class="n">GstBuffer</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="n">gpointer</span> <span class="n">user_data</span><span class="p">);</span>
+
+<span class="n">void</span> <span class="n">gst_vvas_buffer_pool_set_release_buffer_cb</span> <span class="p">(</span><span class="n">GstVvasBufferPool</span> <span class="o">*</span><span class="n">xpool</span><span class="p">,</span>
+<span class="n">ReleaseBufferCallback</span> <span class="n">release_buf_cb</span><span class="p">,</span> <span class="n">gpointer</span> <span class="n">user_data</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+   <span class="n">xpool</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">buffer</span> <span class="n">pool</span> <span class="n">created</span> <span class="n">using</span> <span class="n">gst_vvas_buffer_pool_new</span>
+   <span class="n">release_buf_cb</span> <span class="o">-</span> <span class="n">function</span> <span class="n">pointer</span> <span class="n">of</span> <span class="n">callback</span>
+   <span class="n">user_data</span> <span class="o">-</span> <span class="n">user</span> <span class="n">provided</span> <span class="n">handle</span> <span class="n">to</span> <span class="n">be</span> <span class="n">sent</span> <span class="k">as</span> <span class="n">function</span> <span class="n">argument</span> <span class="k">while</span>
+<span class="n">calling</span> <span class="n">release_buf_cb</span><span class="p">()</span>
+
+<span class="n">Return</span><span class="p">:</span>
+    <span class="kc">None</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gstvvasallocator">
+<h5>GstVvasAllocator<a class="headerlink" href="#gstvvasallocator" title="Permalink to this heading">¶</a></h5>
+<p>The GStreamer VVAS allocator object is derived from an open source GstAllocator object designed for allocating memory using XRT APIs. The VVAS allocator is the backbone to the VVAS framework achieving zero-copy (wherever possible).</p>
+</div>
+</div>
+<div class="section" id="allocator-apis">
+<h4>Allocator APIs<a class="headerlink" href="#allocator-apis" title="Permalink to this heading">¶</a></h4>
+<p>GStreamer plug-in developers can use the following APIs to interact with the VVAS allocator. To allocate memory using XRT, the GStreamer plug-ins and buffer pools require the GstAllocator object provided by the following API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GstAllocator</span><span class="o">*</span> <span class="n">gst_vvas_allocator_new</span> <span class="p">(</span><span class="n">guint</span> <span class="n">dev_idx</span><span class="p">,</span> <span class="n">gboolean</span> <span class="n">need_dma</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+   <span class="n">dev_idx</span> <span class="o">-</span> <span class="n">FPGA</span> <span class="n">Device</span> <span class="n">index</span> <span class="n">on</span> <span class="n">which</span> <span class="n">memory</span> <span class="ow">is</span> <span class="n">going</span> <span class="n">to</span> <span class="n">allocated</span>
+   <span class="n">need_dma</span> <span class="o">-</span> <span class="n">will</span> <span class="n">decide</span> <span class="n">memory</span> <span class="n">allocated</span> <span class="ow">is</span> <span class="n">dmabuf</span> <span class="ow">or</span> <span class="ow">not</span>
+
+<span class="n">Return</span><span class="p">:</span>
+   <span class="n">GstAllocator</span> <span class="n">handle</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="n">NULL</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+<p>..note:: In PCIe platforms, the DMA buffer allocation support is not available. This means that the need_dma argument to gst_vvas_allocator_new() API must be false.</p>
+<p>Use the following API to check if a particular GstMemory object is allocated using GstVvasAlloctor.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gboolean</span> <span class="n">gst_is_vvas_memory</span> <span class="p">(</span><span class="n">GstMemory</span> <span class="o">*</span><span class="n">mem</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+   <span class="n">mem</span> <span class="o">-</span> <span class="n">memory</span> <span class="n">to</span> <span class="n">be</span> <span class="n">validated</span>
+
+<span class="n">Return</span><span class="p">:</span>
+   <span class="n">true</span> <span class="k">if</span> <span class="n">memory</span> <span class="ow">is</span> <span class="n">allocated</span> <span class="n">using</span> <span class="n">VVAS</span> <span class="n">Allocator</span> <span class="ow">or</span> <span class="n">false</span>
+</pre></div>
+</div>
+<p>When GStreamer plug-ins are interacting with hard-kernel IP or soft-kernel, the plug-ins need physical memory addresses on an FPGA using the following API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">guint64</span> <span class="n">gst_vvas_allocator_get_paddr</span> <span class="p">(</span><span class="n">GstMemory</span> <span class="o">*</span><span class="n">mem</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+   <span class="n">mem</span> <span class="o">-</span> <span class="n">memory</span> <span class="n">to</span> <span class="n">get</span> <span class="n">physical</span> <span class="n">address</span>
+
+<span class="n">Return</span><span class="p">:</span>
+   <span class="n">valid</span> <span class="n">physical</span> <span class="n">address</span> <span class="n">on</span> <span class="n">FPGA</span> <span class="n">device</span> <span class="ow">or</span> <span class="mi">0</span> <span class="n">on</span> <span class="n">failure</span>
+
+<span class="n">Use</span> <span class="n">the</span> <span class="n">following</span> <span class="n">API</span> <span class="n">when</span> <span class="n">plug</span><span class="o">-</span><span class="n">ins</span> <span class="n">need</span> <span class="n">an</span> <span class="n">XRT</span> <span class="n">buffer</span> <span class="nb">object</span> <span class="p">(</span><span class="n">BO</span><span class="p">)</span> <span class="n">corresponding</span> <span class="n">to</span> <span class="n">an</span> <span class="n">VVAS</span> <span class="n">memory</span> <span class="nb">object</span><span class="o">.</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">guint</span> <span class="n">gst_vvas_allocator_get_bo</span> <span class="p">(</span><span class="n">GstMemory</span> <span class="o">*</span><span class="n">mem</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+   <span class="n">mem</span> <span class="o">-</span> <span class="n">memory</span> <span class="n">to</span> <span class="n">get</span> <span class="n">XRT</span> <span class="n">BO</span>
+
+<span class="n">Return</span><span class="p">:</span>
+   <span class="n">valid</span> <span class="n">XRT</span> <span class="n">BO</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="mi">0</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="json-schema">
+<h3>JSON Schema<a class="headerlink" href="#json-schema" title="Permalink to this heading">¶</a></h3>
+<p>This section covers the JSON schema for the configuration files used by the infrastructure plug-ins. For more details, refer to <a class="reference internal" href="B-JSON-File-Schema.html"><span class="doc">JSON Schema</span></a></p>
+</div>
+<div class="section" id="vvas-inference-meta-data">
+<h3>VVAS Inference Meta Data<a class="headerlink" href="#vvas-inference-meta-data" title="Permalink to this heading">¶</a></h3>
+<p>This section covers details about inference meta data structure used to store meta data. For more details, refer to <a class="reference internal" href="A-VVAS-Inference-Metadata.html"><span class="doc">VVAS Inference Meta Data</span></a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../release_notes.html" class="btn btn-neutral float-left" title="Vitis Video Analytics SDK Release V1.1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="for_developers.html" class="btn btn-neutral float-right" title="Development Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 11, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>
