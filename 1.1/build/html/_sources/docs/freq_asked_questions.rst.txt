@@ -110,7 +110,7 @@ The following models are supported for this release:
    <details>
    <summary>How do I enable models that are not officially supported?</summary>
 
-Does this mean models not supported by Vitis AI? If the model is not in DPU deployable format, then it first needs to be converted into DPU deployable state. For this refer to `Vitis AI 2.0 documentation <https://www.xilinx.com/html_docs/vitis_ai/2_0/zmw1606771874842.html>`_.
+Does this mean models not supported by Vitis AI? If the model is not in DPU deployable format, then it first needs to be converted into DPU deployable state. For this refer to `Vitis AI 2.0 documentation <https://docs.xilinx.com/access/sources/dita/map?Doc_Version=2.0%20English&url=ug1414-vitis-ai>`_.
 
 
 .. raw:: html
@@ -345,7 +345,7 @@ Using GStreamer's native fps display mechanism.
    <details>
    <summary>How do I compile and prune the model to be used?</summary>
 
-Refer to `Vitis AI 2.0 documentation <https://www.xilinx.com/html_docs/vitis_ai/2_0/zmw1606771874842.html>`_.
+Refer to `Vitis AI 2.0 documentation <https://docs.xilinx.com/access/sources/dita/map?Doc_Version=2.0%20English&url=ug1414-vitis-ai>`_.
 
 .. raw:: html
 

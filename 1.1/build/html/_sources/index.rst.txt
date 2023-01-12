@@ -61,7 +61,7 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :caption: Data Center
    :hidden:
 
-   Platforms & Applications <docs/DC/platforms_and_applications>
+   Plattforms & Applications <docs/DC/platforms_and_applications>
    Plugins <docs/DC/6-DC-plugins>
 
 .. toctree::
@@ -115,14 +115,3 @@ Reference Platforms and Applications
 ------------------------------------------
 
 There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms and sample application details can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section.
-
-
-.. _versions:
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Other Versions
-   :hidden:
-
-   2.0 <https://xilinx.github.io/VVAS/main/build/html/index.html>
-   1.0 <https://xilinx.github.io/VVAS/1.0/build/html/index.html>

@@ -500,12 +500,13 @@ Table 5 preprocess-config json members
 preprocess-config::kernel json members
 ---------------------------------------
 
-Table 3: preprocess-config::kernel json members
+Table 6: preprocess-config::kernel json members
+
 
 +--------------+--------------------+----------------------------------------------------------------------------+
 | JSON key     | Item               | Description                                                                |
 +==============+====================+============================================================================+
-|              | Description        | Name of inference kernel library to be loaded for inferencing              |
+|              | Description        | Name of kernel library to be loaded for inferencing                        |
 |              +--------------------+----------------------------------------------------------------------------+
 |              | Value type         | String                                                                     |
 | library-name +--------------------+----------------------------------------------------------------------------+
@@ -531,6 +532,127 @@ Table 3: preprocess-config::kernel json members
 |              +--------------------+----------------------------------------------------------------------------+
 |              | Object members     | Contains members specific to preprocess kernel library                     |
 +--------------+--------------------+----------------------------------------------------------------------------+
+
+
+
+* Example infer-json file:
+
+
+.. code-block::
+
+   {
+      "vvas-library-repo": "/usr/lib/",
+      "inference-level":1,
+      "inference-max-queue":30,
+      "attach-ppe-outbuf": false,
+      "low-latency":false,
+      "kernel" : {
+          "library-name":"libvvas_xdpuinfer.so",
+          "config": {
+              "model-name" : "yolov3_voc_tf",
+              "model-class" : "YOLOV3",
+              "model-format" : "RGB",
+              "batch-size":1,
+              "model-path" : "/usr/share/vitis_ai_library/models/",
+              "run_time_model" : false,
+              "need_preprocess" : false,
+              "performance_test" : false,
+              "debug_level" : 0
+          }
+      }
+   }
+
+
+* Example preprocess-config json file:
+
+
+.. code-block::
+
+   {
+      "xclbin-location":"/usr/lib/dpu.xclbin",
+      "vvas-library-repo": "/usr/lib",
+      "device-index": 0,
+      "kernels" :[
+          {
+              "kernel-name": "v_multi_scaler:v_multi_scaler_1",
+              "library-name": "libvvas_xpreprocessor.so",
+              "config": {
+	         "alpha_r" : 0.0,
+	         "alpha_g" : 0.0,
+	         "alpha_b" : 0.0,
+	         "beta_r" : 0.25,
+	         "beta_g" : 0.25,
+	         "beta_b" : 0.25,
+	         "cascade" : 1,
+	         "debug_level" : 0
+              }
+          }
+      ]
+
+
+.. note::
+
+   When user wants to perform hardware accelerated pre-processing on input frame using ``vvas_xinfer`` plug-in, then the pre-processing parameters provided in preprocess-config json file must be checked for correctness. The pre-processing parameters for the models are provided in the prototxt file for the models. For few models these parameters needs to be modified from what it is in the prototxt file. User must provide these modified values in the preprocess-config json file.
+   There are few steps mentioned below to know which models need changes.
+
+To determine the pre-processing parameters for a model, follow the steps mentioned below:
+
+* Get the algorithmic scale vector, i.e. "scale" fields for each channel R,G,B mentioned in the model prototxt file. If the model expects input image in RGB format, then the first field will corresponds to Channel R, next will corresponds to Channel G, and the last one will be for Channel B. Example prototxt file contents are mentioned below:
+
+
+.. code-block::
+
+   model {
+           name: "yolov3_voc_416"
+           kernel {
+               name: "yolov3_voc_416"
+               mean: 0.0
+               mean: 0.0
+               mean: 0.0
+               scale: 0.00390625
+               scale: 0.00390625
+               scale: 0.00390625
+   }
+
+
+* Calculate the ``inner scale`` value from the "fixpos" field of the "input_tensor" by executing the command at command prompt on the target board in case of Embedded platform.
+
+.. code-block::
+
+   xdputil xmodel -l path-to-xmodel.xmodel
+
+   you can get something like:
+
+   {
+    "subgraphs":[
+        {
+            "name":"subgraph_data",
+            "device":"USER"
+        },
+        {
+           "name":"subgraph_conv1_1",
+            "device":"DPU",
+            "fingerprint":"0x1000020f6014407",
+            "DPU Arch":"DPUCZDX8G_ISA0_B4096_MAX_BG2",
+            "input_tensor":[
+                {
+                    "name":"data_fixed",
+                    "shape":"[1, 360, 480, 3]",
+                    "fixpos":-1
+                }
+            ],
+
+
+    inner scale = 2^fixpos
+                = 2^-1
+                = 0.5
+
+
+* Multiply the "scale" vector values from prototxt file with the inner scale calculated above. Provide these values in the preprocess-config json file. User need to be careful while assigning the value to the correct channel field.
+
+.. code-block::
+   If the model expects input image in RGB format, then the first scale value in prototxt file will corresponds to channel R. So after multiplying with the "inner scale" value, assign this first value to "beta_r" in  preprocess-config json file. Repeat the same for other channels.
+
 
 * Example Simple inference (YOLOv3) pipeline which takes NV12 YUV file (test.nv12) as input is described below:
 
@@ -1224,9 +1346,9 @@ Table 10: JSON File for vvas_xdpuinfer
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Parameter         | Type    | Expected Values                         | Default      | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
 +===================+=========+=========================================+==============+==============================================================================================================================================================================================================================================================================================================================================================================================================+
-| xclbin-location   | string  | ``/usr/lib/dpu.xclbin``                 | NULL         | By default, Vitis AI expects xclbin to be located at /usr/lib/ and xclbin is called ``dpu.xclbin``.                                                                                                                                                                                                                                                                                                          |
+| xclbin-location   | string  | This field is not needed for dpuinfer   | NULL         | By default, Vitis AI expects xclbin to be located at /usr/lib/ and xclbin is called "dpu.xclbin".                                                                                                                                                                                                                                                                                                            |
 |                   |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
-|                   |         |                                         |              | The environment variable XLNX_VART_FIRMWARE could also be used to change the path and the corresponding path can be updated in the JSON file. For example, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin.                                                                                                                                                                                                 |
+|                   |         |                                         |              | The environment variable XLNX_VART_FIRMWARE could also be used to change the path. For example, export XLNX_VART_FIRMWARE=/where/your/dpu.xclbin. Alternatively, you may also provide the xclbin path in ``/etc/vart.conf``. In this release, ``/etc/vart.conf`` has "/media/sd-mmcblk0p1/dpu.xclbin"                                                                                                        |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | vvas-library-repo | string  | ``/usr/local/lib/vvas/``                | ``usr/lib/`` | This is the path where the vvas_xfilter will search the acceleration software library. The kernel name is specified in the library-name parameter of the JSON file.                                                                                                                                                                                                                                          |
 +-------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
