@@ -79,7 +79,9 @@ This structure represents the inference data generated from the ML operation. BB
       * directly, but to use this module's API to interact with the
       * children.
       * @sub_buffer: A buffer created from the main buffer.
-      *
+      * @bbox_scaled: bbox co-ordinates scaled to root node resolution or not
+      * @segmentation: contains output of segmentation model wrapped in GstBuffer
+      * @obj_track_label: This is currently unused, kept for future use
       * Abstraction that represents a prediction
       */
       struct _GstInferencePrediction
@@ -94,6 +96,9 @@ This structure represents the inference data generated from the ML operation. BB
          GList * classifications;
          GNode * predictions;
          GstBuffer *sub_buffer;
+         gboolean bbox_scaled; /* bbox co-ordinates scaled to root node resolution or not */
+         Segmentation segmentation;
+         gchar *obj_track_label;
          /* for future extension */
          void * reserved_1;
          void * reserved_2;
