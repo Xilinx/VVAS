@@ -17,30 +17,12 @@
 Tutorials for PCIe/Data Center platforms
 #########################################
 
-This section covers how to build GStreamer based Transcoding pipelines for PCIe base platforms that are used in Data Center. Transcoding may be from a Live (capture/streaming) source or from a storage (offline transcoding). First tutorial will cover basic transcoding, how to build and execute single instance of transcode pipeline. Second tutorial talks about complex and multi-instance Transcode pipelines. This tutorial covers how to define multiple instances and launch these on several Alveo U30 cards.
-
-:doc:`Basic Transcoding Pipelines <./transcoding>` tutorial covers basic transcoding, how to build and execute single instance of different transcode pipelines.
-
-:doc:`Multi-instance High Density Transcoding Pipelines <./multi_instance_launch_utilities>` tutorial covers how to define multiple instances and launch these on several Alveo U30 cards installed on a server.
-
+This section covers how to build GStreamer based Machine Learning Pipelines for PCIe base platforms that are used in Data Center.
+:doc:`cascadded_car_classification <cascadded_car_classification>`
 
 .. toctree::
    :maxdepth: 3
-   :caption: Basic Transcoding
+   :caption: Cascadded Car Classification
    :hidden:
 
-   Basic Transcoding <./transcoding>
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Multi-instance Transcoding
-   :hidden:
-
-   Multi-instance Transcoding <./multi_instance_launch_utilities>
-
-.. toctree::
-   :maxdepth: 3
-   :caption: ABR Ladder Application
-   :hidden:
-
-   ABR Ladder Application <./xabrladder>
+   Cascadded_car_classification <./cascadded_car_classification>

@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>JSON File Schema &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+  <title>JSON File Schema &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
@@ -31,6 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -49,7 +50,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.0
+                3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -65,30 +66,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">Meta Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debug_support.html">VVAS Debug Support</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
         </div>
@@ -121,28 +116,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>Table 15: Root JSON Object Members</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 14%" />
-<col style="width: 14%" />
-<col style="width: 1%" />
-<col style="width: 28%" />
-<col style="width: 22%" />
+<col style="width: 13%" />
+<col style="width: 15%" />
+<col style="width: 27%" />
 <col style="width: 21%" />
+<col style="width: 23%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>JSONKey</strong></p></th>
-<th class="head" colspan="2"><p><strong>ValueType</strong></p></th>
+<th class="head"><p><strong>ValueType</strong></p></th>
 <th class="head"><p><strong>Mandatory or Optional</strong></p></th>
 <th class="head"><p><strong>Default Value</strong></p></th>
 <th class="head"><p><strong>Description</strong></p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><blockquote>
-<div><p>xclb</p>
-</div></blockquote>
-<p>in-location</p>
-</td>
-<td colspan="2"><p>String</p></td>
+<tr class="row-even"><td><p>xclbin-
+location</p></td>
+<td><p>String</p></td>
 <td><p>Optional</p></td>
 <td><p>NULL</p></td>
 <td><p>Location of
@@ -160,12 +151,10 @@ based on
 processing
 load.</p></td>
 </tr>
-<tr class="row-odd"><td><blockquote>
-<div><p>vvas-l</p>
-</div></blockquote>
-<p>ibrary-repo</p>
-</td>
-<td colspan="2"><p>String</p></td>
+<tr class="row-odd"><td><p>vvas-
+library-
+repo</p></td>
+<td><p>String</p></td>
 <td><p>Optional</p></td>
 <td><p>/usr/lib</p></td>
 <td><p>The VVAS
@@ -173,8 +162,7 @@ library
 repository
 path that
 looks for
-a
-cceleration
+acceleration
 software
 libraries
 using the
@@ -182,12 +170,9 @@ VVAS
 GStreamer
 plug-in.</p></td>
 </tr>
-<tr class="row-even"><td><blockquote>
-<div><p>e</p>
-</div></blockquote>
-<p>lement-mode</p>
-</td>
-<td colspan="2"><p>Enum</p></td>
+<tr class="row-even"><td><p>element-
+mode</p></td>
+<td><p>String</p></td>
 <td><p>Mandatory</p></td>
 <td></td>
 <td><p>The
@@ -197,170 +182,79 @@ element
 mode to
 operate.
 Based on
-re
-quirements,
+requirements
 you must
 choose one
 of the
 following
 modes:</p>
 <ul class="simple">
-<li><p>P</p></li>
-</ul>
-<dl>
-<dt>assthrough:</dt><dd><blockquote>
-<div><p>In
-this
-mode,
-the</p>
-</div></blockquote>
-<dl class="simple">
-<dt>element</dt><dd><p>does
-not
-alter
-the
-input</p>
-</dd>
-</dl>
-<p>buffer.</p>
-</dd>
-</dl>
-<ul>
-<li><dl>
-<dt>Inplace:</dt><dd><blockquote>
-<div><p>In
-this
-mode,
-the</p>
-</div></blockquote>
-<p>element</p>
-<blockquote>
-<div><dl class="simple">
-<dt>alters</dt><dd><p>the
-input</p>
-</dd>
-</dl>
-<p>buffer</p>
-</div></blockquote>
-<dl class="simple">
-<dt>instead</dt><dd><p>of</p>
-</dd>
-</dl>
+<li><dl class="simple">
+<dt>Passthrough:</dt><dd><p>In this
+mode, the
+element
+does not
+alter the
+input
+buffer.</p>
 </dd>
 </dl>
 </li>
-</ul>
-<blockquote>
-<div><dl>
-<dt>producing</dt><dd><blockquote>
-<div><blockquote>
-<div><p>new</p>
-</div></blockquote>
-<p>output</p>
-</div></blockquote>
-<p>buffers.</p>
+<li><dl class="simple">
+<dt>Inplace:</dt><dd><p>In this
+mode, the
+element
+alters
+the input
+buffer
+instead
+of producing
+new output
+buffers.</p>
 </dd>
 </dl>
-</div></blockquote>
-<ul>
-<li><dl>
-<dt>Transform:</dt><dd><blockquote>
-<div><blockquote>
-<div><p>In
-this
-mode,
-the</p>
-</div></blockquote>
-<p>element</p>
-</div></blockquote>
-<dl>
-<dt>produces</dt><dd><blockquote>
-<div><blockquote>
-<div><p>an</p>
-</div></blockquote>
-<p>output</p>
-<dl class="simple">
-<dt>buffer</dt><dd><p>for
-each
-input</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>buffer.</p>
-</dd>
-</dl>
+</li>
+<li><dl class="simple">
+<dt>Transform:</dt><dd><p>In this
+mode, the
+element
+produces
+an ouput
+buffer fo
+each input
+buffer.</p>
 </dd>
 </dl>
 </li>
 </ul>
 </td>
 </tr>
-<tr class="row-odd"><td><p>kernels</p></td>
-<td colspan="3"><p>Array of   |
-Objects    |   Mandatory</p>
-<blockquote>
-<div><div class="line-block">
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
-</div>
-</div></blockquote>
-</td>
+<tr class="row-odd"><td><p>kernel</p></td>
+<td><p>Kernel
+JSON
+Object</p></td>
+<td><p>Mandatory</p></td>
 <td><p>None</p></td>
-<td><p>Array of
-kernel
-objects.
-Each kernel
+<td><p>A Kernel JSON
 object
 provides
 information
 about an
 VVAS video
 library
-con
-figuration.</p>
-<p>Minimum
-value: 1</p>
-<p>Maximum
-value: 2</p>
+configuration.</p>
 <p>For
 information
 on object
 members,
-see <a class="reference external" href="#_bookmark25">Table
-16: Kernel
+see <a class="reference internal" href="plugin_vvas_xfilter.html#kernel-json-object"><span class="std std-ref">Kernel
 JSON Object
-Memb
-ers</a>.</p>
+Members</span></a></p>
 </td>
 </tr>
 </tbody>
 </table>
-<p>Table 16: Kernel JSON Object Members</p>
+<p id="kernel-json-object">Table 16: Kernel JSON Object Members</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 14%" />
@@ -378,8 +272,8 @@ ers</a>.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>l
-ibrary-name</p></td>
+<tr class="row-even"><td><p>library-
+name</p></td>
 <td><p>String</p></td>
 <td><p>Mandatory</p></td>
 <td><p>None</p></td>
@@ -417,26 +311,31 @@ name
 name&gt;</p>
 </td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-even"><td><p>kernel-
+access-
+mode</p></td>
+<td><p>String</p></td>
+<td><p>Optional</p></td>
+<td><p>shared</p></td>
+<td><p>Mode in which
+IP/Kernel is
+to be accessed.
+“shared” or
+“exclusive”</p></td>
+</tr>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p>Object</p></td>
 <td><p>Optional</p></td>
 <td><p>None</p></td>
-<td><blockquote>
-<div><p>Holds
-the
-co</p>
-</div></blockquote>
-<dl>
-<dt>nfiguration</dt><dd><blockquote>
-<div><p>specific
-to the
-VVAS
+<td><p>Holds the
+configuration
+specific
+to the VVAS
 video
-library.
-The VVAS</p>
-</div></blockquote>
-<dl class="simple">
-<dt>GStreamer</dt><dd><p>plug-ins
+library.</p>
+<p>The VVAS
+GStreamer
+plug-ins
 do not
 parse
 this
@@ -448,46 +347,29 @@ sent to
 the
 video
 library.</p>
-</dd>
-</dl>
-</dd>
-</dl>
 </td>
 </tr>
-<tr class="row-odd"><td><p>soft-kernel</p></td>
+<tr class="row-even"><td><p>soft-kernel</p></td>
 <td><p>Object</p></td>
-<td><dl class="simple">
-<dt>Mandatory</dt><dd><p>if the
-kernel
-library
-is
-written
-for the
-soft
-kernel.</p>
-</dd>
-</dl>
-</td>
+<td><p>Mandatory
+( if the kernel
+library is
+written for
+the soft kernel. )</p></td>
 <td><p>None</p></td>
-<td><blockquote>
-<div><p>Contains</p>
-</div></blockquote>
-<dl>
-<dt>soft-kernel</dt><dd><p>specific
-i</p>
-</dd>
-<dt>nformation.</dt><dd><blockquote>
-<div><p>This
+<td><p>Contains
+soft-
+kernel
+specific
+information.</p>
+<p>This
 JSON
 object
 is only
 valid
 for PCIe
-based</p>
-</div></blockquote>
-<p>platforms.</p>
-</dd>
-</dl>
+based
+platforms.</p>
 </td>
 </tr>
 </tbody>
@@ -512,8 +394,8 @@ based</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
-      <span class="lastupdated">Last updated on December 28, 2022.
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
       </span></p>
   </div>
 

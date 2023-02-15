@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>vvas_xinfer &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>vvas_xinfer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/docs/common/plugin_vvas_xinfer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="vvas-xinfer">
+<h1>vvas_xinfer<a class="headerlink" href="#vvas-xinfer" title="Permalink to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> is a GStreamer plug-in to performs inferencing on video frames/images and gives output as <code class="docutils literal notranslate"><span class="pre">GstInferenceMeta</span></code> object which is tree like structure of inference results. This metadata structure is attached to input GstBuffer. This plug-in can also perform hardware accelerated preprocessing operations like resize/crop/normalization etc. on incoming video frames/images before performing inferencing. <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is based on <code class="docutils literal notranslate"><span class="pre">Vitis-AI</span></code> library for inferencing. Hardware accelerated pre-processing using <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> is optional and requires <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel in the design. User may also use software based pre-processing which is internally using <code class="docutils literal notranslate"><span class="pre">Vitis-AI</span></code> library for pre-processing.</p>
+<p>If hardware accelerated preprocessing is enabled and <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is not receiving physically contiguous memory, then data will be an overhead of copying data into a physically contiguous memory before sending to preprocessing engine.</p>
+<p>Another useful feature of this plug-in is to consolidte the inferencing results of different stages of cascadded inferencing usecases. This plug-in can update/apend the new meta data information generated at each stage in to the metadata of the previous stages.</p>
+<p>For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/infer">vvas_xinfer source code</a></p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/vvas_xinfer_blockdiagram.png"><img alt="../../_images/vvas_xinfer_blockdiagram.png" src="../../_images/vvas_xinfer_blockdiagram.png" style="width: 623.2px; height: 432.8px;" /></a>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In case of multithreaded applications, ML pipeline should be created by ensuring that the vvas_xinfer instances are created in a sequence and not concurrently by multiple threads.</p>
+</div>
+<div class="section" id="input-and-output">
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>ML hardware engine supports images in BGR/RGB formats only (depending on model). Though this plug-in can accepts buffers with GRAY8, NV12, BGR, RGB, YUY2, r210, v308, GRAY10_LE32, ABGR, ARGB color formats on input GstPad &amp; output GstPad, actual formats supported may vary depending on the hardware design, and the color formats enabled in the hardware design.</p>
+<ul>
+<li><p>In case there is <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel in the design, then user may choose to use hardware accelerated pre-processing and/or color space conversion. Make sure <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel supports the required color format.</p></li>
+<li><p>In case <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel in not there in the design then the input image to <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in must be in BGR/RGB format (depending on the model requirements) otherwise the results are unexpected.</p></li>
+</ul>
+</li>
+<li><p>Attaches <code class="docutils literal notranslate"><span class="pre">GstInferenceMeta</span></code> metadata to output GstBuffer. For details about meta data, refer to <a class="reference internal" href="vvas_meta_data_structures.html#vvas-inference-metadata"><span class="std std-ref">VVAS Inference Metadata</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="control-parameters">
+<h2>Control Parameters<a class="headerlink" href="#control-parameters" title="Permalink to this heading">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">Control Parameters</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Property Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Range</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>infer-config</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>Null</p></td>
+<td><p>Complete path, including file name, of the inference configuration JSON file</p></td>
+</tr>
+<tr class="row-odd"><td><p>preprocess-config</p></td>
+<td><p>String</p></td>
+<td><p>N/A</p></td>
+<td><p>Null</p></td>
+<td><p>Complete path, including file name, of the pre-processing kernels config JSON file</p></td>
+</tr>
+<tr class="row-even"><td><p>attach-empty-metadata</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>True</p></td>
+<td><p>Flag to decide attaching empty metadata strucutre when there is no inference results available for the current image</p></td>
+</tr>
+<tr class="row-odd"><td><p>batch-timeout</p></td>
+<td><p>Unsigned Integer</p></td>
+<td><p>0 - UINT_MAX</p></td>
+<td><p>0 (No timeout)</p></td>
+<td><p>time (in milliseconds) to wait when batch is not full, before pushing batch of frames for inference</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="infer-config-json-members">
+<h2>infer-config json members<a class="headerlink" href="#infer-config-json-members" title="Permalink to this heading">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 10%" />
+<col style="width: 79%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Json key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Item description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p>inference-level</p></td>
+<td><p>Description</p></td>
+<td><p>Inference level in cascaded inference use case. e.g. Object detection ML (level-1) followed by object classification (level-2) on detected objects</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Integer</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>low-latency</p></td>
+<td><p>Description</p></td>
+<td><p>Parameter to enable/disable low-latency mode in vvas_xinfer and it is useful only when inference-level &gt; 1.
+If enabled, then vvas_xinfer plug-in will not wait for batch-size frames to be accumulated to reduce latency.
+If disabled, inference engine can work at maximum throughput.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Boolean</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>inference-max-queue</p></td>
+<td><p>Description</p></td>
+<td><p>Maximum number of input frames those can be queued inside the plug-in.
+When low-latency is disabled, vvas_xinfer plug-in will wait for inference-max-queue buffers until batch-size is accumulated</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Integer</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>batch-size</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>attach-ppe-outbuf</p></td>
+<td><p>Description</p></td>
+<td><p>Attaches output of preprocessing library to GstInferenceMeta to avoid redoing of the preprocessing if required.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Boolean</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td rowspan="5"><p>kernel</p></td>
+<td><p>Description</p></td>
+<td><p>Kernel object provides information about an VVAS kernel library configuration and kernel library name</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON Object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object Members</p></td>
+<td><p>members of kernel JSON object are mentioned below</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="infer-config-kernel-json-members">
+<h2>infer-config::kernel json members<a class="headerlink" href="#infer-config-kernel-json-members" title="Permalink to this heading">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 13%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>JSON key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="5"><p>config</p></td>
+<td><p>Description</p></td>
+<td><p>Inference kernel specific configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object members</p></td>
+<td><p>Contains members specific to inference library. See vvas_xdpuinfer library for more information</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="infer-config-config-json-members">
+<h2>infer-config::config json members<a class="headerlink" href="#infer-config-config-json-members" title="Permalink to this heading">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 4%" />
+<col style="width: 2%" />
+<col style="width: 8%" />
+<col style="width: 3%" />
+<col style="width: 82%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Expected Values</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>model-name</p></td>
+<td><p>string</p></td>
+<td><p>resnet50</p></td>
+<td><p>N/A</p></td>
+<td><p>Name string of the machine learning model to be executed. The name string should be same as the name of the directory available in model -path parameter file. If the name of the model ELF file is resnet50.elf, then the model-name is resnet50 in the JSON file. The ELF file present in the specified path model-path of the JSON file.</p></td>
+</tr>
+<tr class="row-odd"><td><p>model-class</p></td>
+<td><p>string</p></td>
+<td><p>YOLOV3</p>
+<p>FACEDETECT</p>
+<p>CLASSIFICATION</p>
+<p>SSD</p>
+<p>REFINEDET</p>
+<p>TFSSD</p>
+<p>YOLOV2</p>
+<p>VEHICLECLASSIFICATION</p>
+<p>REID</p>
+<p>SEGMENTATION</p>
+<p>PLATEDETECT</p>
+<p>PLATENUM</p>
+<p>POSEDETECT</p>
+<p>BCC</p>
+<p>EFFICIENTDETD2</p>
+<p>FACEFEATURE</p>
+<p>FACELANDMARK</p>
+<p>ROADLINE</p>
+<p>ULTRAFAST</p>
+<p>RAWTENSOR</p>
+</td>
+<td><p>N/A</p></td>
+<td><p>Class of some model corresponding to model. Some examples are shown below:</p>
+<ul class="simple">
+<li><p><strong>YOLOV3</strong>: yolov3_adas_pruned_0_9, yolov3_voc, yolov3_voc_tf</p></li>
+<li><p><strong>FACEDETECT</strong>: densebox_320_320, densebox_640_360</p></li>
+<li><p><strong>CLASSIFICATION</strong>: resnet18, resnet50, resnet_v1_50_tf</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>model-format</p></td>
+<td><p>string</p></td>
+<td><p>RGB/BGR</p></td>
+<td><p>N/A</p></td>
+<td><p>Image color format required by model.</p></td>
+</tr>
+<tr class="row-odd"><td><p>model-path</p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/usr/share/vitis_ai_library/models/</span></code></p></td>
+<td><p>N/A</p></td>
+<td><p>Path of the folder where the model to be executed is stored.</p></td>
+</tr>
+<tr class="row-even"><td><p>vitis-ai-preprocess</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>True</p></td>
+<td><p>If vitis-ai-preprocess = true: Normalize with mean/scale through the Vitis AI Library If vitis-ai-preprocess = false: Normalize with mean/scale is performed before calling the vvas_xdpuinfer API’s. The Vitis AI library does not perform these operations.</p></td>
+</tr>
+<tr class="row-odd"><td><p>batch-size</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to UINT_MAX</p></td>
+<td><p>N/A</p></td>
+<td><p>Number of frames to be processed in a single batch. If not set or is greater than the batch-size supported by model, it is adjusted to the maximum batch-size supported by the model.</p></td>
+</tr>
+<tr class="row-even"><td><p>float-feature</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>False</p></td>
+<td><p>This is used for FACEFEATURE class. If float-feature = true: Features are provided as float numbers. If float-feature = false: Features are provided as integers.</p></td>
+</tr>
+<tr class="row-odd"><td><p>max-objects</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to UINT_MAX</p></td>
+<td><p>UINT_MAX</p></td>
+<td><p>Maximum number of objects to be detected.</p></td>
+</tr>
+<tr class="row-even"><td><p>segoutfactor</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to UINT_MAX</p></td>
+<td><p>1</p></td>
+<td><p>Multiplication factor for Y8 output to look bright.</p></td>
+</tr>
+<tr class="row-odd"><td><p>seg-out-format</p></td>
+<td><p>string</p></td>
+<td><p>BGR/GRAY8</p></td>
+<td><p>N/A</p></td>
+<td><p>Output color format of segmentation.</p></td>
+</tr>
+<tr class="row-even"><td><p>filter-labels</p></td>
+<td><p>Array</p></td>
+<td></td>
+<td><p>N/A</p></td>
+<td><p>Array of comma separated strings to filter objects with certain labels only.</p></td>
+</tr>
+<tr class="row-odd"><td><p>performance-test</p></td>
+<td><p>Boolean</p></td>
+<td><p>True/False</p></td>
+<td><p>False</p></td>
+<td><p>Enable performance test and corresponding flops per second (f/s) display logs. Calculates and displays the f/s of the standalone DPU after every second.</p></td>
+</tr>
+<tr class="row-even"><td><p>postprocess-lib-path</p></td>
+<td><p>string</p></td>
+<td><p>/usr/lib/libvvascore_postprocessor.so</p></td>
+<td><p>N/A</p></td>
+<td><p>Library to post-process tensors. Absolute path of the library has to be given
+Embedded: /usr/lib/libvvascore_postprocessor.so
+PCIe: /opt/xilinx/vvas/lib/libvvascore_postprocessor.so</p></td>
+</tr>
+<tr class="row-odd"><td><p>postprocess-function</p></td>
+<td><p>string</p></td>
+<td><p>vvas_postprocess_rawtensor
+implemented.</p></td>
+<td><p>N/A</p></td>
+<td><p>Name of the custom function implemented in postprocess-lib-path for post-procesing.</p></td>
+</tr>
+<tr class="row-even"><td><p>debug-level</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to 3</p></td>
+<td><p>1</p></td>
+<td><p>Used to enable log levels.</p>
+<p>There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a log-level lower than it, (therefore messages with an higher severity) are displayed.</p>
+<p>0: This is the highest level in order of severity: it is used for messages about critical errors, both hardware and software related.</p>
+<p>1: This level is used in situations where you attention is immediately required.</p>
+<p>2: This is the log level used for information messages about the action performed by the kernel and output of model.</p>
+<p>3: This level is used for debugging.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In case of class type RAWTENSOR, it is mandatory to provide the post processing function name in the json file.</p>
+</div>
+</div>
+<div class="section" id="preprocess-config-json-members">
+<h2>preprocess-config json members<a class="headerlink" href="#preprocess-config-json-members" title="Permalink to this heading">¶</a></h2>
+<p>Table 4 preprocess-config json members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 14%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Json key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Item description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p>xclbin-location</p></td>
+<td><p>Description</p></td>
+<td><p>Location of xclbin which contains scaler IP to program FPGA device based on device-index property</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>NULL</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>device-index</p></td>
+<td><p>Description</p></td>
+<td><p>Device index on which scaler IP is present</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Integer</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory in PCIe platforms
+In embedded platforms, device-index is not an applicable option as it is always zero</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>-1 in PCIe platforms
+0 in Embedded platforms</p></td>
+</tr>
+<tr class="row-even"><td rowspan="4"><p>software-ppe</p></td>
+<td><p>Description</p></td>
+<td><p>Use software/hardware pre-processing.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>Boolean</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>FALSE</p></td>
+</tr>
+<tr class="row-even"><td rowspan="5"><p>kernel</p></td>
+<td><p>Description</p></td>
+<td><p>Kernel object provides information about an VVAS library configuration.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON Object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object Members</p></td>
+<td><p>members of kernel JSON object are mentioned below</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="preprocess-config-kernel-json-members">
+<h2>preprocess-config::kernel json members<a class="headerlink" href="#preprocess-config-kernel-json-members" title="Permalink to this heading">¶</a></h2>
+<p>Table 5: preprocess-config::kernel json members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 18%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>JSON key</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td rowspan="4"><p>kernel-name</p></td>
+<td><p>Description</p></td>
+<td><p>Name of the preprocessing kernel. Syntax : “&lt;kernel_name&gt;:&lt;instance_name&gt;”</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>String</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>NULL</p></td>
+</tr>
+<tr class="row-even"><td rowspan="5"><p>config</p></td>
+<td><p>Description</p></td>
+<td><p>preprocess kernel specific configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p>Value type</p></td>
+<td><p>JSON object</p></td>
+</tr>
+<tr class="row-even"><td><p>Mandatory/Optional</p></td>
+<td><p>Mandatory</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default value</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Object members</p></td>
+<td><p>Contains members specific to preprocess library</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="preprocess-config-config-json-members">
+<h2>preprocess-config::config json members<a class="headerlink" href="#preprocess-config-config-json-members" title="Permalink to this heading">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 4%" />
+<col style="width: 20%" />
+<col style="width: 7%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Expected Values</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ppc</p></td>
+<td><p>Integer</p></td>
+<td><p>2/4</p></td>
+<td><p>PCIe : 4
+Embedded : 2</p></td>
+<td><p>Pixel per clock supported by a multi- scaler kernel</p></td>
+</tr>
+<tr class="row-odd"><td><p>scaler-type</p></td>
+<td><p>string</p></td>
+<td><p>letterbox/envelope_cropped/NA</p></td>
+<td><p>default
+resize</p></td>
+<td><p>Type of scaling to be used for resize operation. Some models require resize to be done with aspect-ratio preserved.
+If not set, default res-sizing will be done.
+letterbox: letterbox cropping
+envelope_cropped: envelope cropping</p></td>
+</tr>
+<tr class="row-even"><td><p>scaler-horz-align</p></td>
+<td><p>string</p></td>
+<td><p>left/right/center</p></td>
+<td><p>left</p></td>
+<td><p>Used when “scaler-type” = letterbox.
+left: Image will be at the left i.e, padding will be added at the right end of the image.
+right: Image will be at the left i.e, padding will be added at the right end of the image.
+center: Image will be at the center i.e, padding will be added at both right and left ends of the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p>scaler-vert-align</p></td>
+<td><p>string</p></td>
+<td><p>top/bottom/center</p></td>
+<td><p>top</p></td>
+<td><p>Used when “scaler-type” = letterbox.
+top: Image will be at the top i.e, padding will be added at the bottom end of the image.
+bottom: Image will be at the bottom i.e, padding will be added at the top end of the image.
+center: Image will be at the center i.e, padding will be added at both top and botoom ends of the image.</p></td>
+</tr>
+<tr class="row-even"><td><p>scaler-pad-value</p></td>
+<td><p>Integer</p></td>
+<td><p>0 - UINT_MAX</p></td>
+<td><p>0</p></td>
+<td><p>pixel value of the padded region in letterbox cropping.</p></td>
+</tr>
+<tr class="row-odd"><td><p>in-mem-bank</p></td>
+<td><p>Integer</p></td>
+<td><p>0 - 65535</p></td>
+<td><p>0</p></td>
+<td><p>VVAS input memory bank to allocate memory.</p></td>
+</tr>
+<tr class="row-even"><td><p>out-mem-bank</p></td>
+<td><p>Integer</p></td>
+<td><p>0 - 65535</p></td>
+<td><p>0</p></td>
+<td><p>VVAS output memory bank to allocate memory.</p></td>
+</tr>
+<tr class="row-odd"><td><p>debug-level</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to 3</p></td>
+<td><p>1</p></td>
+<td><p>Used to enable log levels.</p>
+<p>There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity
+till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a
+log-level lower than it, (therefore messages with an higher severity) are displayed.</p>
+<p>0: This is the highest level in order of severity: it is used for messages about critical errors.</p>
+<p>1: This level is used in situations where you attention is immediately required.</p>
+<p>2: This is the log level used for information messages about the action performed by the kernel and output of model.</p>
+<p>3: This level is used for debugging.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="scaler-types">
+<h2>Scaler Types<a class="headerlink" href="#scaler-types" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="letterbox">
+<h2>Letterbox<a class="headerlink" href="#letterbox" title="Permalink to this heading">¶</a></h2>
+<p>Letterbox scaling is a method of preserving the aspect ratio of an image when resizing it to fit a specific resolution. The algorithm works by first determining the target aspect ratio, and then scaling the image down so that it fits within that aspect ratio while maintaining its original aspect ratio. The resulting image will have “letterbox” bars on the top and bottom (or left and right) of the image to fill the remaining space. This is done to ensure that the entire image is visible, and no important parts of the image are cut off.</p>
+<p>Example: Below input image of 1920x1080 is first being scaled down to a resolution of 416x234 using a technique that preserves the aspect ratio of the original image. After that, a letterbox method is applied to the scaled image by adding black bars horizontally to the image, which will result in the final resolution of 416x416 pixels.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/image27.png"><img alt="../../_images/image27.png" src="../../_images/image27.png" style="width: 446.40000000000003px; height: 147.20000000000002px;" /></a>
+</div>
+</div>
+<div class="section" id="envelope-cropped">
+<h2>Envelope Cropped<a class="headerlink" href="#envelope-cropped" title="Permalink to this heading">¶</a></h2>
+<p>Envelope cropped scaling is a technique used in digital image processing to resize an image to fit within a specific resolution while preserving its aspect ratio.
+The algorithm for implementing envelope cropped scaling consists of several steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Determining the target aspect ratio by comparing the aspect ratio of the original image to the aspect ratio of the target resolution.</p></li>
+<li><p>Scaling the image down by a factor that preserves the original aspect ratio while ensuring that the smallest side of the image fits within the target resolution.</p></li>
+<li><p>Cropping the image by removing equal parts from both sides of the image, maintaining the central part of the image.</p></li>
+</ul>
+<p>By scaling the image so that the smallest side fits within the target resolution, it ensures that the input image is resized in a way that preserves its aspect ratio while fitting the target resolution. However, this method can result in important parts of the image being cut off, so it’s important to carefully consider the potential impact on the performance of the model.</p>
+</div></blockquote>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
+<p>Below input image of 1920x1080 is being scaled down to a resolution of 455x256 using the smallest side factor of 256 pixels. This new resolution preserves the aspect ratio of the original image. After that, a center crop of 224x224 pixels is taken from the scaled image to obtain the final resolution of 224x224 pixels.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/image26.png"><img alt="../../_images/image26.png" src="../../_images/image26.png" style="width: 592.0px; height: 192.0px;" /></a>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>scaler-type is not needed for all models. Few models have requirements that image be resized using specific techniques for better inference. Use scaler-type only when needed. Otherwise leave it unset.</p></li>
+<li><p>bcc uses letterbox scaler-type for re-sizing.</p></li>
+<li><p>efficientnetd2 models use envelope_cropped scaler-type for re-sizing.</p></li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Color format conversion is not supported by vitis-ai-preprocess. It is user’s responsibility to feed the frame in the format required by the model if “vitis-ai-preprocess” = true.</p></li>
+<li><p>If “vitis-ai-preprocess” = false and preprocess-config is not provided, then pre-processing operations like, Normalization, scaling must be performed on the frame before feeding to vvas_xinfer, otherwise results may not be as expected.</p></li>
+<li><p>If preprocess-config json is provided and “vitis-ai-preprocess” = true in infer-config json, then pre-processing is done by VVAS using hardware acceleration for better performance.</p></li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Set “device-index” = -1 and “kernel-name” = image_processing_sw:{image_processing_sw_1} when using software-ppe from VVAS.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>If tensors are needed instead of post-processed results, user can set “model-class” = “RAWTENSOR” in the infer-config json file.</p></li>
+<li><p>Users can implement their own post-processing to process the tensors. <code class="docutils literal notranslate"><span class="pre">vvascore_postprocessor</span></code> library is implemented to demonstrate how to implement post-processing library. This is only an example library for reference and is not optimized.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">vvascore_postprocessor</span></code> library only supports yolov3_voc, yolov3_voc_tf, plate_num, densebox_320_320, resnet_v1_50_tf models.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="example-pipelines-and-jsons">
+<h2>Example Pipelines and Jsons<a class="headerlink" href="#example-pipelines-and-jsons" title="Permalink to this heading">¶</a></h2>
+<div class="section" id="single-stage-inference-example">
+<h3>Single stage inference example<a class="headerlink" href="#single-stage-inference-example" title="Permalink to this heading">¶</a></h3>
+<p>An example simple inference (YOLOv3) pipeline which takes NV12 YUV file (test.nv12) as input is described below:</p>
+<p>The below pipeline performs ML using a yolov3_voc_tf model. A 1920x1080 NV12 frame is fed to the vvas_xinfer plugin. The vvas_xinfer feeds this frame to the pre-processor which re-sizes the frame and convert color format as the model requires an RGB input. Along with this mean value subtraction and normalization operations are also performed on the frame. Now this re-sized and pre-processed frame is fed to inference library which gives the inference predictions. These inference predictions are then upscaled to the original resolution (1920x1080) and attached to the output buffer.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&lt;test.nv12&gt; ! videoparse width=1920 height=1080 format=nv12 ! \
+vvas_xinfer preprocess-config=yolov_preproc.json infer-config=yolov3_voc_tf.json ! fakesink -v
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;inference-max-queue&quot;</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span>
+    <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;low-latency&quot;</span><span class="p">:</span><span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">&quot;batch-size&quot;</span><span class="p">:</span><span class="mi">13</span><span class="p">,</span>
+          <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;yolov3_voc_tf&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;YOLOV3&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+       <span class="p">}</span>
+    <span class="p">}</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/run/media/mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;software-ppe&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+   <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+         <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">}</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="level-inference-example">
+<h3>2-level inference example<a class="headerlink" href="#level-inference-example" title="Permalink to this heading">¶</a></h3>
+<p>An example cascade inference (YOLOv3+Resnet18) pipeline which takes NV12 YUV file (test.nv12) as input is described below:</p>
+<p>Here the objects detected in level-1 are cropped using <code class="docutils literal notranslate"><span class="pre">vvas_xabrscaler</span></code> and fed to <code class="docutils literal notranslate"><span class="pre">vascore_dpuinfer</span></code> for further inference.
+Refer to jsons in above example for level-1. jsons files for level-2 are provided below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&lt;test.nv12&gt; ! videoparse width=1920 height=1080 format=nv12 ! \
+vvas_xinfer preprocess-config=yolo_preproc.json infer-config=yolov3_voc_tf.json ! queue ! \
+vvas_xinfer preprocess-config=resnet_preproc.json infer-config=resnet18.json ! fakesink -v
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;inference-max-queue&quot;</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span>
+    <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;low-latency&quot;</span><span class="p">:</span><span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">&quot;batch-size&quot;</span><span class="p">:</span><span class="mi">13</span><span class="p">,</span>
+          <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;resnet50&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;CLASSIFICATION&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+       <span class="p">}</span>
+    <span class="p">}</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/run/media/mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;software-ppe&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+   <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+         <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">}</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rawtensor-example">
+<span id="raw-tensor-example-label"></span><h3>Rawtensor example<a class="headerlink" href="#rawtensor-example" title="Permalink to this heading">¶</a></h3>
+<p>An example inference pipeline to get tensors is described below:</p>
+<p>The below pipeline performs inference using yolov3_voc_tf model. In the infer-json <code class="docutils literal notranslate"><span class="pre">model-class:</span> <span class="pre">RAWTENSOR</span></code> indicates that tensors are required by the user instead of post-processed inference results.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&lt;test.nv12&gt; ! videoparse width=1920 height=1080 format=nv12 ! \
+vvas_xinfer preprocess-config=yolov_preproc.json infer-config=yolov3_voc_tf.json ! fakesink -v
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;inference-max-queue&quot;</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span>
+    <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;low-latency&quot;</span><span class="p">:</span><span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">&quot;batch-size&quot;</span><span class="p">:</span><span class="mi">13</span><span class="p">,</span>
+          <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;yolov3_voc_tf&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;RAWTENSOR&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+       <span class="p">}</span>
+    <span class="p">}</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/run/media/mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;software-ppe&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+   <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+         <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">}</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Using the same pipeline described above, if post-processing has to be performed on the tensors, <code class="docutils literal notranslate"><span class="pre">postprocess-lib-path</span></code> and <code class="docutils literal notranslate"><span class="pre">postprocess-function</span></code> are added in the infer-config json. Note that the post-processing library used here is only a refernce library and does not support all models.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;inference-max-queue&quot;</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span>
+    <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;low-latency&quot;</span><span class="p">:</span><span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
+       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">&quot;batch-size&quot;</span><span class="p">:</span><span class="mi">13</span><span class="p">,</span>
+          <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;yolov3_voc_tf&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;RAWTENSOR&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;postprocess-lib-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/opt/xilinx/vvas/lib/libvvascore_postprocessor.so&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;postprocess-function&quot;</span> <span class="p">:</span> <span class="s2">&quot;vvas_postprocess_tensor&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+          <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+       <span class="p">}</span>
+    <span class="p">}</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

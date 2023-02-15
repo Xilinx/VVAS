@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>Tutorials for PCIe/Data Center platforms &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+  <title>Tutorials for PCIe/Data Center platforms &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/_static/custom.css" type="text/css" />
@@ -31,11 +31,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Basic Transcoding pipelines" href="transcoding.html" />
-    <link rel="prev" title="VVAS GStreamer Plug-ins for PCIe/Data Center Platforms" href="../DC_plugins.html" /> 
+    <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -51,7 +50,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <img src="../../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.0
+                3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -67,35 +66,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../common/common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../common/vvas_meta_data_structures.html">Meta Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../common/for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="transcoding.html">Basic Transcoding</a></li>
-<li class="toctree-l2"><a class="reference internal" href="multi_instance_launch_utilities.html">Multi-instance Transcoding</a></li>
-<li class="toctree-l2"><a class="reference internal" href="xabrladder.html">ABR Ladder Application</a></li>
-</ul>
-</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../freq_asked_questions.html">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
         </div>
@@ -124,13 +112,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="tutorials-for-pcie-data-center-platforms">
 <h1>Tutorials for PCIe/Data Center platforms<a class="headerlink" href="#tutorials-for-pcie-data-center-platforms" title="Permalink to this heading">¶</a></h1>
-<p>This section covers how to build GStreamer based Transcoding pipelines for PCIe base platforms that are used in Data Center. Transcoding may be from a Live (capture/streaming) source or from a storage (offline transcoding). First tutorial will cover basic transcoding, how to build and execute single instance of transcode pipeline. Second tutorial talks about complex and multi-instance Transcode pipelines. This tutorial covers how to define multiple instances and launch these on several Alveo U30 cards.</p>
-<p><a class="reference internal" href="transcoding.html"><span class="doc">Basic Transcoding Pipelines</span></a> tutorial covers basic transcoding, how to build and execute single instance of different transcode pipelines.</p>
-<p><a class="reference internal" href="multi_instance_launch_utilities.html"><span class="doc">Multi-instance High Density Transcoding Pipelines</span></a> tutorial covers how to define multiple instances and launch these on several Alveo U30 cards installed on a server.</p>
-<div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
-</div>
+<p>This section covers how to build GStreamer based Machine Learning Pipelines for PCIe base platforms that are used in Data Center.
+<a class="reference internal" href="cascadded_car_classification.html"><span class="doc">cascadded_car_classification</span></a></p>
 <div class="toctree-wrapper compound">
 </div>
 </div>
@@ -148,16 +131,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         }
                   </style>
 				  
-				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../DC_plugins.html" class="btn btn-neutral float-left" title="VVAS GStreamer Plug-ins for PCIe/Data Center Platforms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="transcoding.html" class="btn btn-neutral float-right" title="Basic Transcoding pipelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+				  <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
-      <span class="lastupdated">Last updated on December 28, 2022.
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
       </span></p>
   </div>
 

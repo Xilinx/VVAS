@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>Platforms And Applications &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+  <title>Platforms And Applications &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
@@ -31,11 +31,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Smart Model Select Application" href="smart_model_select.html" />
-    <link rel="prev" title="Acceleration Kernels" href="../common/Acceleration-Hardware.html" /> 
+    <link rel="prev" title="VVAS Debugging Support" href="../common/debug_support.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -51,7 +52,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.0
+                3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -67,9 +68,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">Meta Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul class="current">
@@ -87,23 +89,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="embedded-plugins.html">VVAS GStreamer Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
         </div>
@@ -132,13 +127,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="platforms-and-applications">
 <h1>Platforms And Applications<a class="headerlink" href="#platforms-and-applications" title="Permalink to this heading">¶</a></h1>
-<p>This VVAS release supports Zynq MPSoc based Embedded platforms like  <code class="docutils literal notranslate"><span class="pre">KV260</span> <span class="pre">SOM</span></code> and <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> platforms. This release has also enabled the support for <code class="docutils literal notranslate"><span class="pre">Versal</span></code> device based platforms. This release has been validated on <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> based platform for different usecases. Various supported example applications using VVAS on <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> and <code class="docutils literal notranslate"><span class="pre">KV260</span> <span class="pre">SOM</span></code> based platforms are listed below. For creating example designs for <code class="docutils literal notranslate"><span class="pre">Versal</span></code> based platforms, you may refer to the <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> based example designs provided with this release as reference for patches needed for other platforms.</p>
+<p>This VVAS release supports <code class="docutils literal notranslate"><span class="pre">Zynq</span> <span class="pre">UltraScale+</span> <span class="pre">MPSoc</span></code> as well as <code class="docutils literal notranslate"><span class="pre">Versal</span></code> based Embedded platforms. This release has been validated on <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> based platform for different usecases. Various supported example applications using VVAS on <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> and <code class="docutils literal notranslate"><span class="pre">KV260</span> <span class="pre">SOM</span></code> based platforms are listed below. For creating example designs for <code class="docutils literal notranslate"><span class="pre">Versal</span></code> based platforms, you may refer to the <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> based example designs provided with this release as reference for patches needed for other platforms.</p>
 <div class="section" id="som-examples">
 <h2>SOM Examples<a class="headerlink" href="#som-examples" title="Permalink to this heading">¶</a></h2>
 <p>There are three Application specific SOM platforms supported. Click on the link below to know more about these.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Currently KV260 SOM example designs mentioned below may be based on VVAS 1.0 and Vitis AI 1.4 release. These designs will be upgraded to VVAS 2.0 and Vitis AI 2.5 soon.</p>
+<p>Currently KV260 SOM example designs mentioned below are based on Previous VVAS release (i.e. VVAS 2.0 and Vitis AI 2.5 release).</p>
 </div>
 <dl class="simple">
 <dt>Smart Camera</dt><dd><p>Smart Camera Application with face detection and display functionality. For more details refer to <a class="reference external" href="https://www.xilinx.com/products/app-store/kria/smart-camera.html">Smart Camera</a></p>
@@ -184,15 +179,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                   </style>
 				  
 				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../common/Acceleration-Hardware.html" class="btn btn-neutral float-left" title="Acceleration Kernels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../common/debug_support.html" class="btn btn-neutral float-left" title="VVAS Debugging Support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="smart_model_select.html" class="btn btn-neutral float-right" title="Smart Model Select Application" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
-      <span class="lastupdated">Last updated on December 28, 2022.
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
       </span></p>
   </div>
 

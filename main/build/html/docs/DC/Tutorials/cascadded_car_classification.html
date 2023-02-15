@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>Developing an application using VVAS Core APIs &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Developing an application using VVAS Core APIs</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/docs/DC/Tutorials/cascadded_car_classification.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="developing-an-application-using-vvas-core-apis">
+<h1>Developing an application using VVAS Core APIs<a class="headerlink" href="#developing-an-application-using-vvas-core-apis" title="Permalink to this heading">¶</a></h1>
+<p>This document explains steps for using the VVAS Core APIs. This document can be used as a user guide to develop any application using VVAS Core APIs. An application to do 1st level of inferencing is considered as an example to explain this.</p>
+<p>Below is the block diagram.</p>
+<div class="figure align-default">
+<img alt="../../../_images/App_Development.png" src="../../../_images/App_Development.png" />
+</div>
+<p>Below is the algorithm for the above application.</p>
+<ul class="simple">
+<li><ol class="upperalpha simple">
+<li><p>Create Parser, Decoder, Scaler, Infer, and MetaConvert instance.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="2">
+<li><p>Read encoded data from the file and parse it using Parser, if EOS go to step K.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="3">
+<li><p>Feed decoder parsed data and get the decoded data.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="4">
+<li><p>Do scaling and pre-processing on decoded buffer using Scaler and keep the decoded buffer as it is.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="5">
+<li><p>Do inferencing on scaled and pre-processed buffer using DPU.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="6">
+<li><p>Free scaled and pre-processed buffer and upscale the inference bounding box to the resolution of decoded buffer.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="7">
+<li><p>Convert DPU inference data to Overlay data using MetaConvert.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="8">
+<li><p>Draw inference data on decoded buffer.</p></li>
+</ol>
+</li>
+<li><ol class="upperroman simple">
+<li><p>Consume this buffer.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="10">
+<li><p>Go to step B.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="11">
+<li><p>Destroy all instances of VVAS core modules.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="12">
+<li><p>Exit</p></li>
+</ol>
+</li>
+</ul>
+<p>Before starting this application let’s have a quick overview of APIs for all above VVAS Core modules.</p>
+<div class="section" id="parser-apis">
+<h2>Parser APIs<a class="headerlink" href="#parser-apis" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Creating Parser instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasParser</span><span class="o">*</span> <span class="n">vvas_parser_create</span> <span class="p">(</span><span class="n">VvasContext</span><span class="o">*</span> <span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasCodecType</span> <span class="n">codec_type</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Get Stream Parameters (Decoder input configuration) and Access Unit frame</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_parser_get_au</span> <span class="p">(</span><span class="n">VvasParser</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="n">VvasMemory</span> <span class="o">*</span><span class="n">inbuf</span><span class="p">,</span> <span class="n">int32_t</span> <span class="n">valid_insize</span><span class="p">,</span> <span class="n">VvasMemory</span> <span class="o">**</span><span class="n">outbuf</span><span class="p">,</span> <span class="n">int32_t</span> <span class="o">*</span><span class="n">offset</span><span class="p">,</span> <span class="n">VvasDecoderInCfg</span> <span class="o">**</span><span class="n">dec_cfg</span><span class="p">,</span> <span class="nb">bool</span> <span class="n">islast</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Destroy Parser instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_parser_destroy</span> <span class="p">(</span><span class="n">VvasParser</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For complete details of all the Parser APIs please refer to the &lt;link to vvas-core parser APIs&gt;</p>
+</div>
+<div class="section" id="decoder-apis">
+<h2>Decoder APIs<a class="headerlink" href="#decoder-apis" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Create Decoder instance</p></li>
+</ul>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">VvasDecoder</span><span class="o">*</span><span class="w"> </span><span class="n">vvas_decoder_create</span><span class="w"> </span><span class="p">(</span><span class="n">VvasContext</span><span class="w"> </span><span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">dec_name</span><span class="p">,</span><span class="w"> </span><span class="n">VvasCodecType</span><span class="w"> </span><span class="n">dec_type</span><span class="p">,</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">hw_instance_id</span><span class="p">,</span><span class="w"> </span><span class="n">VvasLogLevel</span><span class="w"> </span><span class="n">log_level</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Configure Decoder and Get Decoder’s output configuration</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_decoder_config</span> <span class="p">(</span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">dec_handle</span><span class="p">,</span> <span class="n">VvasDecoderInCfg</span> <span class="o">*</span><span class="n">input_cfg</span><span class="p">,</span> <span class="n">VvasDecoderOutCfg</span> <span class="o">*</span><span class="n">output_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Submit Parsed Frame and List of output video frames to the decoder</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VVvasReturnType</span> <span class="n">vvas_decoder_submit_frames</span><span class="p">(</span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">dec_handle</span><span class="p">,</span> <span class="n">VvasMemory</span> <span class="o">*</span><span class="n">nalu</span><span class="p">,</span> <span class="n">VvasList</span> <span class="o">*</span><span class="n">loutframes</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Get Decoded frame from the Decoder</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_decoder_get_decoded_frame</span><span class="p">(</span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">dec_handle</span><span class="p">,</span> <span class="n">VvasVideoFrame</span> <span class="o">**</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Destroy Decoder instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_decoder_destroy</span> <span class="p">(</span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">dec_handle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For complete details of all the Decoder APIs please refer to the &lt;link to vvas-core decoder APIs&gt;</p>
+</div>
+<div class="section" id="scaler-apis">
+<h2>Scaler APIs<a class="headerlink" href="#scaler-apis" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Create Scaler instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">vvas_scaler_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span> <span class="n">kernel_name</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Configuring Scaler</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_prop_set</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">,</span> <span class="n">VvasScalerProp</span> <span class="o">*</span> <span class="n">prop</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Adding processing channel into Scaler</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_channel_add</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">,</span> <span class="n">VvasScalerRect</span> <span class="o">*</span> <span class="n">src_rect</span><span class="p">,</span> <span class="n">VvasScalerRect</span> <span class="o">*</span> <span class="n">dst_rect</span><span class="p">,</span> <span class="n">VvasScalerPpe</span> <span class="o">*</span> <span class="n">ppe</span><span class="p">,</span> <span class="n">VvasScalerParam</span> <span class="o">*</span> <span class="n">param</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Processing all the added channels</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_process_frame</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Destroy Scaler instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_destroy</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For complete details of all the Scaler APIs please refer to the &lt;link to vvas-core scaler APIs&gt;</p>
+</div>
+<div class="section" id="dpu-apis">
+<h2>DPU APIs<a class="headerlink" href="#dpu-apis" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Create DPU instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">vvas_dpuinfer_create</span> <span class="p">(</span><span class="n">VvasDpuInferConf</span> <span class="o">*</span> <span class="n">dpu_conf</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Get DPU configuration</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_dpuinfer_get_config</span> <span class="p">(</span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">dpu_handle</span><span class="p">,</span> <span class="n">VvasModelConf</span> <span class="o">*</span><span class="n">model_conf</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Do inferencing</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_dpuinfer_process_frames</span> <span class="p">(</span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">dpu_handle</span><span class="p">,</span> <span class="n">VvasVideoFrame</span> <span class="o">*</span><span class="n">inputs</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">],</span> <span class="n">VvasInferPrediction</span> <span class="o">*</span><span class="n">predictions</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">],</span> <span class="nb">int</span> <span class="n">batch_size</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Destroy DPU instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_dpuinfer_destroy</span> <span class="p">(</span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">dpu_handle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For complete details of all the DPU APIs please refer to the &lt;link to vvas-core DPU APIs&gt;</p>
+</div>
+<div class="section" id="metaconvert-apis">
+<h2>MetaConvert APIs<a class="headerlink" href="#metaconvert-apis" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Create MetaConvert instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasMetaConvert</span> <span class="o">*</span><span class="n">vvas_metaconvert_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasMetaConvertConfig</span> <span class="o">*</span><span class="n">cfg</span><span class="p">,</span><span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Convert DPU detected data to Overlay data format</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_metaconvert_prepare_overlay_metadata</span> <span class="p">(</span><span class="n">VvasMetaConvert</span> <span class="o">*</span><span class="n">meta_convert</span><span class="p">,</span> <span class="n">VvasTreeNode</span> <span class="o">*</span><span class="n">parent</span><span class="p">,</span> <span class="n">VvasOverlayShapeInfo</span> <span class="o">*</span><span class="n">shape_info</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Destroy MetaConvert instance</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">vvas_metaconvert_destroy</span> <span class="p">(</span><span class="n">VvasMetaConvert</span> <span class="o">*</span><span class="n">meta_convert</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For complete details of all the MetaConvert APIs please refer to the &lt;link to vvas-core MetaConvert APIs&gt;</p>
+</div>
+<div class="section" id="overlay-apis">
+<h2>Overlay APIs<a class="headerlink" href="#overlay-apis" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Draw Infer data onto the Video</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_overlay_process_frame</span> <span class="p">(</span><span class="n">VvasOverlayFrameInfo</span> <span class="o">*</span><span class="n">pFrameInfo</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For complete details of all the Overlay APIs please refer to the &lt;link to vvas-core overlay APIs&gt;</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>VVAS Core APIs are not thread safe.</p></li>
+<li><p>User should create their own buffer pool and manage the buffers allocation.</p></li>
+<li><p>VVAS Core Parser can parse only H264 and H265 elementary streams.</p></li>
+</ul>
+</div>
+<p>As we have now an overview of all the APIs of several VVAS Core modules, let’s use them to create an application.</p>
+<p>The very first step to use VVAS Core APIs of different modules is to create the VVAS Context.</p>
+</div>
+<div class="section" id="creating-vvas-context">
+<h2>Creating VVAS Context<a class="headerlink" href="#creating-vvas-context" title="Permalink to this heading">¶</a></h2>
+<p>VVAS Context is needed by almost every VVAS Core module, VVAS Context can be created using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasContext</span><span class="o">*</span> <span class="n">vvas_context_create</span> <span class="p">(</span><span class="n">int32_t</span> <span class="n">dev_idx</span><span class="p">,</span> <span class="n">char</span> <span class="o">*</span> <span class="n">xclbin_loc</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">vret</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>XCL bin is needed for Scaler and Decoder only in our use case, as they are the only modules using Hardware IP.</p>
+<p>It is recommended to create VVAS context for each component separately if each module will be running in different thread, for creating VVAS context for Parser, MetaConvert and Overlay XCL bin is not needed, hence XCL bin can passed as NULL and dev_idx as -1.</p>
+</div>
+<div class="section" id="creating-vvas-memory">
+<h2>Creating VVAS Memory<a class="headerlink" href="#creating-vvas-memory" title="Permalink to this heading">¶</a></h2>
+<p>VVAS Memory is used to store elementary streams and can be created using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasMemory</span><span class="o">*</span> <span class="n">vvas_memory_alloc</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasAllocationType</span> <span class="n">mem_type</span><span class="p">,</span> <span class="n">VvasAllocationFlags</span> <span class="n">mem_flags</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="n">mbank_idx</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For reading/writing into VvasMemeory, user need to map it is read/write mode using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_memory_map</span> <span class="p">(</span><span class="n">VvasMemory</span><span class="o">*</span> <span class="n">vvas_mem</span><span class="p">,</span> <span class="n">VvasDataMapFlags</span> <span class="n">flags</span><span class="p">,</span> <span class="n">VvasMemoryMapInfo</span> <span class="o">*</span><span class="n">info</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>User can get the virtual pointer and size of the data from VvasMemoryMapInfo after mapping it.</p>
+<p>Once done with read/write on VvasMemory it must be unmapped using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_memory_unmap</span> <span class="p">(</span><span class="n">VvasMemory</span><span class="o">*</span> <span class="n">vvas_mem</span><span class="p">,</span> <span class="n">VvasMemoryMapInfo</span> <span class="o">*</span><span class="n">info</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When done with VvasMemory, it must be freed using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">vvas_memory_free</span> <span class="p">(</span><span class="n">VvasMemory</span><span class="o">*</span> <span class="n">vvas_mem</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-vvas-video-frame">
+<h2>Creating VVAS Video Frame<a class="headerlink" href="#creating-vvas-video-frame" title="Permalink to this heading">¶</a></h2>
+<p>VvasVideoFrame is used to store raw video data and can be created using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasVideoFrame</span><span class="o">*</span> <span class="n">vvas_video_frame_alloc</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasAllocationType</span> <span class="n">alloc_type</span><span class="p">,</span> <span class="n">VvasAllocationFlags</span> <span class="n">alloc_flags</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="n">mbank_idx</span><span class="p">,</span> <span class="n">VvasVideoInfo</span> <span class="o">*</span><span class="n">vinfo</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For reading or writing into VvasVideoFrame user must map it in READ or WRITE mode respectively using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasVideoFrame</span><span class="o">*</span> <span class="n">vvas_video_frame_alloc</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasAllocationType</span> <span class="n">alloc_type</span><span class="p">,</span> <span class="n">VvasAllocationFlags</span> <span class="n">alloc_flags</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="n">mbank_idx</span><span class="p">,</span> <span class="n">VvasVideoInfo</span> <span class="o">*</span><span class="n">vinfo</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After read/write, VvasVideoFrame must be unmapped using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_video_frame_unmap</span> <span class="p">(</span><span class="n">VvasVideoFrame</span><span class="o">*</span> <span class="n">vvas_vframe</span><span class="p">,</span> <span class="n">VvasVideoFrameMapInfo</span> <span class="o">*</span><span class="n">info</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When done with VvasVideoFrame , free it using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">vvas_video_frame_free</span> <span class="p">(</span><span class="n">VvasVideoFrame</span><span class="o">*</span> <span class="n">vvas_vframe</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>VvasAllocationType and VvasAllocationFlags for VVAS Core’s Decoder and Scaler buffers must be VVAS_ALLOC_TYPE_CMA and VVAS_ALLOC_FLAG_NONE respectively.</p>
+</div>
+<div class="section" id="parsing-h-264-h-265-streams">
+<h2>Parsing H.264/H.265 streams<a class="headerlink" href="#parsing-h-264-h-265-streams" title="Permalink to this heading">¶</a></h2>
+<p>Once VVAS context is created, create the Parser context using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasParser</span><span class="o">*</span> <span class="n">vvas_parser_create</span> <span class="p">(</span><span class="n">VvasContext</span><span class="o">*</span> <span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasCodecType</span> <span class="n">codec_type</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>To feed parser with encoded buffer user need to allocate VvasMemory and copy encoded data into it and feed this VvasMemory to the parser to get the parsed buffer and the decoder’s input configuration (Encoded stream information).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_parser_get_au</span> <span class="p">(</span><span class="n">VvasParser</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="n">VvasMemory</span> <span class="o">*</span><span class="n">inbuf</span><span class="p">,</span> <span class="n">int32_t</span> <span class="n">valid_insize</span><span class="p">,</span> <span class="n">VvasMemory</span> <span class="o">**</span><span class="n">outbuf</span><span class="p">,</span> <span class="n">int32_t</span> <span class="o">*</span><span class="n">offset</span><span class="p">,</span> <span class="n">VvasDecoderInCfg</span> <span class="o">**</span><span class="n">dec_cfg</span><span class="p">,</span> <span class="nb">bool</span> <span class="n">islast</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If return value from above API is VVAS_RET_NEED_MOREDATA, it means that the encoded buffer was not sufficient for the parser and it need more data.</p>
+<p>While feeding above API user need to be careful of &#64;offset value, this is both in and out parameter for the API, As input it should be pointing to the offset in input encoded buffer, and when this API returns it will contain the offset till which parser consumed the encoded buffer, hence while feeding this API again user should feed the remaining data if parser was not able to parse the complete data given to it.</p>
+<p>Above API will also return the stream parameters into &#64;dec_cfg, this configuration is generated whenever parser finds any change in the stream parameter or if it is the very first encoded frame.</p>
+<p>This dec_cfg will be used to configure the decoder, user must free it after its use.
+On VVAS_RET_SUCCESS from the API would get the parsed access unit frame in outbuf. This outbuf can be now fed to the decoder. This outbuf is allocated inside parser module, hence must be freed by the user after its use.</p>
+</div>
+<div class="section" id="decoding-h-264-h-265-streams">
+<h2>Decoding H.264/H.265 streams<a class="headerlink" href="#decoding-h-264-h-265-streams" title="Permalink to this heading">¶</a></h2>
+<p>Once VVAS context is created, decoder instance can be created using the below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">vvas_decoder_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="o">*</span><span class="n">dec_name</span><span class="p">,</span> <span class="n">VvasCodecType</span> <span class="n">dec_type</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="n">hw_instance_id</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Decoder name for v70 is kernel_vdu_decoder:{kernel_vdu_decoder_xx} where xx can be from 0 – 16, each index represents one unique instance of the decoder.</p>
+<p>Hw_instance_is is the Hardware instance id, In V70 for decoder_name  kernel_vdu_decoder:{kernel_vdu_decoder_0} to kernel_vdu_decoder:{kernel_vdu_decoder_7} it would be 0 and for kernel_vdu_decoder:{kernel_vdu_decoder_8} to kernel_vdu_decoder:{kernel_vdu_decoder_15} it should be 1.</p>
+<p>Once decoder instance is created, it needs to be configured first using the below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_decoder_config</span> <span class="p">(</span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">dec_handle</span><span class="p">,</span> <span class="n">VvasDecoderInCfg</span> <span class="o">*</span><span class="n">icfg</span><span class="p">,</span> <span class="n">VvasDecoderOutCfg</span> <span class="o">*</span><span class="n">ocfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The icfg can be get from the parser or if using external parser then this needs to be filled with correct values.
+Ocfg is the output configuration which decoder will return.</p>
+<p>Ocfg gives info on how many minimum buffers decoder needs, along with this information it will also give the VvasVideoInfo of the output buffer and memory bank index where these buffers must be allocated.</p>
+<p>Once minimum number of buffers are allocated, put them in one VvasList, and then submit the parsed buffer along with this list of free/minimum buffers to the decoder using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_decoder_submit_frames</span> <span class="p">(</span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">dec_handle</span><span class="p">,</span> <span class="n">VvasMemory</span> <span class="o">*</span><span class="n">au_frame</span><span class="p">,</span> <span class="n">VvasList</span> <span class="o">*</span><span class="n">loutframes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If above API returns VVAS_RET_SEND_AGAIN, this means decoder didn’t consume the current Access Unit frame and need to feed it again. Once possible reason for this return value could be that there is no room for decoded buffer.</p>
+<p>If above API returns VVAS_RET_SUCCESS, this means decoder successfully consumed access unit frame, au_frame can be freed now.</p>
+<p>Au_frame = NULL means this is the last buffer to be decoded, and this is a notification for the decoder to start flushing.</p>
+<p>Even if above API returns VVAS_RET_SEND_AGAIN, user need to query the decoded buffer from the decoder using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_decoder_get_decoded_frame</span> <span class="p">(</span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">dec_handle</span><span class="p">,</span> <span class="n">VvasVideoFrame</span> <span class="o">**</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If above API returns VVAS_RET_NEED_MOREDATA, this means decoder doesn’t have any decoded buffer yet, need to feed more data  using submit_frames API and call this API again.</p>
+<p>If above API returns VVAS_RET_EOS, this means that there are no more decoded frames from the decoder.</p>
+<p>If above API returns VVAS_RET_SUCCESS, this means that decoder has returned a decoded buffer into output, note that this output buffer is not allocated by the decoder, it is one of the buffer which was fed to the decoder using submit_frames API.</p>
+<p>Below is the algorithm for decoding the frame.</p>
+<ul class="simple">
+<li><ol class="upperalpha simple">
+<li><p>Create Decoder instance</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="2">
+<li><p>Get Parsed buffer and the decoder’s input configuration</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="3">
+<li><p>Configure decoder and get the decoder’s output configuration.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="4">
+<li><p>Allocate minimum number of output buffers and prepare the free buffer list containing all these allocated buffers.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="5">
+<li><p>Submit the decoded buffer and the list of free output buffers</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="6">
+<li><p>If submit frame was successful, free the parsed buffer</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="7">
+<li><p>If submit frame returned send again, then we need to send this buffer again, don’t free the parsed buffer.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="8">
+<li><p>Clear the free buffer list as list of free buffers are given to the decoder.</p></li>
+</ol>
+</li>
+<li><ol class="upperroman simple">
+<li><p>Get decoded buffer</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="10">
+<li><p>If get decoded_frame returned EOS, goto N.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="11">
+<li><p>If get decoded_frame returned SUCCESS, then consume the decoded buffer and after consumption put it in list of free output buffers.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="12">
+<li><p>If submit_frame has returned send again, goto E.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="13">
+<li><p>Get new parsed buffer and goto E.</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="14">
+<li><p>Destroy the decoder</p></li>
+</ol>
+</li>
+<li><ol class="upperalpha simple" start="15">
+<li><p>Exit</p></li>
+</ol>
+</li>
+</ul>
+</div>
+<div class="section" id="scaling-cropping-pre-processing-decoded-data-using-scaler">
+<h2>Scaling/Cropping/Pre-Processing Decoded data Using Scaler<a class="headerlink" href="#scaling-cropping-pre-processing-decoded-data-using-scaler" title="Permalink to this heading">¶</a></h2>
+<p>As VVVAS context is created scaler instance can be created using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">vvas_scaler_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span> <span class="n">kernel_name</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Kernel name for V70 is image_processing:{image_processing_1} or image_processing:{image_processing_2}</p>
+<p>Configure the scaler using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_prop_set</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">,</span> <span class="n">VvasScalerProp</span> <span class="o">*</span> <span class="n">prop</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For processing any data using scaler user need to add them as processing channel using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_channel_add</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">,</span> <span class="n">VvasScalerRect</span> <span class="o">*</span> <span class="n">src_rect</span><span class="p">,</span> <span class="n">VvasScalerRect</span> <span class="o">*</span> <span class="n">dst_rect</span><span class="p">,</span> <span class="n">VvasScalerPpe</span> <span class="o">*</span> <span class="n">ppe</span><span class="p">,</span> <span class="n">VvasScalerParam</span> <span class="o">*</span> <span class="n">param</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>User need to always feed the src_rect and dst_rect information to the scaler, for just scaling; x and y of src_rect must be zero, and width and height must be the width and height of the frame.</p>
+<p>For doing crop, set x and y and width and height of src_rect as per the crop requirement.
+For doing pre-processing, set ppe otherwise set it to NULL.
+Different type of scaling can be done by providing VvasScalerParam</p>
+<p>Examples Let’s scale 1920x1080 to 640x480.
+Src_rect.x = 0;
+Src_rext.y = 0;
+Src_rect.width = 1920;
+Src_rect.height = 1080;
+Src_rect.frame = input_frame;
+Dst_rect.x = 0;
+Dst_rect.y = 0;
+Dst_rect.width = 640;
+Dst_rect.height = 480;
+Dst_rect.frame = output_frame;</p>
+<p>Let’s crop input frame from x,y = (300,350) width = 278, height = 590 and scale this cropped frame to 224x224.
+Src_rect.x = 300;
+Src_rect.y = 350;
+Src_rect.width = 278;
+Src_rect.height = 590;
+Src_rect.frame = input_frame;
+Dst_rect.x = 0;
+Dst_rect.y = 0;
+Dst_rect.width = 224;
+Dst_rect.height = 224;
+Dst_rect.frame = output_frame;</p>
+<p>Once channels are added into the scaler, process all of them in one go using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_process_frame</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once done with scaler; destroy it using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_scaler_destroy</span> <span class="p">(</span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">hndl</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doing-inferencing">
+<h2>Doing inferencing<a class="headerlink" href="#doing-inferencing" title="Permalink to this heading">¶</a></h2>
+<p>For doing inferencing create the DPU instance using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">vvas_dpuinfer_create</span> <span class="p">(</span><span class="n">VvasDpuInferConf</span> <span class="o">*</span> <span class="n">dpu_conf</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Every DPU model has its own pre-processing, input format, width and input height requirement, this can be queried from the DPU using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_dpuinfer_get_config</span> <span class="p">(</span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">dpu_handle</span><span class="p">,</span> <span class="n">VvasModelConf</span> <span class="o">*</span><span class="n">model_conf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>DPU will do software-based scaling if input frame being submitted is not of the same resolution as DPU is expecting. This will have an impact on performance.</p>
+<p>DPU can also do software-based pre-processing if VvasDpuInferConf.need_preprocess is true. This will have an impact on performance.
+User can avoid these software-based operation by using Hardware accelerated VVAS Core Scaler for doing pre-processing and scaling in one operation.</p>
+<p>Inferencing can be done on input frame(s) using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_dpuinfer_process_frames</span> <span class="p">(</span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">dpu_handle</span><span class="p">,</span> <span class="n">VvasVideoFrame</span> <span class="o">*</span><span class="n">inputs</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">],</span> <span class="n">VvasInferPrediction</span> <span class="o">*</span><span class="n">predictions</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">],</span> <span class="nb">int</span> <span class="n">batch_size</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>DPU supports batching mode, the number of frames that DPU can process in one batch (batch size) can be queried using vvas_dpuinfer_get_config API.</p>
+<p>It is recommended to form the batch of input frames and then call vvas_dpuinfer_process_frames API for better performance.</p>
+<p>In above API if predictions[x] is NULL, then DPU will create a tree structure of VvasInferPrediction nodes with the root node indicating the image resolution and predictions attached as children to this root node and return it when there is any detection/classification, if this is not NULL then VvasInferPrediction is appended as children to the passed VvasInferPrediction node.</p>
+<p>It is user responsibility to free this VvasInferPrediction node after use.</p>
+<p>It is to be noted that the bounding box information given in VvasInferPrediction are in respect with the input frame’s width and height.</p>
+<p>Once done with inferencing of all frames, destroy the DPU instance using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_dpuinfer_destroy</span> <span class="p">(</span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">dpu_handle</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="drawing-inference-information-on-video-frame">
+<h2>Drawing Inference Information on Video Frame<a class="headerlink" href="#drawing-inference-information-on-video-frame" title="Permalink to this heading">¶</a></h2>
+<p>For drawing bounding box/classification data onto the video frame VVAS Core’s Overlay module can be used, but this Overlay module doesn’t accept data generated using VVAS Core’s DPU module directly. User need to convert Inference data generated using DPU to the format which Overlay module accepts using VVAS Core’s MetaConvert module.</p>
+<p>MetaConvert module’s instance can be created using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasMetaConvert</span> <span class="o">*</span><span class="n">vvas_metaconvert_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasMetaConvertConfig</span> <span class="o">*</span><span class="n">cfg</span><span class="p">,</span><span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Convert VvasInferPrediction to VvasOverlayShapeInfo using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_metaconvert_prepare_overlay_metadata</span> <span class="p">(</span><span class="n">VvasMetaConvert</span> <span class="o">*</span><span class="n">meta_convert</span><span class="p">,</span> <span class="n">VvasTreeNode</span> <span class="o">*</span><span class="n">parent</span><span class="p">,</span> <span class="n">VvasOverlayShapeInfo</span> <span class="o">*</span><span class="n">shape_info</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here parent is nothing but VvasInferPrediction.node.</p>
+<p>Now as VvasInferPrediction is converted to VvasOverlayShapeInfo use Overlay module to draw the inference data using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasReturnType</span> <span class="n">vvas_overlay_process_frame</span> <span class="p">(</span><span class="n">VvasOverlayFrameInfo</span> <span class="o">*</span><span class="n">pFrameInfo</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As VvasInferPrediction is consumed, free using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">vvas_inferprediction_free</span><span class="p">(</span><span class="n">VvasInferPrediction</span> <span class="o">*</span><span class="n">meta</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once done with MetaConvert instance, destroy it using below API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">vvas_metaconvert_destroy</span> <span class="p">(</span><span class="n">VvasMetaConvert</span> <span class="o">*</span><span class="n">meta_convert</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sink">
+<h2>Sink<a class="headerlink" href="#sink" title="Permalink to this heading">¶</a></h2>
+<p>Now as inference data is rendered over original decoded data, consume this buffer; either dump it into file or display it or do whatever you want to do with it.
+Once this buffer is consumed, re-fed it to the decoder for reusing it.</p>
+</div>
+<div class="section" id="compiling-vvas-core-application">
+<h2>Compiling VVAS Core Application<a class="headerlink" href="#compiling-vvas-core-application" title="Permalink to this heading">¶</a></h2>
+<p>VVAS Core installs its libraries and header files into /opt/xilinx/vvas/ directory.
+It also installs the pkg-cfg files for user to easily get the compiler flags and libraries to link VVAS core libraries.</p>
+<dl>
+<dt>VVAS Core installs below package configuration file.</dt><dd><ul>
+<li><p>VVAS Core Utils:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pkg</span><span class="o">-</span><span class="n">config</span> <span class="o">--</span><span class="n">cflags</span> <span class="o">--</span><span class="n">libs</span> <span class="n">vvas</span><span class="o">-</span><span class="n">utils</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>VVAS Core Libs:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pkg</span><span class="o">-</span><span class="n">config</span> <span class="o">--</span><span class="n">cflags</span> <span class="o">--</span><span class="n">libs</span> <span class="n">vvas</span><span class="o">-</span><span class="n">core</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+<p>VVAS Core libraries are dependent on XRT, compiler flags and libraries for XRT libraries can be found using below command.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pkg</span><span class="o">-</span><span class="n">config</span> <span class="o">--</span><span class="n">cflags</span> <span class="o">--</span><span class="n">libs</span> <span class="n">xrt</span>
+</pre></div>
+</div>
+<p>First do source /opt/xilinx/vvas/setup.sh, then above pkg-cfg command can be used to get the compiler flags and libraries for VVAS utils and core libraries.</p>
+<dl class="simple">
+<dt>Along with these compiler flags, user need to enable few macros also while compiling the test application.</dt><dd><ul class="simple">
+<li><p>VVAS_GLIB_UTILS : This macro is must as of now, as VVAS Core Utils is based on Glib implementation.</p></li>
+<li><p>XLNX_PCIe_PLATFORM: Set it if compiling the application for PCIe platform.</p></li>
+<li><p>XLNX_EMBEDDED_PLATFORM: Set it if compiling the application for Edge platform.</p></li>
+<li><p>XLNX_V70_PLATFORM: Set it if compiling the application for V70 platform.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Let’s compile test_cascade_yolov3_3xresnet.cpp test application developed for V70 platform located at vvas-core/test/app/test_cascade_yolov3_3xresnet.cpp using below Makefile commands</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>all: test_video_ml
+XRT_PKG_CFG=`pkg-config --cflags --libs xrt`
+VVAS_UTILS_PKG_CFG=`pkg-config --cflags --libs vvas-utils`
+VVAS_CORE_PKG_CFG=`pkg-config --cflags --libs vvas-core`
+VVAS_CORE_MACROS=-DVVAS_GLIB_UTILS -DXLNX_PCIe_PLATFORM -DXLNX_V70_PLATFORM
+
+test_video_ml:
+    g++ -Wall -g test_cascade_yolov3_3xresnet.cpp $(XRT_PKG_CFG) $(VVAS_UTILS_PKG_CFG) $(VVAS_CORE_PKG_CFG) $(VVAS_CORE_MACROS) -o test_video_ml
+
+clean:
+    rm test_video_ml
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

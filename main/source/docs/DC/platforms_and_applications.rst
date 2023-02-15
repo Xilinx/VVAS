@@ -3,15 +3,9 @@ PCIe/Data Center Platforms And Applications
 #############################################
 
 This section covers the PCIe/Data Center platforms supported by VVAS.
-This release supports Alveo U30 card based solution which is suitable for high density Transcoding usecases.
-For more information about the Transcoding solution using Alveo U30 Cards, refer to :doc:`Transcoding Solution Using Alveo U30 Cards <./u30_platform/u30_platform>`
+This release supports Alveo V70 card based solution which is suitable for high density Machine Learning Usecases.
 
-.. toctree::
-   :maxdepth: 3
-   :caption: Smart Camera
-   :hidden:
+For more information about the Machine Learning solution using Alveo V70 Cards, refer to ``Link Coming Soon``
 
-   Alveo U30 Transcoding Solution <./u30_platform/u30_platform>
- 
 For more information, contact `vvas_discuss@amd.com`.
 

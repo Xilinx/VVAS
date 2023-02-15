@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>Multichannel ML &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+  <title>Multichannel ML &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/_static/custom.css" type="text/css" />
@@ -31,6 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -51,7 +52,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <img src="../../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.0
+                3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -67,9 +68,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../common/common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../common/vvas_meta_data_structures.html">Meta Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../common/for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul class="current">
@@ -89,23 +91,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../embedded-plugins.html">VVAS GStreamer Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../DC/DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../freq_asked_questions.html">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
         </div>
@@ -158,10 +153,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </div>
 <div class="section" id="software-requirements">
 <h3>Software Requirements<a class="headerlink" href="#software-requirements" title="Permalink to this heading">¶</a></h3>
-<p>(Refer <a class="reference external" href="https://docs.xilinx.com/r/en-US/ug1400-vitis-embedded/Installation">Vitis Unified Software Development Platform 2022.1 Documentation</a> for installation instructions)</p>
+<p>(Refer <a class="reference external" href="https://docs.xilinx.com/r/en-US/ug1400-vitis-embedded/Installation">Vitis Unified Software Development Platform 2022.2 Documentation</a> for installation instructions)</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis/2022-1.html">Vitis™ Unified Software Platform</a> version 2022.1</p></li>
-<li><p><a class="reference external" href="https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/2022-1.html">Petalinux tool</a> version 2022.1</p></li>
+<li><p><a class="reference external" href="https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis/2022-2.html">Vitis™ Unified Software Platform</a> version 2022.2</p></li>
+<li><p><a class="reference external" href="https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/2022-2.html">Petalinux tool</a> version 2022.2</p></li>
 <li><p>Serial terminal emulator (for example, Tera Term)</p></li>
 <li><p>Git</p></li>
 <li><p>Host system with Ubuntu 18.04/20.04 (Recommended)</p></li>
@@ -189,12 +184,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p class="admonition-title">Note</p>
 <p>The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code</p>
 </div>
-<p>In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip">Source Licenses and Source Code</a> that contain the Open Source Licenses and source code.</p>
+<p>In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download <a class="reference external" href="TBD">Source Licenses and Source Code(TBD)</a> that contain the Open Source Licenses and source code.</p>
 <p>Once you have downloaded the pre-built binaries, you may go to section <a class="reference internal" href="#board-bring-up"><span class="std std-ref">Board bring up</span></a> to try the released SD card image.</p>
 <div class="section" id="building-blocks">
 <h3>Building Blocks<a class="headerlink" href="#building-blocks" title="Permalink to this heading">¶</a></h3>
 <p>Let us begin with constructing a single stream video pipeline based on the components selected.</p>
-<a class="reference internal image-reference" href="../../../_images/single_channel_pipeline.png"><img alt="../../../_images/single_channel_pipeline.png" class="align-center" src="../../../_images/single_channel_pipeline.png" style="width: 1009.4px; height: 371.7px;" /></a>
+<a class="reference internal image-reference" href="../../../_images/single_channel_pipeline.png"><img alt="../../../_images/single_channel_pipeline.png" class="align-center" src="../../../_images/single_channel_pipeline.png" style="width: 837.9px; height: 280.7px;" /></a>
 <p>We shall build the pipeline incrementally, starting from the source element and keep appending the pipeline per the use case.</p>
 <p>First setup the ZCU104 board with steps outlined in <a class="reference internal" href="#board-bring-up"><span class="std std-ref">Board bring up</span></a>.
 Facedetect model (densebox_320_320) is used in constructing the single stream pipeline, hence choose a mp4 video file with human faces.</p>
@@ -208,11 +203,11 @@ Refer to <a class="reference external" href="https://www.xilinx.com/support/docu
 <p>VVAS solution for VCU block</p>
 <p>Standalone VCU block can be tested with following pipeline:</p>
 <div class="figure align-center" id="id2">
-<a class="reference internal image-reference" href="../../../_images/decode_pipeline.png"><img alt="../../../_images/decode_pipeline.png" src="../../../_images/decode_pipeline.png" style="width: 1010.0999999999999px; height: 371.7px;" /></a>
+<a class="reference internal image-reference" href="../../../_images/decode_pipeline.png"><img alt="../../../_images/decode_pipeline.png" src="../../../_images/decode_pipeline.png" style="width: 849.8px; height: 329.0px;" /></a>
 <p class="caption"><span class="caption-text">Sample video pipeline for VCU block</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
 <p><em>GStreamer command</em>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=/home/root/videos/face_detect.mp4 ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! filesink location=./vcu_out.nv12 -v
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=/home/root/videos/FACEDETECT.mp4 ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! filesink location=./vcu_out.nv12 -v
 </pre></div>
 </div>
 </div>
@@ -230,7 +225,7 @@ Here, x, y represents the starting position of the image on screen,
 width represents width of the video image, and height represents height of the video image.</p>
 <p>Sample video pipeline for adding HDMI Tx is shown as below</p>
 <div class="figure align-center" id="id3">
-<a class="reference internal image-reference" href="../../../_images/decode_hdmitx_pipeline.png"><img alt="../../../_images/decode_hdmitx_pipeline.png" src="../../../_images/decode_hdmitx_pipeline.png" style="width: 1045.8px; height: 371.7px;" /></a>
+<a class="reference internal image-reference" href="../../../_images/decode_hdmitx_pipeline.png"><img alt="../../../_images/decode_hdmitx_pipeline.png" src="../../../_images/decode_hdmitx_pipeline.png" style="width: 853.3px; height: 284.2px;" /></a>
 <p class="caption"><span class="caption-text">Sample video pipeline adding Decoder and HDMI Tx blocks</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </div>
 <p><em>GStreamer command</em>:</p>
@@ -253,7 +248,7 @@ width represents width of the video image, and height represents height of the v
 <div class="section" id="machine-learning-ml-block">
 <h4>Machine Learning (ML) block<a class="headerlink" href="#machine-learning-ml-block" title="Permalink to this heading">¶</a></h4>
 <p>Machine Learning inference is performed by DPU hardware accelerator and <a class="reference internal" href="../../common/common_plugins.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> plug-in.
-VVAS supports the DPU libraries released with <a class="reference external" href="https://github.com/Xilinx/Vitis-AI">Vitis-AI</a> 2.5. <a class="reference internal" href="../../common/common_plugins.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> is used along with the <a class="reference internal" href="../../common/common_plugins.html#vvas-xdpuinfer"><span class="std std-ref">vvas_xdpuinfer</span></a> acceleration software library to perform the Machine Learning Inference.
+VVAS supports the DPU libraries released with <a class="reference external" href="https://github.com/Xilinx/Vitis-AI">Vitis-AI</a> 3.0.
 The beauty of this VVAS solution is that user need not figure out the resolution required for various DPU supported models.
 vvas_xinfer plug-in gets this information from the requested model and perform resize, color space conversion operation on the input image as per the requirement of the model using preprocessor block (vvas_xpreprocessor). The output of the vvas_xinfer is the original input image along with the scaled metadata for that resolution.</p>
 <p>The information for the ML model to be used must be provided in the JSON file, that is passed to vvas_xfilter’s plug-in property <strong>infer-config</strong>.</p>
@@ -263,69 +258,66 @@ vvas_xinfer plug-in gets this information from the requested model and perform r
 </div>
 <p>ML block can be tested with following pipeline:</p>
 <div class="figure align-center" id="id5">
-<a class="reference internal image-reference" href="../../../_images/ML_pipeline.png"><img alt="../../../_images/ML_pipeline.png" src="../../../_images/ML_pipeline.png" style="width: 1019.9px; height: 371.7px;" /></a>
+<a class="reference internal image-reference" href="../../../_images/ML_pipeline.png"><img alt="../../../_images/ML_pipeline.png" src="../../../_images/ML_pipeline.png" style="width: 786.8px; height: 273.7px;" /></a>
 <p class="caption"><span class="caption-text">Sample Video Pipeline adding ML block</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </div>
 <p><em>GStreamer command</em>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-  ! vvas_xinfer preprocess-config=kernel_pp_facedectect.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
   ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot; render-rectangle=&quot;&lt;0,0,1920,1080&gt;&quot;
 </pre></div>
 </div>
 <p>You can notice that the caps are not mentioned after the decoder as the vvas_xinfer auto negotiates the caps based on the model selected.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In this pipeline, if the debug_level of <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> library is increased to 2, you can see the objects detected in logs.
+<p>In this pipeline, if the debug_level of <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> library is increased to 2, you can see the objects detected in logs.
 The debug level can be increased in the <code class="docutils literal notranslate"><span class="pre">kernel_densebox_320_320.json</span></code> JSON file.
 The sample log output is shown below.</p>
 <div class="figure align-center">
 <a class="reference internal image-reference" href="../../../_images/inference_result_dump.png"><img alt="../../../_images/inference_result_dump.png" src="../../../_images/inference_result_dump.png" style="width: 502.5px; height: 314.0px;" /></a>
 </div>
 </div>
-<p>Sample JSON files <strong>kernel_pp_facedectect.json</strong> for preprocesing and <strong>kernel_densebox_320_320.json</strong> for densebox_320_320 DPU model for detection of a human face are provided for reference.</p>
+<p>Sample JSON files <strong>kernel_pp.json</strong> for preprocesing and <strong>kernel_densebox_320_320.json</strong> for densebox_320_320 DPU model for detection of a human face are provided for reference.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/media/sd-mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/run/media/mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
   <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib&quot;</span><span class="p">,</span>
   <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-    <span class="p">{</span>
-      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;v_multi_scaler:</span><span class="si">{v_multi_scaler_1}</span><span class="s2">&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xpreprocessor.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;alpha_r&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_g&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_b&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;beta_r&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;beta_g&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;beta_b&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
-      <span class="p">}</span>
+  <span class="s2">&quot;kernel&quot;</span> <span class="p">:{</span>
+    <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xpreprocessor.so&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+      <span class="s2">&quot;in-mem-bank&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="s2">&quot;out-mem-bank&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
     <span class="p">}</span>
-  <span class="p">]</span>
+  <span class="p">}</span>
 <span class="p">}</span>
-<span class="n">kernel_pp_facedectect</span><span class="o">.</span><span class="n">json</span>
+<span class="n">kernel_pp</span><span class="o">.</span><span class="n">json</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;attach-ppe-outbuf&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s2">&quot;low-latency&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-max-queue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
-     <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
-     <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;FACEDETECT&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;max-objects&quot;</span><span class="p">:</span><span class="mi">3</span>
-     <span class="p">}</span>
+    <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;FACEDETECT&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;max-objects&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="s2">&quot;float-feature&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;segoutfactor&quot;</span> <span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+      <span class="s2">&quot;seg-out-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+    <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
 <span class="n">kernel_densebox_320_320</span><span class="o">.</span><span class="n">json</span>
@@ -338,82 +330,12 @@ The sample log output is shown below.</p>
 <li><p>Mean Subtraction</p></li>
 <li><p>Scale Normalization</p></li>
 </ul>
-<p>Although all these operations can be achieved in software, the performance impact is substantial. VVAS support hardware accelerated pre-processing. Configuration parameters for pre-processing block can be specified through a json file by providing location in preprocess-config property of <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> GStreamer plugin.</p>
-<p>Table 1 lists the pre-processing parameters supported by <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> GStreamer plug-in.
-These properties are tested in the context of this tutorial only.</p>
-<p>Table 1: preprocessing parameters in JSON format to configure mean and scale values</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 27%" />
-<col style="width: 18%" />
-<col style="width: 15%" />
-<col style="width: 18%" />
-<col style="width: 23%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
-<th class="head"><p><strong>Type</strong></p></th>
-<th class="head"><p><strong>Range</strong></p></th>
-<th class="head"><p><strong>Default</strong></p></th>
-<th class="head"><p><strong>Description</strong></p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>alpha-b</p></td>
-<td><p>float</p></td>
-<td><p>0 to 128</p></td>
-<td><p>0</p></td>
-<td><p>Mean
-subtraction for
-blue channel</p></td>
-</tr>
-<tr class="row-odd"><td><p>alpha-g</p></td>
-<td><p>float</p></td>
-<td><p>0 to 128</p></td>
-<td><p>0</p></td>
-<td><p>Mean
-subtraction for
-green channel</p></td>
-</tr>
-<tr class="row-even"><td><p>alpha-r</p></td>
-<td><p>float</p></td>
-<td><p>0 to 128</p></td>
-<td><p>0</p></td>
-<td><p>Mean
-subtraction for
-red channel</p></td>
-</tr>
-<tr class="row-odd"><td><p>beta-b</p></td>
-<td><p>float</p></td>
-<td><p>0 to 1</p></td>
-<td><p>1</p></td>
-<td><p>Scaling
-for blue
-channel</p></td>
-</tr>
-<tr class="row-even"><td><p>beta-g</p></td>
-<td><p>float</p></td>
-<td><p>0 to 1</p></td>
-<td><p>1</p></td>
-<td><p>Scaling
-for green
-channel</p></td>
-</tr>
-<tr class="row-odd"><td><p>beta-r</p></td>
-<td><p>float</p></td>
-<td><p>0 to 1</p></td>
-<td><p>1</p></td>
-<td><p>Scaling
-for red
-channel</p></td>
-</tr>
-</tbody>
-</table>
+<p>Although all these operations can be achieved in software, the performance impact is substantial. VVAS support hardware accelerated pre-processing. Configuration parameters for pre-processing block mean-substraction and scale-normalization is read from the modle .prototxt file.</p>
 <p>Once the objects are detected, you can move to the next advanced blocks.</p>
 </div>
 <div class="section" id="machine-learning-with-preprocessing-in-software">
 <h4>Machine Learning with preprocessing in software<a class="headerlink" href="#machine-learning-with-preprocessing-in-software" title="Permalink to this heading">¶</a></h4>
-<p>VVAS can also be used on the Platform that may not have hardware accelerated pre-processing (multiscaler kernel) due to any reason. In this case the preprocessing needs to be performed in software. The scaling and color space conversation are done by open source gstremaer plugins and the normalization and scaling are done by Vitis AI library.</p>
+<p>VVAS can also be used on the Platform that may not have hardware accelerated pre-processing (Image Processing kernel) due to any reason. In this case the preprocessing needs to be performed in software. The scaling and color space conversation are done by open source gstremaer plugins and the normalization and scaling are done by Vitis AI library.</p>
 <p>Below is the pipe pile without vvas preprocessor.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
@@ -428,23 +350,25 @@ channel</p></td>
 </div>
 <p>The following is sample JSON kernel_densebox_320_320.json for running the densebox_320_320 DPU model that detects a human face.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;attach-ppe-outbuf&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s2">&quot;low-latency&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-max-queue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
-     <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
-     <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;FACEDETECT&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-        <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;max-objects&quot;</span><span class="p">:</span><span class="mi">3</span>
-     <span class="p">}</span>
+    <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;FACEDETECT&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;max-objects&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="s2">&quot;float-feature&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;segoutfactor&quot;</span> <span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+      <span class="s2">&quot;seg-out-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+    <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
@@ -453,52 +377,73 @@ channel</p></td>
 </div>
 <p>You can observe that in above pipeline <strong>preprocess-config</strong> property of <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is not set. This means we do not want to use hardware accelerated pre-processing block of <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in and the videoscale and videoconvert GStreamer opensource plug-ins are used to convert the format and colour of input image as required by DPU model and Kmssink. The caps are not mentioned before <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> and after the decoder as <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> auto negotiates the caps based on the model selected.</p>
 <p>Since we want Vitis AI library to perform the required pre-processing in software, we need to set <strong>need_preprocess</strong> to true in <strong>kernel_densebox_320_320.json</strong>.</p>
-<p>Although all these operations can be achieved in software, the performance impact is substantial. So rest of the document consider that the hardware accelerated pre-processing (using multiscaler kernel) is part of the provided hardware.</p>
+<p>Although all these operations can be achieved in software, the performance impact is substantial. So rest of the document consider that the hardware accelerated pre-processing (using Image Processing kernel) is part of the provided hardware.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Though you may not observe any ML Inference information on monitor with this pipeline,
 but we should see the input image getting displayed in monitor by this pipeline.</p>
 </div>
 </div>
-<div class="section" id="bounding-box-block">
-<h4>Bounding Box block<a class="headerlink" href="#bounding-box-block" title="Permalink to this heading">¶</a></h4>
+<div class="section" id="bounding-box">
+<h4>Bounding Box<a class="headerlink" href="#bounding-box" title="Permalink to this heading">¶</a></h4>
 <p>To view the result of ML Inference displayed on the monitor, you should draw the results on an image.
-The <a class="reference internal" href="../../common/common_plugins.html#vvas-xboundingbox"><span class="std std-ref">vvas_xboundingbox</span></a> software acceleration library comes in handy in this case.
+The <a class="reference internal" href="../../common/common_plugins.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> along with <a class="reference internal" href="../../common/common_plugins.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> software acceleration library comes in handy in this case.
 This library along with VVAS infrastructure plug-in <a class="reference internal" href="../../common/common_plugins.html#vvas-xfilter"><span class="std std-ref">vvas_xfilter</span></a> can provide the bounding box functionality.</p>
-<p>Sample video pipeline for adding bounding box block is shown as below</p>
+<p>Sample video pipeline for adding bounding box is shown as below</p>
 <div class="figure align-center" id="id6">
-<a class="reference internal image-reference" href="../../../_images/single_channel_pipeline.png"><img alt="../../../_images/single_channel_pipeline.png" src="../../../_images/single_channel_pipeline.png" style="width: 1009.4px; height: 371.7px;" /></a>
-<p class="caption"><span class="caption-text">Sample Video Pipeline adding Bounding Box block</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+<a class="reference internal image-reference" href="../../../_images/single_channel_pipeline.png"><img alt="../../../_images/single_channel_pipeline.png" src="../../../_images/single_channel_pipeline.png" style="width: 837.9px; height: 280.7px;" /></a>
+<p class="caption"><span class="caption-text">Sample Video Pipeline adding Bounding Box</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
 </div>
 <p><em>GStreamer command</em>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-  ! vvas_xinfer preprocess-config=kernel_pp_facedectect.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
-  ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue \
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+  ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
   ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot; render-rectangle=&quot;&lt;0,0,1920,1080&gt;&quot;
 </pre></div>
 </div>
-<p>The following sample JSON file kernel_boundingbox.json is used to draw a bounding box on detected objects.</p>
+<p>The following sample JSON file metaconvert_config.json is used to draw a bounding box on detected objects.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-    <span class="p">{</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xboundingbox.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;display_output&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;font_size&quot;</span> <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;label_color&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span> <span class="p">},</span>
-        <span class="s2">&quot;label_filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;probability&quot;</span> <span class="p">],</span>
-        <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
-        <span class="p">]</span>
+  <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;display-level&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;font-size&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;mask-level&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;y-offset&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;label-filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span> <span class="p">],</span>
+    <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
       <span class="p">}</span>
-    <span class="p">}</span>
-  <span class="p">]</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -510,8 +455,7 @@ This library along with VVAS infrastructure plug-in <a class="reference internal
 <p>Now, constructing a four-channel pipeline is simply duplicating the above pipeline four times for different models
 and positioning each output video appropriately on screen on different plane-ids.</p>
 <p>Below Vitis AI models are used as example in this tutorial.
-Refer <a class="reference external" href="https://docs.xilinx.com/r/en-US/ug1414-vitis-ai/Compiling-the-Model?tocId=iw~3MFuL5ebBYiu0WFiv~Q">Vitis AI User Documentation</a> to compile different models
-using arch.json file from release package.</p>
+Refer <a class="reference external" href="https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&amp;url=ug1431-vitis-ai-documentation">Vitis AI User Documentation</a> to compile different models using arch.json file from release package.</p>
 <ul class="simple">
 <li><p>densebox_320_320 (Face detection)</p></li>
 <li><p>yolov3_adas_pruned_0_9 (Object detection)</p></li>
@@ -519,27 +463,27 @@ using arch.json file from release package.</p>
 <li><p>refinedet_pruned_0_96 (Pedestrian detector)</p></li>
 </ul>
 <p>A reference pipeline for four channel ML is given below.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v --no-position \
  filesrc location=/home/root/videos/FACEDETECT.mp4 \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-  ! vvas_xinfer preprocess-config=kernel_pp_facedectect.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
-  ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue \
-  ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot; render-rectangle=&quot;&lt;0,0,1920,1080&gt;&quot; \
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+  ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
+  ! fpsdisplaysink video-sink=&quot;kmssink plane-id=34 bus-id=a0130000.v_mix render-rectangle=&lt;0,0,1920,1080&gt;&quot; text-overlay=false sync=false \
 filesrc location=/home/root/videos/YOLOV3.mp4 \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-  ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_adas_pruned_0_9.json name=infer2 ! queue \
-  ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue \
-  ! kmssink plane-id=35 bus-id=&quot;a0130000.v_mix&quot; render-rectangle=&quot;&lt;1920,0,1920,1080&gt;&quot;
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_adas_pruned_0_9.json name=infer2 ! queue \
+  ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
+  ! fpsdisplaysink video-sink=&quot;kmssink plane-id=35 bus-id=a0130000.v_mix render-rectangle=&lt;1920,0,1920,1080&gt;&quot; text-overlay=false sync=false \
 filesrc location=/home/root/videos/CLASSIFICATION.mp4 \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-  ! vvas_xinfer preprocess-config=kernel_pp_resnet50.json infer-config=kernel_resnet50.json name=infer3 ! queue \
-  ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue \
-  ! kmssink plane-id=36 bus-id=&quot;a0130000.v_mix&quot; render-rectangle=&quot;&lt;0,1080,1920,1080&gt;&quot;
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_resnet50.json name=infer3 ! queue \
+  ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
+  ! fpsdisplaysink video-sink=&quot;kmssink plane-id=36 bus-id=a0130000.v_mix render-rectangle=&lt;0,1080,1920,1080&gt;&quot; text-overlay=false sync=false \
 filesrc location=/home/root/videos/REFINEDET.mp4 \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-  ! vvas_xinfer preprocess-config=kernel_pp_refinedet.json infer-config=kernel_refinedet_pruned_0_96.json name=infer4 ! queue \
-  ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue \
-  ! kmssink plane-id=37 bus-id=&quot;a0130000.v_mix&quot; render-rectangle=&quot;&lt;1920,1080,1920,1080&gt;&quot;
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_refinedet_pruned_0_96.json name=infer4 ! queue \
+  ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
+  ! fpsdisplaysink video-sink=&quot;kmssink plane-id=37 bus-id=a0130000.v_mix render-rectangle=&lt;1920,1080,1920,1080&gt;&quot; text-overlay=false sync=false
 </pre></div>
 </div>
 <p>The above command is available in the release package as <code class="docutils literal notranslate"><span class="pre">multichannel_ml.sh</span></code>.</p>
@@ -570,57 +514,53 @@ The scenario mentioned above required multiple levels of ML inference operation 
 <p>We start to add the first level of ML inference that will detect the cars. This can be achieved using <code class="docutils literal notranslate"><span class="pre">yolov3_voc</span></code> model.</p>
 <img alt="../../../_images/cascase_1st_level_pipeline.png" class="align-center" src="../../../_images/cascase_1st_level_pipeline.png" />
 <p>Pipeline to demonstrate the car detection from frame and display output to monitor is as mentioned below.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v  \
-  filesrc location=/home/root/videos/platedetect_sample.mp4   \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v --no-position \
+  filesrc location=/home/root/videos/PLATEDETECT.mp4   \
    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-   ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-   ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue  \
-   ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot;
+   ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
+   ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
+   ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot; sync=false
 </pre></div>
 </div>
 <p>Below are the sample json files.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/media/sd-mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;xclbin-location&quot;</span> <span class="p">:</span> <span class="s2">&quot;/run/media/mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
   <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-    <span class="p">{</span>
-      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;v_multi_scaler:</span><span class="si">{v_multi_scaler_1}</span><span class="s2">&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xpreprocessor.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;alpha_r&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_g&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_b&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="s2">&quot;beta_r&quot;</span> <span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-        <span class="s2">&quot;beta_g&quot;</span> <span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-        <span class="s2">&quot;beta_b&quot;</span> <span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-        <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
-      <span class="p">}</span>
+  <span class="s2">&quot;kernel&quot;</span> <span class="p">:{</span>
+    <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xpreprocessor.so&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+      <span class="s2">&quot;in-mem-bank&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="s2">&quot;out-mem-bank&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
     <span class="p">}</span>
-  <span class="p">]</span>
+  <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="n">kernel_pp_yolov3</span><span class="o">.</span><span class="n">json</span>
+<span class="n">kernel_pp</span><span class="o">.</span><span class="n">json</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;attach-ppe-outbuf&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s2">&quot;low-latency&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-max-queue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
     <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
       <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;yolov3_voc&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;YOLOV3&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-      <span class="s2">&quot;max-objects&quot;</span><span class="p">:</span><span class="mi">3</span>
+      <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;max-objects&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="s2">&quot;float-feature&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;segoutfactor&quot;</span> <span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+      <span class="s2">&quot;seg-out-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
@@ -629,89 +569,88 @@ The scenario mentioned above required multiple levels of ML inference operation 
 </pre></div>
 </div>
 <p>Here we need to understand the complexity which is taken care of by the VVAS framework in a very easy user interface. The output of VCU Decoder is 1920X1080 <code class="docutils literal notranslate"><span class="pre">NV12</span></code> and the requirement for <code class="docutils literal notranslate"><span class="pre">yolov3_voc</span></code> is 360X360 <code class="docutils literal notranslate"><span class="pre">RGB</span></code>. This conversion is taken care of by the preprocessor block which is part of <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plugin. Not only the color and format conversion, the preprocessor block also does Mean Subtraction and Scale Normalization. Although all these operations can be achieved in software, the performance impact is substantial.</p>
-<p>For simplicity, a common json file is used for bounding box. Please refer <a class="reference internal" href="../../common/common_plugins.html#vvas-xboundingbox"><span class="std std-ref">vvas_xboundingbox</span></a> for more detailed parameters of bounding box.</p>
+<p>For simplicity, a common json file is used for meta convert. Please refer <a class="reference internal" href="../../common/common_plugins.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> for more detailed parameters of meta convert.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;element-mode&quot;</span><span class="p">:</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-    <span class="p">{</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xboundingbox.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;densebox_320_320&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;display_output&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;font_size&quot;</span> <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;label_color&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span> <span class="p">:</span> <span class="mi">0</span> <span class="p">},</span>
-        <span class="s2">&quot;label_filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;probability&quot;</span> <span class="p">],</span>
-        <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
-        <span class="p">]</span>
+  <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;display-level&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;font-size&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;mask-level&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;y-offset&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;label-filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span> <span class="p">],</span>
+    <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
       <span class="p">}</span>
-    <span class="p">}</span>
-  <span class="p">]</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="n">kernel_boundingbox</span><span class="o">.</span><span class="n">json</span>
+<span class="n">metaconvert_config</span><span class="o">.</span><span class="n">json</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="second-level-inference">
 <h4>Second Level inference<a class="headerlink" href="#second-level-inference" title="Permalink to this heading">¶</a></h4>
 <p>First level inference detects the car in the frame, now we need to find the number plate in the area where the car is detected. So, lets add second level ML Inference with <code class="docutils literal notranslate"><span class="pre">plate</span> <span class="pre">detect</span></code> model just after the first level ML Inference with <code class="docutils literal notranslate"><span class="pre">yolov3_voc</span></code> model.</p>
+<img alt="../../../_images/cascase_2nd_level_pipeline.png" class="align-center" src="../../../_images/cascase_2nd_level_pipeline.png" />
 <p>Below is the GStreamer pipe demonstrating the number plate detect after car detect and display output to monitor using the kmssink plugin.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v  \
- filesrc location=/home/root/videos/platedetect_sample.mp4   \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v --no-position \
+ filesrc location=/home/root/videos/PLATEDETECT.mp4   \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-  ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-  ! vvas_xinfer preprocess-config=kernel_pp_platedetect.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
-  ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue  \
-  ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot;
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
+  ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
+  ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot; sync=false
 </pre></div>
 </div>
 <p>Below are the sample json files for 2nd level.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/media/sd-mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-    <span class="p">{</span>
-      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;v_multi_scaler:</span><span class="si">{v_multi_scaler_1}</span><span class="s2">&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xpreprocessor.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;alpha_r&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_g&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_b&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;beta_r&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;beta_g&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;beta_b&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
-      <span class="p">}</span>
-    <span class="p">}</span>
-  <span class="p">]</span>
-<span class="p">}</span>
-
-<span class="n">kernel_pp_platedetect</span><span class="o">.</span><span class="n">json</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-  <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;attach-ppe-outbuf&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s2">&quot;low-latency&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-max-queue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
     <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
       <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;plate_detect&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;PLATEDETECT&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-      <span class="s2">&quot;max-objects&quot;</span><span class="p">:</span><span class="mi">3</span>
+      <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;max-objects&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="s2">&quot;float-feature&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;segoutfactor&quot;</span> <span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+      <span class="s2">&quot;seg-out-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
@@ -725,60 +664,38 @@ As we discussed, there might be multiple cars in frame and we need to find the n
 </div>
 <div class="section" id="third-level-inference">
 <h4>Third Level inference<a class="headerlink" href="#third-level-inference" title="Permalink to this heading">¶</a></h4>
+<img alt="../../../_images/cascase_3rd_level_pipeline.png" class="align-center" src="../../../_images/cascase_3rd_level_pipeline.png" />
 <p>Below is the full GStreamer pipe demonstrating the number plate detect and display using the kmssink plugin.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v  \
- filesrc location=/home/root/videos/platedetect_sample.mp4   \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v --no-position \
+ filesrc location=/home/root/videos/PLATEDETECT.mp4   \
   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-  ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-  ! vvas_xinfer preprocess-config=kernel_pp_platedetect.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
-  ! vvas_xinfer preprocess-config=kernel_pp_plate_num.json infer-config=kernel_plate_num.json name=infer3 ! queue  \
-  ! vvas_xfilter kernels-config=&quot;kernel_boundingbox.json&quot; ! queue  \
-  ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot;
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
+  ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_plate_num.json name=infer3 ! queue  \
+  ! vvas_xmetaconvert config-location=&quot;metaconvert_config.json&quot; ! vvas_xoverlay ! queue \
+  ! kmssink plane-id=34 bus-id=&quot;a0130000.v_mix&quot; sync=false
 </pre></div>
 </div>
 <p>Below are the sample json files for 3rd level.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/media/sd-mmcblk0p1/dpu.xclbin&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;device-index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="s2">&quot;kernels&quot;</span> <span class="p">:[</span>
-    <span class="p">{</span>
-      <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span><span class="s2">&quot;v_multi_scaler:</span><span class="si">{v_multi_scaler_1}</span><span class="s2">&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;library-name&quot;</span><span class="p">:</span> <span class="s2">&quot;libvvas_xpreprocessor.so&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;alpha_r&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_g&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;alpha_b&quot;</span> <span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-        <span class="s2">&quot;beta_r&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;beta_g&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;beta_b&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
-      <span class="p">}</span>
-    <span class="p">}</span>
-  <span class="p">]</span>
-<span class="p">}</span>
-
-<span class="n">kernel_pp_plate_num</span><span class="o">.</span><span class="n">json</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">&quot;vvas-library-repo&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-  <span class="s2">&quot;attach-ppe-outbuf&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;attach-ppe-outbuf&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-level&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s2">&quot;low-latency&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;inference-max-queue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
   <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;library-name&quot;</span><span class="p">:</span><span class="s2">&quot;libvvas_xdpuinfer.so&quot;</span><span class="p">,</span>
     <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
       <span class="s2">&quot;batch-size&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
       <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;plate_num&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;PLATENUM&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
       <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;run_time_model&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;need_preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;performance_test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;debug_level&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-      <span class="s2">&quot;max-objects&quot;</span><span class="p">:</span><span class="mi">3</span>
+      <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;performance-test&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;max-objects&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="s2">&quot;float-feature&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">&quot;segoutfactor&quot;</span> <span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+      <span class="s2">&quot;seg-out-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;BGR&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
@@ -806,7 +723,7 @@ As we discussed, there might be multiple cars in frame and we need to find the n
 <p class="admonition-title">Note</p>
 <p>VVAS platform <code class="docutils literal notranslate"><span class="pre">zcu104_vcuDec_vmixHdmiTx</span></code> adds patch to irps5401 driver for zcu104 board to support multi thread execution of VAI models.
 This <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/blob/v2.0/dsa/DPU-TRD/app/dpu_sw_optimize.tar.gz">patch</a> shouldn’t be applied to other boards
-and is not part of the official Xilinx released 2022.1 Petalinux.</p>
+and is not part of the official Xilinx released 2022.2 Petalinux.</p>
 </div>
 <div class="section" id="build-platform">
 <h3>Build Platform<a class="headerlink" href="#build-platform" title="Permalink to this heading">¶</a></h3>
@@ -816,26 +733,26 @@ and is not part of the official Xilinx released 2022.1 Petalinux.</p>
 <li><p>VCU hardened IP block</p></li>
 <li><p>Video Mixer and HDMI Tx soft IP blocks</p></li>
 <li><p>Opensource framework like GStreamer, OpenCV</p></li>
-<li><p>Vitis AI 2.5 libraries</p></li>
+<li><p>Vitis AI 3.0 libraries</p></li>
 <li><p>Xilinx Runtime (XRT)</p></li>
 <li><p>omxh264dec GStreamer plugin</p></li>
 <li><p>kmmsink GStreamer plugin</p></li>
 <li><p>VVAS GStreamer plugins and libraries</p>
 <ul>
 <li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> GStreamer plugin</p></li>
-<li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xdpuinfer"><span class="std std-ref">vvas_xdpuinfer</span></a> software accelerator library</p></li>
-<li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xboundingbox"><span class="std std-ref">vvas_xboundingbox</span></a> software accelerator library</p></li>
+<li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> software accelerator library</p></li>
+<li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> software accelerator library</p></li>
 </ul>
 </li>
 </ul>
 <p>Steps for building the platform:</p>
 <p>1. Download the VVAS git repository. Let the path where VVAS repo is downloaded be represented as <code class="docutils literal notranslate"><span class="pre">&lt;VVAS_REPO&gt;</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">Xilinx</span><span class="o">/</span><span class="n">VVAS</span><span class="o">.</span><span class="n">git</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recurse</span><span class="o">-</span><span class="n">submodules</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">Xilinx</span><span class="o">/</span><span class="n">VVAS</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
 <p>2. Setup the toolchain</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">&lt;</span><span class="mf">2022.1</span><span class="n">_Vitis</span><span class="o">&gt;/</span><span class="n">settings64</span><span class="o">.</span><span class="n">sh</span>
-<span class="n">source</span> <span class="o">&lt;</span><span class="mf">2022.1</span><span class="n">_Petalinux</span><span class="o">&gt;/</span><span class="n">settings</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">&lt;</span><span class="mf">2022.2</span><span class="n">_Vitis</span><span class="o">&gt;/</span><span class="n">settings64</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">source</span> <span class="o">&lt;</span><span class="mf">2022.2</span><span class="n">_Petalinux</span><span class="o">&gt;/</span><span class="n">settings</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 <p>3. Change directory to the platform</p>
@@ -847,7 +764,7 @@ and is not part of the official Xilinx released 2022.1 Petalinux.</p>
 </pre></div>
 </div>
 <p>After the build is finished, the platform is available at
-<code class="docutils literal notranslate"><span class="pre">&lt;VVAS_REPO&gt;/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx/platform_repo/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1/export/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1/</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&lt;VVAS_REPO&gt;/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx/platform_repo/xilinx_zcu104_vcuDec_vmixHdmiTx_202220_1/export/xilinx_zcu104_vcuDec_vmixHdmiTx_202220_1/</span></code>.</p>
 <p>Let the path to platform be represented as <code class="docutils literal notranslate"><span class="pre">&lt;PLATFORM_PATH&gt;</span></code>.</p>
 </div>
 <div class="section" id="vitis-example-project">
@@ -857,28 +774,29 @@ and is not part of the official Xilinx released 2022.1 Petalinux.</p>
 The hardware accelerators required are:</p>
 <ol class="arabic simple">
 <li><p>DPU (Xilinx ML IP)</p></li>
-<li><p>Multiscaler (Xilinx Preprocessing IP)</p></li>
+<li><p>Image Processing (Xilinx Preprocessing IP)</p></li>
 </ol>
 <p>The Xilinx deep learning processor unit (DPU) is a configurable computation engine dedicated for convolutional neural networks.
-Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/blob/master/dsa/DPU-TRD/prj/Vitis/README.md">DPU-TRD</a> for more information and compiling the DPU accelerator.</p>
-<p>Multiscaler IP/Kernel source code can be refered from &lt;TBD&gt;</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">multichannel_ml</span></code> example design adds two instances of B3136 DPU configuration and a single instance of Multiscaler to the <code class="docutils literal notranslate"><span class="pre">zcu104_vcuDec_vmixHdmiTx</span></code> platform.</p>
+Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/blob/master/dpu/ref_design_docs/README_DPUCZ_Vitis.md">DPU-TRD</a> for more information and compiling the DPU accelerator.</p>
+<p>DPU Kernel for this example design is configured for B3136 architecture. Configuration file used can be found at <code class="docutils literal notranslate"><span class="pre">&lt;VVAS_REPO&gt;/VVAS/vvas-examples/Embedded/multichannel_ml/dpu_conf.vh</span></code>.</p>
+<p>Image Processing IP/Kernel source code can be refered from <code class="docutils literal notranslate"><span class="pre">&lt;VVAS_REPO&gt;/VVAS/vvas-accel-hw/image_processing/</span></code>. For this example design Image Processing kernel is configured for max-width:3840, max-height:2160 and format support of Y_UV8_420, RGB and BGR. Configuration file used can be found at <code class="docutils literal notranslate"><span class="pre">&lt;VVAS_REPO&gt;/VVAS/vvas-examples/Embedded/multichannel_ml/image_processing_config.h</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">multichannel_ml</span></code> example design adds two instances of DPU and a single instance of Image-Processing to the <code class="docutils literal notranslate"><span class="pre">zcu104_vcuDec_vmixHdmiTx</span></code> platform.</p>
 <p>Steps for building Vitis example project:</p>
 <ol class="arabic simple">
 <li><p>Download Vitis-AI. Let the path where Vitis-AI is downloaded be represented as <code class="docutils literal notranslate"><span class="pre">&lt;VITIS_AI_REPO&gt;</span></code>.</p></li>
 </ol>
 <blockquote>
 <div><ul class="simple">
-<li><p>Open the <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/tree/master/reference_design#readme">reference_design</a> readme page from Vitis-AI release repo.</p></li>
-<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Link</span></code> for <code class="docutils literal notranslate"><span class="pre">IP</span> <span class="pre">Name</span></code> corresponding to <code class="docutils literal notranslate"><span class="pre">DPUCZDX8G</span></code> from <code class="docutils literal notranslate"><span class="pre">Edge</span> <span class="pre">IP</span></code> Table</p></li>
+<li><p>Open the <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/tree/master/dpu#readme">reference_design</a> readme page from Vitis-AI release repo.</p></li>
+<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">Reference</span> <span class="pre">Design</span></code> link for <code class="docutils literal notranslate"><span class="pre">IP</span> <span class="pre">Name</span></code> corresponding to <code class="docutils literal notranslate"><span class="pre">DPUCZDX8G</span></code> from <code class="docutils literal notranslate"><span class="pre">Edge</span> <span class="pre">IP</span></code> Table</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="o">-</span><span class="n">O</span> <span class="n">DPUCZDX8G</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="s1">&#39;&lt;Download Link&gt;&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="o">-</span><span class="n">O</span> <span class="n">DPUCZDX8G_VAI_v3</span><span class="mf">.0</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="s1">&#39;&lt;Download Link&gt;&#39;</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Uarchive <code class="docutils literal notranslate"><span class="pre">DPUCZDX8G.tar.gz</span></code></p></li>
+<li><p>Uarchive <code class="docutils literal notranslate"><span class="pre">DPUCZDX8G_VAI_v3.0.tar.gz</span></code></p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tar</span> <span class="o">-</span><span class="n">xf</span> <span class="n">DPUCZDX8G</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tar</span> <span class="o">-</span><span class="n">xf</span> <span class="n">DPUCZDX8G_VAI_v3</span><span class="mf">.0</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -891,7 +809,7 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 <ol class="arabic simple" start="3">
 <li><p>Compile the project</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">PLATFORM</span><span class="o">=&lt;</span><span class="n">PLATFORM_PATH</span><span class="o">&gt;/</span><span class="n">xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1</span><span class="o">.</span><span class="n">xpfm</span> <span class="n">DPU_TRD_PATH</span><span class="o">=&lt;</span><span class="n">VITIS_AI_REPO</span><span class="o">&gt;/</span><span class="n">DPUCZDX8G</span> <span class="n">HW_ACCEL_PATH</span><span class="o">=&lt;</span><span class="n">VVAS_REPO</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span><span class="o">/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">PLATFORM</span><span class="o">=&lt;</span><span class="n">PLATFORM_PATH</span><span class="o">&gt;/</span><span class="n">xilinx_zcu104_vcuDec_vmixHdmiTx_202220_1</span><span class="o">.</span><span class="n">xpfm</span> <span class="n">DPU_TRD_PATH</span><span class="o">=&lt;</span><span class="n">VITIS_AI_REPO</span><span class="o">&gt;/</span><span class="n">DPUCZDX8G_VAI_v3</span><span class="mf">.0</span> <span class="n">HW_ACCEL_PATH</span><span class="o">=&lt;</span><span class="n">VVAS_REPO</span><span class="o">&gt;/</span><span class="n">VVAS</span><span class="o">/</span><span class="n">vvas</span><span class="o">-</span><span class="n">accel</span><span class="o">-</span><span class="n">hw</span><span class="o">/</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -904,7 +822,7 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 <div class="section" id="board-bring-up">
 <span id="id1"></span><h3>Board bring up<a class="headerlink" href="#board-bring-up" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic">
-<li><p>Burn the SD card image <code class="docutils literal notranslate"><span class="pre">sd_card.img</span></code> (Either from <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip">Release package</a> or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.</p>
+<li><p>Burn the SD card image <code class="docutils literal notranslate"><span class="pre">sd_card.img</span></code> (Either from <a class="reference external" href="TBD">Release package(TBD)</a> or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.</p>
 <p>Boot the board using this SD card.</p>
 </li>
 <li><p>Once the board is booted, resize the ext4 partition to extend to full SD card size:</p>
@@ -921,21 +839,17 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 </ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Password for <em>root</em> user is <em>root</em>.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
 <p>Video files are not provided as part of release package.</p>
 </div>
 <ol class="arabic" start="4">
 <li><p>Copy the model json files and scripts on the board:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2022</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">scripts_n_utils</span><span class="o">/</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;</span><span class="p">:</span><span class="o">~</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">scripts_n_utils</span><span class="o">/</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;</span><span class="p">:</span><span class="o">~</span>
 </pre></div>
 </div>
 </li>
 <li><p>Copy the Vitis-AI model files on board. Execute the command mentioned below on the target board:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span>
-<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2022</span><span class="mf">.1</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/*</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
+<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">RELEASE_PATH</span><span class="o">&gt;/</span><span class="n">vvas_multichannel_ml_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/*</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
 </pre></div>
 </div>
 </li>
@@ -1001,8 +915,8 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
-      <span class="lastupdated">Last updated on December 28, 2022.
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
       </span></p>
   </div>
 

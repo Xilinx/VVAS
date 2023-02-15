@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>Index &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+  <title>Index &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/_static/custom.css" type="text/css" />
@@ -31,6 +31,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -49,7 +50,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <img src="_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.0
+                3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -65,30 +66,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="docs/common/common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docs/common/vvas_meta_data_structures.html">Meta Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docs/common/for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/common/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/common/for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="docs/Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docs/Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docs/Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="docs/DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docs/DC/DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docs/DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="docs/freq_asked_questions.html">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
         </div>
@@ -118,134 +113,98 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#Symbols"><strong>Symbols</strong></a>
- | <a href="#C"><strong>C</strong></a>
+ <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  
 </div>
-<h2 id="Symbols">Symbols</h2>
+<h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    --codectype
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-codectype">command line option</a>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.Feature">Feature (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.Feature">[1]</a>
 </li>
-      </ul></li>
-      <li>
-    --devidx
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-devidx">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    --file
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-file">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    --forcekeyframe
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-forcekeyframe">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    --json
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-json">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    --lookahead_enable
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-lookahead_enable">command line option</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    -c
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-c">command line option</a>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.feature_type">feature_type (C enum)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.feature_type">[1]</a>
 </li>
-      </ul></li>
-      <li>
-    -f
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-f">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    -i
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-i">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    -j
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-j">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    -k
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-k">command line option</a>
-</li>
-      </ul></li>
-      <li>
-    -l
-
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-l">command line option</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
-<h2 id="C">C</h2>
+<h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    command line option
+      <li><a href="docs/common/vvas_meta_data_structures.html#c.GstInferenceClassification">GstInferenceClassification (C struct)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_meta_data_structures.html#c.GstInferenceMeta">GstInferenceMeta (C struct)</a>
+</li>
+      <li><a href="docs/common/vvas_meta_data_structures.html#c.GstInferencePrediction">GstInferencePrediction (C struct)</a>
+</li>
+  </ul></td>
+</tr></table>
 
-      <ul>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-codectype">--codectype</a>
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.Pointf">Pointf (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.Pointf">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-devidx">--devidx</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.Pose14Pt">Pose14Pt (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.Pose14Pt">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-file">--file</a>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.Reid">Reid (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.Reid">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-forcekeyframe">--forcekeyframe</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.road_line_type">road_line_type (C enum)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.road_line_type">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-json">--json</a>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.seg_type">seg_type (C enum)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.seg_type">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-lookahead_enable">--lookahead_enable</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.Segmentation">Segmentation (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.Segmentation">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-c">-c</a>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.TensorBuf">TensorBuf (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.TensorBuf">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-f">-f</a>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.VvasBoundingBox">VvasBoundingBox (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.VvasBoundingBox">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-i">-i</a>
+      <li><a href="docs/common/vvas_infer_classification.html#c.VvasColorInfo">VvasColorInfo (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.VvasColorInfo">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-j">-j</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/common/vvas_infer_classification.html#c.VvasInferClassification">VvasInferClassification (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.VvasInferClassification">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-k">-k</a>
+      <li><a href="docs/common/vvas_infer_prediction.html#c.VvasInferPrediction">VvasInferPrediction (C struct)</a>, <a href="docs/common/vvas_meta_data_structures.html#c.VvasInferPrediction">[1]</a>
 </li>
-        <li><a href="docs/DC/Tutorials/xabrladder.html#cmdoption-l">-l</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -268,8 +227,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
-      <span class="lastupdated">Last updated on December 28, 2022.
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
       </span></p>
   </div>
 

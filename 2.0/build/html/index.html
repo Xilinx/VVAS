@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>Vitis Video Analytics SDK Overview &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Vitis Video Analytics SDK Release V2.0" href="docs/release_notes.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="#" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="docs/release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="docs/common/common_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/common/vvas_meta_data_structures.html">Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/common/for_developers.html">For Advanced Developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="docs/Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="docs/DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/DC/DC_plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/DC/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="docs/freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>Vitis Video Analytics SDK Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="vitis-video-analytics-sdk-overview">
+<h1>Vitis Video Analytics SDK Overview<a class="headerlink" href="#vitis-video-analytics-sdk-overview" title="Permalink to this heading">¶</a></h1>
+<p>The Vitis Video Analytics SDK <strong>(VVAS)</strong> is a framework to build transcoding and AI-powered solutions on Xilinx platforms. It takes input data - from USB/CSI camera, video from file or streams over RTSP, and uses Vitis AI to generate insights from pixels for various usecases. VVAS SDK can be the foundation layer for several video analytic solutions like understanding traffic and pedestrians in smart city, health and safety monitoring in hospitals, self-checkout and analytics in retail, detecting component defects at a manufacturing facility and others. VVAS can also be used to build Adaptive Bitrate Transcoding solutions that may require re-encoding the incoming video at different bitrates, resolution and encoding format.</p>
+<p>The core SDK consists of several ready to use, highly optimized plug-ins that use various accelerators such as Video Encoder, Decoder, multiscaler (for resize and color space conversion), Deep learning Processing Unit (DPU) for Machine Learning etc.. By performing all the compute heavy operations in dedicated accelerators, VVAS can help in building highest performance pipelines for video analytics, transcoding and several other application areas.</p>
+<p>For the developer community, VVAS also provides a framework in the form of generic Infrastructure plugins, software acceleration libraries and a simplified interface to develop their own acceleration library to control a custom hardware accelerator. Using this framework, user can easily integrate their custom accelerators/kernels into Gstreamer framework. VVAS builds on top of Xilinx Run Time (XRT) and Vitis AI and abstracts these complex interfaces, making it easy for developers to build video analytics and transcoding pipelines without having to learn the complexities of XRT, Vitis AI.</p>
+<p>Using VVAS SDK,  applications can be deployed on an embedded edge device running on Zynq UltraScale+ MPSoc platform or can be deployed on larger edge or datacenter platforms like Alveo U30.</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="_images/VVA_TopLevel_Overview.png"><img alt="_images/VVA_TopLevel_Overview.png" src="_images/VVA_TopLevel_Overview.png" style="width: 1300px;" /></a>
+<p class="caption"><span class="caption-text">VVAS Block Diagram</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<div class="section" id="vvas-graph-architecture">
+<h2>VVAS Graph Architecture<a class="headerlink" href="#vvas-graph-architecture" title="Permalink to this heading">¶</a></h2>
+<p>VVAS is an optimized graph architecture built using the open source GStreamer framework. The graph below shows a typical video analytic application starting from input video to outputting insights. All the individual blocks are various plugins that are used. At the bottom are the different hardware engines that are utilized throughout the application. Optimum memory management with zero-memory copy between plugins and the use of various accelerators ensure the highest performance.</p>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="_images/VVA_Graph.png"><img alt="_images/VVA_Graph.png" src="_images/VVA_Graph.png" style="width: 1100px;" /></a>
+</div>
+<ul class="simple">
+<li><p>Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. <code class="docutils literal notranslate"><span class="pre">vvas_xvcudec</span></code>, <code class="docutils literal notranslate"><span class="pre">omxh264dec</span></code> and <code class="docutils literal notranslate"><span class="pre">omxh265dec</span></code> are the plugin for decoding.</p></li>
+<li><p>After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion, mean subtrction etc.. <code class="docutils literal notranslate"><span class="pre">vvas_xabrscaler</span></code> plugin can perform hardware accelerated resize as well as color format conversion on the frame.</p></li>
+<li><p>After pre-processing, frame is sent for inference. Inference is performed using VVAS infrastructure plugin, <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> and <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> acceleration library. There is another plug-in, <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> that performs pre-processing as well as ML inferencing in batch mode to give improved performance. <code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> is built on top of <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">AI</span></code> Development Kit to accelerate the AI Inference on Xilinx hardware platforms.</p></li>
+<li><p>To overlay the inference results such as bounding boxes, labels. arrows etc., there is a software acceleration library called <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code>. This library along with vvas_xfilter plug-in draws bounding box and label information on the frame.</p></li>
+<li><p>Finally to output the results, VVAS presents various options, like render the output with the bounding boxes on the screen, save the output to the local disk, stream out over RTSP.</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="why-vvas">
+<h3>Why VVAS?<a class="headerlink" href="#why-vvas" title="Permalink to this heading">¶</a></h3>
+<p>Application developers can build seamless streaming pipelines for AI-based video and image analytics, complex Adaptive Bitrate Transcoding pipelines and several other solutions using VVAS without having any understanding about FPGA or other development environment complexities. VVAS ships with several hardware accelerators for various functionalities, highly optimized GStreamer plugins meeting most of the requirements of the Video Analytics and transcoding solutions.
+For advanced developers, VVAS provides an easy to use framework to integrate their own hardware accelerators/kernels in to Gstreamer framework based applications.
+VVAS provide AI model support for popular object detection and classification models such as  SSD, YOLO etc.
+All these infrastructure gives the flexibility for rapid prototyping to full production level solutions by significantly reducing time to market for the solutions on Xilinx platforms.</p>
+</div>
+<div class="section" id="vvas-core-components">
+<h3>VVAS Core Components<a class="headerlink" href="#vvas-core-components" title="Permalink to this heading">¶</a></h3>
+<p>This section gives more deeper insight into VVAS. VVAS comprises following core components.</p>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="_images/vvas_core_comp.png"><img alt="_images/vvas_core_comp.png" src="_images/vvas_core_comp.png" style="width: 400px;" /></a>
+</div>
+<div class="section" id="custom-plug-ins">
+<h4>Custom Plug-ins<a class="headerlink" href="#custom-plug-ins" title="Permalink to this heading">¶</a></h4>
+<p>These are highly optimized GStreamer plug-ins developed  to provide very specific functionality using optimized Kernels and IPs on Xilinx Platform. Refer to <a class="reference internal" href="docs/common/common_plugins.html#custom-plugins-label"><span class="std std-ref">VVAS Custom Plug-ins</span></a> for more details about how to use these plug-ins.</p>
+</div>
+<div class="section" id="infrastructure-plug-ins">
+<h4>Infrastructure Plug-ins<a class="headerlink" href="#infrastructure-plug-ins" title="Permalink to this heading">¶</a></h4>
+<p>These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to <a class="reference internal" href="docs/common/common_plugins.html#infra-plugins-label"><span class="std std-ref">VVAS Infrastructure Plug-ins</span></a> for more details about how to use these plug-ins. These plug-ins are part of “vvas-gst-plugins” folder in the VVAS sources tree.</p>
+</div>
+<div class="section" id="acceleration-s-w-libs">
+<h4>Acceleration S/W Libs<a class="headerlink" href="#acceleration-s-w-libs" title="Permalink to this heading">¶</a></h4>
+<p>These are optimized Acceleration s/w libs developed to manage the state machine of the acceleration Kernels/IPs and expose the interface so that these Acceleration s/w libs can be hooked into VVAS Generic Infrastructure Plug-ins. These can be used as reference to develop a new Acceleration s/w lib based on VVAS framework. Details about the vvas acceleration s/w libs and how can these be used with infrastructure plugins are explained in <a class="reference internal" href="docs/common/common_plugins.html#infra-plugins-label"><span class="std std-ref">VVAS Infrastructure Plug-ins and Acceleration s/w Libraries</span></a> section.</p>
+</div>
+<div class="section" id="acceleration-h-w-kernels-ips">
+<h4>Acceleration H/W (Kernels/IPs)<a class="headerlink" href="#acceleration-h-w-kernels-ips" title="Permalink to this heading">¶</a></h4>
+<p>These are highly optimized Kernels being developed by Xilinx. Details of these are captured in this section. Refer to VVAS Acceleration H/W <a class="reference internal" href="docs/common/Acceleration-Hardware.html"><span class="doc">VVAS Acceleration H/W</span></a> for more details.</p>
+</div>
+<div class="section" id="reference-platforms-and-applications">
+<h4>Reference Platforms and Applications<a class="headerlink" href="#reference-platforms-and-applications" title="Permalink to this heading">¶</a></h4>
+<p>There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms example designs and sample application details can be found in <a class="reference internal" href="docs/Embedded/platforms_and_applications.html"><span class="doc">Platforms And Applications</span></a> section. Similarly Platforms and application details for PCIe/Data center are covered in <a class="reference internal" href="docs/DC/platforms_and_applications.html"><span class="doc">PCIe/Data Center Platforms and Applications</span></a></p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="docs/release_notes.html" class="btn btn-neutral float-right" title="Vitis Video Analytics SDK Release V2.0" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on December 28, 2022.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

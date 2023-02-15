@@ -17,7 +17,7 @@
 Tutorials
 #########################################
 
-This section covers tutorials that will explain step by step approach to build GStreamer pipelines for different usecases  using VVAS framework. Each tutorial explains what is the purpose of each plugin in the pipeline and how to configure, set properties and the corresponding json files whereever applicable.
+This section covers tutorials that will explain step by step approach to build GStreamer pipelines for different usecases  using VVAS framework. Each tutorial explains what is the purpose of each plugin in the pipeline and how to configure, set properties and the corresponding json files where ever applicable.
 
 ********************
 Multi Channel ML

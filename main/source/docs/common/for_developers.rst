@@ -13,7 +13,7 @@ For advanced developers who wants to develop their Kernel or VVAS acceleration s
 
    Acceleration s/w Library Developement Guide <Acceleration-Software-Library-Development>
    Acceleration H/W Kernels <Acceleration-Hardware>
-
+   Add support for new models in VVAS <adding_new_model>
 
 
 .. list-table:: 
@@ -29,3 +29,5 @@ For advanced developers who wants to develop their Kernel or VVAS acceleration s
    * - :doc:`Acceleration H/W Kernels <Acceleration-Hardware>`
      - This section covers the H/W (HLS) kernels supported by the VVAS release. It explains how to change the kernel configuration parameters, how to build these kernels. Ready to use workspace is already created to build the kernel.
 
+   * - :doc:`Adding new model support in VVAS  <adding_new_model>`
+     - This section covers the details about how to add a new model support into VVAS.
