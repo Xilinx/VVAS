@@ -102,11 +102,11 @@ Click on `Smart Model Select Prebuilt Binaries COMING SOON`
     Pre-built binaries for this example designs will be available soon. You may also build the complete example design following the steps mentioned in **Build Design** section. For more information, you may contact vvas_discuss@amd.com.
 
 
-Unzip the downloaded package `vvas_smart_model_select_2022.1_zcu104.zip`.
+Unzip the downloaded package `vvas_smart_model_select_2022.2_zcu104.zip`.
 
 .. code-block::
    
-   unzip vvas_smart_model_select_2022.1_zcu104.zip
+   unzip vvas_smart_model_select_2022.2_zcu104.zip
 
 
 Prebuilt binaries package includes
@@ -122,10 +122,10 @@ Prebuilt binaries package includes
 
    The pre-buit binaries available for download from the link mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
 
-Open-Source Licenses and Source code - VVAS 2.0
+Open-Source Licenses and Source code - VVAS 3.0
 ------------------------------------------------
 
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip>`_ that contain the Open-Source Licenses and source code.
+In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code(TBD) <TBD>`_ that contain the Open-Source Licenses and source code.
 
 Once you have downloaded the prebuilt binaries, you need to prepare the setup to execute the application, as shown in the next section.
 
@@ -145,7 +145,7 @@ One time setup
   If using pre-built binaries, then sd_card.img is located as
   ::
   
-    <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/sd_card.img
+    <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/sd_card.img
 
   If you have built the platform yourself, then sd_card.img would be located at
   ::
@@ -162,11 +162,11 @@ One time setup
 
      resize-part /dev/mmcblk0p2
 
-* Copy the `<PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/app` folder of the application onto `home` folder of the board.
+* Copy the `<PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/app` folder of the application onto `home` folder of the board.
 
   .. code-block::
 
-     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/app root@<board ip>:~/
+     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/app root@<board ip>:~/
 
 * After copying, ``chmod`` `~/app/setup.sh` and `~/app/smart_model_select` to make them executable on the board.
 
@@ -178,7 +178,7 @@ One time setup
 * Create `/usr/share/vitis_ai_library/models` folder on the board and copy the Vitis-AI models into it::
 
      mkdir -p /usr/share/vitis_ai_library/models
-     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/models/* root@<board ip>/usr/share/vitis_ai_library/models/
+     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/models/* root@<board ip>/usr/share/vitis_ai_library/models/
 
 
 
@@ -269,17 +269,17 @@ The application supports RTSP input with RTP packets containing H264 payload of 
 
 .. code-block::
 
-      1.  wget https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-1.16.2.tar.xz
-      2.  tar -xvf gst-rtsp-server-1.16.2.tar.xz
-      3.  cd gst-rtsp-server-1.16.2/
+      1.  wget https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-1.18.5.tar.xz
+      2.  tar -xvf gst-rtsp-server-1.18.5.tar.xz
+      3.  cd gst-rtsp-server-1.18.5/
       4.  ./autogen.sh --disable-gtk-doc
       5.  make
 
-Examples in gst-rtsp-server-1.16.2/examples can be used to serve RTSP data. Refer below example
+Examples in gst-rtsp-server-1.18.5/examples can be used to serve RTSP data. Refer below example
 
 .. code-block::
 
-      cd gst-rtsp-server-1.16.2/examples
+      cd gst-rtsp-server-1.18.5/examples
       ./test-launch  "filesrc location=<Absolute Path of File with H264 1080p in MP4 format> ! qtdemux  ! h264parse ! rtph264pay name=pay0 pt=96"
 
 Streaming starts on the URL rtsp://<RTSP server ip adress>:8554/test. Enter the same URL as input to the application.
@@ -312,7 +312,7 @@ In addition to the above-mentioned hardware components, ``zcu104_vcuDec_DP`` sup
 
 * omxh264dec GStreamer plugin
 * Opensource framework like GStreamer, OpenCV
-* Vitis AI 2.5 libraries
+* Vitis AI 3.0 libraries
 * Xilinx Run Time (XRT)
 
 
@@ -327,13 +327,13 @@ Follow the steps mentioned below to compile the platform.
 
 2. Clone VVAS repo::
    
-      git clone https://github.com/Xilinx/VVAS.git
+      git clone --recurse-submodules https://github.com/Xilinx/VVAS.git
          
 3. Setup tool chain environment::
 
-      source <2022.1_Vitis>/settings64.sh
-      source <2022.1_Petalinux>/settings.sh
-      source <2022.1_Vivado>/setenv.sh
+      source <2022.2_Vitis>/settings64.sh
+      source <2022.2_Petalinux>/settings.sh
+      source <2022.2_Vivado>/setenv.sh
        
 4. Navigate to ``zcu104_vcuDec_DP`` platform folder::
 
@@ -345,7 +345,7 @@ Follow the steps mentioned below to compile the platform.
 
 .. _platform_path:
 
-After build is finished, platform will be available ``<VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202210_1/export/xilinx_zcu104_vcuDec_DP_202210_1/`` location.
+After build is finished, platform will be available ``<VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202220_1/export/xilinx_zcu104_vcuDec_DP_202220_1/`` location.
 
 Hardware Accelerators (Kernels)
 ================================
@@ -353,7 +353,7 @@ Hardware Accelerators (Kernels)
 ``Smart Model Select`` application's requirements of Machine Learning and Resize operations are fulfilled by below mentioned accelerators (Kernels):
 
 *  ``DPU`` (Deep Learning Processing Unit) for Machine Learning.
-*  ``Multiscaler`` for Preprocessing operation
+*  ``Image Processing`` for Preprocessing operation
 
 
 ******************************************
@@ -366,20 +366,20 @@ The sources for hardware accelerators required for ``Smart Model Select`` applic
 
 2. DPU Kernel sources can be obtained by following steps as below:
 
-  * Open the `reference_design <https://github.com/Xilinx/Vitis-AI/tree/master/reference_design#readme>`__ readme page from Vitis-AI release repo.
+  * Open the `reference_design <https://github.com/Xilinx/Vitis-AI/tree/master/dpu#readme>`__ readme page from Vitis-AI release repo.
 
-  * Copy the **Download Link** for **IP Name** corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table::
+  * Copy the **Reference Design** link for **IP Name** corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table::
 
-      wget -O DPUCZDX8G.tar.gz '<Download Link>'
+      wget -O DPUCZDX8G_VAI_v3.0.tar.gz '<Download Link>'
 
-  * Unarchive ``DPUCZDX8G.tar.gz`` ::
+  * Unarchive ``DPUCZDX8G_VAI_v3.0.tar.gz`` ::
 
-      tar -xf DPUCZDX8G.tar.gz
+      tar -xf DPUCZDX8G_VAI_v3.0.tar.gz
 
 
-3. Multiscaler kernel sources are part of VVAS source tree and are located at::
+3. Image Processing kernel sources are part of VVAS source tree and are located at::
 
-      <VVAS_SOURCES>/VVAS/vvas-accel-hw/multiscaler
+      <VVAS_SOURCES>/VVAS/vvas-accel-hw/image_processing
 
 Kernels may have different configurations for different application requirements. Hence it is recommended to build the Kernels from the application design workspace with the required Kernel configuration for that application. 
 
@@ -392,15 +392,11 @@ In case one wants to change the kernel configuration for some reason, do these c
    Compilation of Kernels is initiated from the build process of the final design for the application. Hence kernel compilation steps are not covered separately here.
 
 
-* Configuration of DPU::
-  
-     <VVAS_SOURCES>/VVAS/vvas-examples/Embedded/smart_model_select/dpu_conf.vh
+DPU Kernel for this example design is configured for B4096 architecture. Configuration file used can be found at ``<VVAS_SOURCES>/VVAS/vvas-examples/Embedded/multichannel_ml/dpu_conf.vh``.
 
-* Configuration of Multiscaler::
+Image Processing IP/Kernel source code can be refered from ``<VVAS_SOURCES>/VVAS/vvas-accel-hw/image_processing/``. For this example design Image Processing kernel is configured for max-width:1920, max-height:1080 and format support of Y_UV8_420, RGB and BGR. Configuration file used can be found at ``<VVAS_SOURCES>/VVAS/vvas-examples/Embedded/multichannel_ml/image_processing_config.h``.
 
-     <VVAS_SOURCES>/VVAS/vvas-examples/Embedded/smart_model_select/v_multi_scaler_config.h
-
-You may modify the kernel configuration as per your requirements in these files.
+You may modify the kernel configuration as per your requirements in corresponding configuration files.
 
 
 ***********************
@@ -414,13 +410,13 @@ VVAS sources already has ready to build example Vitis workspace for ``smart_mode
 .. code-block::
 
       cd <VVAS_SOURCES>/VVAS/vvas-examples/Embedded/smart_model_select
-      make PLATFORM=<PLATFORM_PATH> DPU_TRD_PATH=<DPU_PATH> HW_ACCEL_PATH=<MULTISCALER_PATH>
+      make PLATFORM=<PLATFORM_PATH> DPU_TRD_PATH=<DPU_PATH> HW_ACCEL_PATH=<IMAGE_PROCESSING_PATH>
       
-      PLATFORM_PATH=<VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202210_1/export/xilinx_zcu104_vcuDec_DP_202210_1/xilinx_zcu104_vcuDec_DP_202210_1.xpfm
+      PLATFORM_PATH=<VVAS_SOURCES>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/xilinx_zcu104_vcuDec_DP_202220_1/export/xilinx_zcu104_vcuDec_DP_202220_1/xilinx_zcu104_vcuDec_DP_202220_1.xpfm
 
-      DPU_PATH=<VVAS_SOURCES>/DPUCZDX8G
+      DPU_PATH=<VVAS_SOURCES>/DPUCZDX8G_VAI_v3.0
 
-      MULTISCALER_PATH=<VVAS_SOURCES>/VVAS/vvas-accel-hw
+      IMAGE_PROCESSING_PATH=<VVAS_SOURCES>/VVAS/vvas-accel-hw
 
 Once above build is done, final sdcard image is available at ``./binary_container_1/sd_card.img`` location.
 
@@ -440,7 +436,7 @@ Sysroot is required to build the VVAS GStreamer plugins. Sysroot installer locat
 
 If you have downloaded the pre-built binaries in folder, say ``PREBUILT_BINARIES``, then you can find the Sysroot installer at::
 
-   <PREBUILT_BINARIES>/vvas_smart_model_select_2022.1_zcu104/sdk.sh
+   <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/sdk.sh
 
 
 If you have built the platform yourself, then Sysroot installer is available at::
@@ -464,7 +460,7 @@ Get the VVAS Sources if not done already. Follow the steps mentioned below.
 
 * Clone VVAS repo::
   
-     git clone https://github.com/Xilinx/VVAS.git
+     git clone --recurse-submodules https://github.com/Xilinx/VVAS.git
 
 
   VVAS Source tree structure is described below:
@@ -473,6 +469,7 @@ Get the VVAS Sources if not done already. Follow the steps mentioned below.
      :width: 300
 
   * **vvas-utils:** This folder contains the source code for the VVAS kernel interface to be exposed by the acceleration software libraries, abstraction APIs on top of the Xilinx Runtime (XRT) tool, and common headers (for example, metadata).
+  * **vvas-core:** This folder contains the source code of core APIs.
 
   * **vvas-gst-plugins:** This folder contains all the VVAS GSteamer plug-ins, including the infrastructure plug-ins and the Custom plug-ins.
 
@@ -500,7 +497,7 @@ Get the VVAS Sources if not done already. Follow the steps mentioned below.
 
 * Build VVAS plugins and libraries::
 
-   ./build_install_vvas.sh Edge
+   ./build_install_vvas.sh TARGET=Edge
 
 * When above step is complete, VVAS plugins are generated as ``install/vvas_installer.tar.gz``.
 

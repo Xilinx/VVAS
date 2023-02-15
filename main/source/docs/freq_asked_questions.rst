@@ -39,8 +39,7 @@ Yes.
 
 VVAS Release has been covered by below mentioned licenses:
 
-* Apache License
-* Version 2.0
+* Apache License Version 2.0
 * 3-Clause BSD License
 * GNU GENERAL PUBLIC LICENSE
 * The MIT License
@@ -80,24 +79,32 @@ VVAS is tested on PetaLinux for embedded platforms and UBUntu 20.04 for PCIe bas
 
 The following models are supported for this release:
 
-* resnet50
-* resnet18
-* mobilenet_v2
-* inception_v1
-* ssd_adas_pruned_0_95
-* ssd_traffic_pruned_0_9
-* ssd_mobilenet_v2
-* ssd_pedestrian_pruned_0_97
-* plate detection
-* yolov3_voc_tf
-* yolov3_adas_pruned_0_9
-* refinedet_pruned_0_96
-* yolov2_voc
-* yolov2_voc_pruned_0_77
-* densebox_320_320
-* densebox_640_360
-* Semantic Segmentation
-* TBD
+  - resnet50
+  - resnet18
+  - mobilenet_v2
+  - inception_v1
+  - ssd_adas_pruned_0_95
+  - ssd_traffic_pruned_0_9
+  - ssd_mobilenet_v2
+  - ssd_pedestrian_pruned_0_97
+  - plate_detect
+  - plat_num
+  - yolov3_voc_tf
+  - yolov3_adas_pruned_0_9
+  - refinedet_pruned_0_96
+  - yolov2_voc
+  - yolov2_voc_pruned_0_77
+  - densebox_320_320
+  - densebox_640_360
+  - bcc_pt
+  - efficientdet_d2_tf
+  - efficientnet-b0_tf2
+  - face_mask_detection_pt
+  - facerec_resnet20
+  - refinedet_pruned_0_96
+  - sp_net
+  - ultrafast_pt
+  - vpgnet_pruned_0_99
 
 .. raw:: html
 
@@ -111,8 +118,7 @@ The following models are supported for this release:
    <details>
    <summary>How do I enable models that are not officially supported?</summary>
 
-If the model is not in DPU deployable format, then it first needs to be converted into DPU deployable state. For this refer to `Vitis AI 2.5 documentation <https://docs.xilinx.com/access/sources/dita/map?Doc_Version=2.5%20English&url=ug1414-vitis-ai>`_.
-
+Refer to :doc:`How to add support for new model in VVAS <common/adding_new_model>`.
 
 .. raw:: html
 
@@ -126,7 +132,7 @@ If the model is not in DPU deployable format, then it first needs to be converte
    <details>
    <summary>What is the version of Vitis AI tool used for VVAS?</summary>
 
-This VVAS release supports Vitis AI 2.5.
+This VVAS release supports Vitis AI 3.0.
 
 
 .. raw:: html
@@ -140,7 +146,7 @@ This VVAS release supports Vitis AI 2.5.
    <details>
    <summary>Is VVAS compatible with lower versions of Vitis AI tools, such as VAI 1.3?</summary>
 
-No, it has dependencies on Vitis AI 2.5.
+No, it has dependencies on Vitis AI 3.0.
 
 
 .. raw:: html
@@ -154,7 +160,7 @@ No, it has dependencies on Vitis AI 2.5.
    <details>
    <summary>How can I change the model in the pipeline?</summary>
 
-The model name to be used for inferencing has to be provided in the JSON file for vvas_xdpuinfer acceleration library. For more details, see :ref:`DPU Infer <json-vvas-dpuinfer>`.
+The model name to be used for inference has to be provided in the JSON file for ``vvas_xinfer`` plug-in. For more details, see :ref:`vvas_xinfer <vvas_xinfer>`.
 
 
 .. raw:: html
@@ -225,7 +231,7 @@ Yes, VVAS suports simultaneous execution of multiple instances of plugins to rea
    <details>
    <summary>How do I develop kernel libraries</summary>
 
-Refer to :doc:`Acceleration s/w development guide <common/6-common-Acceleration-Software-Library-Development>`.
+Refer to :doc:`Acceleration s/w development guide <common/Acceleration-Software-Library-Development>`.
 
 .. raw:: html
 
@@ -320,7 +326,7 @@ One can connect multipe instances of ``vvas_xinfer`` one after another to implem
    <details>
    <summary>How to debug VVAS application if there are any issues?</summary>
 
-VVAS is based on GStreamer framework. It relies of debugging tools supported by GStreamer framework. For more details, you may refer to `GStreamer Debugging Tools <https://gstreamer.freedesktop.org/documentation/tutorials/basic/debugging-tools.html?gi-language=c>`_.
+Refer to :doc:`VVAS Debug Support <common/debug_support>`
 
 .. raw:: html
 
@@ -346,7 +352,7 @@ Using GStreamer's native fps display mechanism.
    <details>
    <summary>How do I compile and prune the model to be used?</summary>
 
-Refer to `Vitis AI 2.5 documentation <https://docs.xilinx.com/access/sources/dita/map?Doc_Version=2.5%20English&url=ug1414-vitis-ai>`_.
+Refer to `Vitis AI 3.0 documentation <https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&url=ug1431-vitis-ai-documentation>`_.
 
 .. raw:: html
 
@@ -373,7 +379,7 @@ For Embedded platforms, refer to :ref:`Building VVAS Plugins and Libraries <buil
    <details>
    <summary>What if I cannot find the information that i am looking for?</summary>
 
-Contact support.
+Contact support vvas_discuss@amd.com.
 
 .. raw:: html
 

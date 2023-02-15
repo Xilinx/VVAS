@@ -253,12 +253,19 @@ Use this API to start the kernel. This API internally uses Xilinx Run Time (XRT)
 
 Follow below format specifiers for kernel arguments for "format" argument
 
-"i" : Signed int argument.
-"u" : Unsigned int argument.
-"l" : Unsigned long long argument.
-"p" : Any pointer argument.
-"b" : Buffer Object argument.
-"s" : If you want to skip the argument.
+| "i" : Signed int argument.
+| "u" : Unsigned int argument.
+| "f" : Float argument.
+| "F" : Double argument.
+| "c" : Char argument.
+| "C" : Unsigned char argument.
+| "S" : Short argument.
+| "U" : Unsigned short argument.
+| "l" : Unsigned long long argument.
+| "d" : Long long argument.
+| "p" : Any pointer argument.
+| "b" : Buffer Object argument.
+| "s" : If you want to skip the argument.
 
 Ex : For passing 3 arguments of types int, unsigned int and a pointer,
      then the format specifier string would be "iup"
@@ -573,3 +580,546 @@ API to add new caps to src pad. Only one pad is supported as on today.
 
    bool vvas_caps_add_to_src (VVASKernel * handle, kernelcaps * kcaps, int sinkpad_num)
 
+
+********************************************************************
+Example (Development of acceleration sw library)
+********************************************************************
+
+This section shows how to develop an acceleration sw library using VVAS APIs which controls ``vvas_xsample`` kernel.
+
+Following is a sample structure used in the example to validate ``vvas_xsample`` kernel.
+
+.. code-block::
+
+ struct  __attribute__((aligned(4))) vvas_sample_struct
+ {
+  char c_value;
+  unsigned char uc_value;
+  short s_value;
+  unsigned short us_value;
+  int i_value;
+  unsigned int ui_value;
+  float f_value;
+  double d_value;
+  long long ll_value;
+  unsigned long long ul_value;
+ };
+ typedef struct vvas_sample_struct VvasSampleStruct;
+
+At the first step we have to expose the CORE APIs, so that these can be controlled from the GStreamer Infrastructure plug-ins as well as applications. Following APIs are mandatory APIs.
+
+
+.. code-block::
+
+  
+  /*********  CORE APIs ************/
+
+  int32_t xlnx_kernel_init (VVASKernel * handle);
+
+  uint32_t xlnx_kernel_start (VVASKernel * handle, int start,
+      VVASFrame * input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT]);
+
+  int32_t xlnx_kernel_done (VVASKernel * handle);
+
+  uint32_t xlnx_kernel_deinit (VVASKernel * handle);
+
+We have to perform all the one-time initialization in ``xlnx_kernel_init`` API.
+Following is the private structure to maintain/store all the initializations. It is upto the user to implement their own storage classes to maintain one-time initializations.
+
+.. code-block::
+
+ /*
+  * Structure to store all initializations
+  */
+
+ typedef struct _kern_priv
+ {
+   int log_level;                /* Debug Level of logs */
+   char c_value;                 /* variable to store char value */
+   unsigned char uc_value;       /* varaiable to store unsigned char value */
+   short s_value;                /* varable to store short value */
+   unsigned short us_value;      /* varable to store unsigned short value */
+   int i_value;                  /* varable to store int value */
+   unsigned int ui_value;        /* varable to store unsigned int value */
+   float f_value;                /* varable to store float value */
+   double d_value;               /* variable to store double value */
+   long long ll_value;           /* variable to store long long value */
+   unsigned long long ul_value;  /* variable to store unsigned long long value */
+   char overlay_image_path[MAX_LENGTH];  /* Path of the input overlay image */
+   char input_overlay_image[MAX_OVERLAY_SIZE];   /* Buffer to store input overlay image */
+   int overlay_image_height;     /* Height of the overlay image */
+   int overlay_image_width;      /* Width of the overlay image */
+   int overlay_image_xpos;       /* x-position, where to overlay image on input buffer */
+   int overlay_image_ypos;       /* y-position, where to overlay image on input buffer */
+   char input_string[MAX_LENGTH];        /* Input string to test sample kernel */
+   void *xrt_input_string;       /* Pointer to hold the address of input string's xrt::bo */
+   void *xrt_input_overlay_buffer;       /* Pointer to hold the address of the input overlay buffer's xrt::bo */
+   void *xrt_output_string;      /* Pointer to hold the address of output string's xrt::bo */
+   void *xrt_output_structure;   /* Pointer to hold the address of the output structure's xrt::bo */
+ } vvasSampleKernelPriv;
+
+Initialize all the required variables of the vvasSampleKernelPriv structure in ``xlnx_kernel_init`` API.
+
+
+.. code-block::
+
+  int32_t xlnx_kernel_init (VVASKernel * handle)
+  {
+    /*
+     *  kernel configuration from application
+     */
+    json_t *jconfig = handle->kernel_config;
+    json_t *val;
+    vvasSampleKernelPriv *kpriv =
+        (vvasSampleKernelPriv *) calloc (1, sizeof (vvasSampleKernelPriv));
+    if (!kpriv)
+    {
+      LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level,
+          "ERROR: SAMPLE_KERNEL: failed to allocate kernelprivate memory");
+      return -1;
+    }
+
+    /*
+     *  Initaializing the kernel parameters
+     *  Below values are hard coded for better understanding
+     */
+    kpriv->c_value = '\0';      /* Initialize the char value */
+    kpriv->uc_value = '\0';     /* Initialize the unsigned char value */
+    kpriv->s_value = -100;      /* Initialize the short value */
+    kpriv->us_value = 0;        /* Initialize the unsigned short value */
+    kpriv->i_value = -10000;    /* Initialize the int value */
+    kpriv->ui_value = 0;        /* Initialize the unsigned int value */
+    kpriv->f_value = 0.2;       /* Initialize the float value */
+    kpriv->d_value = 1000000.1; /* Initialize the double value */
+    kpriv->ll_value = 10000000; /* Initialize the long long value */
+    kpriv->ul_value = 10000000; /* Initialize the unsigned long long value */
+
+    /*
+     *  Initaializing the kernel parameters
+     *  from the configuration file passed to infrastructure plugin.
+     */
+
+    /* Set the debug level for logging purpose */
+    val = json_object_get (jconfig, "debug_level");
+    if (!val || !json_is_integer (val)) {
+      kpriv->log_level = LOG_LEVEL_WARNING;
+      LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv->log_level, "debug_level %d",
+          kpriv->log_level);
+    } else {
+      kpriv->log_level = json_integer_value (val);
+      LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level, "debug_level %d",
+          kpriv->log_level);
+    }
+
+    /* Get and set the input string that should be passed
+     * to sample kernel
+     */
+    val = json_object_get (jconfig, "input_string");
+    if (!val || !json_is_string (val)) {
+      LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv->log_level,
+          "Input String not provided taking default");
+      strcpy (kpriv->input_string, "HELLO SAMPLE");
+    } else {
+      strcpy (kpriv->input_string, (char *) json_string_value (val));
+      LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+          "Input String is : %s", kpriv->input_string);
+    }
+
+    /* Get and set the height of the overlay image */
+    val = json_object_get (jconfig, "overlay_image_height");
+    if (!val || !json_is_integer (val)) {
+      LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level,
+          "Overlay image height not provided");
+      return -1;
+    } else {
+      kpriv->overlay_image_height = json_integer_value (val);
+      LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+          "Overlay image height : %d", kpriv->overlay_image_height);
+    }
+
+    /* Get and set the width of the overlay image */
+    val = json_object_get (jconfig, "overlay_image_width");
+    if (!val || !json_is_integer (val)) {
+      LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level,
+          "Overlay image width not provided");
+      return -1;
+    } else {
+      kpriv->overlay_image_width = json_integer_value (val);
+      LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+          "Overlay image width : %d", kpriv->overlay_image_width);
+    }
+
+    /* Get and set the path/location of the overlay image */
+    val = json_object_get (jconfig, "overlay_image_path");
+    if (!val || !json_is_string (val)) {
+      LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level,
+          "Overlay image path not provided");
+      return -1;
+    } else {
+      strcpy (kpriv->overlay_image_path, (char *) json_string_value (val));
+      LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+          "Overlay image path : %s", kpriv->overlay_image_path);
+    }
+
+    /* Get and set the x position of the overlay image
+     * to draw on input buffer
+     */
+    val = json_object_get (jconfig, "overlay_image_xpos");
+    if (!val || !json_is_integer (val)) {
+      kpriv->overlay_image_xpos = DEFAULT_X_POS;
+      LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv->log_level,
+          "Overlay xpos is not set" " taking default : %d",
+          kpriv->overlay_image_xpos);
+    } else {
+      kpriv->overlay_image_xpos = json_integer_value (val);
+      LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+          "Overlay xpos is  : %d", kpriv->overlay_image_xpos);
+    }
+
+
+    /* Get and set the y position of the overlay image
+     * to draw on input buffer
+     */
+    val = json_object_get (jconfig, "overlay_image_ypos");
+    if (!val || !json_is_integer (val)) {
+      kpriv->overlay_image_ypos = DEFAULT_Y_POS;
+      LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv->log_level,
+          "Overlay xpos is not set" " taking default : %d",
+          kpriv->overlay_image_ypos);
+    } else {
+      kpriv->overlay_image_ypos = json_integer_value (val);
+      LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+          "Overlay ypos is  : %d", kpriv->overlay_image_ypos);
+    }
+
+    /* Open, read and store the overlay image */
+    ifstream input_file (kpriv->overlay_image_path);
+    if (!input_file.is_open ()) {
+      LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level,
+          "Could not open overlay image  : %s", kpriv->overlay_image_path);
+
+      return EXIT_FAILURE;
+    }
+    input_file.read (kpriv->input_overlay_image,
+        (int) (kpriv->overlay_image_height * kpriv->overlay_image_width *
+            NV12_BYTE_SIZE));
+    input_file.close ();
+
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+        "Completed reading %s ", kpriv->overlay_image_path);
+
+    /* Populate the kernel private in the kernel handle */
+    handle->kernel_priv = (void *) kpriv;
+
+    /* Enable multiprocess as we are using ``vvas_kernel_start`` method */
+    handle->is_multiprocess = 1;
+
+    return 0;
+  }
+
+
+After completing all the initializations in ``xlnx_kernel_init`` API , it is the time to execute the kernel in ``xlnx_kernel_start`` API. ``xlnx_kernel_start`` is called by infrastructure plug-in for each input frame/buffer it has received for further processing by the kernel.
+
+As the ``vvas_xsample`` is a hard kernel, all the arguments passed to it deals with physical addresses.
+
+.. code-block::
+
+  uint32_t
+      xlnx_kernel_start (VVASKernel * handle, int start,
+      VVASFrame * input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT]) {
+
+    int ret;
+    vvasSampleKernelPriv *kpriv = (vvasSampleKernelPriv *) handle->kernel_priv;
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level, "Kernel Start");
+    /* Get the physical address of the input buffer */
+    uint64_t input_buffer = (input[0]->paddr[0]);
+    /* Get the physical address of the output buffer */
+    uint64_t output_buffer = (output[0]->paddr[0]);
+    /* Get the height of the input buffer */
+    short width = input[0]->props.width;
+    /* Get the width of the input buffer */
+    short height = input[0]->props.height;
+
+    /* Fill the arguments that we are going to pass
+     * to the vvas_xsample kernel with the initialized values
+     *  in xlnx_kernel_init
+     */
+    char c_value = kpriv->c_value;      /* Fill the char argument */
+    unsigned char uc_value = kpriv->uc_value;   /* Fill the unsigned char argument */
+    short s_value = kpriv->s_value;     /* Fill the short argument */
+    unsigned short us_value = kpriv->us_value;  /* Fill the unsigned short argument */
+    int i_value = kpriv->i_value;       /* Fill the int argument */
+    unsigned int ui_value = kpriv->ui_value;    /* Fill the unsigned int argument */
+    float f_value = kpriv->f_value;     /* Fill the float argument */
+    double d_value = kpriv->d_value;    /* Fill the double argument */
+    long long ll_value = kpriv->ll_value;       /* Fill the long long argument */
+    unsigned long long ul_value = kpriv->ul_value;      /* Fill the unsigned long long argument */
+
+    /* Get the device and kernel handle to create xrt::bo s
+     * which are passed to vvas_xsample kernel
+     */
+    xrt::device * device = (xrt::device *) handle->dev_handle;
+    xrt::kernel * kernel = (xrt::kernel *) handle->kern_handle;
+
+    /* In this example, the xrt::kernel::group_id() member function is used to pass the memory bank index.
+     * This member function accept kernel argument-index and automatically
+     * detect corresponding memory bank index by inspecting XCLBIN.
+     */
+
+    /* Passing 13 to group_id indicates to create the bo on memory bank
+     * index attached to 13th argument of the kernel function
+     * which is a input_overlay_buffer argument in this example.
+     */
+
+    auto input_overlay_buffer = new xrt::bo (*device,
+        (int) (kpriv->overlay_image_height * kpriv->overlay_image_width *
+            NV12_BYTE_SIZE),
+        XRT_BO_FLAGS_NONE, kernel->group_id (13));
+
+    /* Passing 18 to group_id indicates to create the bo on memory bank
+     * index attached to 18th argument of the kernel function
+     * which is a input_string argument in this example.
+     */
+
+    auto input_string = new
+        xrt::bo (*device, strlen (kpriv->input_string) + 1, XRT_BO_FLAGS_NONE,
+        kernel->group_id (18));
+
+    /* Passing 19 to group_id indicates to create the bo on memory bank
+     * index attached to 19th argument of the kernel function
+     * which is a output_string argument in this example.
+     */
+
+    auto output_string = new
+        xrt::bo (*device, strlen (kpriv->input_string) + 1, XRT_BO_FLAGS_NONE,
+        kernel->group_id (19));
+
+    /* Passing 13 to group_id indicates to create the bo on memory bank
+     * index attached to 13th argument of the kernel function
+     * which is a output_structure in this example.
+     */
+
+    auto xrt_output_structure = new
+        xrt::bo (*device, sizeof (VvasSampleStruct), XRT_BO_FLAGS_NONE,
+        kernel->group_id (21));
+
+    /* Hold the references to validate the kernel after its functionality is done */
+    kpriv->xrt_input_string = (void *) input_string;
+    kpriv->xrt_input_overlay_buffer = (void *) input_overlay_buffer;
+    kpriv->xrt_output_string = (void *) output_string;
+    kpriv->xrt_output_structure = (void *) xrt_output_structure;
+
+    /* Reset the buffer objects */
+    memset (input_overlay_buffer->map (), 0,
+        (int) (kpriv->overlay_image_height * kpriv->overlay_image_width *
+            NV12_BYTE_SIZE));
+    memset (xrt_output_structure->map (), 0, sizeof (VvasSampleStruct));
+    memset (input_string->map (), 0, strlen (kpriv->input_string) + 1);
+    memset (output_string->map (), 0, strlen (kpriv->input_string) + 1);
+
+    /* Fill the buffer objects with Input Data */
+    memcpy (input_overlay_buffer->map (), kpriv->input_overlay_image,
+        (int) kpriv->overlay_image_height * kpriv->overlay_image_width *
+        NV12_BYTE_SIZE);
+    memcpy (input_string->map (), kpriv->input_string,
+        strlen (kpriv->input_string) + 1);
+
+    /* Check whether x-position , y-position of overlay
+     * image exceeds the boundaries of input buffer
+     */
+    if (kpriv->overlay_image_xpos + kpriv->overlay_image_width > width) {
+      kpriv->overlay_image_xpos = DEFAULT_X_POS;
+      LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv->log_level,
+          "Overlay xpos is making the image to overlay out of bounds so"
+          " taking default : %d", kpriv->overlay_image_xpos);
+    }
+
+    if (kpriv->overlay_image_ypos + kpriv->overlay_image_height > width) {
+      kpriv->overlay_image_ypos = DEFAULT_Y_POS;
+      LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv->log_level,
+          "Overlay ypos is making the image to overlay out of bounds so"
+          " taking default : %d", kpriv->overlay_image_ypos);
+    }
+
+    /* Use the format specifier for kernel arguments as explained in the Execution APIs section
+     *   "i" : Signed int argument.
+     *   "u" : Unsigned int argument.
+     *   "f" : Float argument.
+     *   "F" : Double argument.
+     *   "c" : Char argument.
+     *   "C" : Unsigned char argument.
+     *   "S" : Short argument.
+     *   "U" : Unsigned short argument.
+     *   "l" : Unsigned long long argument.
+     *   "d" : Long long argument.
+     *   "p" : Any pointer argument.
+     *   "b" : Buffer Object argument.
+     *   "s" : If you want to skip the argument.
+     *
+     *   For all the arguments passing to vvas_xsample kernel, the format specifier string looks
+     *   like "iufFcCSUldpSSpSSSSppSbp"
+     */
+
+
+    /* Execute the kernel using vvas_kernel_start API.
+     * This API internally uses Xilinx Run Time (XRT) APIs to start the kernel.
+     */
+
+
+    ret =
+        vvas_kernel_start (handle, "iufFcCSUldpSSpSSSSppSbp", i_value, ui_value,
+        f_value, d_value, c_value, uc_value, s_value, us_value, ul_value,
+        ll_value, input_buffer, height, width, input_overlay_buffer->address (),
+        kpriv->overlay_image_height, kpriv->overlay_image_width,
+        kpriv->overlay_image_xpos, kpriv->overlay_image_ypos,
+        input_string->address (), output_string->address (),
+        strlen (kpriv->input_string), xrt_output_structure, output_buffer);
+
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+        "SAMPLE KERNEL : Kernel Started");
+
+    if (ret < 0) {
+      LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level,
+          "SAMPLE KERNEL : failed to issue execute command");
+      return ret;
+    }
+    return 0;
+  }
+
+To know whether the kernel has finished processing the current frame/buffer, infrastructure plug-in or an application will call ``xlnx_kernel_done``. We must call ``vvas_kernel_done`` utility API to know if kernel has finished processing the current job in ``xlnx_kernel_done``. When it returns true we can validate the functionality of the kernel.
+
+
+.. code-block::
+
+  int32_t xlnx_kernel_done (VVASKernel * handle)
+  {
+    int ret;
+    vvasSampleKernelPriv *kpriv = (vvasSampleKernelPriv *) handle->kernel_priv;
+
+    /* Use the vvas_kernel_done API to check whether the IP or kernel has finished execution.
+     * This function internally loops for MAX_EXEC_WAIT_RETRY_CNT times
+     * until a timeout before returning an error.
+     */
+    ret = vvas_kernel_done (handle, VVAS_SAMPLE_KERNEL_TIMEOUT);
+    if (ret < 0) {
+      LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv->log_level,
+          "ROTATE: failed to receive response from kernel");
+      return ret;
+    }
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv->log_level,
+        "SAMPLE KERNEL : Kernel Done");
+
+    /*
+     * Validating all the parameters from the kernel
+     */
+    xrt::bo * xrt_output_string = (xrt::bo *) kpriv->xrt_output_string;
+    xrt::bo * xrt_output_structure = (xrt::bo *) kpriv->xrt_output_structure;
+
+    /* One of the functionality of the vvas_xsample hard kernel is to
+     * increment the arguments (from 1 to 10) values by 1 and
+     *  store them in xrt_output_structure
+     */
+
+    /* Get the virtual address of the xrt_output_structure bo for validating all the data types */
+    VvasSampleStruct *output_structure =
+        (VvasSampleStruct *) xrt_output_structure->map ();
+    if (output_structure->i_value == (++kpriv->i_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "int TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "int TEST FAILED");
+    }
+    if (output_structure->ui_value == (++kpriv->ui_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned int TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned int TEST FAILED");
+    }
+    if (output_structure->f_value == (++kpriv->f_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "float TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "float TEST FAILED");
+    }
+    if (output_structure->d_value == (++kpriv->d_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "double TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "double TEST FAILED");
+    }
+    if (output_structure->c_value == (++kpriv->c_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "char TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "char TEST FAILED");
+    }
+    if (output_structure->uc_value == (++kpriv->uc_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned char TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned char TEST FAILED");
+    }
+    if (output_structure->s_value == (++kpriv->s_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "short TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "short TEST FAILED");
+    }
+    if (output_structure->us_value == (++kpriv->us_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned short TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned short TEST FAILED");
+    }
+    if (output_structure->ul_value == (++kpriv->ul_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned long long TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level,
+          "unsigned long long TEST FAILED");
+    }
+    if (output_structure->ll_value == (++kpriv->ll_value)) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "long long TEST PASSED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "long long TEST FAILED");
+    }
+    LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "output string %s\n",
+        (char *) xrt_output_string->map ());
+    if (strcmp (kpriv->input_string, (char *) xrt_output_string->map ())) {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, " void TEST FAILED");
+    } else {
+      LOG_MESSAGE (LOG_LEVEL_DEBUG, kpriv->log_level, "void TEST PASSED");
+    }
+
+    /* delete the xrt bos which are allocated in xlnx_kernel_start */
+
+    delete (xrt::bo *) kpriv->xrt_input_string;
+    kpriv->xrt_input_string = NULL;
+
+    delete (xrt::bo *) kpriv->xrt_input_overlay_buffer;
+    kpriv->xrt_input_overlay_buffer = NULL;
+
+    delete xrt_output_string;
+    kpriv->xrt_output_string = NULL;
+
+    delete xrt_output_structure;
+    kpriv->xrt_output_structure = NULL;
+
+    return 0;
+  }
+
+We must perform any clean-up, de-initialization tasks such as freeing private handles and internal memory allocation in ``xlnx_kernel_deinit`` API.
+
+.. code-block::
+
+  uint32_t xlnx_kernel_deinit (VVASKernel * handle)
+  {
+    vvasSampleKernelPriv *kpriv = (vvasSampleKernelPriv *) handle->kernel_priv;
+
+    /* Free private handle which was created during initialization */
+    if (kpriv)
+      free (kpriv);
+    handle->kernel_priv = NULL;
+
+    return 0;
+  }
+
+.. note::  The overlay image on the input buffer need to be visually verified.

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>vvas_xtracker &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>vvas_xtracker</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/docs/common/plugin_vvas_xtracker.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="vvas-xtracker">
+<h1>vvas_xtracker<a class="headerlink" href="#vvas-xtracker" title="Permalink to this heading">¶</a></h1>
+<p>The tracker plug-in tracks detected objects in a sequence of video frames. Because tracking is easier than detection, tracking algorithms can use fewer computational resources
+than running an object detector on every frame and hence finds many applications.</p>
+<p>Each tracker element in the frame is given a unique ID and is initialized with the coordinates of the object detected by ML block.
+The object is snipped from the frame and taken as a template. Afterwards, the tracker element updates the filter every time that there is an object hit,
+adapting itself to the possible changes which an object might have during the video.</p>
+<p>The tracker plug-in supports three types of object tracking algorithms, namely <strong>Intersection-Over-Union (IOU), Kernelized Correlation Filters (KCF) and
+Minimum Output Sum of Squared Error (MOSSE)</strong>.  IOU algorithm is used when detection output is available for every frame.
+Kernelized Correlation Filters (KCF) algorithm or Minimum Output Sum of Squared Error (MOSSE) filter algorithm implemented completely in software
+using optimizations for the host processor.</p>
+<p>Tracker plugin supports tracking up to 16 objects. Tracker Id starts from 0 and supported till MAX_INT32, -1 will be used when Id is not aaigned yet by tracker.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/tracker_embedded_pipeline.PNG"><img alt="../../_images/tracker_embedded_pipeline.PNG" src="../../_images/tracker_embedded_pipeline.PNG" style="width: 1022.4000000000001px; height: 264.8px;" /></a>
+</div>
+<p>This pipeline depicts the typical multi-stream usecase where, multiple streams are muxed by funnel element to form a batch for inference.
+With tracker in the pipeline, not all the frames are required to be fed for inference. <a class="reference internal" href="common_plugins.html#vvas-xskipframe"><span class="std std-ref">vvas_xskipframe</span></a> plugin controls the rate at which the frames needs to be sent for inference.
+<a class="reference internal" href="common_plugins.html#vvas-xreorderframe"><span class="std std-ref">vvas_xreorderframe</span></a> plugin receives the frames that are inferred and that are skipped and arranges them in the correct order of presentation before forwarding frames downstream.</p>
+<p>Optionally, if less CPU is available on the host, the frames can be scaled to lower resolution (can be scaled to model resolution or nearest resolution that maintains aspect ratio) before submitting to Tracker so as to avoid CPU load of Tracker algorithm that requires to work on larger areas if not scaled down.</p>
+<p>The frames in the correct order are presented to <a class="reference internal" href="common_plugins.html#vvas-xtracker"><span class="std std-ref">vvas_xtracker</span></a> plugin to track the objects that were detected by inference.
+Tracker waits for object to be found in multiple frames before assigning Tracker Id to it and attaches the tracked bounding box information in the GstBuffer metadata.</p>
+<p>If video resolution is scaled down for tracker, metaaffixer plugin should be added to the pipeline to scale the bounding box co-ordinates received from tracker to original video resolution.
+Metaaffixer scales and updates the Inference metadata to original video resolution and pushes the frames downstream.</p>
+<p>Downstream plugins read the bounding box information of the objects from inference metadata attached to the GstBuffer and does further processing.</p>
+<p>The <a class="reference internal" href="common_plugins.html#vvas-xskipframe"><span class="std std-ref">vvas_xskipframe</span></a>, <a class="reference internal" href="common_plugins.html#vvas-xreorderframe"><span class="std std-ref">vvas_xreorderframe</span></a> and <a class="reference internal" href="common_plugins.html#vvas-xtracker"><span class="std std-ref">vvas_xtracker</span></a> are multi-stream aware and supports buffers of multiple streams on their sink and source GstPads.</p>
+<div class="section" id="input-and-output">
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<p>Accepts buffers with NV12 color formats on sink and source pads.</p>
+</div>
+<div class="section" id="control-parameters-and-plugin-properties">
+<h2>Control Parameters and Plugin Properties<a class="headerlink" href="#control-parameters-and-plugin-properties" title="Permalink to this heading">¶</a></h2>
+<p>The following table lists the GStreamer plugin properties supported by the vvas_xtracker plugin.</p>
+<p>Table 8: vvas_xtracker plugin properties</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 13%" />
+<col style="width: 15%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>tracker-algo</p></td>
+<td><p>Enum</p></td>
+<td><p>0, 1, 2</p></td>
+<td><p>0</p></td>
+<td><p>Tracker algorithm to
+use</p>
+<p>0 - Tracker IOU
+algorithm</p>
+<p>1 - Tracker MOSSE
+algorithm</p>
+<p>2 - Tracker KCF
+algorithm</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>IOU-with-color</p></td>
+<td><p>Boolean</p></td>
+<td><p>0 or 1</p></td>
+<td><p>0</p></td>
+<td><p>To use color
+information during
+matching when tracker
+algo is IOU</p>
+<p>0 - No color
+information for
+matching</p>
+<p>1 - Use color
+information for
+matching</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>obj-match-color-space</p></td>
+<td><p>Enum</p></td>
+<td><p>0, 1</p></td>
+<td><p>1</p></td>
+<td><p>Color space to use
+for objects matching</p>
+<p>0 - RGB color space
+for object match</p>
+<p>1 - HSV color space
+for object match</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>feature-length</p></td>
+<td><p>Enum</p></td>
+<td><p>22, 31</p></td>
+<td><p>31</p></td>
+<td><p>Object feature length
+(required only for
+KCF algorithm)</p></td>
+</tr>
+<tr class="row-even"><td><p>search-scale</p></td>
+<td><p>Enum</p></td>
+<td><p>0, 1, 2</p></td>
+<td><p>0</p></td>
+<td><p>Scales to verify for
+object localization</p>
+<p>0 - Search all scales
+(up, down and same
+scale)</p>
+<p>1 - Search up and
+same scale</p>
+<p>2 - Search down and
+same scale</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>inactive-wait-
+interval</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to
+4294967295</p></td>
+<td><p>200</p></td>
+<td><p>Number of frames
+to wait before
+stopping tracking of
+inactive objects</p></td>
+</tr>
+<tr class="row-even"><td><p>min-object-width</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to
+4294967295</p></td>
+<td><p>20</p></td>
+<td><p>Minimum object width
+in pixels to consider
+for tracking</p></td>
+</tr>
+<tr class="row-odd"><td><p>min-object-height</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to
+4294967295</p></td>
+<td><p>60</p></td>
+<td><p>Minimum object height
+in pixels to consider
+for tracking</p></td>
+</tr>
+<tr class="row-even"><td><p>max-object-width</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to
+4294967295</p></td>
+<td><p>200</p></td>
+<td><p>Objects width above
+maximum width are not
+considered for
+tracking</p></td>
+</tr>
+<tr class="row-odd"><td><p>max-object-height</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to
+4294967295</p></td>
+<td><p>360</p></td>
+<td><p>Objects height above
+maximum height are
+not considered for
+tracking</p></td>
+</tr>
+<tr class="row-even"><td><p>num-frames-confidence</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to
+4294967295</p></td>
+<td><p>3</p></td>
+<td><p>Number of times
+object need to be
+detected continuously
+to consider for
+tracking</p></td>
+</tr>
+<tr class="row-odd"><td><p>match-search-region</p></td>
+<td><p>Float</p></td>
+<td><p>1.0 to 2.0</p></td>
+<td><p>1.5</p></td>
+<td><p>Object search region
+during detection for
+IOU based matching</p></td>
+</tr>
+<tr class="row-even"><td><p>relative-search-
+region</p></td>
+<td><p>Float</p></td>
+<td><p>1.0 to 2.5</p></td>
+<td><p>1.5</p></td>
+<td><p>Object search region
+with respect to
+detection coordinates</p></td>
+</tr>
+<tr class="row-odd"><td><p>correlation-threshold</p></td>
+<td><p>Float</p></td>
+<td><p>0.1 to 1.0</p></td>
+<td><p>0.7</p></td>
+<td><p>Object correlation
+threshold value for
+matching</p></td>
+</tr>
+<tr class="row-even"><td><p>correlation-weight</p></td>
+<td><p>Float</p></td>
+<td><p>0.0 to 1.0</p></td>
+<td><p>0.7</p></td>
+<td><p>Weightage for
+correlation value</p></td>
+</tr>
+<tr class="row-odd"><td><p>overlap-threshold</p></td>
+<td><p>Float</p></td>
+<td><p>0.0 to 1.0</p></td>
+<td><p>0</p></td>
+<td><p>Object overlap
+threshold to consider
+for matching</p></td>
+</tr>
+<tr class="row-even"><td><p>overlap-weight</p></td>
+<td><p>Float</p></td>
+<td><p>0.0 to 1.0</p></td>
+<td><p>0.2</p></td>
+<td><p>Weightage for
+overlap value</p></td>
+</tr>
+<tr class="row-odd"><td><p>scale-change-
+threshold</p></td>
+<td><p>Float</p></td>
+<td><p>0.001 to 1.0</p></td>
+<td><p>0.7</p></td>
+<td><p>Maximum object scale
+change threshold to
+consider for matching.
+Value of 1 means
+double the scale</p></td>
+</tr>
+<tr class="row-even"><td><p>scale-change-weight</p></td>
+<td><p>Float</p></td>
+<td><p>0.0 to 1.0</p></td>
+<td><p>0.1</p></td>
+<td><p>Weightage for
+change in scale</p></td>
+</tr>
+<tr class="row-odd"><td><p>occlusion-threshold</p></td>
+<td><p>Float</p></td>
+<td><p>0.0 to 1.0</p></td>
+<td><p>0.4</p></td>
+<td><p>Threshold for
+considering object as
+occluded</p></td>
+</tr>
+<tr class="row-even"><td><p>confidence-score-
+threshold</p></td>
+<td><p>Float</p></td>
+<td><p>0.0 to 1.0</p></td>
+<td><p>0.25</p></td>
+<td><p>Confidence score of
+tracker to be
+consider for tracking
+objects</p></td>
+</tr>
+<tr class="row-odd"><td><p>skip-inactive-objs</p></td>
+<td><p>Boolean</p></td>
+<td><p>0 or 1</p></td>
+<td><p>0</p></td>
+<td><p>Whether to mark the
+inactive tracker
+objects to be skipped
+by downstream plugins
+or not.</p>
+<p>0 - Inactive objects
+are processed by
+downstream plugins</p>
+<p>1 - Inactive objects
+marked not to be
+processed by
+downstream plugins</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="example-pipeline">
+<h2>Example Pipeline<a class="headerlink" href="#example-pipeline" title="Permalink to this heading">¶</a></h2>
+<p>The following is an example pipeline to demonstrate usage of vvas_xtracker plugin with inference performed every 6th frame.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=cars_1.264 ! \
+h264parse ! queue ! \
+omxh264dec internal-entropy-buffers=2 ! \
+queue ! \
+vvas_xfunnel name=xfunnel_0_0 ! \
+vvas_xskipframe name=skip_0_0 infer-interval=6 ! \
+vvas_xinfer preprocess-config=kernel_preprocessor_dev0_yolov3_voc_tf.json infer-config=kernel_yolov3_voc_tf.json name=infer ! \
+vvas_xreorderframe name=reorder_0_0 ! \
+tee name=t_0_0 ! \
+queue max-size-bytes=0 max-size-buffers=1 max-size-time=0 ! \
+vvas_xabrscaler xclbin-location=&quot;/run/media/mmcblk0p1/dpu.xclbin&quot; kernel-name=image_processing:{image_processing_1} avoid-output-copy=true ! \
+video/x-raw, width=416, height=416, format=NV12 ! \
+vvas_xtracker skip-inactive-objs=true min-object-width=20 max-object-width=1900 min-object-height=20 max-object-height=1000 match-search-region=1 num-frames-confidence=2 ! \
+ma_1_0.sink_master vvas_xmetaaffixer name=ma_1_0 sync=false ma_1_0.src_master ! \
+fakesink ma_1_0.src_slave_0 ! \
+queue max-size-bytes=0 max-size-buffers=1 max-size-time=0 ! \
+vvas_xdefunnel name=xdefunnel_0_0 \
+skip_0_0. ! reorder_0_0. \
+t_0_0. ! \
+queue max-size-bytes=0 max-size-buffers=1 max-size-time=0 ! \
+ma_1_0.sink_slave_0 xdefunnel_0_0. ! \
+queue min-threshold-buffers=4 ! \
+vvas_xmetaconvert config-location=metaconvert_config.json ! \
+vvas_xoverlay ! \
+queue ! \
+fpsdisplaysink name=&quot;fpssink0&quot; video-sink=\&quot;fakesink async=false sync=false\&quot; text-overlay=false sync=false -v
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

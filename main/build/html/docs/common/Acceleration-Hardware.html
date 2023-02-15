@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>Acceleration Kernels &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+  <title>Acceleration Kernels &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
@@ -31,10 +31,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Platforms And Applications" href="../Embedded/platforms_and_applications.html" />
+    <link rel="next" title="Adding new model in VVAS" href="adding_new_model.html" />
     <link rel="prev" title="Acceleration Software Library Development Guide" href="Acceleration-Software-Library-Development.html" /> 
 </head>
 
@@ -51,7 +52,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.0
+                3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -67,42 +68,37 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">Meta Data</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">For Advanced Developers</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">VVAS For Advanced Developers</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Acceleration-Software-Library-Development.html">Acceleration s/w Library Developement Guide</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration H/W Kernels</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#building-kernels">Building Kernels</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#multiscaler-kernel">Multiscaler Kernel</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#image-processing-kernel">Image Processing Kernel</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#kernel-configuration">Kernel Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#steps-to-build-kernel">Steps to Build Kernel</a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="adding_new_model.html">Add support for new models in VVAS</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="debug_support.html">VVAS Debug Support</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/DC_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../DC/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
         </div>
@@ -143,13 +139,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <li><p>Make &lt;kernel name&gt;.</p></li>
 </ol>
 </div>
-<div class="section" id="multiscaler-kernel">
-<span id="id1"></span><h2>Multiscaler Kernel<a class="headerlink" href="#multiscaler-kernel" title="Permalink to this heading">¶</a></h2>
-<p>Multiscaler Kernel is capable of hardware accelerated resizing, color space conversion and cropping of region of interest in a frame. VVAS releases full HLS source code of the Multiscaler 2.0 IP/Kernel.</p>
+<div class="section" id="image-processing-kernel">
+<span id="id1"></span><h2>Image Processing Kernel<a class="headerlink" href="#image-processing-kernel" title="Permalink to this heading">¶</a></h2>
+<p>Image-processing Kernel is capable of hardware accelerated resizing, color space conversion and cropping of region of interest in a frame. VVAS releases full HLS source code of the Image-processing 2.0 IP/Kernel.</p>
 <div class="section" id="kernel-configuration">
 <h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this heading">¶</a></h3>
-<p>Multiscaler IP is highly configurable and supports several features. All applications may not need all the features. Keeping all the features enabled results in lots of FPGA resources being consumed. Hence it is recommended to enable only those features that are required for your applications. The multiscaler kernel configuration can be edited by changing the <cite>&lt;VVAS_SOURCES&gt;/vvas-accel-hw/multiscaler/v_multi_scaler_config.h</cite> file. The parameters in the following table can be changed as required.</p>
-<p>Table 14: Multiscaler Kernel Configuration</p>
+<p>Image-processing IP is highly configurable and supports several features. All applications may not need all the features. Keeping all the features enabled results in lots of FPGA resources being consumed. Hence it is recommended to enable only those features that are required for your applications. The image-processing kernel configuration can be edited by changing the <cite>&lt;VVAS_SOURCES&gt;/vvas-accel-hw/image_processing/image_processing_config.h</cite> file. The parameters in the following table can be changed as required.</p>
+<p>Table 14: Image-Processing Kernel Configuration</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 33%" />
@@ -304,10 +300,10 @@ format support</p></td>
 <div class="section" id="steps-to-build-kernel">
 <h3>Steps to Build Kernel<a class="headerlink" href="#steps-to-build-kernel" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
-<li><p>Source the Vitis HLS 2022.1 software.</p></li>
-<li><p>Edit the makefile to point the PLATFORM_FILE, <cite>(.xpfm)</cite> file, to any Vitis 2022.1 platform (tested using the ZCU104 base platform).</p></li>
-<li><p>Edit the options in the multiscaler/v_multi_scaler_config.h.</p></li>
-<li><p>Make v_multi_scaler.xo. The generated output will be in the xo folder as xo/ v_multi_scaler.xo.</p></li>
+<li><p>Source the Vitis HLS 2022.2 software.</p></li>
+<li><p>Edit the makefile to point the PLATFORM_FILE, <cite>(.xpfm)</cite> file, to any Vitis 2022.2 platform (tested using the ZCU104 base platform).</p></li>
+<li><p>Edit the options in the image_processing/image_processing_config.h.</p></li>
+<li><p>Make image_processing.xo. The generated output will be in the xo folder as xo/ image_processing.xo.</p></li>
 </ol>
 </div>
 </div>
@@ -328,14 +324,14 @@ format support</p></td>
 				  
 				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="Acceleration-Software-Library-Development.html" class="btn btn-neutral float-left" title="Acceleration Software Library Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../Embedded/platforms_and_applications.html" class="btn btn-neutral float-right" title="Platforms And Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="adding_new_model.html" class="btn btn-neutral float-right" title="Adding new model in VVAS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
-      <span class="lastupdated">Last updated on December 28, 2022.
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
       </span></p>
   </div>
 

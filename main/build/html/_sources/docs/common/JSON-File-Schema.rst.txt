@@ -1,5 +1,5 @@
 ..
-   Copyright 2021 Xilinx, Inc.
+   Copyright 2021-2022 Xilinx, Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,148 +20,106 @@ Configuration file used in VVAS Infrastructure plugins has to be defined in json
 
 Table 15: Root JSON Object Members
 
-+-------------+---------------+---------------------------+---------------------+--------------------+
-|             |               |                           |                     |                    |
-| **JSONKey** | **ValueType** | **Mandatory or Optional** |   **Default Value** |   **Description**  |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |                    |
-+=============+===============+===========================+=====================+====================+
-|    xclb     |    String     |    Optional               |    NULL             | Location of        |
-| in-location |               |                           |                     | the xclbin         |
-|             |               |                           |                     | to program         |
-|             |               |                           |                     | the FPGA.          |
-|             |               |                           |                     | In PCIe            |
-|             |               |                           |                     | platforms,         |
-|             |               |                           |                     | the XRM            |
-|             |               |                           |                     | chooses the        |
-|             |               |                           |                     | device to          |
-|             |               |                           |                     | download           |
-|             |               |                           |                     | the xclbin         |
-|             |               |                           |                     | based on           |
-|             |               |                           |                     | processing         |
-|             |               |                           |                     | load.              |
-+-------------+---------------+---------------------------+---------------------+--------------------+
-|    vvas-l   |    String     |    Optional               |    /usr/lib         | The VVAS           |
-| ibrary-repo |               |                           |                     | library            |
-|             |               |                           |                     | repository         |
-|             |               |                           |                     | path that          |
-|             |               |                           |                     | looks for          |
-|             |               |                           |                     | a                  |
-|             |               |                           |                     | cceleration        |
-|             |               |                           |                     | software           |
-|             |               |                           |                     | libraries          |
-|             |               |                           |                     | using the          |
-|             |               |                           |                     | VVAS               |
-|             |               |                           |                     | GStreamer          |
-|             |               |                           |                     | plug-in.           |
-+-------------+---------------+---------------------------+---------------------+--------------------+
-|    e        |    Enum       |                           |                     | The                |
-| lement-mode |               |   Mandatory               |                     | GStreamer          |
-|             |               |                           |                     | uses the           |
-|             |               |                           |                     | element            |
-|             |               |                           |                     | mode to            |
-|             |               |                           |                     | operate.           |
-|             |               |                           |                     | Based on           |
-|             |               |                           |                     | re                 |
-|             |               |                           |                     | quirements,        |
-|             |               |                           |                     | you must           |
-|             |               |                           |                     | choose one         |
-|             |               |                           |                     | of the             |
-|             |               |                           |                     | following          |
-|             |               |                           |                     | modes:             |
-|             |               |                           |                     |                    |
-|             |               |                           |                     | -  P               |
-|             |               |                           |                     | assthrough:        |
-|             |               |                           |                     |       In           |
-|             |               |                           |                     |       this         |
-|             |               |                           |                     |       mode,        |
-|             |               |                           |                     |       the          |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |     element        |
-|             |               |                           |                     |       does         |
-|             |               |                           |                     |       not          |
-|             |               |                           |                     |       alter        |
-|             |               |                           |                     |       the          |
-|             |               |                           |                     |       input        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |     buffer.        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     | -  Inplace:        |
-|             |               |                           |                     |       In           |
-|             |               |                           |                     |       this         |
-|             |               |                           |                     |       mode,        |
-|             |               |                           |                     |       the          |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |     element        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |      alters        |
-|             |               |                           |                     |       the          |
-|             |               |                           |                     |       input        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |      buffer        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |     instead        |
-|             |               |                           |                     |       of           |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |   producing        |
-|             |               |                           |                     |       new          |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |      output        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |    buffers.        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     | -                  |
-|             |               |                           |                     |  Transform:        |
-|             |               |                           |                     |       In           |
-|             |               |                           |                     |       this         |
-|             |               |                           |                     |       mode,        |
-|             |               |                           |                     |       the          |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |     element        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |    produces        |
-|             |               |                           |                     |       an           |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |      output        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |      buffer        |
-|             |               |                           |                     |       for          |
-|             |               |                           |                     |       each         |
-|             |               |                           |                     |       input        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     |     buffer.        |
-+-------------+---------------+---------------------------+---------------------+--------------------+
-|    kernels  |    Array of   |                           |    None             | Array of           |
-|             |    Objects    |   Mandatory               |                     | kernel             |
-|             |               |                           |                     | objects.           |
-|             |               |                           |                     | Each kernel        |
-|             |               |                           |                     | object             |
-|             |               |                           |                     | provides           |
-|             |               |                           |                     | information        |
-|             |               |                           |                     | about an           |
-|             |               |                           |                     | VVAS video         |
-|             |               |                           |                     | library            |
-|             |               |                           |                     | con                |
-|             |               |                           |                     | figuration.        |
-|             |               |                           |                     |                    |
-|             |               |                           |                     | Minimum            |
-|             |               |                           |                     | value: 1           |
-|             |               |                           |                     |                    |
-|             |               |                           |                     | Maximum            |
-|             |               |                           |                     | value: 2           |
-|             |               |                           |                     |                    |
-|             |               |                           |                     | For                |
-|             |               |                           |                     | information        |
-|             |               |                           |                     | on object          |
-|             |               |                           |                     | members,           |
-|             |               |                           |                     | see `Table         |
-|             |               |                           |                     | 16: Kernel         |
-|             |               |                           |                     | JSON Object        |
-|             |               |                           |                     | Memb               |
-|             |               |                           |                     | ers <#_book        |
-|             |               |                           |                     | mark25>`__.        |
-+-------------+-------------+-----------------------------+---------------------+--------------------+
++-------------+---------------+---------------------------+---------------------+-----------------------+
+|             |               |                           |                     |                       |
+| **JSONKey** | **ValueType** | **Mandatory or Optional** |   **Default Value** |   **Description**     |
+|             |               |                           |                     |                       |
+|             |               |                           |                     |                       |
+|             |               |                           |                     |                       |
++=============+===============+===========================+=====================+=======================+
+| xclbin-     |    String     |    Optional               |    NULL             | Location of           |
+| location    |               |                           |                     | the xclbin            |
+|             |               |                           |                     | to program            |
+|             |               |                           |                     | the FPGA.             |
+|             |               |                           |                     | In PCIe               |
+|             |               |                           |                     | platforms,            |
+|             |               |                           |                     | the XRM               |
+|             |               |                           |                     | chooses the           |
+|             |               |                           |                     | device to             |
+|             |               |                           |                     | download              |
+|             |               |                           |                     | the xclbin            |
+|             |               |                           |                     | based on              |
+|             |               |                           |                     | processing            |
+|             |               |                           |                     | load.                 |
++-------------+---------------+---------------------------+---------------------+-----------------------+
+| vvas-       |    String     |    Optional               |    /usr/lib         | The VVAS              |
+| library-    |               |                           |                     | library               |
+| repo        |               |                           |                     | repository            |
+|             |               |                           |                     | path that             |
+|             |               |                           |                     | looks for             |
+|             |               |                           |                     | acceleration          |
+|             |               |                           |                     | software              |
+|             |               |                           |                     | libraries             |
+|             |               |                           |                     | using the             |
+|             |               |                           |                     | VVAS                  |
+|             |               |                           |                     | GStreamer             |
+|             |               |                           |                     | plug-in.              |
++-------------+---------------+---------------------------+---------------------+-----------------------+
+| element-    |    String     |                           |                     | The                   |
+| mode        |               |   Mandatory               |                     | GStreamer             |
+|             |               |                           |                     | uses the              |
+|             |               |                           |                     | element               |
+|             |               |                           |                     | mode to               |
+|             |               |                           |                     | operate.              |
+|             |               |                           |                     | Based on              |
+|             |               |                           |                     | requirements          |
+|             |               |                           |                     | you must              |
+|             |               |                           |                     | choose one            |
+|             |               |                           |                     | of the                |
+|             |               |                           |                     | following             |
+|             |               |                           |                     | modes:                |
+|             |               |                           |                     |                       |
+|             |               |                           |                     | -  Passthrough:       |
+|             |               |                           |                     |     In this           |
+|             |               |                           |                     |     mode, the         |
+|             |               |                           |                     |     element           |
+|             |               |                           |                     |     does not          |
+|             |               |                           |                     |     alter the         |
+|             |               |                           |                     |     input             |
+|             |               |                           |                     |     buffer.           |
+|             |               |                           |                     |                       |
+|             |               |                           |                     | -  Inplace:           |
+|             |               |                           |                     |     In this           |
+|             |               |                           |                     |     mode, the         |
+|             |               |                           |                     |     element           |
+|             |               |                           |                     |     alters            |
+|             |               |                           |                     |     the input         |
+|             |               |                           |                     |     buffer            |
+|             |               |                           |                     |     instead           |
+|             |               |                           |                     |     of producing      |
+|             |               |                           |                     |     new output        |
+|             |               |                           |                     |     buffers.          |
+|             |               |                           |                     |                       |
+|             |               |                           |                     | -  Transform:         |
+|             |               |                           |                     |     In this           |
+|             |               |                           |                     |     mode, the         |
+|             |               |                           |                     |     element           |
+|             |               |                           |                     |     produces          |
+|             |               |                           |                     |     an ouput          |
+|             |               |                           |                     |     buffer fo         |
+|             |               |                           |                     |     each input        |
+|             |               |                           |                     |     buffer.           |
++-------------+---------------+---------------------------+---------------------+-----------------------+
+|    kernel   |  Kernel       |                           |    None             | A Kernel JSON         |
+|             |  JSON         |   Mandatory               |                     | object                |
+|             |  Object       |                           |                     | provides              |
+|             |               |                           |                     | information           |
+|             |               |                           |                     | about an              |
+|             |               |                           |                     | VVAS video            |
+|             |               |                           |                     | library               |
+|             |               |                           |                     | configuration.        |
+|             |               |                           |                     |                       |
+|             |               |                           |                     | For                   |
+|             |               |                           |                     | information           |
+|             |               |                           |                     | on object             |
+|             |               |                           |                     | members,              |
+|             |               |                           |                     | see :ref:`Kernel      |
+|             |               |                           |                     | JSON Object           |
+|             |               |                           |                     | Members               |
+|             |               |                           |                     | <kernel-json-object>` |
++-------------+---------------+---------------------------+---------------------+-----------------------+
+
+.. _kernel-json-object:
 
 Table 16: Kernel JSON Object Members
 
@@ -172,8 +130,8 @@ Table 16: Kernel JSON Object Members
 |             |               |                           |                   |                 |
 |             |               |                           |                   |                 |
 +=============+===============+===========================+===================+=================+
-| l           |    String     |                           |    None           | The name of     |
-| ibrary-name |               |   Mandatory               |                   | the VVAS        |
+| library-    |    String     |                           |    None           | The name of     |
+| name        |               |   Mandatory               |                   | the VVAS        |
 |             |               |                           |                   | video           |
 |             |               |                           |                   | library         |
 |             |               |                           |                   | loaded by       |
@@ -202,44 +160,46 @@ Table 16: Kernel JSON Object Members
 |             |               |                           |                   | >:<instance     |
 |             |               |                           |                   | name>           |
 +-------------+---------------+---------------------------+-------------------+-----------------+
-|    config   |    Object     |    Optional               |    None           |    Holds        |
-|             |               |                           |                   |    the          |
-|             |               |                           |                   |    co           |
-|             |               |                           |                   | nfiguration     |
-|             |               |                           |                   |    specific     |
-|             |               |                           |                   |    to the       |
-|             |               |                           |                   |    VVAS         |
-|             |               |                           |                   |    video        |
-|             |               |                           |                   |    library.     |
-|             |               |                           |                   |    The VVAS     |
-|             |               |                           |                   |                 |
-|             |               |                           |                   |   GStreamer     |
-|             |               |                           |                   |    plug-ins     |
-|             |               |                           |                   |    do not       |
-|             |               |                           |                   |    parse        |
-|             |               |                           |                   |    this         |
-|             |               |                           |                   |    JSON         |
-|             |               |                           |                   |    object,      |
-|             |               |                           |                   |    instead      |
-|             |               |                           |                   |    it is        |
-|             |               |                           |                   |    sent to      |
-|             |               |                           |                   |    the          |
-|             |               |                           |                   |    video        |
-|             |               |                           |                   |    library.     |
+| kernel-     |   String      |    Optional               |  shared           | Mode in which   |
+| access-     |               |                           |                   | IP/Kernel is    |
+| mode        |               |                           |                   | to be accessed. |
+|             |               |                           |                   | "shared" or     |
+|             |               |                           |                   | "exclusive"     |
 +-------------+---------------+---------------------------+-------------------+-----------------+
-|             |    Object     |                           |    None           |    Contains     |
-| soft-kernel |               |   Mandatory               |                   |                 |
-|             |               |    if the                 |                   | soft-kernel     |
-|             |               |    kernel                 |                   |    specific     |
-|             |               |    library                |                   |    i            |
-|             |               |    is                     |                   | nformation.     |
-|             |               |    written                |                   |    This         |
-|             |               |    for the                |                   |    JSON         |
-|             |               |    soft                   |                   |    object       |
-|             |               |    kernel.                |                   |    is only      |
-|             |               |                           |                   |    valid        |
-|             |               |                           |                   |    for PCIe     |
-|             |               |                           |                   |    based        |
+|    config   |    Object     |    Optional               |    None           | Holds the       |
+|             |               |                           |                   | configuration   |
+|             |               |                           |                   | specific        |
+|             |               |                           |                   | to the VVAS     |
+|             |               |                           |                   | video           |
+|             |               |                           |                   | library.        |
 |             |               |                           |                   |                 |
-|             |               |                           |                   |  platforms.     |
+|             |               |                           |                   | The VVAS        |
+|             |               |                           |                   | GStreamer       |
+|             |               |                           |                   | plug-ins        |
+|             |               |                           |                   | do not          |
+|             |               |                           |                   | parse           |
+|             |               |                           |                   | this            |
+|             |               |                           |                   | JSON            |
+|             |               |                           |                   | object,         |
+|             |               |                           |                   | instead         |
+|             |               |                           |                   | it is           |
+|             |               |                           |                   | sent to         |
+|             |               |                           |                   | the             |
+|             |               |                           |                   | video           |
+|             |               |                           |                   | library.        |
++-------------+---------------+---------------------------+-------------------+-----------------+
+| soft-kernel |    Object     |                           |    None           | Contains        |
+|             |               |   Mandatory               |                   | soft-           |
+|             |               |   ( if the kernel         |                   | kernel          |
+|             |               |   library is              |                   | specific        |
+|             |               |   written for             |                   | information.    |
+|             |               |   the soft kernel. )      |                   |                 |
+|             |               |                           |                   | This            |
+|             |               |                           |                   | JSON            |
+|             |               |                           |                   | object          |
+|             |               |                           |                   | is only         |
+|             |               |                           |                   | valid           |
+|             |               |                           |                   | for PCIe        |
+|             |               |                           |                   | based           |
+|             |               |                           |                   | platforms.      |
 +-------------+---------------+---------------------------+-------------------+-----------------+

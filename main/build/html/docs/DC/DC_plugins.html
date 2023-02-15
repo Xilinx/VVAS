@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms &mdash; Vitis™ Video Analytics SDK 2.0 documentation</title>
+  <title>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
@@ -31,11 +31,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Tutorials for PCIe/Data Center platforms" href="Tutorials/Tutorials.html" />
-    <link rel="prev" title="Alveo U30 Platform" href="u30_platform/u30_platform.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -51,7 +50,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.0
+                3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -67,51 +66,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">Meta Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="platforms_and_applications.html">Platforms &amp; Applications</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Plugins</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#vvas-xvcudec">vvas_xvcudec</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#input-and-output">Input and Output</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#control-parameters-and-plug-in-properties">Control Parameters and Plug-in Properties</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#example-pipelines">Example Pipelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#vvas-xvcuenc">vvas_xvcuenc</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Input and Output</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id6">Control Parameters and Plug-in Properties</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#id7">Example Pipelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#vvas-xlookahead">vvas_xlookahead</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id9">Input and Output</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id10">Control Parameters and Plug-in Properties</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#id11">Example Pipelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#vvas-xabrscaler">vvas_xabrscaler</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Tutorials/Tutorials.html">Tutorials</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Other Versions</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.1/build/html/index.html">1.1</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://xilinx.github.io/VVAS/1.0/build/html/index.html">1.0</a></li>
 </ul>
 
         </div>
@@ -140,31 +112,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="vvas-gstreamer-plug-ins-for-pcie-data-center-platforms">
 <h1>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms<a class="headerlink" href="#vvas-gstreamer-plug-ins-for-pcie-data-center-platforms" title="Permalink to this heading">¶</a></h1>
-<p>VVAS 2.0 Release supports below mentioned plug-ins that are needed for PCIe/Data Center platforms for Transcoding solutions:</p>
+<p>VVAS 3.0 Release supports below mentioned plug-ins that are needed for PCIe/Data Center platforms for supporting Machine Learning solutions:</p>
 <ol class="arabic simple">
-<li><p>VCU Decoder (<a class="reference internal" href="#vvas-xvcudec"><span class="std std-ref">vvas_xvcudec</span></a>)</p></li>
-<li><p>VCU Encoder (<a class="reference internal" href="#vvas-xvcuenc"><span class="std std-ref">vvas_xvcuenc</span></a>)</p></li>
-<li><p>Lookahead (<a class="reference internal" href="#vvas-xlookahead"><span class="std std-ref">vvas_xlookahead</span></a>)</p></li>
+<li><p>Video Decoder (<a class="reference internal" href="#vvas-xvideodec"><span class="std std-ref">vvas_xvideodec</span></a>)</p></li>
 <li><p>ABR Scaler (<a class="reference internal" href="../common/common_plugins.html#vvas-xabrscaler"><span class="std std-ref">vvas_xabrscaler</span></a>)</p></li>
 </ol>
 <p>Following sections details about each plugin.</p>
-<div class="section" id="vvas-xvcudec">
-<span id="id1"></span><h2>vvas_xvcudec<a class="headerlink" href="#vvas-xvcudec" title="Permalink to this heading">¶</a></h2>
-<p>In Zynq UltraScale+ MPSoC devices, there is an IP, VCU, for video decoder and encoder. This IP supports encoding and decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a> for more information on the Xilinx VCU block. This guide provides details about this IP and how to configure it.</p>
-<p>vvas_xvcudec plugin is provided to control the VCU hardened IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in
-<a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a>. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vcudec">vvas_xvcudec source code</a></p>
+<div class="section" id="vvas-xvideodec">
+<span id="id1"></span><h2>vvas_xvideodec<a class="headerlink" href="#vvas-xvideodec" title="Permalink to this heading">¶</a></h2>
+<p>In Versal devices, there is an IP, VDU, for video decoder. This IP supports decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a> for more information on the Xilinx VDU block. This guide provides details about this IP and how to configure it.</p>
+<p>vvas_xvideodec plugin is provided to control the VDU hardened IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in
+<a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a>. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vdudec">vvas_xvideodec source code</a></p>
 <div class="figure align-default">
-<img alt="../../_images/vcu_decoder.png" src="../../_images/vcu_decoder.png" />
+<img alt="../../_images/video_decoder.png" src="../../_images/video_decoder.png" />
 </div>
 <div class="section" id="input-and-output">
 <h3>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h3>
-<p>This plugin supports H264 and HEVC encoded streams of various profile, level values as input. For complete list of supported profiles and levels, please refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a>
+<p>This plugin supports H264 and HEVC encoded streams of various profile, level values as input. For complete list of supported profiles and levels, please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a>
 The native output of this plugin is NV12 format. For any other desired output format, it should be software-converted and will affect performance.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
 <h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h3>
-<p>The following table lists the GStreamer plug-in properties supported by the vvas_xvcudec plug-in.</p>
-<p>Table 1: vvas_xvcudec Plug-in Properties</p>
+<p>The following table lists the GStreamer plug-in properties supported by the vvas_xvideodec plug-in.</p>
+<p>Table 1: vvas_xvideodec Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 26%" />
@@ -212,6 +182,24 @@ only in PCIe/
 Data Center
 platforms.</p></td>
 </tr>
+<tr class="row-odd"><td><p>i-frame-only</p></td>
+<td><p>Boolean</p></td>
+<td><p>true/false</p></td>
+<td><p>false</p></td>
+<td><p>Whether to
+decode ‘I’ frames
+only or not from
+the given input
+encoded stream</p></td>
+</tr>
+<tr class="row-even"><td><p>instance-id</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to 1</p></td>
+<td><p>0</p></td>
+<td><p>Select one of
+the VDU hardware
+IP instances</p></td>
+</tr>
 <tr class="row-odd"><td><p>disable-hdr10-sei</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
@@ -222,16 +210,7 @@ HDR10/10+
 SEI messages or
 not</p></td>
 </tr>
-<tr class="row-even"><td><p>in-mem-bank</p></td>
-<td><p>Unsigned
-Integer</p></td>
-<td><p>0 - 65535</p></td>
-<td><p>0</p></td>
-<td><p>VVAS input memory
-bank to allocate
-memory</p></td>
-</tr>
-<tr class="row-odd"><td><p>interpolate-timestamps</p></td>
+<tr class="row-even"><td><p>interpolate-timestamps</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>false</p></td>
@@ -240,7 +219,7 @@ interpolate
 timestamps
 or not</p></td>
 </tr>
-<tr class="row-even"><td><p>kernel-name</p></td>
+<tr class="row-odd"><td><p>kernel-name</p></td>
 <td><p>String</p></td>
 <td><p>N/A</p></td>
 <td><p>decoder:{decoder_1}</p></td>
@@ -250,7 +229,7 @@ instance
 separated
 by a colon.</p></td>
 </tr>
-<tr class="row-odd"><td><p>low-latency</p></td>
+<tr class="row-even"><td><p>low-latency</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>false</p></td>
@@ -258,7 +237,7 @@ by a colon.</p></td>
 low latency
 or not</p></td>
 </tr>
-<tr class="row-even"><td><p>num-entropy-buf</p></td>
+<tr class="row-odd"><td><p>num-entropy-buf</p></td>
 <td><p>Unsigned
 Integer</p></td>
 <td><p>2 - 10</p></td>
@@ -266,26 +245,7 @@ Integer</p></td>
 <td><p>Number of
 entropy buffers</p></td>
 </tr>
-<tr class="row-odd"><td><p>out-mem-bank</p></td>
-<td><p>Unsigned int</p></td>
-<td><p>0 - 65535</p></td>
-<td><p>0</p></td>
-<td><p>VVAS o/p memory
-bank to allocate
-memory</p></td>
-</tr>
-<tr class="row-even"><td><p>reservation-id</p></td>
-<td><p>Unsigned
-Integer64</p></td>
-<td><p>0-
-184467440
-73709551615
-12=&gt;12 taps</p></td>
-<td><p>0</p></td>
-<td><p>Resource Pool
-Reservation id</p></td>
-</tr>
-<tr class="row-odd"><td><p>splitbuff-mode</p></td>
+<tr class="row-even"><td><p>splitbuff-mode</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>false</p></td>
@@ -293,7 +253,7 @@ Reservation id</p></td>
 splitbuff mode or
 not</p></td>
 </tr>
-<tr class="row-even"><td><p>xclbin-location</p></td>
+<tr class="row-odd"><td><p>xclbin-location</p></td>
 <td><p>String</p></td>
 <td><p>N/A</p></td>
 <td><p>null</p></td>
@@ -308,622 +268,21 @@ xclbin.</p></td>
 <div class="section" id="example-pipelines">
 <h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
 <p>The following pipeline takes MP4 file with H264 codec as an input and provides raw decoded output in NV12 format. Please refer above table for other parameters and values.</p>
-<p><cite>dev-idx</cite> represents the zero based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_u30 <span class="p">|</span> wc -l
+<p><cite>dev-idx</cite> represents the zero based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N-1 where N can be obtained with below command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_v70 <span class="p">|</span> wc -l
 </pre></div>
 </div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc <span class="nv">location</span><span class="o">=</span>&lt;input compressed H264 stream <span class="k">in</span> MP4 container&gt; <span class="se">\</span>
 ! qtdemux ! h264parse <span class="se">\</span>
-! vvas_xvcudec dev-idx<span class="o">=</span><span class="m">3</span>  avoid-output-copy<span class="o">=</span><span class="nb">false</span> xclbin-location<span class="o">=</span>&lt;xclbin file path&gt; <span class="se">\</span>
+! vvas_xvideodec kernel-name<span class="o">=</span>kernel_vdu_decoder:<span class="o">{</span>kernel_vdu_decoder_0<span class="o">}</span> dev-idx<span class="o">=</span><span class="m">0</span> instance-id<span class="o">=</span><span class="m">0</span> avoid-output-copy<span class="o">=</span><span class="nb">false</span> xclbin-location<span class="o">=</span>&lt;xclbin file path&gt; <span class="se">\</span>
 ! fpsdisplaysink <span class="nv">name</span><span class="o">=</span>fpssink video-sink<span class="o">=</span>fakesink text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="vvas-xvcuenc">
-<span id="id3"></span><h2>vvas_xvcuenc<a class="headerlink" href="#vvas-xvcuenc" title="Permalink to this heading">¶</a></h2>
-<p>In Zynq UltraScale+ MPSoC devices, there is an IP, VCU, for video decoder and encoder. This IP supports encoding and decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a> for more information on the Xilinx VCU block. This guide provides details about this IP and how to configure it.</p>
-<p>vvas_xvcuenc plugin is provided to control the VCU hardened IP for Video Encoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in <a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a></p>
-<div class="figure align-default">
-<img alt="../../_images/vcu_encoder.png" src="../../_images/vcu_encoder.png" />
-</div>
-<p>For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vcuenc">vvas_xvcuenc source code</a></p>
-<div class="section" id="id5">
-<h3>Input and Output<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
-<p>This plug-in takes 8/10 bit raw input in NV12 format and generates H264/H265 Encoded streams. There are several parameters that affect the encoded stream. Details of each parameter are covered in the table below. These parameters are configured using plug-in properties.</p>
-</div>
-<div class="section" id="id6">
-<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
-<p>The following table lists the GStreamer plug-in properties supported by the vvas_xvcuenc plug-in.</p>
-<p>Table 2: vvas_xvcuenc Plug-in Properties</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 3%" />
-<col style="width: 8%" />
-<col style="width: 3%" />
-<col style="width: 10%" />
-<col style="width: 3%" />
-<col style="width: 19%" />
-<col style="width: 3%" />
-<col style="width: 33%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
-<th class="head" colspan="2"><p><strong>Type</strong></p></th>
-<th class="head" colspan="2"><p><strong>Range</strong></p></th>
-<th class="head" colspan="2"><p><strong>Default</strong></p></th>
-<th class="head" colspan="2"><p><strong>Description</strong></p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>aspect-ratio</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0: auto</p>
-<p>1: 4-3</p>
-<p>2: 16-9</p>
-<p>3: none</p>
-</td>
-<td colspan="2"><p>0 (auto)</p></td>
-<td colspan="2"><p>Display aspect ratio of the video
-sequence to be written in SPS/VUI</p></td>
-</tr>
-<tr class="row-odd"><td><p>avc-lowlat</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>Enable AVC low latency flag for H264
-to run multiple cores in
-ultra-low-latency mode.</p></td>
-</tr>
-<tr class="row-even"><td><p>b-frames</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>-1 -
-4294967295</p></td>
-<td colspan="2"><p>-1</p></td>
-<td colspan="2"><p>Number of B-frames between two
-consecutive P-frames. Internally set
-to 0 in case of ultra-low-latency mode,
-2 otherwise if not-configured or
-configured with -1.</p></td>
-</tr>
-<tr class="row-odd"><td><p>constrained-intra-
-prediction</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>If enabled, prediction only uses
-residual data and decoded samples
-from neighbouring coding blocks coded
-using intra prediction modes.
-This property is experimental.</p></td>
-</tr>
-<tr class="row-even"><td><p>control-rate</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0 - disable</p>
-<p>1 - constant</p>
-<p>2 - variable</p>
-<p>3 -low-latency</p>
-</td>
-<td colspan="2"><p>1 (constant)</p></td>
-<td colspan="2"><p>Bitrate control method</p></td>
-</tr>
-<tr class="row-odd"><td><p>cpb-size</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 -
-4294967295</p></td>
-<td colspan="2"><p>2000</p></td>
-<td colspan="2"><p>Coded Picture Buffer as specified
-when control-rate=disable. This
-property is experimental.</p></td>
-</tr>
-<tr class="row-even"><td><p>dependent-slice</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>Specifies whether the additional
-slices are dependent another slice
-segments or regular slices in multiple
-slicesencoding sessions. Used in H.265
-(HEVC) encoding only.</p></td>
-</tr>
-<tr class="row-odd"><td><p>dev-idx</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>0 to 31</p></td>
-<td colspan="2"><p>0</p></td>
-<td colspan="2"><p>Device index. This is valid only in
-PCIe/ Data Center platforms.</p></td>
-</tr>
-<tr class="row-even"><td><p>enable-pipeline</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>Enable buffer pipelining to improve
-performance in non zero-copy use cases</p></td>
-</tr>
-<tr class="row-odd"><td><p>entropy-mode</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0 : CAVLC</p>
-<p>1 : CABAC</p>
-</td>
-<td colspan="2"><p>1 (CABAC)</p></td>
-<td colspan="2"><p>Entropy mode for encoding process
-(only in H264). This property is
-experimental</p></td>
-</tr>
-<tr class="row-even"><td><p>filler-data</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>Enable/Disable Filler Data NAL
-(only in H264). This property is
-experimental</p></td>
-</tr>
-<tr class="row-odd"><td><p>gdr-mode</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0 : disable</p>
-<p>1 : vertical</p>
-<p>2 : horizontal</p>
-</td>
-<td colspan="2"><p>0 (disable)</p></td>
-<td colspan="2"><p>Entropy mode for encoding process
-(only in H264). This property is
-experimental</p></td>
-</tr>
-<tr class="row-even"><td><p>gop-length</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 - 100</p></td>
-<td colspan="2"><p>120</p></td>
-<td colspan="2"><p>Number of all frames in 1 GOP, Must be
-in multiple of (b-frames+1), Distance
-between two consecutive I frames</p></td>
-</tr>
-<tr class="row-odd"><td><p>gop-mode</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0: basic</p>
-<p>1: pyramidal</p>
-<p>2: low-delay-p</p>
-<p>3: low-delay-b</p>
-</td>
-<td colspan="2"><p>0 (basic)</p></td>
-<td colspan="2"><p>Group Of Pictures mode.
-This property is experimental.</p></td>
-</tr>
-<tr class="row-even"><td><p>initial-delay</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 -
-4294967295</p></td>
-<td colspan="2"><p>1000</p></td>
-<td colspan="2"><p>The initial removal delay as specified,
-in the HRD model in msec. Not used when
-control-rate=disable. This property is
-experimental.</p></td>
-</tr>
-<tr class="row-odd"><td colspan="9"><dl>
-<dt>in-mem-bank        | Unsigned    |  0 - 65535    | 0                      | VVAS input memory bank to allocate</dt><dd><div class="line-block">
-<div class="line">Integer     |               |                        | memory.</div>
-<div class="line-block">
-<div class="line">|               |                        |</div>
-</div>
-</div>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="row-even"><td colspan="9"><p>ip-delta           |  Integer    | -1 - 51       | -1                     | IP Delta</p></td>
-</tr>
-<tr class="row-odd"><td><p>kernel-name</p></td>
-<td colspan="2"><p>String</p></td>
-<td colspan="2"><p>N/A</p></td>
-<td colspan="2"><p>encoder:encoder_1</p></td>
-<td colspan="2"><p>Kernel name and instance separated by
-colon.</p></td>
-</tr>
-<tr class="row-even"><td><p>loop-filter-beta-
-offset</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>-6 - 6</p></td>
-<td colspan="2"><p>-1</p></td>
-<td colspan="2"><p>loop filter beta offset</p></td>
-</tr>
-<tr class="row-odd"><td><p>loop-filter-mode</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0: enable</p>
-<p>1: disable</p>
-<p>2: low-delay-p</p>
-<p>3: disable-</p>
-<p>slice-boundary</p>
-</td>
-<td colspan="2"><p>0 (enable)</p></td>
-<td colspan="2"><p>Enable or disable the deblocking
-filter. This property is experimental.</p></td>
-</tr>
-<tr class="row-even"><td><p>loop-filter-tc-
-offset</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>-6 - 6</p></td>
-<td colspan="2"><p>-1</p></td>
-<td colspan="2"><p>loop filter tc offset</p></td>
-</tr>
-<tr class="row-odd"><td><p>max-bitrate</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 -
-35000000</p></td>
-<td colspan="2"><p>5000</p></td>
-<td colspan="2"><p>Max bitrate in Kbps, only, used if
-control-rate=variable</p></td>
-</tr>
-<tr class="row-even"><td><p>max-qp</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 - 51</p></td>
-<td colspan="2"><p>51</p></td>
-<td colspan="2"><p>Maximum QP value allowed,for the rate
-control</p></td>
-</tr>
-<tr class="row-odd"><td><p>min-qp</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 - 51</p></td>
-<td colspan="2"><p>0</p></td>
-<td colspan="2"><p>Minimum QP value allowed,for the rate
-control</p></td>
-</tr>
-<tr class="row-even"><td><p>num-cores</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 - 4</p></td>
-<td colspan="2"><p>0</p></td>
-<td colspan="2"><p>Number of Encoder Cores to be used for
-current Stream. There are 4 Encoder
-cores. Value  0 =&gt; AUTO, VCU Encoder
-will automatically decide the number
-of cores for the current stream. Value
-1 to 4 =&gt; number of cores to be used</p></td>
-</tr>
-<tr class="row-odd"><td><p>num-slices</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 - 68</p></td>
-<td colspan="2"><p>1</p></td>
-<td colspan="2"><p>Number of slices produced for each
-frame. Each slice contains one or more
-complete macroblock/CTU row(s). Slices
-are distributed over the frame as
-possible. If slice-size is defined as
-well more slices may be produced to
-fit the slice-size requirement. In
-low-latency mode  H.264(AVC): 32,H.265
-(HEVC): 22 and In normal latency-mode
-H.264(AVC): picture_height/16,
-H.265(HEVC): minimum of
-picture_height/32</p></td>
-</tr>
-<tr class="row-even"><td colspan="9"><dl>
-<dt>out-mem-bank       | Unsigned    |  0 - 65535    | 0                      | VVAS output memory bank to allocate</dt><dd><div class="line-block">
-<div class="line">Integer     |               |                        | memory.</div>
-<div class="line-block">
-<div class="line">|               |                        |</div>
-</div>
-</div>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="row-odd"><td colspan="9"><p>pb-delta           |  Integer    |  -1 - 51      | -1                     | PB Delta</p></td>
-</tr>
-<tr class="row-even"><td><p>periodicity-idr</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 -
-4294967295</p></td>
-<td colspan="2"><p>4294967295</p></td>
-<td colspan="2"><p>Periodicity of IDR frames</p></td>
-</tr>
-<tr class="row-odd"><td><p>prefetch-buffer</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>true</p></td>
-<td colspan="2"><p>Enable/Disable L2Cache buffer in
-encoding process. This property is
-experimental</p></td>
-</tr>
-<tr class="row-even"><td><p>qos</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>Handle Quality-of-Service events
-from downstream</p></td>
-</tr>
-<tr class="row-odd"><td><p>qp-mode</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0: uniform</p>
-<p>1: auto</p>
-<p>2: roi</p>
-</td>
-<td colspan="2"><p>1 (auto)</p></td>
-<td colspan="2"><p>QP control mode used by the VCU
-encoder</p></td>
-</tr>
-<tr class="row-even"><td><p>rc-mode</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>true</p></td>
-<td colspan="2"><p>VCU Custom rate control mode</p></td>
-</tr>
-<tr class="row-odd"><td><p>scaling-list</p></td>
-<td colspan="2"><p>Enum</p></td>
-<td colspan="2"><p>0: flat</p>
-<p>1: default</p>
-</td>
-<td colspan="2"><p>1 (default)</p></td>
-<td colspan="2"><p>Scaling list mode</p></td>
-</tr>
-<tr class="row-even"><td><p>slice-qp</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>-1 - 51</p></td>
-<td colspan="2"><p>-1</p></td>
-<td colspan="2"><p>When RateCtrlMode = CONST_QP the
-specified QP is applied to all slices.
-When RateCtrlMode = CBR the specified
-QP is used as initial QP</p></td>
-</tr>
-<tr class="row-odd"><td><p>slice-size</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 - 65535</p></td>
-<td colspan="2"><p>0</p></td>
-<td colspan="2"><p>Target slice size (in bytes) that the
-encoder uses to automatically split
-the bitstream into approximately
-equally-sized slices. This property is
-experimental.</p></td>
-</tr>
-<tr class="row-even"><td><p>target-bitrate</p></td>
-<td colspan="2"><p>Unsigned
-Integer</p></td>
-<td colspan="2"><p>0 -
-4294967295</p></td>
-<td colspan="2"><p>5000</p></td>
-<td colspan="2"><p>Target bitrate in Kbps
-(5000 Kbps = component default)</p></td>
-</tr>
-<tr class="row-odd"><td><p>tune-metrics</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>Tunes Encoder’s video quality
-for objective metrics</p></td>
-</tr>
-<tr class="row-even"><td><p>ultra-low-latency</p></td>
-<td colspan="2"><p>Boolean</p></td>
-<td colspan="2"><p>true/false</p></td>
-<td colspan="2"><p>false</p></td>
-<td colspan="2"><p>Serializes encoding when b-frames=0</p></td>
-</tr>
-<tr class="row-odd"><td><p>xclbin-location</p></td>
-<td colspan="2"><p>String</p></td>
-<td colspan="2"><p>N/A</p></td>
-<td colspan="2"><p>null</p></td>
-<td colspan="2"><p>The location of xclbin.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="section" id="id7">
-<h2>Example Pipelines<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
-<p><cite>dev-idx</cite> represents the zero-based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_u30 <span class="p">|</span> wc -l
+<p>kernel name is mandatory and the name represents both the name of the decoder kernel as well as its instance. In above example, “kernel-name=kernel_vdu_decoder:{kernel_vdu_decoder_0}” represents decoder kernel name as “kernel_vdu_decoder” and instance “0”. Instance Id range can be known from the below command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>xbutil examine -d &lt;PCI bdf&gt;
 </pre></div>
 </div>
-<ol class="arabic simple">
-<li><p>The following example pipeline encodes a raw data in NV12 data generated by ‘videotestsrc’ plugin to a h264 stream and displays the performance in frames/sec (fps).</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v videotestsrc num-buffers<span class="o">=</span><span class="m">1000</span> ! queue <span class="se">\</span>
-! vvas_xvcuenc xclbin-location<span class="o">=</span>&lt;xclbin file path&gt; dev-idx<span class="o">=</span><span class="m">3</span> target-bitrate<span class="o">=</span><span class="m">600</span> <span class="se">\</span>
-! h264parse ! fpsdisplaysink video-sink<span class="o">=</span>fakesink text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="2">
-<li><p>The following pipeline reads raw/uncompressed data, the properties of which should be known to user. These are provided in the command line such width, height, format, framerate. The configurable properties for encoder plug-in, <code class="docutils literal notranslate"><span class="pre">vvas_xvcuenc</span></code> are b-frames (0), num-cores(4) and num-slices(4). When no parameter values are mentioned, default values are considered.</p></li>
-</ol>
-<p>Please refer above table for other parameters and corresponding default/range values/ for encoder plugin.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>Note: <span class="nv">BLOCKSIZE</span> <span class="o">=</span> width * height * <span class="m">1</span>.5  as only NV12 input format is specified.
-
-gst-launch-1.0 filesrc <span class="nv">location</span><span class="o">=</span>&lt;input file&gt; <span class="nv">blocksize</span><span class="o">=</span><span class="nv">$BLOCKSIZE</span> ! <span class="se">\</span>
-queue ! <span class="se">\</span>
-rawvideoparse <span class="nv">width</span><span class="o">=</span><span class="m">1920</span> <span class="nv">height</span><span class="o">=</span><span class="m">1080</span> <span class="nv">format</span><span class="o">=</span>nv12 <span class="nv">framerate</span><span class="o">=</span><span class="m">30</span> ! <span class="se">\</span>
-vvas_xvcuenc enable-pipeline<span class="o">=</span><span class="m">0</span> dev-idx<span class="o">=</span><span class="m">0</span> b-frames<span class="o">=</span><span class="m">0</span> num-cores<span class="o">=</span><span class="m">4</span> num-slices<span class="o">=</span><span class="m">4</span> xclbin-location<span class="o">=</span>&lt;xclbin ! <span class="se">\</span>
-h264parse ! <span class="se">\</span>
-fpsdisplaysink video-sink<span class="o">=</span><span class="s2">&quot;filesink location=&lt;output file&gt;&quot;</span> text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="vvas-xlookahead">
-<span id="id8"></span><h2>vvas_xlookahead<a class="headerlink" href="#vvas-xlookahead" title="Permalink to this heading">¶</a></h2>
-<p>For video quality improvements, Xilinx have developed <code class="docutils literal notranslate"><span class="pre">Lookahead</span></code> IP. This IP performs analysis on several frames and provides few parameters for the encoder to improve the video quality. <code class="docutils literal notranslate"><span class="pre">vvas_xlookahead</span></code> plugin controls this IP. This is an optional plug-in in transcoding pipeline.
-For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/lookahead">vvas_xlookahead source code</a></p>
-<div class="section" id="id9">
-<h3>Input and Output<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
-<p>This plugin takes raw video data as input and generates ‘QP’ values which are used during encoding.</p>
-</div>
-<div class="section" id="id10">
-<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
-<p>The following table lists the GStreamer plug-in properties supported by the vvas_xlookahead plug-in.</p>
-<p>Table 3: vvas_xlookahead Plug-in Properties</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 14%" />
-<col style="width: 16%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
-<th class="head"><p><strong>Type</strong></p></th>
-<th class="head"><p><strong>Range</strong></p></th>
-<th class="head"><p><strong>Default</strong></p></th>
-<th class="head"><p><strong>Description</strong></p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>b-frames</p></td>
-<td><p>Integer</p></td>
-<td><p>-1 -
-4294967295
-4294967295</p></td>
-<td><p>-1</p></td>
-<td><p>Number of B-frames
-between two consecutive
-P-frames. Internally
-set to 0 in case of
-ultra-low-latency mode,
-2 otherwise if
-not-configured or
-configured with -1.</p></td>
-</tr>
-<tr class="row-odd"><td><p>codec-type</p></td>
-<td><p>Enum</p></td>
-<td><p>-1 : none
-0  : H264
-1  : H265</p></td>
-<td><p>-1</p></td>
-<td><p>Codec type -
-H264/H265</p></td>
-</tr>
-<tr class="row-even"><td><p>dev-idx</p></td>
-<td><p>Integer</p></td>
-<td><p>0 to 31</p></td>
-<td><p>0</p></td>
-<td><p>Device index
-This is valid
-only in PCIe/
-Data Center
-platforms.</p></td>
-</tr>
-<tr class="row-odd"><td><p>dynamic-gop</p></td>
-<td><p>Boolean</p></td>
-<td><p>true/false</p></td>
-<td><p>false</p></td>
-<td><p>Automatically
-change b-frame
-structure based
-on motion vectors</p></td>
-</tr>
-<tr class="row-even"><td><p>enable-pipeline</p></td>
-<td><p>Boolean</p></td>
-<td><p>true/false</p></td>
-<td><p>false</p></td>
-<td><p>Enable buffer
-pipelining to
-improve
-performance
-in non zero-copy
-use cases</p></td>
-</tr>
-<tr class="row-odd"><td><p>in-mem-bank</p></td>
-<td><p>Unsigned
-Integer</p></td>
-<td><p>0 - 65535</p></td>
-<td><p>0</p></td>
-<td><p>VVAS input memory
-bank to allocate
-memory</p></td>
-</tr>
-<tr class="row-even"><td><p>kernel-name</p></td>
-<td><p>String</p></td>
-<td><p>N/A</p></td>
-<td><p>v_mot_est:{v_mot_est_1}</p></td>
-<td><p>Kernel name
-and
-instance
-separated
-by a colon.</p></td>
-</tr>
-<tr class="row-odd"><td><p>lookahead-depth</p></td>
-<td><p>Unsigned
-Integer</p></td>
-<td><p>1 - 20</p></td>
-<td><p>8</p></td>
-<td><p>Lookahead depth</p></td>
-</tr>
-<tr class="row-even"><td><p>reservation-id</p></td>
-<td><p>Unsigned
-Integer64</p></td>
-<td><p>0-
-184467440
-73709551615
-12=&gt;12 taps</p></td>
-<td><p>0</p></td>
-<td><p>Resource Pool
-Reservation id</p></td>
-</tr>
-<tr class="row-odd"><td><p>spatial-aq</p></td>
-<td><p>Boolean</p></td>
-<td><p>true/false</p></td>
-<td><p>true</p></td>
-<td><p>Enable/Disable
-Spatial AQ
-activity</p></td>
-</tr>
-<tr class="row-even"><td><p>spatial-aq-gain</p></td>
-<td><p>Unsigned
-Integer</p></td>
-<td><p>0 - 100</p></td>
-<td><p>50</p></td>
-<td><p>Percentage of
-Spatial AQ gain,
-applied when
-spatial-aq
-is true</p></td>
-</tr>
-<tr class="row-odd"><td><p>temporal-aq</p></td>
-<td><p>Boolean</p></td>
-<td><p>true/false</p></td>
-<td><p>true</p></td>
-<td><p>Enable/Disable
-Temporal AQ
-linear</p></td>
-</tr>
-<tr class="row-even"><td><p>xclbin-location</p></td>
-<td><p>String</p></td>
-<td><p>N/A</p></td>
-<td><p>null</p></td>
-<td><p>The
-location of
-xclbin.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="section" id="id11">
-<h2>Example Pipelines<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
-<p>Please note that ‘dev-idx’ parameter range can vary from 0 to N where N can be obtained with below command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_u30 <span class="p">|</span> wc -l
-</pre></div>
-</div>
-<p>The following pipeline transcodes a stream with improved quality. User can tweak the lookahead parameters - “spatial-aq,
-temporal-aq, lookahead-depth” to have varied degree of quality. Please refer above Table-3 for more information.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc <span class="nv">location</span><span class="o">=</span>&lt;input h264 file&gt; <span class="se">\</span>
-! queue <span class="se">\</span>
-! h264parse <span class="se">\</span>
-! vvas_xvcudec xclbin-location<span class="o">=</span>/opt/xilinx/xcdr/xclbins/transcode.xclbin dev-idx<span class="o">=</span><span class="m">3</span> <span class="se">\</span>
-! vvas_xabrscaler xclbin-location<span class="o">=</span>/opt/xilinx/xcdr/xclbins/transcode.xclbin dev-idx<span class="o">=</span><span class="m">3</span> <span class="nv">ppc</span><span class="o">=</span><span class="m">4</span> scale-mode<span class="o">=</span><span class="m">0</span> <span class="nv">name</span><span class="o">=</span>sc_00 sc_00.src_0 <span class="se">\</span>
-! queue <span class="se">\</span>
-! video/x-raw, <span class="nv">width</span><span class="o">=</span><span class="m">848</span>, <span class="nv">height</span><span class="o">=</span><span class="m">480</span>, <span class="nv">format</span><span class="o">=</span>NV12 <span class="se">\</span>
-! queue <span class="se">\</span>
-! vvas_xlookahead xclbin-location<span class="o">=</span>/opt/xilinx/xcdr/xclbins/transcode.xclbin codec-type<span class="o">=</span><span class="m">0</span> spatial-aq<span class="o">=</span><span class="m">1</span> temporal-aq<span class="o">=</span><span class="m">1</span> lookahead-depth<span class="o">=</span><span class="m">8</span> dev-idx<span class="o">=</span><span class="m">3</span> <span class="se">\</span>
-! vvas_xvcuenc xclbin-location<span class="o">=</span>/opt/xilinx/xcdr/xclbins/transcode.xclbin <span class="nv">name</span><span class="o">=</span>enc_720p60_dev0_0 dev-idx<span class="o">=</span><span class="m">3</span> target-bitrate<span class="o">=</span><span class="m">600</span> <span class="se">\</span>
-! h264parse <span class="se">\</span>
-! fpsdisplaysink <span class="nv">name</span><span class="o">=</span>sink_xcode_scale_720p60_dev0_0 video-sink<span class="o">=</span>fakesink text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
-</pre></div>
-</div>
+<p>Currently, 2 instances of video decoder IP (VDU) is supported and can be selected with the plugin parameter ‘instance-id’. Above example uses instance id = 0.</p>
 </div>
 <div class="section" id="vvas-xabrscaler">
 <h2>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this heading">¶</a></h2>
@@ -947,16 +306,13 @@ For more details on using this plugin, please refer to <a class="reference inter
                         }
                   </style>
 				  
-				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="u30_platform/u30_platform.html" class="btn btn-neutral float-left" title="Alveo U30 Platform" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Tutorials/Tutorials.html" class="btn btn-neutral float-right" title="Tutorials for PCIe/Data Center platforms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+				  <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021-2022, Advanced Micro Devices, Inc.
-      <span class="lastupdated">Last updated on December 28, 2022.
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
       </span></p>
   </div>
 

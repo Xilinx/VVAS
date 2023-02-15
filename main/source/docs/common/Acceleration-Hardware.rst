@@ -33,21 +33,21 @@ Follow the steps mentioned below to build the kernel. These are mostly applicabl
 
 #. Make <kernel name>.
 
-.. _multiscaler-kernel:
+.. _image-processing-kernel:
 
-===================
-Multiscaler Kernel
-===================
+=======================
+Image Processing Kernel
+=======================
 
-Multiscaler Kernel is capable of hardware accelerated resizing, color space conversion and cropping of region of interest in a frame. VVAS releases full HLS source code of the Multiscaler 2.0 IP/Kernel.
+Image-processing Kernel is capable of hardware accelerated resizing, color space conversion and cropping of region of interest in a frame. VVAS releases full HLS source code of the Image-processing 2.0 IP/Kernel.
 
 
 Kernel Configuration
 ---------------------                    
 
-Multiscaler IP is highly configurable and supports several features. All applications may not need all the features. Keeping all the features enabled results in lots of FPGA resources being consumed. Hence it is recommended to enable only those features that are required for your applications. The multiscaler kernel configuration can be edited by changing the `<VVAS_SOURCES>/vvas-accel-hw/multiscaler/v_multi_scaler_config.h` file. The parameters in the following table can be changed as required.
+Image-processing IP is highly configurable and supports several features. All applications may not need all the features. Keeping all the features enabled results in lots of FPGA resources being consumed. Hence it is recommended to enable only those features that are required for your applications. The image-processing kernel configuration can be edited by changing the `<VVAS_SOURCES>/vvas-accel-hw/image_processing/image_processing_config.h` file. The parameters in the following table can be changed as required.
 
-Table 14: Multiscaler Kernel Configuration
+Table 14: Image-Processing Kernel Configuration
 
 +----------------------+----------------------+----------------------+
 | **Parameter Macro**  | **Possible Values**  |    **Description**   |
@@ -137,10 +137,10 @@ Table 14: Multiscaler Kernel Configuration
 Steps to Build Kernel
 ----------------------
 
-#. Source the Vitis HLS 2022.1 software.
+#. Source the Vitis HLS 2022.2 software.
 
-#. Edit the makefile to point the PLATFORM_FILE, `(.xpfm)` file, to any Vitis 2022.1 platform (tested using the ZCU104 base platform).
+#. Edit the makefile to point the PLATFORM_FILE, `(.xpfm)` file, to any Vitis 2022.2 platform (tested using the ZCU104 base platform).
 
-#. Edit the options in the multiscaler/v_multi_scaler_config.h.
+#. Edit the options in the image_processing/image_processing_config.h.
 
-#. Make v_multi_scaler.xo. The generated output will be in the xo folder as xo/ v_multi_scaler.xo.
+#. Make image_processing.xo. The generated output will be in the xo folder as xo/ image_processing.xo.

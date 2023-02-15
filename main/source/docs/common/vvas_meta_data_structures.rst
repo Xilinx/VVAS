@@ -35,127 +35,112 @@ The GStreamer plug-ins can set and get inference metadata from the GstBuffer by 
 GstInferenceMeta
 =================               
 
-GstInferenceMeta is the root node of the inference metadata. GstInferencePrediction hosts the actual inference metadata.
+.. c:struct:: GstInferenceMeta
 
-.. code-block::
+   GstInferenceMeta is the root node of the inference metadata. GstInferencePrediction hosts the actual inference metadata.
 
-      /**
-      * Implements the placeholder for inference information.
-      */
-      typedef struct _GstInferenceMeta GstInferenceMeta;
-      struct _GstInferenceMeta
-      {
-      GstMeta meta;
-      GstInferencePrediction *prediction;
-      gchar *stream_id;
-      };
+**Definition**
 
+::
+
+  struct GstInferenceMeta {
+    GstMeta meta;
+    GstInferencePrediction *prediction;
+  };
+
+**Members**
+
+``meta``
+  Buffer metadata
+
+``prediction``
+  Contains all the predictions associated to this node
 
 =======================
 GstInferencePrediction
 =======================                     
 
-This structure represents the inference data generated from the ML operation. BBox represents the bounding box around the detected object from detection model. The classification parameter of this structure stores a list of classification information associated with the detected object. This structure also stores the results of the next level of ML operation performed (typically in cascaded network based ML operation).
+.. c:struct:: GstInferencePrediction
 
-.. code-block::
+   This structure represents the inference data generated from the ML operation
 
-      typedef struct _VvasColorMetadata {
-        uint8_t red;
-        uint8_t green;
-        uint8_t blue;
-        uint8_t alpha;
-      } VvasColorMetadata;
+**Definition**
 
-      struct _BoundingBox
-      {
-        gint x;
-        gint y;
-        guint width;
-        guint height;
-        VvasColorMetadata box_color;
-      };
+::
 
-      typedef struct _BoundingBox BoundingBox;
+  struct GstInferencePrediction {
+    GstMiniObject base;
+    GMutex mutex;
+    GstBuffer *sub_buffer;
+    VvasInferPrediction prediction;
+    void *reserved_1;
+    void *reserved_2;
+    void *reserved_3;
+    void *reserved_4;
+    void *reserved_5;
+  };
 
-      /**
-      * GstInferencePrediction:
-      * @prediction_id: unique id for this specific prediction
-      * @enabled: flag indicating whether or not this prediction should be
-      * used for further inference
-      * @bbox: the BoundingBox for this specific prediction
-      * @classifications: a linked list of GstInfereferenceClassification
-      * associated to this prediction
-      * @predictions: a n-ary tree of child predictions within this
-      * specific prediction. It is recommended to access the tree
-      * directly, but to use this module's API to interact with the
-      * children.
-      * @sub_buffer: A buffer created from the main buffer.
-      * @bbox_scaled: bbox co-ordinates scaled to root node resolution or not
-      * @segmentation: contains output of segmentation model wrapped in GstBuffer
-      * @obj_track_label: This is currently unused, kept for future use
-      * Abstraction that represents a prediction
-      */
-      struct _GstInferencePrediction
-      {
-         /*<private>*/
-         GstMiniObject base;
-         GMutex mutex;
-         /*<public>*/
-         guint64 prediction_id;
-         gboolean enabled;
-         BoundingBox bbox;
-         GList * classifications;
-         GNode * predictions;
-         GstBuffer *sub_buffer;
-         gboolean bbox_scaled; /* bbox co-ordinates scaled to root node resolution or not */
-         Segmentation segmentation;
-         gchar *obj_track_label;
-         /* for future extension */
-         void * reserved_1;
-         void * reserved_2;
-         void * reserved_3;
-         void * reserved_4;
-         void * reserved_5;
-      };
+**Members**
 
+``base``
+  private base object
+
+``mutex``
+  mutex
+
+``sub_buffer``
+  A buffer created from the main buffer
+
+``prediction``
+  VVAS core inference structure
+
+``reserved_1``
+  for future extension
+
+``reserved_2``
+  for future extension
+
+``reserved_3``
+  for future extension
+
+``reserved_4``
+  for future extension
+
+``reserved_5``
+  for future extension
+
+.. include:: ./vvas_infer_prediction.rst
 
 ===========================
 GstInferenceClassification
 ===========================                          
 
-This structure stores the results of the ML operation by the classification network.
+.. c:struct:: GstInferenceClassification
 
-.. code-block::
+   This structure stores the results of the ML operation by the classification network
 
-      /**
-      * GstInferenceClassification:
-      * @classification_id: a unique id associated to this classification
-      * @class_id: the numerical id associated to the assigned class
-      * @class_prob: the resulting probability of the assigned
-      * class. Typically, between 0 and 1
-      * @class_label: the label associated to this class or NULL if not
-      * available
-      * @num_classes: the amount of classes of the entire prediction
-      * @probabilities: the entire array of probabilities of the prediction
-      * @labels: the entire array of labels of the prediction or NULL if
-      * not available
-      */
-      typedef struct _GstInferenceClassification GstInferenceClassification;
-      struct _GstInferenceClassification
-      {
-         /*<private>*/
-         GstMiniObject base;
-         GMutex mutex;
-         /*<public>*/
-         guint64 classification_id;
-         gint class_id;
-         gdouble class_prob;
-         gchar *class_label;
-         gint num_classes;
-         gdouble *probabilities;
-         gchar **labels;
-         VvasColorMetadata label_color;
-      };
+**Definition**
+
+::
+
+  struct GstInferenceClassification {
+    GstMiniObject base;
+    GMutex mutex;
+    VvasInferClassification classification;
+  };
+
+**Members**
+
+``base``
+  private base object
+
+``mutex``
+  mutex
+
+``classification``
+  VVAS core inference structure
+
+.. include:: ./vvas_infer_classification.rst
 
 
 .. _vvas_overlay_metadata:
@@ -165,7 +150,7 @@ This structure stores the results of the ML operation by the classification netw
 VVAS Overlay Metadata
 ***********************
 
-VVAS overlay metadata structure hold the information of geometric shapes and text need to be overlaid on video frames. VVAS overlay plugin parses the overlay metadata structures to overlay information on the frames. An intermediate plugin is required for converting metadata generated from upstream plugins like infer, segmentation or optical flow plugins to overlay metadata for displaying information on frames. Currently supported structures in gstvvasoverlaymeta are rectangles, text, lines, arrows, circles and polygons. Maximum number of structures of any geometric shape or text that can be draw on frames are 16 (VVAS_MAX_OVERLAY_DATA 16). For displaying text, text need to be display must be copied into the text structure.
+VVAS overlay metadata structure hold the information of geometric shapes and text need to be overlaid on video frames. VVAS overlay plugin parses the overlay metadata structures to overlay information on the frames. An intermediate plugin is required for converting metadata generated from upstream plugins like infer, segmentation or optical flow plugins to overlay metadata for displaying information on frames. Currently supported structures in gstvvasoverlaymeta are rectangles, text, lines, arrows, circles and polygons. For displaying text, text need to be display must be copied into the text structure.
 
 The GStreamer plug-ins can set and get overlay metadata from the GstBuffer by using the gst_buffer_add_meta () API and gst_buffer_get_meta () API, respectively.
 
@@ -175,85 +160,84 @@ The GStreamer plug-ins can set and get overlay metadata from the GstBuffer by us
 GstOverlayMeta
 ================
 
-GstOverlayMeta structure stores the information of different geometric structures and text.
+GstOverlayMeta structure holds VvasOverlayShapeInfo of vvas_core which intern stores the information of different geometric structures and text. The structural information of different shapes, VvasOverlayShapeInfo and GstOverlayMeta are as described below:
 
 
 .. code-block::
 
-      typedef enum
-      {
-        AT_START,
-        AT_END,
-        BOTH_ENDS,
-      } vvas_arrow_direction;
 
-      struct _vvas_pt
-      {
-        int x;
-        int y;
-      };
+			typedef enum  {
+        ARROW_DIRECTION_START ,
+        ARROW_DIRECTION_END,
+        ARROW_DIRECTION_BOTH_ENDS
+      } VvasOverlayArrowDirection;
 
-      struct _vvas_font_params
-      {
-        int font_num;
+      typedef struct {
+        int32_t x;
+        int32_t y;
+      } VvasOverlayCoordinates;
+
+      typedef struct {
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+        uint8_t alpha;
+      } VvasOverlayColorData;
+
+      typedef struct {
+        uint32_t font_num;
         float font_size;
-        VvasColorMetadata font_color;
-      };
+        VvasOverlayColorData font_color;
+      } VvasOverlayFontData;
 
-      struct _vvas_rect_params
-      {
-        vvas_pt offset;
-        int width;
-        int height;
-        int thickness;
-        VvasColorMetadata rect_color;
-        int apply_bg_color;
-        VvasColorMetadata bg_color;
-      };
+      typedef struct {
+        VvasOverlayCoordinates points;
+        uint32_t width;
+        uint32_t height;
+        uint32_t thickness;
+        VvasOverlayColorData rect_color;
+        uint32_t apply_bg_color;
+        VvasOverlayColorData bg_color;
+      } VvasOverlayRectParams;
 
-      struct _vvas_text_params
-      {
-        vvas_pt offset;
-        char disp_text[VVAS_MAX_TEXT_SIZE];
-        int bottom_left_origin;
-        vvas_font_params text_font;
-        int apply_bg_color;
-        VvasColorMetadata bg_color;
-      };
+      typedef struct {
+        VvasOverlayCoordinates points;
+        char * disp_text;
+        uint32_t bottom_left_origin;
+        VvasOverlayFontData text_font;
+        uint32_t apply_bg_color;
+        VvasOverlayColorData bg_color;
+      } VvasOverlayTextParams;
 
-      struct _vvas_line_params
-      {
-        vvas_pt start_pt;
-        vvas_pt end_pt;
-        int thickness;
-        VvasColorMetadata line_color;
-      };
+      typedef struct {
+        VvasOverlayCoordinates start_pt;
+        VvasOverlayCoordinates end_pt;
+        uint32_t thickness;
+        VvasOverlayColorData line_color;
+      } VvasOverlayLineParams;
 
-      struct _vvas_arrow_params
-      {
-        vvas_pt start_pt;
-        vvas_pt end_pt;
-        vvas_arrow_direction arrow_direction;
-        int thickness;
+      typedef struct {
+        VvasOverlayCoordinates start_pt;
+        VvasOverlayCoordinates end_pt;
+        VvasOverlayArrowDirection arrow_direction;
+        uint32_t thickness;
         float tipLength;
-        VvasColorMetadata line_color;
-      };
+        VvasOverlayColorData line_color;
+      } VvasOverlayArrowParams;
 
-      struct _vvas_circle_params
-      {
-        vvas_pt center_pt;
-        int radius;
-        int thickness;
-        VvasColorMetadata circle_color;
-      };
+      typedef struct {
+        VvasOverlayCoordinates center_pt;
+        uint32_t radius;
+        uint32_t thickness;
+        VvasOverlayColorData circle_color;
+      } VvasOverlayCircleParams;
 
-      struct _vvas_polygon_params
-      {
-        vvas_pt poly_pts[VVAS_MAX_OVERLAY_POLYGON_POINTS];
-        int num_pts;
-        int thickness;
-        VvasColorMetadata poly_color;
-      };
+      typedef struct {
+        VvasList * poly_pts;
+        uint32_t num_pts;
+        uint32_t thickness;
+        VvasOverlayColorData poly_color;
+      } VvasOverlayPolygonParams;
 
       /**
       * GstVvasOverlayMeta:
@@ -263,15 +247,14 @@ GstOverlayMeta structure stores the information of different geometric structure
       * @num_arrows: number of arrows
       * @num_circles: number of circles
       * @num_polys: number of polygons
-      * @vvas_rect_params: structure for holding rectangles information
-      * @vvas_text_params: structure for holding text information
-      * @vvas_line_params: structure for holding lines information
-      * @vvas_arrow_params: structure for holding arrows information
-      * @vvas_circle_params: structure for holding circles information
-      * @vvas_polygon_params: structure for holding polygons information
+      * @rect_params: structure for holding rectangles information
+      * @text_params: structure for holding text information
+      * @line_params: structure for holding lines information
+      * @arrow_params: structure for holding arrows information
+      * @circle_params: structure for holding circles information
+      * @polygon_params: structure for holding polygons information
       */
-
-      struct _GstVvasOverlayMeta {
+      typedef struct {
         GstMeta meta;
         int num_rects;
         int num_text;
@@ -280,23 +263,29 @@ GstOverlayMeta structure stores the information of different geometric structure
         int num_circles;
         int num_polys;
 
-        vvas_rect_params rects[VVAS_MAX_OVERLAY_DATA];
-        vvas_text_params text[VVAS_MAX_OVERLAY_DATA];
-        vvas_line_params lines[VVAS_MAX_OVERLAY_DATA];
-        vvas_arrow_params arrows[VVAS_MAX_OVERLAY_DATA];
-        vvas_circle_params circles[VVAS_MAX_OVERLAY_DATA];
-        vvas_polygon_params polygons[VVAS_MAX_OVERLAY_DATA];
+        VvasList *rect_params;
+        VvasList *text_params;
+        VvasList *line_params;
+        VvasList *arrow_params;
+        VvasList *circle_params;
+        VvasList *polygon_params;
+      } VvasOverlayShapeInfo;
+
+      typedef struct _GstVvasOverlayMeta GstVvasOverlayMeta;
+      struct _GstVvasOverlayMeta {
+        GstMeta meta;
+ 
+        VvasOverlayShapeInfo shape_info;
       };
+
+
+.. _vvas_optflow_metadata:
 
 *************************
 VVAS Opticalflow Metadata
 *************************
 
-VVAS optical flow metadata structure hold the information of motion of frame in x and y direction and object motion information. VVAS optical flow plugin set the optical flow meta data of frame. This metadata structure also supports storing of motion information in object level for further analysis by downstream plugins.
-
-The GStreamer plug-ins can set and get optical flow metadata from the GstBuffer by using the gst_buffer_add_meta () API and gst_buffer_get_meta () API, respectively.VVAS optical flow metadata structure hold the information of motion of frame in x and y direction and object motion information. VVAS optical flow plugin set the optical flow meta data of frame. This metadata structure also supports storing of motion information in object level for further analysis by downstream plugins.
-
-The GStreamer plug-ins can set and get optical flow metadata from the GstBuffer by using the gst_buffer_add_meta () API and gst_buffer_get_meta () API, respectively.
+VVAS optical flow metadata structure hold the information of motion of frame in x and y direction and object motion information. VVAS optical flow plugin set the optical flow meta data of frame. This metadata structure also supports storing of motion information in object level for further analysis by downstream plugins.  The GStreamer plug-ins can set and get optical flow metadata from the GstBuffer by using the gst_buffer_add_meta () API and gst_buffer_get_meta () API respectively.
 
 ================
  GstOptflowMeta

@@ -3,7 +3,7 @@ Platforms And Applications
 ########################################
 
 
-This VVAS release supports Zynq MPSoc based Embedded platforms like  ``KV260 SOM`` and ``zcu104`` platforms. This release has also enabled the support for ``Versal`` device based platforms. This release has been validated on ``zcu104`` based platform for different usecases. Various supported example applications using VVAS on ``zcu104`` and ``KV260 SOM`` based platforms are listed below. For creating example designs for ``Versal`` based platforms, you may refer to the ``zcu104`` based example designs provided with this release as reference for patches needed for other platforms. 
+This VVAS release supports ``Zynq UltraScale+ MPSoc`` as well as ``Versal`` based Embedded platforms. This release has been validated on ``zcu104`` based platform for different usecases. Various supported example applications using VVAS on ``zcu104`` and ``KV260 SOM`` based platforms are listed below. For creating example designs for ``Versal`` based platforms, you may refer to the ``zcu104`` based example designs provided with this release as reference for patches needed for other platforms. 
 
 *******************
 SOM Examples
@@ -12,7 +12,7 @@ SOM Examples
 There are three Application specific SOM platforms supported. Click on the link below to know more about these.
 
 .. note::
-        Currently KV260 SOM example designs mentioned below may be based on VVAS 1.0 and Vitis AI 1.4 release. These designs will be upgraded to VVAS 2.0 and Vitis AI 2.5 soon.
+        Currently KV260 SOM example designs mentioned below are based on Previous VVAS release (i.e. VVAS 2.0 and Vitis AI 2.5 release).
 
 Smart Camera
    Smart Camera Application with face detection and display functionality. For more details refer to `Smart Camera <https://www.xilinx.com/products/app-store/kria/smart-camera.html>`_

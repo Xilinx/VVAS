@@ -34,10 +34,10 @@ Hardware Requirements
 Software Requirements
 ========================
 
-(Refer `Vitis Unified Software Development Platform 2022.1 Documentation <https://docs.xilinx.com/r/en-US/ug1400-vitis-embedded/Installation>`_ for installation instructions)
+(Refer `Vitis Unified Software Development Platform 2022.2 Documentation <https://docs.xilinx.com/r/en-US/ug1400-vitis-embedded/Installation>`_ for installation instructions)
 
-- `Vitis™ Unified Software Platform <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis/2022-1.html>`_ version 2022.1
-- `Petalinux tool <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/2022-1.html>`_ version 2022.1
+- `Vitis™ Unified Software Platform <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis/2022-2.html>`_ version 2022.2
+- `Petalinux tool <https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/2022-2.html>`_ version 2022.2
 - Serial terminal emulator (for example, Tera Term)
 - Git
 - Host system with Ubuntu 18.04/20.04 (Recommended)
@@ -64,7 +64,7 @@ Download the release package. Let the path where release package is downloaded b
 
    The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
 
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip>`_ that contain the Open Source Licenses and source code.
+In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code(TBD) <TBD>`_ that contain the Open Source Licenses and source code.
 
 Once you have downloaded the pre-built binaries, you may go to section :ref:`board-bring-up` to try the released SD card image.
 
@@ -109,7 +109,7 @@ Standalone VCU block can be tested with following pipeline:
 
 ::
 
-  gst-launch-1.0 filesrc location=/home/root/videos/face_detect.mp4 ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! filesink location=./vcu_out.nv12 -v
+  gst-launch-1.0 filesrc location=/home/root/videos/FACEDETECT.mp4 ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! filesink location=./vcu_out.nv12 -v
 
 HDMI Tx Block
 ------------------------------------------
@@ -159,7 +159,7 @@ Machine Learning (ML) block
 -------------------------------
 
 Machine Learning inference is performed by DPU hardware accelerator and :ref:`vvas_xinfer` plug-in.
-VVAS supports the DPU libraries released with `Vitis-AI <https://github.com/Xilinx/Vitis-AI>`_ 2.5. :ref:`vvas_xinfer` is used along with the :ref:`vvas_xdpuinfer <vvas_xdpuinfer>` acceleration software library to perform the Machine Learning Inference.
+VVAS supports the DPU libraries released with `Vitis-AI <https://github.com/Xilinx/Vitis-AI>`_ 3.0.
 The beauty of this VVAS solution is that user need not figure out the resolution required for various DPU supported models.
 vvas_xinfer plug-in gets this information from the requested model and perform resize, color space conversion operation on the input image as per the requirement of the model using preprocessor block (vvas_xpreprocessor). The output of the vvas_xinfer is the original input image along with the scaled metadata for that resolution.
 
@@ -185,14 +185,14 @@ ML block can be tested with following pipeline:
 
   gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp_facedectect.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
     ! kmssink plane-id=34 bus-id="a0130000.v_mix" render-rectangle="<0,0,1920,1080>"
 
 You can notice that the caps are not mentioned after the decoder as the vvas_xinfer auto negotiates the caps based on the model selected.
 
 .. Note::
 
-    In this pipeline, if the debug_level of ``vvas_xdpuinfer`` library is increased to 2, you can see the objects detected in logs.
+    In this pipeline, if the debug_level of ``vvas_xinfer`` library is increased to 2, you can see the objects detected in logs.
     The debug level can be increased in the ``kernel_densebox_320_320.json`` JSON file.
     The sample log output is shown below.
 
@@ -201,53 +201,50 @@ You can notice that the caps are not mentioned after the decoder as the vvas_xin
        :scale: 50
 
 
-Sample JSON files **kernel_pp_facedectect.json** for preprocesing and **kernel_densebox_320_320.json** for densebox_320_320 DPU model for detection of a human face are provided for reference.
+Sample JSON files **kernel_pp.json** for preprocesing and **kernel_densebox_320_320.json** for densebox_320_320 DPU model for detection of a human face are provided for reference.
 
 ::
 
         {
-          "xclbin-location":"/media/sd-mmcblk0p1/dpu.xclbin",
+          "xclbin-location":"/run/media/mmcblk0p1/dpu.xclbin",
           "vvas-library-repo": "/usr/lib",
           "device-index": 0,
-          "kernels" :[
-            {
-              "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
-              "library-name": "libvvas_xpreprocessor.so",
-              "config": {
-                "alpha_r" : 128,
-                "alpha_g" : 128,
-                "alpha_b" : 128,
-                "beta_r" : 1,
-                "beta_g" : 1,
-                "beta_b" : 1,
-                "inference-level" : 1,
-                "debug_level" : 0
-              }
+          "kernel" :{
+            "kernel-name":"image_processing:{image_processing_1}",
+            "library-name": "libvvas_xpreprocessor.so",
+            "config": {
+              "ppc": 2,
+              "in-mem-bank": 0,
+              "out-mem-bank": 0,
+              "inference-level" : 1,
+              "debug_level" : 0
             }
-          ]
+          }
         }
-        kernel_pp_facedectect.json
+        kernel_pp.json
 
 ::
 
     {
-      "vvas-library-repo": "/usr/lib/",
-      "inference-level": 1,
-      "attach-ppe-outbuf": false,
+      "attach-ppe-outbuf" : false,
+      "inference-level" : 1,
+      "low-latency" : false,
+      "inference-max-queue" : 0,
       "kernel" : {
-         "library-name":"libvvas_xdpuinfer.so",
-         "config": {
-            "batch-size" : 0,
-            "model-name" : "densebox_320_320",
-            "model-class" : "FACEDETECT",
-            "model-format" : "BGR",
-            "model-path" : "/usr/share/vitis_ai_library/models/",
-            "run_time_model" : false,
-            "need_preprocess" : false,
-            "performance_test" : false,
-            "debug_level" : 1,
-            "max-objects":3
-         }
+        "config": {
+          "batch-size" : 1,
+          "model-name" : "densebox_320_320",
+          "model-class" : "FACEDETECT",
+          "model-format" : "BGR",
+          "model-path" : "/usr/share/vitis_ai_library/models/",
+          "vitis-ai-preprocess" : false,
+          "performance-test" : false,
+          "max-objects" : 3,
+          "float-feature" : 1,
+          "segoutfactor" : 1.0,
+          "seg-out-format" : "BGR",
+          "debug-level" : 0
+        }
       }
     }
     kernel_densebox_320_320.json
@@ -259,49 +256,14 @@ Different ML models supported by the DPU have different preprocessing requiremen
 * Mean Subtraction
 * Scale Normalization
 
-Although all these operations can be achieved in software, the performance impact is substantial. VVAS support hardware accelerated pre-processing. Configuration parameters for pre-processing block can be specified through a json file by providing location in preprocess-config property of ``vvas_xinfer`` GStreamer plugin.
-
-Table 1 lists the pre-processing parameters supported by ``vvas_xinfer`` GStreamer plug-in.
-These properties are tested in the context of this tutorial only.
-
-Table 1: preprocessing parameters in JSON format to configure mean and scale values
-
-+--------------------+-------------+-----------+-------------+-----------------+
-|                    |             |           |             |                 |
-|  **Property Name** |   **Type**  | **Range** | **Default** | **Description** |
-|                    |             |           |             |                 |
-+====================+=============+===========+=============+=================+
-|                    |  float      | 0 to 128  |  0          | Mean            |
-|  alpha-b           |             |           |             | subtraction for |
-|                    |             |           |             | blue channel    |
-+--------------------+-------------+-----------+-------------+-----------------+
-|                    |  float      | 0 to 128  |  0          | Mean            |
-|  alpha-g           |             |           |             | subtraction for |
-|                    |             |           |             | green channel   |
-+--------------------+-------------+-----------+-------------+-----------------+
-|  alpha-r           |  float      | 0 to 128  |  0          | Mean            |
-|                    |             |           |             | subtraction for |
-|                    |             |           |             | red channel     |
-+--------------------+-------------+-----------+-------------+-----------------+
-|  beta-b            |  float      | 0 to 1    |  1          | Scaling         |
-|                    |             |           |             | for blue        |
-|                    |             |           |             | channel         |
-+--------------------+-------------+-----------+-------------+-----------------+
-|  beta-g            |  float      | 0 to 1    |  1          | Scaling         |
-|                    |             |           |             | for green       |
-|                    |             |           |             | channel         |
-+--------------------+-------------+-----------+-------------+-----------------+
-|  beta-r            |  float      | 0 to 1    |  1          | Scaling         |
-|                    |             |           |             | for red         |
-|                    |             |           |             | channel         |
-+--------------------+-------------+-----------+-------------+-----------------+
+Although all these operations can be achieved in software, the performance impact is substantial. VVAS support hardware accelerated pre-processing. Configuration parameters for pre-processing block mean-substraction and scale-normalization is read from the modle .prototxt file.
 
 Once the objects are detected, you can move to the next advanced blocks.
 
 Machine Learning with preprocessing in software
 -----------------------------------------------------
 
-VVAS can also be used on the Platform that may not have hardware accelerated pre-processing (multiscaler kernel) due to any reason. In this case the preprocessing needs to be performed in software. The scaling and color space conversation are done by open source gstremaer plugins and the normalization and scaling are done by Vitis AI library.
+VVAS can also be used on the Platform that may not have hardware accelerated pre-processing (Image Processing kernel) due to any reason. In this case the preprocessing needs to be performed in software. The scaling and color space conversation are done by open source gstremaer plugins and the normalization and scaling are done by Vitis AI library.
 
 Below is the pipe pile without vvas preprocessor.
 
@@ -322,23 +284,25 @@ The following is sample JSON kernel_densebox_320_320.json for running the denseb
 ::
 
     {
-      "vvas-library-repo": "/usr/lib/",
-      "inference-level": 1,
-      "attach-ppe-outbuf": false,
+      "attach-ppe-outbuf" : false,
+      "inference-level" : 1,
+      "low-latency" : false,
+      "inference-max-queue" : 0,
       "kernel" : {
-         "library-name":"libvvas_xdpuinfer.so",
-         "config": {
-            "batch-size" : 0,
-            "model-name" : "densebox_320_320",
-            "model-class" : "FACEDETECT",
-            "model-format" : "BGR",
-            "model-path" : "/usr/share/vitis_ai_library/models/",
-            "run_time_model" : false,
-            "need_preprocess" : true,
-            "performance_test" : false,
-            "debug_level" : 1,
-            "max-objects":3
-         }
+        "config": {
+          "batch-size" : 1,
+          "model-name" : "densebox_320_320",
+          "model-class" : "FACEDETECT",
+          "model-format" : "BGR",
+          "model-path" : "/usr/share/vitis_ai_library/models/",
+          "vitis-ai-preprocess" : false,
+          "performance-test" : false,
+          "max-objects" : 3,
+          "float-feature" : 1,
+          "segoutfactor" : 1.0,
+          "seg-out-format" : "BGR",
+          "debug-level" : 0
+        }
       }
     }
     
@@ -348,27 +312,27 @@ You can observe that in above pipeline **preprocess-config** property of ``vvas_
 
 Since we want Vitis AI library to perform the required pre-processing in software, we need to set **need_preprocess** to true in **kernel_densebox_320_320.json**.
 
-Although all these operations can be achieved in software, the performance impact is substantial. So rest of the document consider that the hardware accelerated pre-processing (using multiscaler kernel) is part of the provided hardware.
+Although all these operations can be achieved in software, the performance impact is substantial. So rest of the document consider that the hardware accelerated pre-processing (using Image Processing kernel) is part of the provided hardware.
 
 .. Note::
 
     Though you may not observe any ML Inference information on monitor with this pipeline,
     but we should see the input image getting displayed in monitor by this pipeline.
 
-Bounding Box block
+Bounding Box
 ------------------------------
 
 To view the result of ML Inference displayed on the monitor, you should draw the results on an image.
-The :ref:`vvas_xboundingbox <vvas_xboundingbox>` software acceleration library comes in handy in this case.
+The :ref:`vvas_xmetaconvert <vvas_xmetaconvert>` along with :ref:`vvas_xoverlay <vvas_xoverlay>` software acceleration library comes in handy in this case.
 This library along with VVAS infrastructure plug-in :ref:`vvas_xfilter` can provide the bounding box functionality.
 
-Sample video pipeline for adding bounding box block is shown as below
+Sample video pipeline for adding bounding box is shown as below
 
 .. figure:: ./media/multichannel_ml/single_channel_pipeline.png
    :align: center
    :scale: 70
 
-   Sample Video Pipeline adding Bounding Box block
+   Sample Video Pipeline adding Bounding Box
 
 *GStreamer command*:
 
@@ -376,34 +340,55 @@ Sample video pipeline for adding bounding box block is shown as below
 
   gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp_facedectect.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
-    ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue \
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
     ! kmssink plane-id=34 bus-id="a0130000.v_mix" render-rectangle="<0,0,1920,1080>"
 
-The following sample JSON file kernel_boundingbox.json is used to draw a bounding box on detected objects.
+The following sample JSON file metaconvert_config.json is used to draw a bounding box on detected objects.
 
 ::
 
   {
-    "vvas-library-repo": "/usr/lib/",
-    "element-mode":"inplace",
-    "kernels" :[
-      {
-        "library-name":"libvvas_xboundingbox.so",
-        "config": {
-          "model-name" : "densebox_320_320",
-          "display_output" : 1,
-          "font_size" : 0.5,
-          "font" : 3,
-          "thickness" : 3,
-          "debug_level" : 1,
-          "label_color" : { "blue" : 0, "green" : 0, "red" : 0 },
-          "label_filter" : [ "class", "probability" ],
-          "classes" : [
-          ]
+    "config": {
+      "display-level": 0,
+      "font-size" : 1,
+      "font" : 3,
+      "thickness" : 2,
+      "radius": 5,
+      "mask-level" : 0,
+      "y-offset" : 0,
+      "label-filter" : [ "class" ],
+      "classes" : [
+        {
+          "name" : "car",
+          "blue" : 255,
+          "green" : 0,
+          "red"  : 0,
+          "masking"  : 0
+        },
+        {
+          "name" : "person",
+          "blue" : 0,
+          "green" : 255,
+          "red"  : 0,
+          "masking"  : 0
+        },
+        {
+          "name" : "bus",
+          "blue" : 0,
+          "green" : 0,
+          "red"  : 255,
+          "masking"  : 0
+        },
+        {
+          "name" : "bicycle",
+          "blue" : 0,
+          "green" : 0,
+          "red"  : 255,
+          "masking"  : 0
         }
-      }
-    ]
+      ]
+    }
   }
 
      
@@ -416,8 +401,7 @@ Now, constructing a four-channel pipeline is simply duplicating the above pipeli
 and positioning each output video appropriately on screen on different plane-ids.
 
 Below Vitis AI models are used as example in this tutorial.
-Refer `Vitis AI User Documentation <https://docs.xilinx.com/r/en-US/ug1414-vitis-ai/Compiling-the-Model?tocId=iw~3MFuL5ebBYiu0WFiv~Q>`_ to compile different models
-using arch.json file from release package.
+Refer `Vitis AI User Documentation <https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&url=ug1431-vitis-ai-documentation>`_ to compile different models using arch.json file from release package.
 
 * densebox_320_320 (Face detection)
 * yolov3_adas_pruned_0_9 (Object detection)
@@ -428,27 +412,27 @@ A reference pipeline for four channel ML is given below.
 
 ::
 
-  gst-launch-1.0 -v \
+  gst-launch-1.0 -v --no-position \
    filesrc location=/home/root/videos/FACEDETECT.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp_facedectect.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
-    ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue \
-    ! kmssink plane-id=34 bus-id="a0130000.v_mix" render-rectangle="<0,0,1920,1080>" \
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+    ! fpsdisplaysink video-sink="kmssink plane-id=34 bus-id=a0130000.v_mix render-rectangle=<0,0,1920,1080>" text-overlay=false sync=false \
   filesrc location=/home/root/videos/YOLOV3.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_adas_pruned_0_9.json name=infer2 ! queue \
-    ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue \
-    ! kmssink plane-id=35 bus-id="a0130000.v_mix" render-rectangle="<1920,0,1920,1080>"
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_adas_pruned_0_9.json name=infer2 ! queue \
+    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+    ! fpsdisplaysink video-sink="kmssink plane-id=35 bus-id=a0130000.v_mix render-rectangle=<1920,0,1920,1080>" text-overlay=false sync=false \
   filesrc location=/home/root/videos/CLASSIFICATION.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp_resnet50.json infer-config=kernel_resnet50.json name=infer3 ! queue \
-    ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue \
-    ! kmssink plane-id=36 bus-id="a0130000.v_mix" render-rectangle="<0,1080,1920,1080>"
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_resnet50.json name=infer3 ! queue \
+    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+    ! fpsdisplaysink video-sink="kmssink plane-id=36 bus-id=a0130000.v_mix render-rectangle=<0,1080,1920,1080>" text-overlay=false sync=false \
   filesrc location=/home/root/videos/REFINEDET.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp_refinedet.json infer-config=kernel_refinedet_pruned_0_96.json name=infer4 ! queue \
-    ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue \
-    ! kmssink plane-id=37 bus-id="a0130000.v_mix" render-rectangle="<1920,1080,1920,1080>"
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_refinedet_pruned_0_96.json name=infer4 ! queue \
+    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+    ! fpsdisplaysink video-sink="kmssink plane-id=37 bus-id=a0130000.v_mix render-rectangle=<1920,1080,1920,1080>" text-overlay=false sync=false
 
 The above command is available in the release package as ``multichannel_ml.sh``.
 
@@ -499,160 +483,156 @@ Pipeline to demonstrate the car detection from frame and display output to monit
 
 ::
 
-  gst-launch-1.0 -v  \
-    filesrc location=/home/root/videos/platedetect_sample.mp4   \
+  gst-launch-1.0 -v --no-position \
+    filesrc location=/home/root/videos/PLATEDETECT.mp4   \
      ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-     ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-     ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue  \
-     ! kmssink plane-id=34 bus-id="a0130000.v_mix"
+     ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
+     ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+     ! kmssink plane-id=34 bus-id="a0130000.v_mix" sync=false
 
 Below are the sample json files.
 
 ::
 
  {
-   "xclbin-location":"/media/sd-mmcblk0p1/dpu.xclbin",
-   "vvas-library-repo": "/usr/lib",
+   "xclbin-location" : "/run/media/mmcblk0p1/dpu.xclbin",
    "device-index": 0,
-   "kernels" :[
-     {
-       "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
-       "library-name": "libvvas_xpreprocessor.so",
-       "config": {
-         "alpha_r" : 0,
-         "alpha_g" : 0,
-         "alpha_b" : 0,
-         "beta_r" : 0.25,
-         "beta_g" : 0.25,
-         "beta_b" : 0.25,
-         "inference-level" : 1,
-         "debug_level" : 0
-       }
-     }
-   ]
- }
- 
- kernel_pp_yolov3.json
-
-::
-
- {
-   "vvas-library-repo": "/usr/lib/",
-   "inference-level": 1,
-   "attach-ppe-outbuf": false,
-   "kernel" : {
-     "library-name":"libvvas_xdpuinfer.so",
+   "kernel" :{
+     "kernel-name":"image_processing:{image_processing_1}",
+     "library-name": "libvvas_xpreprocessor.so",
      "config": {
-       "batch-size" : 0,
-       "model-name" : "yolov3_voc",
-       "model-class" : "YOLOV3",
-       "model-format" : "RGB",
-       "model-path" : "/usr/share/vitis_ai_library/models/",
-       "run_time_model" : false,
-       "need_preprocess" : false,
-       "performance_test" : false,
-       "debug_level" : 1,
-       "max-objects":3
+       "ppc": 2,
+       "in-mem-bank": 0,
+       "out-mem-bank": 0,
+       "inference-level" : 1,
+       "debug_level" : 0
      }
    }
  }
  
- kernel_yolov3_voc.json
-
-Here we need to understand the complexity which is taken care of by the VVAS framework in a very easy user interface. The output of VCU Decoder is 1920X1080 ``NV12`` and the requirement for ``yolov3_voc`` is 360X360 ``RGB``. This conversion is taken care of by the preprocessor block which is part of ``vvas_xinfer`` plugin. Not only the color and format conversion, the preprocessor block also does Mean Subtraction and Scale Normalization. Although all these operations can be achieved in software, the performance impact is substantial.
-
-For simplicity, a common json file is used for bounding box. Please refer :ref:`vvas_xboundingbox <vvas_xboundingbox>` for more detailed parameters of bounding box.
+ kernel_pp.json
 
 ::
 
  {
-   "vvas-library-repo": "/usr/lib/",
-   "element-mode":"inplace",
-   "kernels" :[
-     {
-       "library-name":"libvvas_xboundingbox.so",
-       "config": {
-         "model-name" : "densebox_320_320",
-         "display_output" : 1,
-         "font_size" : 0.5,
-         "font" : 3,
-         "thickness" : 3,
-         "debug_level" : 2,
-         "label_color" : { "blue" : 0, "green" : 0, "red" : 0 },
-         "label_filter" : [ "class", "probability" ],
-         "classes" : [
-         ]
-       }
+   "attach-ppe-outbuf" : false,
+   "inference-level" : 1,
+   "low-latency" : false,
+   "inference-max-queue" : 0,
+   "kernel" : {
+     "config": {
+       "batch-size" : 1,
+       "model-name" : "yolov3_voc",
+       "model-class" : "YOLOV3",
+       "model-format" : "RGB",
+       "model-path" : "/usr/share/vitis_ai_library/models/",
+       "vitis-ai-preprocess" : false,
+       "performance-test" : false,
+       "max-objects" : 3,
+       "float-feature" : 1,
+       "segoutfactor" : 1.0,
+       "seg-out-format" : "BGR",
+       "debug-level" : 0
      }
-   ]
+   }
  }
- 
- kernel_boundingbox.json
+
+ kernel_yolov3_voc.json
+
+Here we need to understand the complexity which is taken care of by the VVAS framework in a very easy user interface. The output of VCU Decoder is 1920X1080 ``NV12`` and the requirement for ``yolov3_voc`` is 360X360 ``RGB``. This conversion is taken care of by the preprocessor block which is part of ``vvas_xinfer`` plugin. Not only the color and format conversion, the preprocessor block also does Mean Subtraction and Scale Normalization. Although all these operations can be achieved in software, the performance impact is substantial.
+
+For simplicity, a common json file is used for meta convert. Please refer :ref:`vvas_xmetaconvert <vvas_xmetaconvert>` for more detailed parameters of meta convert.
+
+::
+
+ {
+   "config": {
+     "display-level": 0,
+     "font-size" : 1,
+     "font" : 3,
+     "thickness" : 2,
+     "radius": 5,
+     "mask-level" : 0,
+     "y-offset" : 0,
+     "label-filter" : [ "class" ],
+     "classes" : [
+       {
+         "name" : "car",
+         "blue" : 255,
+         "green" : 0,
+         "red"  : 0,
+         "masking"  : 0
+       },
+       {
+         "name" : "person",
+         "blue" : 0,
+         "green" : 255,
+         "red"  : 0,
+         "masking"  : 0
+       },
+       {
+         "name" : "bus",
+         "blue" : 0,
+         "green" : 0,
+         "red"  : 255,
+         "masking"  : 0
+       },
+       {
+         "name" : "bicycle",
+         "blue" : 0,
+         "green" : 0,
+         "red"  : 255,
+         "masking"  : 0
+       }
+     ]
+   }
+ }
+
+ metaconvert_config.json
 
 Second Level inference
 -------------------------------
 
 First level inference detects the car in the frame, now we need to find the number plate in the area where the car is detected. So, lets add second level ML Inference with ``plate detect`` model just after the first level ML Inference with ``yolov3_voc`` model.
 
+.. image:: ./media/Cascade1/cascase_2nd_level_pipeline.png
+   :align: center
+
 Below is the GStreamer pipe demonstrating the number plate detect after car detect and display output to monitor using the kmssink plugin.
 
 ::
 
-  gst-launch-1.0 -v  \
-   filesrc location=/home/root/videos/platedetect_sample.mp4   \
+  gst-launch-1.0 -v --no-position \
+   filesrc location=/home/root/videos/PLATEDETECT.mp4   \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp_platedetect.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
-    ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue  \
-    ! kmssink plane-id=34 bus-id="a0130000.v_mix"
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
+    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+    ! kmssink plane-id=34 bus-id="a0130000.v_mix" sync=false
 
 Below are the sample json files for 2nd level.
 
 ::
 
  {
-   "xclbin-location":"/media/sd-mmcblk0p1/dpu.xclbin",
-   "vvas-library-repo": "/usr/lib",
-   "device-index": 0,
-   "kernels" :[
-     {
-       "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
-       "library-name": "libvvas_xpreprocessor.so",
-       "config": {
-         "alpha_r" : 128,
-         "alpha_g" : 128,
-         "alpha_b" : 128,
-         "beta_r" : 1,
-         "beta_g" : 1,
-         "beta_b" : 1,
-         "inference-level" : 2,
-         "debug_level" : 0
-       }
-     }
-   ]
- }
- 
- kernel_pp_platedetect.json
-
-::
-
- {
-   "vvas-library-repo": "/usr/lib/",
-   "inference-level": 2,
-   "attach-ppe-outbuf": false,
+   "attach-ppe-outbuf" : false,
+   "inference-level" : 2,
+   "low-latency" : false,
+   "inference-max-queue" : 0,
    "kernel" : {
-     "library-name":"libvvas_xdpuinfer.so",
      "config": {
-       "batch-size" : 0,
+       "batch-size" : 1,
        "model-name" : "plate_detect",
        "model-class" : "PLATEDETECT",
        "model-format" : "BGR",
        "model-path" : "/usr/share/vitis_ai_library/models/",
-       "run_time_model" : false,
-       "need_preprocess" : false,
-       "performance_test" : false,
-       "debug_level" : 1,
-       "max-objects":3
+       "vitis-ai-preprocess" : false,
+       "performance-test" : false,
+       "max-objects" : 3,
+       "float-feature" : 1,
+       "segoutfactor" : 1.0,
+       "seg-out-format" : "BGR",
+       "debug-level" : 0
      }
    }
  }
@@ -667,70 +647,49 @@ Similarly, when data passes to 3rd level, vvas framework reads the metadata and 
 Third Level inference
 -------------------------------------
 
+.. image:: ./media/Cascade1/cascase_3rd_level_pipeline.png
+   :align: center
+
 Below is the full GStreamer pipe demonstrating the number plate detect and display using the kmssink plugin.
 
 ::
 
-  gst-launch-1.0 -v  \
-   filesrc location=/home/root/videos/platedetect_sample.mp4   \
+  gst-launch-1.0 -v --no-position \
+   filesrc location=/home/root/videos/PLATEDETECT.mp4   \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp_yolov3.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp_platedetect.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp_plate_num.json infer-config=kernel_plate_num.json name=infer3 ! queue  \
-    ! vvas_xfilter kernels-config="kernel_boundingbox.json" ! queue  \
-    ! kmssink plane-id=34 bus-id="a0130000.v_mix"
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
+    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_plate_num.json name=infer3 ! queue  \
+    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+    ! kmssink plane-id=34 bus-id="a0130000.v_mix" sync=false
 
 Below are the sample json files for 3rd level.
 
 ::
 
  {
-   "xclbin-location":"/media/sd-mmcblk0p1/dpu.xclbin",
-   "vvas-library-repo": "/usr/lib",
-   "device-index": 0,
-   "kernels" :[
-     {
-       "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
-       "library-name": "libvvas_xpreprocessor.so",
-       "config": {
-         "alpha_r" : 128,
-         "alpha_g" : 128,
-         "alpha_b" : 128,
-         "beta_r" : 1,
-         "beta_g" : 1,
-         "beta_b" : 1,
-         "inference-level" : 3,
-         "debug_level" : 0
-       }
-     }
-   ]
- }
- 
- kernel_pp_plate_num.json
-
-::
-
- {
-   "vvas-library-repo": "/usr/lib/",
-   "inference-level": 3,
-   "attach-ppe-outbuf": false,
+   "attach-ppe-outbuf" : false,
+   "inference-level" : 3,
+   "low-latency" : false,
+   "inference-max-queue" : 0,
    "kernel" : {
-     "library-name":"libvvas_xdpuinfer.so",
      "config": {
        "batch-size" : 0,
        "model-name" : "plate_num",
        "model-class" : "PLATENUM",
        "model-format" : "BGR",
        "model-path" : "/usr/share/vitis_ai_library/models/",
-       "run_time_model" : false,
-       "need_preprocess" : false,
-       "performance_test" : false,
-       "debug_level" : 1,
-       "max-objects":3
+       "vitis-ai-preprocess" : false,
+       "performance-test" : false,
+       "max-objects" : 3,
+       "float-feature" : 1,
+       "segoutfactor" : 1.0,
+       "seg-out-format" : "BGR",
+       "debug-level" : 0
      }
    }
  }
- 
+
  kernel_plate_num.json
 
 Please note the "inference-level" parameter in both the json is 3 which tells the framework that this model placed at level 3 in full use case.
@@ -760,7 +719,7 @@ For more information on Vitis platforms, see `Vitis Software Platform <https://w
 
     VVAS platform ``zcu104_vcuDec_vmixHdmiTx`` adds patch to irps5401 driver for zcu104 board to support multi thread execution of VAI models.
     This `patch <https://github.com/Xilinx/Vitis-AI/blob/v2.0/dsa/DPU-TRD/app/dpu_sw_optimize.tar.gz>`_ shouldn't be applied to other boards
-    and is not part of the official Xilinx released 2022.1 Petalinux.
+    and is not part of the official Xilinx released 2022.2 Petalinux.
 
 Build Platform
 ==============
@@ -772,28 +731,28 @@ The platform provides the following hardware and software components of the pipe
 * VCU hardened IP block
 * Video Mixer and HDMI Tx soft IP blocks
 * Opensource framework like GStreamer, OpenCV
-* Vitis AI 2.5 libraries
+* Vitis AI 3.0 libraries
 * Xilinx Runtime (XRT)
 * omxh264dec GStreamer plugin
 * kmmsink GStreamer plugin
 * VVAS GStreamer plugins and libraries
 
   * :ref:`vvas_xinfer <vvas_xinfer>` GStreamer plugin
-  * :ref:`vvas_xdpuinfer <vvas_xdpuinfer>` software accelerator library
-  * :ref:`vvas_xboundingbox <vvas_xboundingbox>` software accelerator library
+  * :ref:`vvas_xmetaconvert <vvas_xmetaconvert>` software accelerator library
+  * :ref:`vvas_xoverlay <vvas_xoverlay>` software accelerator library
 
 Steps for building the platform:
 
 1. Download the VVAS git repository. Let the path where VVAS repo is downloaded be represented as ``<VVAS_REPO>``.
 ::
 
-  git clone https://github.com/Xilinx/VVAS.git
+  git clone --recurse-submodules https://github.com/Xilinx/VVAS.git
 
 2. Setup the toolchain
 ::
 
-  source <2022.1_Vitis>/settings64.sh
-  source <2022.1_Petalinux>/settings.sh
+  source <2022.2_Vitis>/settings64.sh
+  source <2022.2_Petalinux>/settings.sh
 
 3. Change directory to the platform
 ::
@@ -806,7 +765,7 @@ Steps for building the platform:
   make
 
 After the build is finished, the platform is available at
-``<VVAS_REPO>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx/platform_repo/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1/export/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1/``.
+``<VVAS_REPO>/VVAS/vvas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx/platform_repo/xilinx_zcu104_vcuDec_vmixHdmiTx_202220_1/export/xilinx_zcu104_vcuDec_vmixHdmiTx_202220_1/``.
 
 Let the path to platform be represented as ``<PLATFORM_PATH>``.
 
@@ -820,32 +779,34 @@ A Vitis build is required to stitch all the discussed hardware accelerators to t
 The hardware accelerators required are:
 
 1. DPU (Xilinx ML IP)
-2. Multiscaler (Xilinx Preprocessing IP)
+2. Image Processing (Xilinx Preprocessing IP)
 
 The Xilinx deep learning processor unit (DPU) is a configurable computation engine dedicated for convolutional neural networks.
-Refer to `DPU-TRD <https://github.com/Xilinx/Vitis-AI/blob/master/dsa/DPU-TRD/prj/Vitis/README.md>`_ for more information and compiling the DPU accelerator.
+Refer to `DPU-TRD <https://github.com/Xilinx/Vitis-AI/blob/master/dpu/ref_design_docs/README_DPUCZ_Vitis.md>`_ for more information and compiling the DPU accelerator.
 
-Multiscaler IP/Kernel source code can be refered from <TBD>
+DPU Kernel for this example design is configured for B3136 architecture. Configuration file used can be found at ``<VVAS_REPO>/VVAS/vvas-examples/Embedded/multichannel_ml/dpu_conf.vh``.
 
-The ``multichannel_ml`` example design adds two instances of B3136 DPU configuration and a single instance of Multiscaler to the ``zcu104_vcuDec_vmixHdmiTx`` platform.
+Image Processing IP/Kernel source code can be refered from ``<VVAS_REPO>/VVAS/vvas-accel-hw/image_processing/``. For this example design Image Processing kernel is configured for max-width:3840, max-height:2160 and format support of Y_UV8_420, RGB and BGR. Configuration file used can be found at ``<VVAS_REPO>/VVAS/vvas-examples/Embedded/multichannel_ml/image_processing_config.h``.
+
+The ``multichannel_ml`` example design adds two instances of DPU and a single instance of Image-Processing to the ``zcu104_vcuDec_vmixHdmiTx`` platform.
 
 Steps for building Vitis example project:
 
 1. Download Vitis-AI. Let the path where Vitis-AI is downloaded be represented as ``<VITIS_AI_REPO>``.
 
-  * Open the `reference_design <https://github.com/Xilinx/Vitis-AI/tree/master/reference_design#readme>`__ readme page from Vitis-AI release repo.
+  * Open the `reference_design <https://github.com/Xilinx/Vitis-AI/tree/master/dpu#readme>`__ readme page from Vitis-AI release repo.
 
-  * Copy the ``Download Link`` for ``IP Name`` corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table
-
-  ::
-
-      wget -O DPUCZDX8G.tar.gz '<Download Link>'
-
-  * Uarchive ``DPUCZDX8G.tar.gz``
+  * Copy the ``Reference Design`` link for ``IP Name`` corresponding to ``DPUCZDX8G`` from ``Edge IP`` Table
 
   ::
 
-      tar -xf DPUCZDX8G.tar.gz
+      wget -O DPUCZDX8G_VAI_v3.0.tar.gz '<Download Link>'
+
+  * Uarchive ``DPUCZDX8G_VAI_v3.0.tar.gz``
+
+  ::
+
+      tar -xf DPUCZDX8G_VAI_v3.0.tar.gz
 
 
 2. Change directory to example project
@@ -858,7 +819,7 @@ Steps for building Vitis example project:
 
 ::
 
-  make PLATFORM=<PLATFORM_PATH>/xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1.xpfm DPU_TRD_PATH=<VITIS_AI_REPO>/DPUCZDX8G HW_ACCEL_PATH=<VVAS_REPO>/VVAS/vvas-accel-hw/
+  make PLATFORM=<PLATFORM_PATH>/xilinx_zcu104_vcuDec_vmixHdmiTx_202220_1.xpfm DPU_TRD_PATH=<VITIS_AI_REPO>/DPUCZDX8G_VAI_v3.0 HW_ACCEL_PATH=<VVAS_REPO>/VVAS/vvas-accel-hw/
 
 
 .. Note:: *Depending on the build machine capacity, building this example project can take about 3 or more hours to compile*.
@@ -872,7 +833,7 @@ Once the build is completed, you can find the sdcard image at
 Board bring up
 ==================================
 
-1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
+1. Burn the SD card image ``sd_card.img`` (Either from `Release package(TBD) <TBD>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
 
    Boot the board using this SD card.
 
@@ -885,18 +846,16 @@ Board bring up
       mkdir -p ~/videos
       scp -r <Path to Videos> root@<board ip>:~/videos
 
-.. Note:: Password for *root* user is *root*.
-
 .. Note:: Video files are not provided as part of release package.
 
 4. Copy the model json files and scripts on the board::
 
-      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2022.1_zcu104/scripts_n_utils/ root@<board ip>:~
+      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2022.2_zcu104/scripts_n_utils/ root@<board ip>:~
 
 5. Copy the Vitis-AI model files on board. Execute the command mentioned below on the target board::
 
       mkdir -p /usr/share/vitis_ai_library/models
-      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2022.1_zcu104/models/* /usr/share/vitis_ai_library/models/
+      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2022.2_zcu104/models/* /usr/share/vitis_ai_library/models/
 
 6. Execute four channel GStreamer pipeline script. Execute the command mentioned below on the target board::
       
