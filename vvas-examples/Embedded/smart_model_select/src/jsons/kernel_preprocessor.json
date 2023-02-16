@@ -1,21 +1,14 @@
 {
-  "xclbin-location":"XCLBIN_PATH",
-  "vvas-library-repo": "/usr/lib",
+  "xclbin-location" : "/run/media/mmcblk0p1/dpu.xclbin",
   "device-index": 0,
-  "kernels" :[
-    {
-      "kernel-name":"v_multi_scaler:{v_multi_scaler_1}",
-      "library-name": "libvvas_xpreprocessor.so",
-      "config": {
-        "alpha_r" : MEANR,
-        "alpha_g" : MEANG,
-        "alpha_b" : MEANB,
-        "beta_r" : SCALER,
-        "beta_g" : SCALEG,
-        "beta_b" : SCALEB,
-        "inference-level" : 1,
-        "debug_level" : 0
-      }
+  "kernel" :{
+    "kernel-name":"image_processing:{image_processing_1}",
+    "config": {
+      "ppc": 2,
+      "in-mem-bank": 0,
+      "out-mem-bank": 0,
+      "debug-level" : 0
     }
-  ]
+  }
 }
+

@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -14,20 +15,6 @@
  # limitations under the License.
 #########################################################################
 
-xrtutil_sources = ['xrt_utils.cpp']
-
-xrtutils = library('xrtutil-' + utils_version,
-  xrtutil_sources,
-  cpp_args : vvas_utils_args,
-  include_directories : [configinc],
-  install : true,
-  dependencies : [xrt_dep, uuid_dep],
-)
-
-xrtutils_dep = declare_dependency(link_with : xrtutils, 
-  include_directories : [utilsinc],
-  dependencies : [xrt_dep])
-
 vvasutil_sources = ['vvas_kernel_utils.c']
 
 vvasutil = library('vvasutil-' + utils_version,
@@ -35,14 +22,27 @@ vvasutil = library('vvasutil-' + utils_version,
   c_args : vvas_utils_args,
   include_directories : [configinc],
   install : true,
-  dependencies : [xrt_dep, jansson_dep, xrtutils_dep],
+  dependencies : [xrt_dep, jansson_dep, vvascore_dep],
 )
 
 #VVAS Common Headers to install
-#vvas_common_headers = ['vvas/vvas_kernel.h', 'vvas/vvasmeta.h']
-vvas_common_headers = ['vvas/vvas_kernel.h', 'vvas/vvasmeta.h', 'xrt_utils.h', 'vvas/vvaslogs.h']
+vvas_common_headers = ['vvas/vvas_kernel.h', 'vvas/vvasmeta.h', 'vvas/vvaslogs.h', 'vvas/vvas_structure.h']
 install_headers(vvas_common_headers, subdir : 'vvas/')
 
 vvasutils_dep = declare_dependency(link_with : vvasutil,
   include_directories : [utilsinc],
-  dependencies : [xrt_dep])
+  dependencies : [vvascore_dep])
+
+vvasstructure_sources = ['vvas_structure.c']
+
+vvasstructure = library('vvasstructure-' + utils_version,
+  vvasstructure_sources,
+  cpp_args : vvas_utils_args,
+  include_directories : [configinc],
+  install : true,
+  dependencies : [glib_deps],
+)
+
+vvasstructure_dep = declare_dependency(link_with : vvasstructure,
+  include_directories : [utilsinc],
+  dependencies : [glib_deps])

@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -15,7 +16,6 @@
 #########################################################################
 
 source /opt/xilinx/xrt/setup.sh
-source /opt/xilinx/xrm/setup.sh
 export LD_LIBRARY_PATH=/opt/xilinx/vvas/lib:$LD_LIBRARY_PATH
 export PKG_CONFIG_PATH=/opt/xilinx/vvas/lib/pkgconfig:$PKG_CONFIG_PATH
 export PATH=/opt/xilinx/vvas/bin:$PATH

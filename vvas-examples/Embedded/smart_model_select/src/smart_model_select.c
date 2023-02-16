@@ -1,5 +1,6 @@
 /*
  * Copyright 2021 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +29,7 @@
 #define DEFAULT_XCLBIN_PATH "/run/media/mmcblk0p1/dpu.xclbin"
 
 char dpu_template_json[40] = "./jsons/kernel_dpu.json";
-char bbox_template_json[40] = "./jsons/kernel_bbox.json";
-char preprocessor_template_json[40] = "./jsons/kernel_preprocessor.json";
 char dpu_json[100] = "./jsons/kernel_dpu_MODEL.json";
-char bbox_json[100] = "./jsons/kernel_bbox_MODEL.json";
-char preprocessor_json[100] = "./jsons/kernel_preprocessor_MODEL.json";
 
 typedef struct user_choice {
   int src;
@@ -232,169 +229,6 @@ static int validate_input (options *op, int n)
   return 0;
 }
 
-static void update_pre_process_cfg (char *file, int n)
-{
-  char cmd[100];
-  char *mean_r;
-  char *mean_g;
-  char *mean_b;
-  char *scale_r;
-  char *scale_g;
-  char *scale_b;
-
-  switch (n) {
-    case 1:
-      mean_r = "104";
-      mean_g = "107";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 2:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 3:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.501961";
-      scale_g = "0.501961";
-      scale_b = "0.501961";
-      break;
-    case 4:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 5:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 6:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 7:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 8:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 9:
-      mean_r = "128";
-      mean_g = "128";
-      mean_b = "128";
-      scale_r = "1";
-      scale_g = "1";
-      scale_b = "1";
-      break;
-    case 10:
-      mean_r = "0";
-      mean_g = "0";
-      mean_b = "0";
-      scale_r = "0.25";
-      scale_g = "0.25";
-      scale_b = "0.25";
-      break;
-    case 11:
-      mean_r = "0";
-      mean_g = "0";
-      mean_b = "0";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 12:
-      mean_r = "104";
-      mean_g = "117";
-      mean_b = "123";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 13:
-      mean_r = "0";
-      mean_g = "0";
-      mean_b = "0";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 14:
-      mean_r = "0";
-      mean_g = "0";
-      mean_b = "0";
-      scale_r = "0.5";
-      scale_g = "0.5";
-      scale_b = "0.5";
-      break;
-    case 15:
-      mean_r = "128";
-      mean_g = "128";
-      mean_b = "128";
-      scale_r = "1";
-      scale_g = "1";
-      scale_b = "1";
-      break;
-    case 16:
-      mean_r = "128";
-      mean_g = "128";
-      mean_b = "128";
-      scale_r = "1";
-      scale_g = "1";
-      scale_b = "1";
-      break;
-    default:
-      return;
-  }
-
-  memset(cmd, '\0', 100);
-  sprintf(cmd, "sed -i \'s/MEANR/%s/g\' %s", mean_r, file);
-  system(cmd);
-  memset(cmd, '\0', 100);
-  sprintf(cmd, "sed -i \'s/MEANG/%s/g\' %s", mean_g, file);
-  system(cmd);
-  memset(cmd, '\0', 100);
-  sprintf(cmd, "sed -i \'s/MEANB/%s/g\' %s", mean_b, file);
-  system(cmd);
-  memset(cmd, '\0', 100);
-  sprintf(cmd, "sed -i \'s/SCALER/%s/g\' %s", scale_r, file);
-  system(cmd);
-  memset(cmd, '\0', 100);
-  sprintf(cmd, "sed -i \'s/SCALEG/%s/g\' %s", scale_g, file);
-  system(cmd);
-  memset(cmd, '\0', 100);
-  sprintf(cmd, "sed -i \'s/SCALEB/%s/g\' %s", scale_b, file);
-  system(cmd);
-}
-
 static void update_input_filename (char *file, char *input_file_name)
 {
   char cmd[100];
@@ -439,8 +273,7 @@ static void update_color_format (char *dpu_json, int model)
   }
 }
 
-static void update_xclbin_location (char *tmp_file, char *dpu_json,
-                                    char *bbox_json, char *preprocessor_json)
+static void update_xclbin_location (char *tmp_file, char *dpu_json)
 {
   char xclbin_loc[200];
   char cmd[300];
@@ -457,10 +290,6 @@ static void update_xclbin_location (char *tmp_file, char *dpu_json,
   sprintf(cmd, "sed -i \'s#XCLBIN_PATH#%s#g\' %s", xclbin_loc, tmp_file);
   system(cmd);
   sprintf(cmd, "sed -i \'s#XCLBIN_PATH#%s#g\' %s", xclbin_loc, dpu_json);
-  system(cmd);
-  sprintf(cmd, "sed -i \'s#XCLBIN_PATH#%s#g\' %s", xclbin_loc, bbox_json);
-  system(cmd);
-  sprintf(cmd, "sed -i \'s#XCLBIN_PATH#%s#g\' %s", xclbin_loc, preprocessor_json);
   system(cmd);
 }
 
@@ -502,15 +331,10 @@ static void parse_input (options *op, int n, char *file)
     printf ("DEBUG SINK is %s\n", sink);
 #endif
     sprintf(dpu_json, "./jsons/kernel_dpu_%s.json", model);
-    sprintf(bbox_json, "./jsons/kernel_bbox_%s.json", model);
-    sprintf(preprocessor_json, "./jsons/kernel_preprocessor_%s.json", model);
     update_model (file_temp, file, model, class);
     update_model (dpu_template_json, dpu_json, model, class); /* dpuinfer */
-    update_model (bbox_template_json, bbox_json, model, class); /* bbox */
-    update_model (preprocessor_template_json, preprocessor_json, model, class); /* xinfer */
     update_input_filename (file, op[0].input_file);
-    update_pre_process_cfg (preprocessor_json, op[0].model);
-    update_xclbin_location (file, dpu_json, bbox_json, preprocessor_json);
+    update_xclbin_location (file, dpu_json);
     update_color_format (dpu_json, op[0].model);
 
   } else {
@@ -592,10 +416,6 @@ int main()
 
     pthread_create(&wel_id, NULL, welcome, NULL);
     sleep(1);
-#if 0
-    printf ("\n\n>>Please enter the number of models you want to run:\n");
-    scanf("%d", &n);
-#endif
     n = 1;  /* Supporting single model */
     if (menu(op, n)) {
       cancel_thread (wel_id);
@@ -621,8 +441,6 @@ int main()
     if (strcmp(file, "welcome.cfg")) {
       remove (file);
       remove (dpu_json);
-      remove (bbox_json);
-      remove (preprocessor_json);
     }
     cancel_thread (first_id);
   }

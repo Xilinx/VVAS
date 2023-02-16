@@ -1,0 +1,160 @@
+From 53b14aca40ff5edc5f952a21a1af2257be1bf35c Mon Sep 17 00:00:00 2001
+From: Ray Clenaghan <ray.clenaghan@allegrodvt.com>
+Date: Fri, 9 Dec 2022 13:29:32 +0000
+Subject: [PATCH] fix(4243):Store initial GST display resolution
+
+---
+ module/mediatype_dec_avc.cpp     | 13 ++++---------
+ module/mediatype_dec_hevc.cpp    | 14 +++++---------
+ module/mediatype_dec_interface.h |  1 +
+ module/module_dec.cpp            | 17 +++++------------
+ module/module_structs.h          |  1 +
+ 5 files changed, 16 insertions(+), 30 deletions(-)
+
+diff --git a/module/mediatype_dec_avc.cpp b/module/mediatype_dec_avc.cpp
+index f8dda55..1fd3895 100644
+--- a/module/mediatype_dec_avc.cpp
++++ b/module/mediatype_dec_avc.cpp
+@@ -88,6 +88,7 @@ void DecMediatypeAVC::Reset()
+   stream.eProfile = AL_PROFILE_AVC_C_BASELINE;
+   stream.eSequenceMode = AL_SM_PROGRESSIVE;
+ 
++  initialDisplayResolution = { -1, -1 };
+   stride.horizontal = RoundUp(static_cast<int>(AL_Decoder_GetMinPitch(stream.tDim.iWidth, stream.iBitDepth, settings.eFBStorageMode)), strideAlignments.horizontal);
+   stride.vertical = RoundUp(static_cast<int>(AL_Decoder_GetMinStrideHeight(stream.tDim.iHeight)), strideAlignments.vertical);
+ }
+@@ -391,6 +392,9 @@ MediatypeInterface::ErrorType DecMediatypeAVC::Set(std::string index, void const
+ 
+     if(!UpdateResolution(this->settings, this->stride, this->strideAlignments, resolution))
+       return BAD_PARAMETER;
++
++    this->initialDisplayResolution.horizontal = resolution.dimension.horizontal;
++    this->initialDisplayResolution.vertical = resolution.dimension.vertical;
+     return SUCCESS;
+   }
+ 
+@@ -429,19 +433,10 @@ MediatypeInterface::ErrorType DecMediatypeAVC::Set(std::string index, void const
+ 
+ bool DecMediatypeAVC::Check()
+ {
+-  // Fix: remove this line and below block when a better fix is found
+-  // This is a Gstreamer issue (not OMX) for allocation!
+-  int tmp_height = settings.tStream.tDim.iHeight;
+-  settings.tStream.tDim.iHeight = RoundUp(settings.tStream.tDim.iHeight, 16);
+-
+   if(AL_DecSettings_CheckValidity(&settings, stderr) != 0)
+     return false;
+ 
+   AL_DecSettings_CheckCoherency(&settings, stdout);
+ 
+-  // Fix: remove this line and below block when a better fix is found
+-  // This is a Gstreamer issue (not OMX) for allocation!
+-  settings.tStream.tDim.iHeight = tmp_height;
+-
+   return true;
+ }
+diff --git a/module/mediatype_dec_hevc.cpp b/module/mediatype_dec_hevc.cpp
+index 0f42268..59f0a7e 100644
+--- a/module/mediatype_dec_hevc.cpp
++++ b/module/mediatype_dec_hevc.cpp
+@@ -88,6 +88,8 @@ void DecMediatypeHEVC::Reset()
+   stream.eProfile = AL_PROFILE_HEVC_MAIN;
+   stream.eSequenceMode = AL_SM_PROGRESSIVE;
+ 
++  initialDisplayResolution = { -1, -1 };
++
+   tier = 0;
+   this->stride.horizontal = RoundUp(static_cast<int>(AL_Decoder_GetMinPitch(stream.tDim.iWidth, stream.iBitDepth, settings.eFBStorageMode)), strideAlignments.horizontal);
+   this->stride.vertical = RoundUp(static_cast<int>(AL_Decoder_GetMinStrideHeight(stream.tDim.iHeight)), strideAlignments.vertical);
+@@ -399,6 +401,9 @@ MediatypeInterface::ErrorType DecMediatypeHEVC::Set(std::string index, void cons
+ 
+     if(!UpdateResolution(this->settings, this->stride, this->strideAlignments, resolution))
+       return BAD_PARAMETER;
++
++    this->initialDisplayResolution.horizontal = resolution.dimension.horizontal;
++    this->initialDisplayResolution.vertical = resolution.dimension.vertical;
+     return SUCCESS;
+   }
+ 
+@@ -437,19 +442,10 @@ MediatypeInterface::ErrorType DecMediatypeHEVC::Set(std::string index, void cons
+ 
+ bool DecMediatypeHEVC::Check()
+ {
+-  // Fix: remove this line and below block when a better fix is found
+-  // This is a Gstreamer issue (not OMX) for allocation!
+-  int tmp_height = settings.tStream.tDim.iHeight;
+-  settings.tStream.tDim.iHeight = RoundUp(settings.tStream.tDim.iHeight, 16);
+-
+   if(AL_DecSettings_CheckValidity(&settings, stderr) != 0)
+     return false;
+ 
+   AL_DecSettings_CheckCoherency(&settings, stdout);
+ 
+-  // Fix: remove this line and below block when a better fix is found
+-  // This is a Gstreamer issue (not OMX) for allocation!
+-  settings.tStream.tDim.iHeight = tmp_height;
+-
+   return true;
+ }
+diff --git a/module/mediatype_dec_interface.h b/module/mediatype_dec_interface.h
+index 3d780df..88f5540 100644
+--- a/module/mediatype_dec_interface.h
++++ b/module/mediatype_dec_interface.h
+@@ -55,4 +55,5 @@ struct DecMediatypeInterface : MediatypeInterface
+ 
+   AL_TDecSettings settings;
+   Stride stride;
++  InitialDisplayRes initialDisplayResolution;
+ };
+diff --git a/module/module_dec.cpp b/module/module_dec.cpp
+index fd21b60..9bcc11e 100644
+--- a/module/module_dec.cpp
++++ b/module/module_dec.cpp
+@@ -358,14 +358,6 @@ ModuleInterface::ErrorType DecModule::CreateDecoder(bool shouldPrealloc)
+   if(inputParsed)
+     decCallbacks.parsedSeiCB = { nullptr, nullptr };
+ 
+-  // Fix: remove this line and below block when a better fix is found
+-  // This is a Gstreamer issue (not OMX) for allocation!
+-  int tmp_height = media->settings.tStream.tDim.iHeight;
+-  {
+-    if(shouldPrealloc)
+-      media->settings.tStream.tDim.iHeight = RoundUp(media->settings.tStream.tDim.iHeight, 16);
+-  }
+-
+   auto errorCode = AL_Decoder_Create(&decoder, channel, allocator.get(), &media->settings, &decCallbacks);
+ 
+   if(AL_IS_ERROR_CODE(errorCode))
+@@ -382,12 +374,13 @@ ModuleInterface::ErrorType DecModule::CreateDecoder(bool shouldPrealloc)
+       DestroyDecoder();
+       return ToModuleError(errorCode);
+     }
+-
+-    // Fix remove this line when a better fix is found
+-    // This is a Gstreamer issue (not OMX) for allocation!
+-    media->settings.tStream.tDim.iHeight = tmp_height;
+   }
+ 
++  if ((media->initialDisplayResolution.vertical != -1) && (media->initialDisplayResolution.horizontal != -1))
++  {
++    media->settings.tStream.tDim.iHeight = media->initialDisplayResolution.vertical;
++    media->settings.tStream.tDim.iWidth = media->initialDisplayResolution.horizontal;
++  }
+   return SUCCESS;
+ }
+ 
+diff --git a/module/module_structs.h b/module/module_structs.h
+index ed33e7d..b73391b 100644
+--- a/module/module_structs.h
++++ b/module/module_structs.h
+@@ -89,6 +89,7 @@ struct Dimension
+ 
+ typedef Dimension<int> Stride;
+ typedef Dimension<int> StrideAlignments;
++typedef Dimension<int> InitialDisplayRes;
+ 
+ struct Resolution
+ {
+-- 
+2.17.1
+

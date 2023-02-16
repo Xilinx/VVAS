@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -61,50 +62,147 @@
 #include <gst/vvas/gstvvasbufferpool.h>
 #include <gst/vvas/gstinferencemeta.h>
 #include <gst/vvas/gstvvashdrmeta.h>
-#include <vvas/xrt_utils.h>
+#include <vvas_core/vvas_device.h>
 #ifdef XLNX_PCIe_PLATFORM
 #include <experimental/xrt-next.h>
 #else
 #include <xrt/experimental/xrt-next.h>
 #endif
 #include "gstvvas_xmulticrop.h"
-#include "multi_scaler_hw.h"
+
+#include <gst/vvas/gstvvascoreutils.h>
+#include <vvas_core/vvas_context.h>
+#include <vvas_core/vvas_common.h>
+#include <vvas_core/vvas_scaler.h>
 
 #ifdef XLNX_PCIe_PLATFORM
+/** @def DEFAULT_DEVICE_INDEX
+ *  @brief Default device index
+ */
 #define DEFAULT_DEVICE_INDEX -1
-#define DEFAULT_KERNEL_NAME "scaler:scaler_1"
+
+/** @def DEFAULT_KERNEL_NAME
+ *  @brief Default kernel name
+ */
+#define DEFAULT_KERNEL_NAME "image_processing:{image_processing_1}"
+
+/** @def NEED_DMABUF
+ *  @brief Need DMA buffer
+ */
 #define NEED_DMABUF 0
 #else
-#define DEFAULT_DEVICE_INDEX 0  /* on Embedded only one device i.e. device 0 */
-#define DEFAULT_KERNEL_NAME "v_multi_scaler:{v_multi_scaler_1}"
+
+/** @def DEFAULT_DEVICE_INDEX
+ *  @brief Default device index
+ */
+#define DEFAULT_DEVICE_INDEX 0
+
+/** @def DEFAULT_KERNEL_NAME
+ *  @brief Default kernel name
+ */
+#define DEFAULT_KERNEL_NAME "image_processing:{image_processing_1}"
+
+/** @def NEED_DMABUF
+ *  @brief Need DMA buffer
+ */
 #define NEED_DMABUF 1
 #endif
 
-#define MULTI_SCALER_TIMEOUT 1000       // 1 sec
-#define ALIGN(size,align) (((size) + (align) - 1) & ~((align) - 1))
-#define DIV_AND_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
+#ifndef DEFAULT_MEM_BANK
+/** @def DEFAULT_MEM_BANK
+ *  @brief Default memory bank
+ */
+#define DEFAULT_MEM_BANK 0
+#endif
+
+/** @def VVAS_XMULTICROP_AVOID_OUTPUT_COPY_DEFAULT
+ *  @brief Default value for avoiding copy of output buffer
+ */
 #define VVAS_XMULTICROP_AVOID_OUTPUT_COPY_DEFAULT FALSE
+
+/** @def VVAS_XMULTICROP_ENABLE_PIPELINE_DEFAULT
+ *  @brief Default value for enabling pipeline
+ */
 #define VVAS_XMULTICROP_ENABLE_PIPELINE_DEFAULT FALSE
+/** @def VVAS_XMULTICROP_ENABLE_SOFTWARE_SCALING_DEFAULT
+ *  @brief Default value for software-scaling property.
+ */
+#define VVAS_XMULTICROP_ENABLE_SOFTWARE_SCALING_DEFAULT FALSE
+
+/** @def STOP_COMMAND
+ *  @brief Stop command
+ */
 #define STOP_COMMAND ((gpointer)GINT_TO_POINTER (g_quark_from_string("STOP")))
+
+/** @def VVAS_XMULTICROP_PPE_ON_MAIN_BUF_DEFAULT
+ *  @brief Default value for Need pre-processing on main/output buffer
+ */
 #define VVAS_XMULTICROP_PPE_ON_MAIN_BUF_DEFAULT FALSE
 
 #ifdef XLNX_PCIe_PLATFORM
+/** @def WIDTH_ALIGN
+ *  @brief Width alignment requirement for MultiScaler IP
+ */
 #define WIDTH_ALIGN 256
+
+/** @def HEIGHT_ALIGN
+ *  @brief Height alignment requirement for MultiScaler IP
+ */
 #define HEIGHT_ALIGN 64
 #else
+/** @def WIDTH_ALIGN
+ *  @brief Width alignment requirement for MultiScaler IP
+ */
 #define WIDTH_ALIGN (8 * self->ppc)
+
+/** @def HEIGHT_ALIGN
+ *  @brief Height alignment requirement for MultiScaler IP
+ */
 #define HEIGHT_ALIGN 1
 #endif
 
+/** @def DEFAULT_CROP_PARAMS
+ *  @brief Default crop parameters (x, y, width, height)
+ */
 #define DEFAULT_CROP_PARAMS 0
-#define MAX_SUBBUFFER_POOLS 10
-#define MIN_SCALAR_WIDTH    64
-#define MIN_SCALAR_HEIGHT   64
 
+/** @def MAX_SUBBUFFER_POOLS
+ *  @brief Maximum Sub Buffer pools for dynamic crop buffers
+ */
+#define MAX_SUBBUFFER_POOLS 10
+
+/** @def MIN_SCALAR_WIDTH
+ *  @brief This is the minimum width which can be processed using MultiScaler IP
+ */
+#define MIN_SCALAR_WIDTH    16
+
+/** @def MIN_SCALAR_HEIGHT
+ *  @brief This is the minimum height which can be processed using MultiScaler IP
+ */
+#define MIN_SCALAR_HEIGHT   16
+
+/** @def DEFAULT_VVAS_DEBUG_LEVEL
+ *  @brief Default debug level for VVAS CORE.
+ */
+#define DEFAULT_VVAS_DEBUG_LEVEL        2
+
+/** @def DEFAULT_VVAS_SCALER_DEBUG_LEVEL
+ *  @brief Default debug level for VVAS CORE Scaler.
+ */
+#define DEFAULT_VVAS_SCALER_DEBUG_LEVEL 2
+
+/**
+ *  @brief Defines a static GstDebugCategory global variable "gst_vvas_xmulticrop_debug_category"
+ */
 GST_DEBUG_CATEGORY_STATIC (gst_vvas_xmulticrop_debug_category);
+
+/** @def GST_CAT_DEFAULT
+ *  @brief Setting gst_vvas_xmulticrop_debug_category as default debug category for logging
+ */
 #define GST_CAT_DEFAULT gst_vvas_xmulticrop_debug_category
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
+/* Function prototypes */
 static GstStateChangeReturn gst_vvas_xmulticrop_change_state
     (GstElement * element, GstStateChange transition);
 static void gst_vvas_xmulticrop_set_property (GObject * object,
@@ -128,100 +226,143 @@ static GstFlowReturn gst_vvas_xmulticrop_generate_output (GstBaseTransform *
     trans, GstBuffer ** outbuf);
 static GstFlowReturn gst_vvas_xmulticrop_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean vvas_xmulticrop_allocate_internal_buffers (GstVvasXMultiCrop *
-    self, guint buffer_count);
-static void xlnx_multiscaler_coff_fill (void *Hcoeff_BufAddr,
-    void *Vcoeff_BufAddr, float scale);
 static GstBufferPool *vvas_xmulticrop_allocate_buffer_pool (GstVvasXMultiCrop *
     self, guint width, guint height, GstVideoFormat format);
 
-enum
+/** @enum VvasXMultiCropProperties
+ *  @brief Contains properties related to vvas_xmulticrop
+ */
+typedef enum
 {
+  /** Default property installed by GStreamer */
   PROP_0,
+  /** Property to set/get XCLBIN location */
   PROP_XCLBIN_LOCATION,
+  /** Property to set/get kernel name */
   PROP_KERN_NAME,
 #ifdef XLNX_PCIe_PLATFORM
+  /** Property to set/get device index */
   PROP_DEVICE_INDEX,
 #endif
+  /** Property to set/get input memory bank */
   PROP_IN_MEM_BANK,
+  /** Property to set/get output memory bank */
   PROP_OUT_MEM_BANK,
+  /** Property to set/get PPC */
   PROP_PPC,
+  /** Property to set/get scale mode */
   PROP_SCALE_MODE,
+  /** Property to set/get num of taps */
   PROP_NUM_TAPS,
+  /** Property to set/get coeff loading type */
   PROP_COEF_LOADING_TYPE,
+  /** Property to set/get avoid output copy flag */
   PROP_AVOID_OUTPUT_COPY,
+  /** Property to set/get Enable pipeline mode */
   PROP_ENABLE_PIPELINE,
 #ifdef ENABLE_PPE_SUPPORT
+  /** Property to set/get pre-processing alpha r value */
   PROP_ALPHA_R,
+  /** Property to set/get pre-processing alpha g value */
   PROP_ALPHA_G,
+  /** Property to set/get pre-processing alpha b value */
   PROP_ALPHA_B,
+  /** Property to set/get pre-processing beta r value */
   PROP_BETA_R,
+  /** Property to set/get pre-processing beta g value */
   PROP_BETA_G,
+  /** Property to set/get pre-processing beta b value */
   PROP_BETA_B,
 #endif
+  /** Property to set/get static crop x */
   PROP_CROP_X,
+  /** Property to set/get static crop y */
   PROP_CROP_Y,
+  /** Property to set/get static crop width */
   PROP_CROP_WIDTH,
+  /** Property to set/get static crop height */
   PROP_CROP_HEIGHT,
+  /** Property to set/get width of dynamically cropped buffers */
   PROP_SUBBUFFER_WIDTH,
+  /** Property to set/get height of dynamically cropped buffers */
   PROP_SUBBUFFER_HEIGHT,
+  /** Property to set/get format of dynamically cropped buffers */
   PROP_SUBBUFFER_FORMAT,
+  /** Property to set/get Enable pre-processing on main buffer mode */
   PROP_PPE_ON_MAIN_BUFFER,
-};
+  /** Software scaling */
+  PROP_SOFTWARE_SCALING,
+} VvasXMultiCropProperties;
 
+/** @enum ColorDomain
+ *  @brief Contains enum for different color domains
+ */
 typedef enum ColorDomain
 {
+  /** YUV color domain */
   COLOR_DOMAIN_YUV,
+  /** RGB color domain */
   COLOR_DOMAIN_RGB,
+  /** GRAY color domain */
   COLOR_DOMAIN_GRAY,
+  /** Unknown color domain */
   COLOR_DOMAIN_UNKNOWN,
 } ColorDomain;
 
+/** @struct GstVvasXMultiCropPrivate
+ *  @brief  Holds private members related VVAS MultiCrop instance
+ */
 struct _GstVvasXMultiCropPrivate
 {
-  gboolean is_internal_buf_allocated;
+  /** Input Video info */
   GstVideoInfo *in_vinfo;
+  /** Output video info */
   GstVideoInfo *out_vinfo;
-  uint32_t meta_in_stride;
-  vvasKernelHandle kern_handle;
-  vvasRunHandle run_handle;
+  /** device handle */
   vvasDeviceHandle dev_handle;
-  uuid_t xclbinId;
-  xrt_buffer Hcoff[MAX_CHANNELS];       //0th for main buffer
-  xrt_buffer Vcoff[MAX_CHANNELS];
-  xrt_buffer msPtr[MAX_CHANNELS];
-  guint internal_buf_counter;
-
+  /** Output buffer */
   GstBuffer *outbuf;
+  /** Dynamically cropped buffers */
   GstBuffer *sub_buf[MAX_CHANNELS - 1];
+  /** dynamic crop buffer counter */
   guint sub_buffer_counter;
-
-  /* physical address for input buffer */
-  guint64 phy_in_0;
-  guint64 phy_in_1;
-  guint64 phy_in_2;
-  /* physical address for output buffer */
-  guint64 phy_out_0;
-  guint64 phy_out_1;
-  guint64 phy_out_2;
-
+  /** Input buffer pool */
   GstBufferPool *input_pool;
   /* when user has set sub buffer(dynamically cropped buffer) output resolution,
    * we only need 1 buffer pool, hence index 0 will only be used, otherwise
    * all MAX_SUBBUFFER_POOLS pools will be created as and when
    * need arises.
    */
+  /** buffer pools for dynamic crop */
   GstBufferPool *subbuffer_pools[MAX_SUBBUFFER_POOLS];
+  /** size of buffer pools for dynamic crop */
   guint subbuffer_pool_size[MAX_SUBBUFFER_POOLS];
-
+  /** validate import */
   gboolean validate_import;
+  /** Need to copy output buffer */
   gboolean need_copy;
+  /** Thread for copying input buffer */
   GThread *input_copy_thread;
+  /** input queue for \p input_copy_thread */
   GAsyncQueue *copy_inqueue;
+  /** output queue for \p input_copy_thread */
   GAsyncQueue *copy_outqueue;
+  /** First frame */
   gboolean is_first_frame;
+
+  /** VVAS Core Context */
+  VvasContext *vvas_ctx;
+  /** VVAS Core Scaler Context */
+  VvasScaler *vvas_scaler;
+  /** Reference of input VvasVideoFrame */
+  VvasVideoFrame *input_frame;
+  /** Reference of output VvasVideoFrames */
+  VvasVideoFrame *output_frames[MAX_CHANNELS];
 };
 
+/**
+ *  @brief Defines sink pad's template
+ */
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -229,6 +370,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         ("{RGBx, YUY2, r210, Y410, NV16, NV12, RGB, v308, I422_10LE, GRAY8, \
   NV12_10LE32, BGRx, GRAY10_LE32, BGRx, UYVY, BGR, RGBA, BGRA, I420, GBR}")));
 
+/**
+ *  @brief Defines source pad's template
+ */
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -244,24 +388,67 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstVvasXMultiCrop, gst_vvas_xmulticrop,
                       (gst_vvas_xmulticrop_get_instance_private (self))
 
 #ifdef XLNX_PCIe_PLATFORM       /* default taps for PCIe platform 12 */
+/** @def VVAS_XMULTICROP_DEFAULT_NUM_TAPS
+ *  @brief Default number of tap points
+ */
 #define VVAS_XMULTICROP_DEFAULT_NUM_TAPS 12
+
+/** @def VVAS_XMULTICROP_DEFAULT_PPC
+ *  @brief Default PPC(pixel per clock) values
+ */
 #define VVAS_XMULTICROP_DEFAULT_PPC 4
+
+/** @def VVAS_XMULTICROP_SCALE_MODE
+ *  @brief Default Scale Mode
+ */
 #define VVAS_XMULTICROP_SCALE_MODE 2
 #else /* default taps for Embedded platform 6 */
+/** @def VVAS_XMULTICROP_DEFAULT_NUM_TAPS
+ *  @brief Default number of tap points
+ */
 #define VVAS_XMULTICROP_DEFAULT_NUM_TAPS 6
+
+/** @def VVAS_XMULTICROP_DEFAULT_PPC
+ *  @brief Default PPC(pixel per clock) values
+ */
 #define VVAS_XMULTICROP_DEFAULT_PPC 2
+
+/** @def VVAS_XMULTICROP_SCALE_MODE
+ *  @brief Default Scale Mode
+ */
 #define VVAS_XMULTICROP_SCALE_MODE 0
 #endif
 
+/**
+ *  @brief Get VVAS_XMULTICROP_NUM_TAPS_TYPE GType
+ */
 #define VVAS_XMULTICROP_NUM_TAPS_TYPE (vvas_xmulticrop_num_taps_type ())
+
+/**
+ *  @brief Get VVAS_XMULTICROP_PPC_TYPE GType
+ */
 #define VVAS_XMULTICROP_PPC_TYPE (vvas_xmulticrop_ppc_type ())
+
+/**
+ *  @brief Get VVAS_XMULTICROP_SUBBUFFER_FORMAT_TYPE GType
+ */
 #define VVAS_XMULTICROP_SUBBUFFER_FORMAT_TYPE (vvas_xmulticrop_subbuffer_format_type ())
 
+/**
+ *  @fn static guint vvas_xmulticrop_get_stride (GstVideoFormat format, guint width)
+ *  @param [in] format  - GstVideoFormat
+ *  @param [in] width   - width
+ *  @return stride
+ *  @brief  This function calculates stride for given color format and width and
+ *          aligns them by 4.
+ */
 static guint
 vvas_xmulticrop_get_stride (GstVideoFormat format, guint width)
 {
   guint stride = 0;
-
+  /* Get the stride for different color format, also align this stride value
+   * by 4 bytes
+   */
   switch (format) {
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_NV12:
@@ -301,65 +488,12 @@ vvas_xmulticrop_get_stride (GstVideoFormat format, guint width)
   return stride;
 }
 
-static guint
-vvas_xmulticrop_get_padding_right (GstVvasXMultiCrop * self,
-    GstVideoInfo * info)
-{
-  guint padding_pixels = -1;
-  guint plane_stride = GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
-  guint padding_bytes =
-      ALIGN (plane_stride, self->out_stride_align) - plane_stride;
-
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_GBR:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_r210:
-    case GST_VIDEO_FORMAT_Y410:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBA:
-      padding_pixels = padding_bytes / 4;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      padding_pixels = padding_bytes / 2;
-      break;
-    case GST_VIDEO_FORMAT_NV16:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_BGR:
-      padding_pixels = padding_bytes / 3;
-      break;
-    case GST_VIDEO_FORMAT_I422_10LE:
-      padding_pixels = padding_bytes / 2;
-      break;
-    case GST_VIDEO_FORMAT_NV12_10LE32:
-      padding_pixels = (padding_bytes * 3) / 4;
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_GRAY10_LE32:
-      padding_pixels = (padding_bytes * 3) / 4;
-      break;
-    case GST_VIDEO_FORMAT_I420:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_I420_10LE:
-      padding_pixels = padding_bytes / 2;
-      break;
-    default:
-      GST_ERROR_OBJECT (self, "not yet supporting format %d",
-          GST_VIDEO_INFO_FORMAT (info));
-  }
-  return padding_pixels;
-}
-
+/**
+ *  @fn static ColorDomain vvas_xmulticrop_get_color_domain (const gchar * color_format)
+ *  @param [in] color_format    - GStreamer color format
+ *  @return ColorDomain value
+ *  @brief  This function find the color domain from the passed GStreamer video format
+ */
 static ColorDomain
 vvas_xmulticrop_get_color_domain (const gchar * color_format)
 {
@@ -369,7 +503,7 @@ vvas_xmulticrop_get_color_domain (const gchar * color_format)
 
   format = gst_video_format_from_string (color_format);
   format_info = gst_video_format_get_info (format);
-
+  /* check whether video format belongs to YUV, RGB or GRAY color domain */
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (format_info)) {
     color_domain = COLOR_DOMAIN_YUV;
   } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (format_info)) {
@@ -381,11 +515,18 @@ vvas_xmulticrop_get_color_domain (const gchar * color_format)
   return color_domain;
 }
 
+/**
+ *  @fn static GType vvas_xmulticrop_num_taps_type (void)
+ *  @param void
+ *  @return Returns the GEnumValue for all scaler filter co-efficient taps.
+ *  @brief  This function just returns the GEnumValue for all taps supported by
+ *          scaler IP filter co-efficients.
+ */
 static GType
 vvas_xmulticrop_num_taps_type (void)
 {
   static GType num_tap = 0;
-
+  /* Register number of taps enum type */
   if (!num_tap) {
     static const GEnumValue taps[] = {
       {6, "6 taps filter for scaling", "6"},
@@ -399,11 +540,18 @@ vvas_xmulticrop_num_taps_type (void)
   return num_tap;
 }
 
+/**
+ *  @fn static GType vvas_xmulticrop_ppc_type (void)
+ *  @param void
+ *  @return Returns the GEnumValue for all PPC supported by scaler IP.
+ *  @brief  This function just returns the GEnumValue for all pixel per clock(PPC)
+ *          supported by scaler IP co-efficients.
+ */
 static GType
 vvas_xmulticrop_ppc_type (void)
 {
   static GType num_ppc = 0;
-
+  /* Register PPC (pixel per clock) enum type */
   if (!num_ppc) {
     static const GEnumValue ppc[] = {
       {1, "1 Pixel Per Clock", "1"},
@@ -416,11 +564,17 @@ vvas_xmulticrop_ppc_type (void)
   return num_ppc;
 }
 
+/**
+ *  @fn static GType vvas_xmulticrop_subbuffer_format_type (void)
+ *  @param void
+ *  @return Returns the GEnumValue for all supported dynamic buffers format(sub-buffer format).
+ *  @brief  This function just returns the GEnumValue for all supported sub-buffer formats.
+ */
 static GType
 vvas_xmulticrop_subbuffer_format_type (void)
 {
   static GType sub_buffer_fromat = 0;
-
+  /* Register subbuffer (dynamic crop buffer) format enum type */
   if (!sub_buffer_fromat) {
     static const GEnumValue subbuffer_format[] = {
       {0, "GST_VIDEO_FORMAT_UNKNOWN", "0"},
@@ -452,18 +606,33 @@ vvas_xmulticrop_subbuffer_format_type (void)
 }
 
 #ifdef XLNX_PCIe_PLATFORM
+/** @def VVAS_XMULTICROP_DEFAULT_COEF_LOAD_TYPE
+ *  @brief   Default value for coefficients loading type
+ */
 #define VVAS_XMULTICROP_DEFAULT_COEF_LOAD_TYPE COEF_AUTO_GENERATE
 #else
+/** @def VVAS_XMULTICROP_DEFAULT_COEF_LOAD_TYPE
+ *  @brief   Default value for coefficients loading type
+ */
 #define VVAS_XMULTICROP_DEFAULT_COEF_LOAD_TYPE COEF_FIXED
 #endif
 
+/**
+ *  @brief Get VVAS_XMULTICROP_COEF_LOAD_TYPE GType
+ */
 #define VVAS_XMULTICROP_COEF_LOAD_TYPE (vvas_xmulticrop_coef_load_type ())
 
+/**
+ *  @fn static GType vvas_xmulticrop_coef_load_type (void)
+ *  @param void
+ *  @return Returns the GEnumValue for showing co-efficients types supported by scaler IP.
+ *  @brief  This function just returns the GEnumValue for showing co-efficients types supported by scaler IP.
+ */
 static GType
 vvas_xmulticrop_coef_load_type (void)
 {
   static GType load_type = 0;
-
+  /* Register filter co-efficient load type enum type */
   if (!load_type) {
     static const GEnumValue load_types[] = {
       {COEF_FIXED, "Use fixed filter coefficients", "fixed"},
@@ -476,607 +645,30 @@ vvas_xmulticrop_coef_load_type (void)
   return load_type;
 }
 
-static uint32_t
-xlnx_multiscaler_colorformat (uint32_t col)
-{
-  switch (col) {
-    case GST_VIDEO_FORMAT_RGBx:
-      return XV_MULTI_SCALER_RGBX8;
-    case GST_VIDEO_FORMAT_YUY2:
-      return XV_MULTI_SCALER_YUYV8;
-    case GST_VIDEO_FORMAT_r210:
-      return XV_MULTI_SCALER_RGBX10;
-    case GST_VIDEO_FORMAT_Y410:
-      return XV_MULTI_SCALER_YUVX10;
-    case GST_VIDEO_FORMAT_NV16:
-      return XV_MULTI_SCALER_Y_UV8;
-    case GST_VIDEO_FORMAT_NV12:
-      return XV_MULTI_SCALER_Y_UV8_420;
-    case GST_VIDEO_FORMAT_RGB:
-      return XV_MULTI_SCALER_RGB8;
-    case GST_VIDEO_FORMAT_v308:
-      return XV_MULTI_SCALER_YUV8;
-    case GST_VIDEO_FORMAT_I422_10LE:
-      return XV_MULTI_SCALER_Y_UV10;
-    case GST_VIDEO_FORMAT_NV12_10LE32:
-      return XV_MULTI_SCALER_Y_UV10_420;
-    case GST_VIDEO_FORMAT_GRAY8:
-      return XV_MULTI_SCALER_Y8;
-    case GST_VIDEO_FORMAT_GRAY10_LE32:
-      return XV_MULTI_SCALER_Y10;
-    case GST_VIDEO_FORMAT_BGRx:
-      return XV_MULTI_SCALER_BGRX8;
-    case GST_VIDEO_FORMAT_UYVY:
-      return XV_MULTI_SCALER_UYVY8;
-    case GST_VIDEO_FORMAT_BGR:
-      return XV_MULTI_SCALER_BGR8;
-    case GST_VIDEO_FORMAT_BGRA:
-      return XV_MULTI_SCALER_BGRA8;
-    case GST_VIDEO_FORMAT_RGBA:
-      return XV_MULTI_SCALER_RGBA8;
-    case GST_VIDEO_FORMAT_I420:
-      return XV_MULTI_SCALER_I420;
-    case GST_VIDEO_FORMAT_GBR:
-      return XV_MULTI_SCALER_R_G_B8;
-    default:
-      GST_ERROR ("Not supporting %s yet",
-          gst_video_format_to_string ((GstVideoFormat) col));
-      return XV_MULTI_SCALER_NONE;
-  }
-}
-
+/**
+ *  @fn static uint32_t xlnx_multiscaler_stride_align (uint32_t stride_in, uint16_t alignment)
+ *  @param [in] stride_in   - Input stride
+ *  @param [in] alignment   - alignment requirement
+ *  @return aligned value
+ *  @brief  This function aligns the stride_in value to the next aligned integer value
+ */
 static inline uint32_t
 xlnx_multiscaler_stride_align (uint32_t stride_in, uint16_t alignment)
 {
   uint32_t stride;
+  /* Align the passed value (stride_in) by passed alignment value, this will
+   * return the next aligned integer */
   stride = (((stride_in) + alignment - 1) / alignment) * alignment;
   return stride;
 }
 
-static inline gint
-log2_val (guint val)
-{
-  gint cnt = 0;
-  while (val > 1) {
-    val = val >> 1;
-    cnt++;
-  }
-  return cnt;
-}
-
-static gboolean
-feasibility_check (int src, int dst, int *filterSize)
-{
-  int sizeFactor = 4;
-  int xInc = (((int64_t) src << 16) + (dst >> 1)) / dst;
-  if (xInc <= 1 << 16)
-    *filterSize = 1 + sizeFactor;       // upscale
-  else
-    *filterSize = 1 + (sizeFactor * src + dst - 1) / dst;
-
-  if (*filterSize > MAX_FILTER_SIZE) {
-    GST_ERROR ("FilterSize %d for %d to %d is greater than maximum taps(%d)",
-        *filterSize, src, dst, MAX_FILTER_SIZE);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static void
-copy_filt_set (int16_t dest_filt[64][12], int set)
-{
-  int i = 0, j = 0;
-
-  for (i = 0; i < 64; i++) {
-    for (j = 0; j < 12; j++) {
-      switch (set) {
-        case XLXN_FIXED_COEFF_SR13:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR13_0[i][j];    //<1.5SR
-          break;
-        case XLXN_FIXED_COEFF_SR15:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR15_0[i][j];    //1.5SR
-          break;
-        case XLXN_FIXED_COEFF_SR2:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps8_12C[i][j];  //2SR //8tap
-          break;
-        case XLXN_FIXED_COEFF_SR25:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR25_0[i][j];    //2.5SR
-          break;
-        case XLXN_FIXED_COEFF_TAPS_10:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps10_12C[i][j]; //10tap
-          break;
-        case XLXN_FIXED_COEFF_TAPS_12:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps12_12C[i][j]; //12tap
-          break;
-        case XLXN_FIXED_COEFF_TAPS_6:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps6_12C[i][j];  //6tap: Always used for up scale
-          break;
-        default:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps12_12C[i][j]; //12tap
-          break;
-      }
-    }
-  }
-}
-
-static void
-xlnx_multiscaler_coff_fill (void *Hcoeff_BufAddr, void *Vcoeff_BufAddr,
-    float scale)
-{
-  uint16_t *hpoly_coeffs, *vpoly_coeffs;        /* int need to check */
-  int uy = 0;
-  int temp_p;
-  int temp_t;
-
-  hpoly_coeffs = (uint16_t *) Hcoeff_BufAddr;
-  vpoly_coeffs = (uint16_t *) Vcoeff_BufAddr;
-
-  if ((scale >= 2) && (scale < 2.5)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-  }
-
-  if ((scale >= 2.5) && (scale < 3)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS >= 10) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      } else {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-    }
-  }
-
-  if ((scale >= 3) && (scale < 3.5)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 12) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 8) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 10) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-    }
-  }
-
-  if ((scale >= 3.5) || (scale < 2 && scale >= 1)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-      for (temp_p = 0; temp_p < 64; temp_p++) {
-        if (temp_p > 60) {
-        }
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-      }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 8) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 10) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 12) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-  }
-
-  if (scale < 1) {
-    for (temp_p = 0; temp_p < 64; temp_p++)
-      for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-        *(hpoly_coeffs + uy) =
-            XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-        *(vpoly_coeffs + uy) =
-            XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-        uy = uy + 1;
-      }
-  }
-}
-
-static void
-generate_cardinal_cubic_spline (int src, int dst, int filterSize, int64_t B,
-    int64_t C, int16_t * CCS_filtCoeff)
-{
-#ifdef COEFF_DUMP
-  FILE *fp;
-  char fname[512];
-  sprintf (fname, "coeff_%dTO%d.csv", src, dst);
-  fp = fopen (fname, "w");
-  /*FILE *fph;
-     sprintf(fname,"phase_%dTO%d_2Inc.txt",src,dst);
-     fph=fopen(fname,"w"); */
-  //fprintf(fp,"src:%d => dst:%d\n\n",src,dst);
-#endif
-  int one = (1 << 14);
-  int64_t *coeffFilter = NULL;
-  int64_t *coeffFilter_reduced = NULL;
-  int16_t *outFilter = NULL;
-  int16_t *coeffFilter_normalized = NULL;
-  int lumXInc = (((int64_t) src << 16) + (dst >> 1)) / dst;
-  int srt = src / dst;
-  int lval = log2_val (srt);
-  int th0 = 8;
-  int lv0 = MIN (lval, th0);
-  const int64_t fone = (int64_t) 1 << (54 - lv0);
-  int64_t thr1 = ((int64_t) 1 << 31);
-  int64_t thr2 = ((int64_t) 1 << 54) / fone;
-  int i, xInc, outFilterSize;
-  int num_phases = 64;
-  int phase_set[64] = { 0 };
-  int64_t xDstInSrc;
-  int xx, j, p, t;
-  int64_t d = 0, coeff = 0, dd = 0, ddd = 0;
-  int phase_cnt = 0;
-  int64_t error = 0, sum = 0, v = 0;
-  int intV = 0;
-  int fstart_Idx = 0, fend_Idx = 0, half_Idx = 0, middleIdx = 0;
-  unsigned int PhaseH = 0, offset = 0, WriteLoc = 0, WriteLocNext = 0, ReadLoc =
-      0, OutputWrite_En = 0;
-  int OutPixels = dst;
-  int PixelRate =
-      (int) ((float) ((src * STEP_PRECISION) + (dst / 2)) / (float) dst);
-  int ph_max_sum = 1 << MAX_FILTER_SIZE;
-  int sumVal = 0, maxIdx = 0, maxVal = 0, diffVal = 0;
-
-  xInc = lumXInc;
-  filterSize = MAX (filterSize, 1);
-  coeffFilter = (int64_t *) calloc (num_phases * filterSize, sizeof (int64_t));
-  xDstInSrc = xInc - (1 << 16);
-
-  // coefficient generation based on scaler IP
-  for (i = 0; i < src; i++) {
-    PhaseH =
-        ((offset >> (STEP_PRECISION_SHIFT - NR_PHASE_BITS))) & (NR_PHASES - 1);
-    WriteLoc = WriteLocNext;
-
-    if ((offset >> STEP_PRECISION_SHIFT) != 0) {
-      // Take a new sample from input, but don't process anything
-      ReadLoc++;
-      offset = offset - (1 << STEP_PRECISION_SHIFT);
-      OutputWrite_En = 0;
-      WriteLocNext = WriteLoc;
-    }
-
-    if (((offset >> STEP_PRECISION_SHIFT) == 0) && (WriteLoc < OutPixels)) {
-      // Produce a new output sample
-      offset += PixelRate;
-      OutputWrite_En = 1;
-      WriteLocNext = WriteLoc + 1;
-    }
-
-    if (OutputWrite_En) {
-      xDstInSrc = ReadLoc * (1 << 17) + PhaseH * (1 << 11);
-      xx = ReadLoc - (filterSize - 2) / 2;
-
-      d = (ABS (((int64_t) xx * (1 << 17)) - xDstInSrc)) << 13;
-
-      //count number of phases used for this SR
-      if (phase_set[PhaseH] == 0)
-        phase_cnt += 1;
-
-      //Filter coeff generation
-      for (j = 0; j < filterSize; j++) {
-        d = (ABS (((int64_t) xx * (1 << 17)) - xDstInSrc)) << 13;
-        if (xInc > 1 << 16) {
-          d = (int64_t) (d * dst / src);
-        }
-
-        if (d >= thr1) {
-          coeff = 0.0;
-        } else {
-          dd = (int64_t) (d * d) >> 30;
-          ddd = (int64_t) (dd * d) >> 30;
-          if (d < 1 << 30) {
-            coeff = (12 * (1 << 24) - 9 * B - 6 * C) * ddd +
-                (-18 * (1 << 24) + 12 * B + 6 * C) * dd +
-                (6 * (1 << 24) - 2 * B) * (1 << 30);
-          } else {
-            coeff = (-B - 6 * C) * ddd +
-                (6 * B + 30 * C) * dd +
-                (-12 * B - 48 * C) * d + (8 * B + 24 * C) * (1 << 30);
-          }
-        }
-
-        coeff = coeff / thr2;
-        coeffFilter[PhaseH * filterSize + j] = coeff;
-        xx++;
-      }
-      if (phase_set[PhaseH] == 0) {
-        phase_set[PhaseH] = 1;
-      }
-    }
-  }
-
-  coeffFilter_reduced =
-      (int64_t *) calloc ((num_phases * filterSize), sizeof (int64_t));
-  memcpy (coeffFilter_reduced, coeffFilter,
-      sizeof (int64_t) * num_phases * filterSize);
-  outFilterSize = filterSize;
-  outFilter =
-      (int16_t *) calloc ((num_phases * outFilterSize), sizeof (int16_t));
-  coeffFilter_normalized =
-      (int16_t *) calloc ((num_phases * outFilterSize), sizeof (int16_t));
-
-  /* normalize & store in outFilter */
-  for (i = 0; i < num_phases; i++) {
-    error = 0;
-    sum = 0;
-
-    for (j = 0; j < filterSize; j++) {
-      sum += coeffFilter_reduced[i * filterSize + j];
-    }
-    sum = (sum + one / 2) / one;
-    if (!sum) {
-      sum = 1;
-    }
-    for (j = 0; j < outFilterSize; j++) {
-      v = coeffFilter_reduced[i * filterSize + j] + error;
-      intV = ROUNDED_DIV (v, sum);
-      coeffFilter_normalized[i * (outFilterSize) + j] = intV;
-      //added to negate double increment and match our precision
-      coeffFilter_normalized[i * (outFilterSize) + j] =
-          coeffFilter_normalized[i * (outFilterSize) + j] >> 2;
-      error = v - intV * sum;
-    }
-  }
-
-  for (p = 0; p < num_phases; p++) {
-    for (t = 0; t < filterSize; t++) {
-      outFilter[p * filterSize + t] =
-          coeffFilter_normalized[p * filterSize + t];
-    }
-  }
-
-  /*incorporate filter less than 12 tap into a 12 tap */
-  fstart_Idx = 0, fend_Idx = 0, half_Idx = 0;
-  middleIdx = (MAX_FILTER_SIZE / 2);    //center location for 12 tap
-  half_Idx = (outFilterSize / 2);
-  if ((outFilterSize - (half_Idx << 1)) == 0) { //evenOdd
-    fstart_Idx = middleIdx - half_Idx;
-    fend_Idx = middleIdx + half_Idx;
-  } else {
-    fstart_Idx = middleIdx - (half_Idx);
-    fend_Idx = middleIdx + half_Idx + 1;
-  }
-
-  for (i = 0; i < num_phases; i++) {
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-
-      CCS_filtCoeff[i * MAX_FILTER_SIZE + j] = 0;
-      if ((j >= fstart_Idx) && (j < fend_Idx))
-        CCS_filtCoeff[i * MAX_FILTER_SIZE + j] =
-            outFilter[i * (outFilterSize) + (j - fstart_Idx)];
-    }
-  }
-
-  /*Make sure filterCoeffs within a phase sum to 4096 */
-  for (i = 0; i < num_phases; i++) {
-    sumVal = 0;
-    maxVal = 0;
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-      sumVal += CCS_filtCoeff[i * MAX_FILTER_SIZE + j];
-      if (CCS_filtCoeff[i * MAX_FILTER_SIZE + j] > maxVal) {
-        maxVal = CCS_filtCoeff[i * MAX_FILTER_SIZE + j];
-        maxIdx = j;
-      }
-    }
-    diffVal = ph_max_sum - sumVal;
-    if (diffVal > 0)
-      CCS_filtCoeff[i * MAX_FILTER_SIZE + maxIdx] =
-          CCS_filtCoeff[i * MAX_FILTER_SIZE + maxIdx] + diffVal;
-  }
-
-
-#ifdef COEFF_DUMP
-  fprintf (fp, "taps/phases, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\n");
-  for (i = 0; i < num_phases; i++) {
-    fprintf (fp, "%d, ", i + 1);
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-      fprintf (fp, "%d,  ", CCS_filtCoeff[i * MAX_FILTER_SIZE + j]);
-    }
-    fprintf (fp, "\n");
-  }
-#endif
-
-  free (coeffFilter);
-  free (coeffFilter_reduced);
-  free (outFilter);
-  free (coeffFilter_normalized);
-#ifdef COEFF_DUMP
-  fclose (fp);
-#endif
-}
-
-static void
-vvas_xmulticrop_prepare_coefficients_with_12tap (GstVvasXMultiCrop * self,
-    guint chain_id, guint in_width, guint in_height,
-    guint out_width, guint out_height)
-{
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  gint filter_size;
-  int64_t B = 0 * (1 << 24);
-  int64_t C = 0.6 * (1 << 24);
-  float scale_ratio[2] = { 0, 0 };
-  int upscale_enable[2] = { 0, 0 };
-  int filterSet[2] = { 0, 0 };
-  guint d;
-  gboolean bret;
-
-  /* store width scaling ratio  */
-  if (in_width >= out_width) {
-    scale_ratio[0] = (float) in_width / (float) out_width;      //downscale
-  } else {
-    scale_ratio[0] = (float) out_width / (float) in_width;      //upscale
-    upscale_enable[0] = 1;
-  }
-
-  /* store height scaling ratio */
-  if (in_height >= out_height) {
-    scale_ratio[1] = (float) in_height / (float) out_height;    //downscale
-  } else {
-    scale_ratio[1] = (float) out_height / (float) in_height;    //upscale
-    upscale_enable[1] = 1;
-  }
-
-  for (d = 0; d < 2; d++) {
-    if (upscale_enable[d] == 1) {
-      /* upscaling default use 6 taps */
-      filterSet[d] = XLXN_FIXED_COEFF_TAPS_6;
-    } else {
-      /* Get index of downscale fixed filter */
-      if (scale_ratio[d] < 1.5)
-        filterSet[d] = XLXN_FIXED_COEFF_SR13;
-      else if ((scale_ratio[d] >= 1.5) && (scale_ratio[d] < 2))
-        filterSet[d] = XLXN_FIXED_COEFF_SR15;
-      else if ((scale_ratio[d] >= 2) && (scale_ratio[d] < 2.5))
-        filterSet[d] = XLXN_FIXED_COEFF_SR2;
-      else if ((scale_ratio[d] >= 2.5) && (scale_ratio[d] < 3))
-        filterSet[d] = XLXN_FIXED_COEFF_SR25;
-      else if ((scale_ratio[d] >= 3) && (scale_ratio[d] < 3.5))
-        filterSet[d] = XLXN_FIXED_COEFF_TAPS_10;
-      else
-        filterSet[d] = XLXN_FIXED_COEFF_TAPS_12;
-    }
-    GST_INFO_OBJECT (self, "%s scaling ratio = %f and chosen filter type = %d",
-        d == 0 ? "width" : "height", scale_ratio[d], filterSet[d]);
-  }
-
-  if (self->coef_load_type == COEF_AUTO_GENERATE) {
-    /* prepare horizontal coefficients */
-    bret = feasibility_check (in_width, out_width, &filter_size);
-    if (bret && !upscale_enable[0]) {
-      GST_INFO_OBJECT (self, "Generate cardinal cubic horizontal coefficients "
-          "with filter size %d", filter_size);
-      generate_cardinal_cubic_spline (in_width, out_width, filter_size, B, C,
-          (int16_t *) priv->Hcoff[chain_id].user_ptr);
-    } else {
-      /* get fixed horizontal filters */
-      GST_INFO_OBJECT (self,
-          "Consider predefined horizontal filter coefficients");
-      copy_filt_set (priv->Hcoff[chain_id].user_ptr, filterSet[0]);
-    }
-
-    /* prepare vertical coefficients */
-    bret = feasibility_check (in_height, out_height, &filter_size);
-    if (bret && !upscale_enable[1]) {
-      GST_INFO_OBJECT (self, "Generate cardinal cubic vertical coefficients "
-          "with filter size %d", filter_size);
-      generate_cardinal_cubic_spline (in_height, out_height, filter_size, B, C,
-          (int16_t *) priv->Vcoff[chain_id].user_ptr);
-    } else {
-      /* get fixed vertical filters */
-      GST_INFO_OBJECT (self,
-          "Consider predefined vertical filter coefficients");
-      copy_filt_set (priv->Vcoff[chain_id].user_ptr, filterSet[1]);
-    }
-  } else if (self->coef_load_type == COEF_FIXED) {
-    /* get fixed horizontal filters */
-    GST_INFO_OBJECT (self,
-        "Consider predefined horizontal filter coefficients");
-    copy_filt_set (priv->Hcoff[chain_id].user_ptr, filterSet[0]);
-
-    /* get fixed vertical filters */
-    GST_INFO_OBJECT (self, "Consider predefined vertical filter coefficients");
-    copy_filt_set (priv->Vcoff[chain_id].user_ptr, filterSet[1]);
-  }
-}
-
+/**
+ *  @fn static gboolean is_colordomain_matching_with_peer (GstCaps * peercaps, ColorDomain in_color_domain)
+ *  @param [in] peercaps        - Peer's GstCaps
+ *  @param [in] in_color_domain - input color domain
+ *  @return TRUE if color domain matches FALSE otherwise
+ *  @brief  This function checks whether in_color_domain matches with the color domain of peer or not.
+ */
 static gboolean
 is_colordomain_matching_with_peer (GstCaps * peercaps,
     ColorDomain in_color_domain)
@@ -1100,6 +692,7 @@ is_colordomain_matching_with_peer (GstCaps * peercaps,
       out_color_domain = vvas_xmulticrop_get_color_domain (out_format);
 
       if (out_color_domain == in_color_domain) {
+        /* color domain matched with input color domain */
         color_domain_matched = TRUE;
       }
 
@@ -1115,6 +708,7 @@ is_colordomain_matching_with_peer (GstCaps * peercaps,
 
         if (out_color_domain == in_color_domain) {
           color_domain_matched = TRUE;
+          /* color domain matched with input color domain */
           break;
         }
       }
@@ -1123,13 +717,28 @@ is_colordomain_matching_with_peer (GstCaps * peercaps,
   return color_domain_matched;
 }
 
+/**
+ *  @fn static gboolean vvas_xmulticrop_align_crop_params (GstBaseTransform * trans,
+ *                                                         VvasCropParams * crop_params,
+ *                                                         guint width_alignment)
+ *  @param [in] trans               - GstVvasXMultiCrop object typecasted to GstBaseTransform
+ *  @param [in, out] crop_params    - crop parameter to be validated and aligned
+ *  @param [in] width_alignment     - width alignment
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  This function validates and aligns the given crop_params to the given width_alignment.
+ *  @details  This function will validate crop parameters only when any of the
+ *            parameters are non zero.
+ *            If x is non zero, and width is 0; width will be auto calculated,
+ *            If y is non zero, and height is 0; height will be auto calculated.
+ */
 static gboolean
 vvas_xmulticrop_align_crop_params (GstBaseTransform * trans,
     VvasCropParams * crop_params, guint width_alignment)
 {
-
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
 
+  /* Validate and align crops parameters only when x, y, width or
+   * height value is set */
   if (crop_params->x || crop_params->y ||
       crop_params->width || crop_params->height) {
 
@@ -1139,26 +748,40 @@ vvas_xmulticrop_align_crop_params (GstBaseTransform * trans,
     input_height = self->priv->in_vinfo->height;
 
     if ((crop_params->x >= input_width) || (crop_params->y >= input_height)) {
+      /* x can't be greater than the input width and y can't be greater than
+       * the input height */
       GST_ERROR_OBJECT (self, "crop x or y coordinate can't be >= "
           " input width and height");
       return FALSE;
     }
 
-    if (crop_params->x && !crop_params->width) {
+    /* If user hasn't set crop width, we will auto consider
+     * the crop width */
+    if (!crop_params->width) {
       crop_params->width = input_width - crop_params->x;
     }
 
-    if (crop_params->y && !crop_params->height) {
+    /* If user hasn't set crop height, we will auto consider
+     * the crop height */
+    if (!crop_params->height) {
       crop_params->height = input_height - crop_params->y;
     }
     crop_width = crop_params->width;
-    /* Align values as per the IP requirement
-     * Align x by 8 * PPC, width by PPC, y and height by 2
-     */
-    x_aligned = (crop_params->x / (8 * self->ppc)) * (8 * self->ppc);
-    crop_params->width = crop_params->x + crop_params->width - x_aligned;
-    crop_params->width = xlnx_multiscaler_stride_align (crop_params->width,
-        width_alignment);
+    if (!self->software_scaling) {
+      /* Align values as per the IP requirement
+       * Align x by 8 * PPC, width by PPC, y and height by 2
+       */
+      x_aligned = (crop_params->x / (8 * self->ppc)) * (8 * self->ppc);
+      crop_params->width = crop_params->x + crop_params->width - x_aligned;
+      crop_params->width = xlnx_multiscaler_stride_align (crop_params->width,
+          width_alignment);
+    } else {
+      /* Align x to an even number for computational ease */
+      x_aligned = (crop_params->x / 2) * 2;
+      crop_params->width = crop_params->x + crop_params->width - x_aligned;
+      crop_params->width = xlnx_multiscaler_stride_align (crop_params->width,
+          2);
+    }
 
     crop_params->x = x_aligned;
     crop_params->y = (crop_params->y / 2) * 2;
@@ -1170,6 +793,7 @@ vvas_xmulticrop_align_crop_params (GstBaseTransform * trans,
         crop_params->x, crop_params->y, crop_params->width, crop_params->height,
         (crop_params->width - crop_width));
 
+    /* aligned values must not go beyond boundaries */
     if (((crop_params->x + crop_params->width) > input_width) ||
         ((crop_params->y + crop_params->height) > input_height)) {
       GST_ERROR_OBJECT (self, "x + width or y + height can't be greater "
@@ -1180,202 +804,17 @@ vvas_xmulticrop_align_crop_params (GstBaseTransform * trans,
   return TRUE;
 }
 
-static int32_t
-vvas_xmulticrop_exec_buf (vvasDeviceHandle dev_handle,
-    vvasKernelHandle kern_handle, vvasRunHandle * run_handle,
-    const char *format, ...)
-{
-  va_list args;
-  int32_t iret;
-
-  va_start (args, format);
-
-  iret = vvas_xrt_exec_buf (dev_handle, kern_handle, run_handle, format, args);
-
-  va_end (args);
-
-  return iret;
-}
-
-#ifdef XLNX_PCIe_PLATFORM
-static gboolean
-xlnx_multicrop_coeff_sync_bo (GstVvasXMultiCrop * self)
-{
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  int iret;
-  guint idx;
-
-  for (idx = 0; idx < (self->priv->sub_buffer_counter + 1); idx++) {
-
-    iret = vvas_xrt_write_bo (priv->Hcoff[idx].bo,
-        priv->Hcoff[idx].user_ptr, priv->Hcoff[idx].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to write horizontal coefficients. reason : %s",
-          strerror (errno));
-      return FALSE;
-    }
-
-    iret = vvas_xrt_sync_bo (priv->Hcoff[idx].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->Hcoff[idx].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync horizontal coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync horizontal coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-
-    iret = vvas_xrt_write_bo (priv->Vcoff[idx].bo,
-        priv->Vcoff[idx].user_ptr, priv->Vcoff[idx].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to write vertical coefficients. reason : %s",
-          strerror (errno));
-      return FALSE;
-    }
-
-    iret = vvas_xrt_sync_bo (priv->Vcoff[idx].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->Vcoff[idx].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync vertical coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync vertical coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-static gboolean
-xlnx_multicrop_desc_sync_bo (GstVvasXMultiCrop * self)
-{
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  int chan_id;
-  int iret;
-
-  for (chan_id = 0; chan_id < (self->priv->sub_buffer_counter + 1); chan_id++) {
-
-    iret = vvas_xrt_sync_bo (priv->msPtr[chan_id].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->msPtr[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync horizontal coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync  horizontal coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-
-  }
-  return TRUE;
-}
-#endif
-
-static gboolean
-vvas_xmulticrop_create_context (GstVvasXMultiCrop * self)
-{
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  if (!self->kern_name) {
-    GST_ERROR_OBJECT (self, "kernel name is not set");
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("kernel name is not set"));
-    return FALSE;
-  }
-#ifdef XLNX_PCIe_PLATFORM
-  if (self->dev_index < 0) {
-    GST_ERROR_OBJECT (self, "device index %d is not valid", self->dev_index);
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("device index %d is not valid", self->dev_index));
-    return FALSE;
-  }
-#endif
-
-  if (!vvas_xrt_open_device (self->dev_index, &priv->dev_handle)) {
-    GST_ERROR_OBJECT (self, "failed to open device index %u", self->dev_index);
-    return FALSE;
-  }
-
-  /* TODO: Need to uncomment after CR-1122125 is resolved */
-//#ifndef ENABLE_XRM_SUPPORT
-  if (!self->xclbin_path) {
-    GST_ERROR_OBJECT (self, "invalid xclbin path %s", self->xclbin_path);
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, (NULL),
-        ("xclbin path not set"));
-    return FALSE;
-  }
-
-  /* We have to download the xclbin irrespective of XRM or not as there
-   * mismatch of UUID between XRM and XRT Native. CR-1122125 raised */
-  if (vvas_xrt_download_xclbin (self->xclbin_path,
-          priv->dev_handle, &(priv->xclbinId))) {
-    GST_ERROR_OBJECT (self, "failed to initialize XRT");
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("xclbin download failed"));
-    return FALSE;
-  }
-//#endif
-
-  if (vvas_xrt_open_context (priv->dev_handle, priv->xclbinId,
-          &priv->kern_handle, self->kern_name, true)) {
-    GST_ERROR_OBJECT (self, "failed to open XRT context ...");
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static void
-vvas_xmulticrop_free_internal_buffers (GstVvasXMultiCrop * self)
-{
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  guint idx;
-
-  GST_DEBUG_OBJECT (self, "freeing internal buffers");
-  for (idx = 0; idx < priv->internal_buf_counter; idx++) {
-    if (priv->Hcoff[idx].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->Hcoff[idx]);
-      memset (&(self->priv->Hcoff[idx]), 0x0, sizeof (xrt_buffer));
-    }
-    if (priv->Vcoff[idx].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->Vcoff[idx]);
-      memset (&(self->priv->Vcoff[idx]), 0x0, sizeof (xrt_buffer));
-    }
-    if (priv->msPtr[idx].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->msPtr[idx]);
-      memset (&(self->priv->msPtr[idx]), 0x0, sizeof (xrt_buffer));
-    }
-  }
-  priv->internal_buf_counter = 0;
-}
-
-static gboolean
-vvas_xmulticrop_destroy_context (GstVvasXMultiCrop * self)
-{
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  gboolean has_error = FALSE;
-  gint iret;
-
-  if (priv->dev_handle) {
-    iret = vvas_xrt_close_context (priv->kern_handle);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self, "failed to close xrt context");
-      has_error = TRUE;
-    }
-    vvas_xrt_close_device (priv->dev_handle);
-    priv->dev_handle = NULL;
-    GST_INFO_OBJECT (self, "closed xrt context");
-  }
-
-  return has_error ? FALSE : TRUE;
-}
-
+/**
+ *  @fn static void gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
+ *  @param [in] klass   - Handle to GstVvasXMultiCropClass
+ *  @return None
+ *  @brief  Add properties and signals of GstVvasXMultiCrop to parent GObjectClass
+ *          and overrides function pointers present in itself and/or its parent class structures
+ *  @details  This function publishes properties those can be set/get from application
+ *            on GstVvasXMultiCrop object. And, while publishing a property it also declares
+ *            type, range of acceptable values, default value, readability/writability and in
+ *            which GStreamer state a property can be changed.
+ */
 static void
 gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
 {
@@ -1383,11 +822,13 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *xform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
+  /* Add pad templated to the element */
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
       &src_template);
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
       &sink_template);
 
+  /* Add element's metadata */
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "Xilinx XlnxMultiCrop plugin",
       "Filter/Converter/Video/Scaler",
@@ -1399,26 +840,33 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
 
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
+  /* Override GObject class' virtual methods */
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_vvas_xmulticrop_set_property);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_vvas_xmulticrop_get_property);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_vvas_xmulticrop_finalize);
+  /* Override GstElement class' virtual methods */
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_vvas_xmulticrop_change_state);
 
+  /* Install xclbin-location property */
   g_object_class_install_property (gobject_class, PROP_XCLBIN_LOCATION,
       g_param_spec_string ("xclbin-location", "xclbin file location",
           "Location of the xclbin to program devices", NULL,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               GST_PARAM_MUTABLE_READY)));
+
+  /* Install kernel-name property */
   g_object_class_install_property (gobject_class, PROP_KERN_NAME,
       g_param_spec_string ("kernel-name", "kernel name and instance",
           "String defining the kernel name and instance as mentioned in xclbin",
           DEFAULT_KERNEL_NAME,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               GST_PARAM_MUTABLE_READY)));
+
 #ifdef XLNX_PCIe_PLATFORM
+  /* Install dev-idx property */
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("dev-idx", "Device index",
           "Valid Device index is 0 to 31. Default value is set to -1 intentionally"
@@ -1427,6 +875,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
+  /* Install in-mem-bank property */
   g_object_class_install_property (gobject_class, PROP_IN_MEM_BANK,
       g_param_spec_uint ("in-mem-bank", "VVAS Input Memory Bank",
           "VVAS input memory bank to allocate memory",
@@ -1434,6 +883,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install out-mem-bak property */
   g_object_class_install_property (gobject_class, PROP_OUT_MEM_BANK,
       g_param_spec_uint ("out-mem-bank", "VVAS Output Memory Bank",
           "VVAS output memory bank to allocate memory",
@@ -1441,12 +891,15 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install ppc (pixel per clock) property */
   g_object_class_install_property (gobject_class, PROP_PPC,
       g_param_spec_enum ("ppc", "pixel per clock",
           "Pixel per clock configured in Multiscaler kernel",
           VVAS_XMULTICROP_PPC_TYPE, VVAS_XMULTICROP_DEFAULT_PPC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+
+  /* Install scale-mode property */
   g_object_class_install_property (gobject_class, PROP_SCALE_MODE,
       g_param_spec_int ("scale-mode", "Scaling Mode",
           "Scale Mode configured in Multiscaler kernel.  "
@@ -1454,6 +907,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           VVAS_XMULTICROP_SCALE_MODE, G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
 
+  /* Install num-taps property */
   g_object_class_install_property (gobject_class, PROP_NUM_TAPS,
       g_param_spec_enum ("num-taps", "Number filter taps",
           "Number of filter taps to be used for scaling",
@@ -1461,6 +915,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install coefficient load type property */
   g_object_class_install_property (gobject_class, PROP_COEF_LOADING_TYPE,
       g_param_spec_enum ("coef-load-type", "Coefficients loading type",
           "coefficients loading type for scaling",
@@ -1469,6 +924,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install avoid-output-copy property */
   g_object_class_install_property (gobject_class, PROP_AVOID_OUTPUT_COPY,
       g_param_spec_boolean ("avoid-output-copy",
           "Avoid output frames copy",
@@ -1478,6 +934,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install enable-pipeline property */
   g_object_class_install_property (gobject_class, PROP_ENABLE_PIPELINE,
       g_param_spec_boolean ("enable-pipeline",
           "Enable pipelining",
@@ -1486,6 +943,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install static crop x property */
   g_object_class_install_property (gobject_class, PROP_CROP_X,
       g_param_spec_uint ("s-crop-x", "Crop X coordinate for static cropping",
           "Crop X coordinate for static cropping",
@@ -1493,6 +951,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install static crop y property */
   g_object_class_install_property (gobject_class, PROP_CROP_Y,
       g_param_spec_uint ("s-crop-y", "Crop Y coordinate for static cropping",
           "Crop Y coordinate for static cropping",
@@ -1500,6 +959,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install static crop width property */
   g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
       g_param_spec_uint ("s-crop-width", "Crop width for static cropping",
           "Crop width (minimum: 64) for static cropping, if s-crop-x is given, but "
@@ -1509,6 +969,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install static crop height property */
   g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
       g_param_spec_uint ("s-crop-height", "Crop height for static cropping",
           "Crop height (minimum: 64) for static cropping, if s-crop-y is given, but "
@@ -1518,6 +979,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install dynamic crop width property */
   g_object_class_install_property (gobject_class, PROP_SUBBUFFER_WIDTH,
       g_param_spec_uint ("d-width", "Width of dynamically cropped buffers",
           "Width of dynamically cropped buffers, if set all dynamically "
@@ -1526,6 +988,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install dynamic crop height property */
   g_object_class_install_property (gobject_class, PROP_SUBBUFFER_HEIGHT,
       g_param_spec_uint ("d-height", "Height of dynamically cropped buffers",
           "Height of dynamically cropped buffers, if set all dynamically"
@@ -1534,6 +997,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install dynamic crop buffer format property */
   g_object_class_install_property (gobject_class, PROP_SUBBUFFER_FORMAT,
       g_param_spec_enum ("d-format", "Format of dynamically cropped buffers",
           "Format of dynamically cropped buffers, by default it will be same as"
@@ -1542,6 +1006,7 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /* Install pre-process on main buffer property */
   g_object_class_install_property (gobject_class, PROP_PPE_ON_MAIN_BUFFER,
       g_param_spec_boolean ("ppe-on-main-buffer",
           "Post processing on main buffer",
@@ -1552,36 +1017,42 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           GST_PARAM_MUTABLE_READY));
 
 #ifdef ENABLE_PPE_SUPPORT
+  /* Install alpha red property */
   g_object_class_install_property (gobject_class, PROP_ALPHA_R,
       g_param_spec_float ("alpha-r",
           "PreProcessing parameter alpha red channel value",
           "PreProcessing parameter alpha red channel value", 0, 128,
           0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* Install alpha green property */
   g_object_class_install_property (gobject_class, PROP_ALPHA_G,
       g_param_spec_float ("alpha-g",
           "PreProcessing parameter alpha green channel value",
           "PreProcessing parameter alpha green channel value", 0, 128,
           0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* Install alpha blue property */
   g_object_class_install_property (gobject_class, PROP_ALPHA_B,
       g_param_spec_float ("alpha-b",
           "PreProcessing parameter alpha blue channel value",
           "PreProcessing parameter alpha blue channel value", 0, 128,
           0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* Install beta red property */
   g_object_class_install_property (gobject_class, PROP_BETA_R,
       g_param_spec_float ("beta-r",
           "PreProcessing parameter beta red channel value",
           "PreProcessing parameter beta red channel value", 0, 1,
           1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* Install beta green property */
   g_object_class_install_property (gobject_class, PROP_BETA_G,
       g_param_spec_float ("beta-g",
           "PreProcessing parameter beta green channel value",
           "PreProcessing parameter beta green channel value", 0, 1,
           1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* Install beta blue property */
   g_object_class_install_property (gobject_class, PROP_BETA_B,
       g_param_spec_float ("beta-b",
           "PreProcessing parameter beta blue channel value",
@@ -1589,6 +1060,15 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
           1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
+  g_object_class_install_property (gobject_class, PROP_SOFTWARE_SCALING,
+      g_param_spec_boolean ("software-scaling",
+          "Flag to to enable software scaling flow.",
+          "Set this flag to true in case of software scaling.",
+          VVAS_XMULTICROP_ENABLE_SOFTWARE_SCALING_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  /* Override GstBaseTransoform class' virtual methods */
   xform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_vvas_xmulticrop_transform_caps);
   xform_class->fixate_caps =
@@ -1606,17 +1086,25 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
   xform_class->passthrough_on_same_caps = FALSE;
 }
 
+/**
+ *  @fn static void gst_vvas_xmulticrop_init (GstVvasXMultiCrop * self)
+ *  @param [in] self    - Handle to GstVvasXMultiCrop instance
+ *  @return None
+ *  @brief  Initializes GstVvasXMultiCrop member variables to default and does
+ *          one time object/memory allocations in object's lifecycle
+ */
 static void
 gst_vvas_xmulticrop_init (GstVvasXMultiCrop * self)
 {
   self->priv = GST_VVAS_XMULTICROP_PRIVATE (self);
-
+  /* Initialize context to their default values */
   self->xclbin_path = NULL;
   self->out_stride_align = 1;
   self->out_elevation_align = 1;
   self->num_taps = VVAS_XMULTICROP_DEFAULT_NUM_TAPS;
   self->coef_load_type = VVAS_XMULTICROP_DEFAULT_COEF_LOAD_TYPE;
   self->avoid_output_copy = VVAS_XMULTICROP_AVOID_OUTPUT_COPY_DEFAULT;
+  self->software_scaling = VVAS_XMULTICROP_ENABLE_SOFTWARE_SCALING_DEFAULT;
 #ifdef ENABLE_PPE_SUPPORT
   self->alpha_r = 0;
   self->alpha_g = 0;
@@ -1642,12 +1130,12 @@ gst_vvas_xmulticrop_init (GstVvasXMultiCrop * self)
   self->subbuffer_height = 0;
   self->ppe_on_main_buffer = VVAS_XMULTICROP_PPE_ON_MAIN_BUF_DEFAULT;
   self->priv->sub_buffer_counter = 0;
-  self->priv->internal_buf_counter = 0;
   self->priv->in_vinfo = gst_video_info_new ();
   self->priv->out_vinfo = gst_video_info_new ();
   self->priv->validate_import = TRUE;
   self->priv->input_pool = NULL;
-  self->priv->is_internal_buf_allocated = FALSE;
+  self->priv->vvas_ctx = NULL;
+  self->priv->vvas_scaler = NULL;
   self->kern_name = g_strdup (DEFAULT_KERNEL_NAME);
   gst_video_info_init (self->priv->in_vinfo);
   gst_video_info_init (self->priv->out_vinfo);
@@ -1655,7 +1143,16 @@ gst_vvas_xmulticrop_init (GstVvasXMultiCrop * self)
   self->enabled_pipeline = VVAS_XMULTICROP_ENABLE_PIPELINE_DEFAULT;
 }
 
-/* decide allocation query for output buffers */
+/**
+ *  @fn static gboolean gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans, GstQuery * query)
+ *  @param [in] trans   - Handle to GstVvasXMultiCrop typecasted to GstBaseTransform.
+ *  @param [in] query   - Response for the allocation query.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will decide allocation strategy based on the preference
+ *          from downstream element.
+ *  @details  The proposed query will be parsed through, verified if the proposed pool is VVAS and alignments
+ *            are quoted. Otherwise it will be discarded and new pool, allocator will be created.
+ */
 static gboolean
 gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
@@ -1671,6 +1168,7 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
   GstStructure *config = NULL;
   GstVideoInfo out_vinfo;
 
+  /* Get output caps from the query */
   gst_query_parse_allocation (query, &outcaps, NULL);
   if (outcaps && !gst_video_info_from_caps (&info, outcaps)) {
     GST_ERROR_OBJECT (self, "failed to get video info from outcaps");
@@ -1685,6 +1183,7 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
     GST_DEBUG_OBJECT (self, "has allocator %p", allocator);
     update_allocator = TRUE;
   } else {
+    /* No allocator params from the peer */
     allocator = NULL;
     update_allocator = FALSE;
     gst_allocation_params_init (&params);
@@ -1696,12 +1195,15 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
   }
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
+    /* Got pool from the peer */
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     size = MAX (size, out_vinfo.size);
     update_pool = TRUE;
+    /* minimum buffers from the pool should be 3 */
     if (min == 0)
       min = 3;
   } else {
+    /* No pools from the peer */
     pool = NULL;
     min = 3;
     max = 0;
@@ -1709,180 +1211,261 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
     update_pool = FALSE;
   }
 
-  /* Check if the proposed pool is VVAS Buffer Pool and stride is aligned with (8 * ppc)
-   * If otherwise, discard the pool. Will create a new one */
-  if (pool) {
-    GstVideoAlignment video_align = { 0, };
-    guint padded_width = 0;
-    guint stride = 0, multiscaler_req_stride;
+  if (!self->software_scaling) {
+    /* Check if the proposed pool is VVAS Buffer Pool and stride is aligned with (8 * ppc)
+     * If otherwise, discard the pool. Will create a new one */
+    if (pool) {
+      GstVideoAlignment video_align = { 0, };
+      guint padded_width = 0;
+      guint stride = 0, multiscaler_req_stride;
 
-    config = gst_buffer_pool_get_config (pool);
-    if (config && gst_buffer_pool_config_has_option (config,
-            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
-      gst_buffer_pool_config_get_video_alignment (config, &video_align);
+      config = gst_buffer_pool_get_config (pool);
+      if (config && gst_buffer_pool_config_has_option (config,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_get_video_alignment (config, &video_align);
 
-      /* We have adding padding_right and padding_left in pixels.
-       * We need to convert them to bytes for finding out the complete stride with alignment */
-      padded_width =
-          out_vinfo.width + video_align.padding_right +
-          video_align.padding_left;
-      stride =
-          vvas_xmulticrop_get_stride (GST_VIDEO_INFO_FORMAT (&out_vinfo),
-          padded_width);
-      //stride = vvas_xmulticrop_get_stride (&out_vinfo, padded_width);
+        /* We have adding padding_right and padding_left in pixels.
+         * We need to convert them to bytes for finding out the complete stride with alignment */
+        padded_width =
+            out_vinfo.width + video_align.padding_right +
+            video_align.padding_left;
+        stride =
+            vvas_xmulticrop_get_stride (GST_VIDEO_INFO_FORMAT (&out_vinfo),
+            padded_width);
 
-      GST_INFO_OBJECT (self, "output stride = %u", stride);
+        GST_INFO_OBJECT (self, "output stride = %u", stride);
 
-      if (!stride)
-        return FALSE;
-      gst_structure_free (config);
-      config = NULL;
-      multiscaler_req_stride = 8 * self->ppc;
+        if (!stride)
+          return FALSE;
+        gst_structure_free (config);
+        config = NULL;
+        multiscaler_req_stride = WIDTH_ALIGN;
 
-      if (stride % multiscaler_req_stride) {
-        GST_WARNING_OBJECT (self, "Discarding the propsed pool, "
-            "Alignment not matching with 8 * self->ppc");
+        if (stride % multiscaler_req_stride) {
+          GST_WARNING_OBJECT (self, "Discarding the propsed pool, "
+              "Alignment not matching with 8 * self->ppc");
+          gst_object_unref (pool);
+          pool = NULL;
+          update_pool = FALSE;
+          /* stride of proposed pool and that of Multi scaler IP is not matching,
+           * we can't use this pool, free it and allocate new buffer pool */
+          self->out_stride_align = multiscaler_req_stride;
+          self->out_elevation_align = 1;
+          GST_DEBUG_OBJECT (self, "Going to allocate pool with stride_align %d and \
+              elevation_align %d", self->out_stride_align,
+              self->out_elevation_align);
+        }
+      } else {
+        /* VVAS Buffer Pool but no alignment information.
+         * Discard to create pool with scaler alignment requirements*/
+        if (config) {
+          gst_structure_free (config);
+          config = NULL;
+        }
         gst_object_unref (pool);
         pool = NULL;
         update_pool = FALSE;
+      }
+    }
+#ifdef XLNX_EMBEDDED_PLATFORM
+    /* TODO: Currently Kms buffer are not supported in PCIe platform */
+    if (pool) {
+      GstStructure *config = gst_buffer_pool_get_config (pool);
 
-        self->out_stride_align = multiscaler_req_stride;
-        self->out_elevation_align = 1;
-        GST_DEBUG_OBJECT (self, "Going to allocate pool with stride_align %d and \
-            elevation_align %d", self->out_stride_align,
-            self->out_elevation_align);
-      }
-    } else {
-      /* VVAS Buffer Pool but no alignment information.
-       * Discard to create pool with scaler alignment requirements*/
-      if (config) {
+      if (gst_buffer_pool_config_has_option (config,
+              "GstBufferPoolOptionKMSPrimeExport")) {
         gst_structure_free (config);
-        config = NULL;
+        goto next;
       }
+
+      gst_structure_free (config);
+      gst_object_unref (pool);
+      pool = NULL;
+      GST_DEBUG_OBJECT (self, "pool deos not have the KMSPrimeExport option, \
+          unref the pool and create vvas allocator");
+    }
+#endif
+
+    if (pool && !GST_IS_VVAS_BUFFER_POOL (pool)) {
+      /* create own pool */
       gst_object_unref (pool);
       pool = NULL;
       update_pool = FALSE;
     }
-  }
+
+    /* If proposed allocator is not VVAS allocator or if it is not created for same device,
+     * we can't use it, free it and allocate new VVAS allocator */
+    if (allocator && (!GST_IS_VVAS_ALLOCATOR (allocator) ||
+            gst_vvas_allocator_get_device_idx (allocator) != self->dev_index)) {
+      GST_DEBUG_OBJECT (self, "replace %" GST_PTR_FORMAT " to xrt allocator",
+          allocator);
+      gst_object_unref (allocator);
+      gst_allocation_params_init (&params);
+      allocator = NULL;
+    }
+
+    if (!allocator) {
+      /* making vvas allocator for the HW mode without dmabuf */
+      allocator = gst_vvas_allocator_new (self->dev_index,
+          NEED_DMABUF, self->out_mem_bank);
+      params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
+      params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
+      GST_INFO_OBJECT (self, "creating new xrt allocator %" GST_PTR_FORMAT
+          "at mem bank %d", allocator, self->out_mem_bank);
+      have_new_allocator = TRUE;
+    }
 #ifdef XLNX_EMBEDDED_PLATFORM
-/* TODO: Currently Kms buffer are not supported in PCIe platform */
-  if (pool) {
-    GstStructure *config = gst_buffer_pool_get_config (pool);
-
-    if (gst_buffer_pool_config_has_option (config,
-            "GstBufferPoolOptionKMSPrimeExport")) {
-      gst_structure_free (config);
-      goto next;
-    }
-
-    gst_structure_free (config);
-    gst_object_unref (pool);
-    pool = NULL;
-    GST_DEBUG_OBJECT (self, "pool deos not have the KMSPrimeExport option, \
-        unref the pool and create vvas allocator");
-  }
+  next:
 #endif
+    if (update_allocator)
+      gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+    else
+      gst_query_add_allocation_param (query, allocator, &params);
 
-  if (pool && !GST_IS_VVAS_BUFFER_POOL (pool)) {
-    /* create own pool */
-    gst_object_unref (pool);
-    pool = NULL;
-    update_pool = FALSE;
-  }
-
-  if (allocator && (!GST_IS_VVAS_ALLOCATOR (allocator) ||
-          gst_vvas_allocator_get_device_idx (allocator) != self->dev_index)) {
-    GST_DEBUG_OBJECT (self, "replace %" GST_PTR_FORMAT " to xrt allocator",
-        allocator);
-    gst_object_unref (allocator);
-    gst_allocation_params_init (&params);
-    allocator = NULL;
-  }
-
-  if (!allocator) {
-    /* making vvas allocator for the HW mode without dmabuf */
-    allocator = gst_vvas_allocator_new (self->dev_index,
-        NEED_DMABUF, self->out_mem_bank, self->priv->kern_handle);
-    params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
-    params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
-    GST_INFO_OBJECT (self, "creating new xrt allocator %" GST_PTR_FORMAT
-        "at mem bank %d", allocator, self->out_mem_bank);
-    have_new_allocator = TRUE;
-  }
-#ifdef XLNX_EMBEDDED_PLATFORM
-next:
-#endif
-  if (update_allocator)
-    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
-  else
-    gst_query_add_allocation_param (query, allocator, &params);
-
-  /* If there is no pool allignment requirement from downstream or if scaling dimension
-   * is not aligned to (8 * ppc), then we will create a new pool*/
-  if (!pool && (self->out_stride_align == 1)
-      && ((out_vinfo.stride[0] % WIDTH_ALIGN)
-          || (out_vinfo.height % HEIGHT_ALIGN))) {
-    self->out_stride_align = WIDTH_ALIGN;
-    self->out_elevation_align = HEIGHT_ALIGN;
-  }
-
-  if (!pool) {
-    GstVideoAlignment align;
-
-    pool = gst_vvas_buffer_pool_new (self->out_stride_align,
-        self->out_elevation_align);
-    GST_INFO_OBJECT (self, "created new pool %p %" GST_PTR_FORMAT, pool, pool);
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_video_alignment_reset (&align);
-    align.padding_top = 0;
-    align.padding_left = 0;
-    align.padding_right = vvas_xmulticrop_get_padding_right (self, &out_vinfo);
-    align.padding_bottom = ALIGN (GST_VIDEO_INFO_HEIGHT (&out_vinfo),
-        self->out_elevation_align) - GST_VIDEO_INFO_HEIGHT (&out_vinfo);
-
-    if (align.padding_right == -1)
-      goto error;
-    gst_video_info_align (&out_vinfo, &align);
-    /* size updated in vinfo based on alignment */
-    size = out_vinfo.size;
-
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-    gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    gst_buffer_pool_config_set_video_alignment (config, &align);
-
-    GST_DEBUG_OBJECT (self,
-        "Align padding: top:%d, bottom:%d, left:%d, right:%d",
-        align.padding_top, align.padding_bottom, align.padding_left,
-        align.padding_right);
-
-    bret = gst_buffer_pool_set_config (pool, config);
-    if (!bret) {
-      GST_ERROR_OBJECT (self, "failed configure pool");
-      goto error;
+    /* If there is no pool alignment requirement from downstream or if scaling dimension
+     * is not aligned to (8 * ppc), then we will create a new pool*/
+    if (!pool && (self->out_stride_align == 1)
+        && ((out_vinfo.stride[0] % WIDTH_ALIGN)
+            || (out_vinfo.height % HEIGHT_ALIGN))) {
+      self->out_stride_align = WIDTH_ALIGN;
+      self->out_elevation_align = HEIGHT_ALIGN;
     }
-  } else if (have_new_allocator) {
-    /* update newly allocator on downstream pool */
-    config = gst_buffer_pool_get_config (pool);
 
-    GST_INFO_OBJECT (self, "updating allocator %" GST_PTR_FORMAT
-        " on pool %" GST_PTR_FORMAT, allocator, pool);
+    if (!pool) {
+      GstVideoAlignment align;
+      /* Allocate new VVAS buffer pool as per the IP alignment requirement */
+      pool = gst_vvas_buffer_pool_new (self->out_stride_align,
+          self->out_elevation_align);
+      GST_INFO_OBJECT (self, "created new pool %p %" GST_PTR_FORMAT, pool,
+          pool);
 
-    gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    bret = gst_buffer_pool_set_config (pool, config);
-    if (!bret) {
-      GST_ERROR_OBJECT (self, "failed configure pool");
-      goto error;
+      config = gst_buffer_pool_get_config (pool);
+      gst_video_alignment_reset (&align);
+      align.padding_bottom = ALIGN (GST_VIDEO_INFO_HEIGHT (&out_vinfo),
+          self->out_elevation_align) - GST_VIDEO_INFO_HEIGHT (&out_vinfo);
+
+      for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&out_vinfo); idx++) {
+        align.stride_align[idx] = (self->out_stride_align - 1);
+      }
+      gst_video_info_align (&out_vinfo, &align);
+      /* size updated in vinfo based on alignment */
+      size = out_vinfo.size;
+
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+      gst_buffer_pool_config_set_allocator (config, allocator, &params);
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      gst_buffer_pool_config_set_video_alignment (config, &align);
+
+      GST_DEBUG_OBJECT (self,
+          "Align padding: top:%d, bottom:%d, left:%d, right:%d",
+          align.padding_top, align.padding_bottom, align.padding_left,
+          align.padding_right);
+
+      bret = gst_buffer_pool_set_config (pool, config);
+      if (!bret) {
+        GST_ERROR_OBJECT (self, "failed configure pool");
+        goto error;
+      }
+    } else if (have_new_allocator) {
+      /* We already have a pool, but the allocator is new.
+       * Update the newly created allocator in the downstream pool*/
+      config = gst_buffer_pool_get_config (pool);
+
+      GST_INFO_OBJECT (self, "updating allocator %" GST_PTR_FORMAT
+          " on pool %" GST_PTR_FORMAT, allocator, pool);
+
+      gst_buffer_pool_config_set_allocator (config, allocator, &params);
+      bret = gst_buffer_pool_set_config (pool, config);
+      if (!bret) {
+        GST_ERROR_OBJECT (self, "failed configure pool");
+        goto error;
+      }
+    }
+    /*  Since self->out_stride_align is common for all channels
+     *  reset the output stride to 1 (its default), so that other channels are not affected */
+    self->out_stride_align = 1;
+    self->out_elevation_align = 1;
+  } else {
+    /* We have a pool, lets just configure it */
+    if (pool) {
+      GstVideoAlignment video_align = { 0, };
+      guint padded_width = 0;
+      guint stride = 0;
+
+      config = gst_buffer_pool_get_config (pool);
+
+      /* Check if the proposed buffer pool has alignment information */
+      if (config && gst_buffer_pool_config_has_option (config,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_get_video_alignment (config, &video_align);
+
+        /* We have padding_right and padding_left in pixels.
+         * We need to convert them to bytes for finding out the complete stride with alignment */
+        padded_width =
+            out_vinfo.width + video_align.padding_right +
+            video_align.padding_left;
+        gst_video_info_align (&out_vinfo, &video_align);
+        stride = vvas_xmulticrop_get_stride (GST_VIDEO_INFO_FORMAT (&out_vinfo),
+            padded_width);
+
+        GST_INFO_OBJECT (self, "output stride = %u", stride);
+        /* Stride can't be zero here */
+        if (!stride) {
+          gst_structure_free (config);
+          config = NULL;
+          gst_object_unref (pool);
+          pool = NULL;
+          return FALSE;
+        }
+      }
+      min = 3;
+      max = 0;
+      size = out_vinfo.size;
+      gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+      gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+      /* buffer pool may have to do some changes */
+      if (!gst_buffer_pool_set_config (pool, config)) {
+        config = gst_buffer_pool_get_config (pool);
+
+        /* If change are not acceptable, fallback to video buffer pool */
+        if (!gst_buffer_pool_config_validate_params (config, outcaps, size, min,
+                max)) {
+          GST_DEBUG_OBJECT (self, "unsupported pool, making new pool");
+
+          gst_object_unref (pool);
+          pool = NULL;
+        }
+      }
+    }
+
+    /* Either the downstream has not proposed a pool or the proposed pool is not
+     * usable for us. Let't create a new video pool with host memory, as we are
+     * not doing the accelerated scaling.  */
+    if (!pool) {
+      pool = gst_video_buffer_pool_new ();
+      size = out_vinfo.size;
+      min = 3;
+      max = 0;
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      bret = gst_buffer_pool_set_config (pool, config);
+      if (!bret) {
+        GST_ERROR_OBJECT (self, "failed configure pool");
+        goto error;
+      }
+      /* We are using a video buffer pool, no need of copy even if
+       * downstream element is non video intelligent.
+       */
+      self->avoid_output_copy = TRUE;
+      update_pool = FALSE;
     }
   }
-  /*  Since self->out_stride_align is common for all channels
-   *  reset the output stride to 1 (its default), so that other channels are not affected */
-  self->out_stride_align = 1;
-  self->out_elevation_align = 1;
 
   /* avoid output frames copy when downstream supports video meta */
   if (!self->avoid_output_copy) {
@@ -1920,12 +1503,21 @@ error:
   return FALSE;
 }
 
-/* propose allocation query parameters for input buffers */
+/**
+ *  @fn static gboolean gst_vvas_xmulticrop_propose_allocation (GstBaseTransform * trans,
+ *                                                              GstQuery * decide_query,
+ *                                                              GstQuery * query)
+ *  @param [in] trans           - Handle to GstVvasXMultiCrop typecasted to GstBaseTransform.
+ *  @param [in] decide_query    - decide GstQuery
+ *  @param [in] query           - Src pad object for which allocation has to be decided
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function proposes buffer allocation parameters for upstream elements.
+ */
 static gboolean
 gst_vvas_xmulticrop_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
-
+  /* Propose buffer allocation mechanism to the upstream plugin */
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
   GstCaps *caps;
   GstVideoInfo info;
@@ -1937,71 +1529,77 @@ gst_vvas_xmulticrop_propose_allocation (GstBaseTransform * trans,
       (gst_vvas_xmulticrop_parent_class)->propose_allocation (trans,
       decide_query, query);
 
-  gst_query_parse_allocation (query, &caps, NULL);
+  if (!self->software_scaling) {
+    /* parse caps from query */
+    gst_query_parse_allocation (query, &caps, NULL);
 
-  if (caps == NULL)
-    return FALSE;
+    if (caps == NULL)
+      return FALSE;
 
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
+    if (!gst_video_info_from_caps (&info, caps))
+      return FALSE;
 
-  if (gst_query_get_n_allocation_pools (query) == 0) {
-    GstStructure *structure;
-    GstAllocator *allocator = NULL;
-    GstAllocationParams params =
-        { GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS, 0, 0, 0 };
+    /* Get pools information from the query */
+    if (gst_query_get_n_allocation_pools (query) == 0) {
+      GstStructure *structure;
+      GstAllocator *allocator = NULL;
+      GstAllocationParams params =
+          { GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS, 0, 0, 0 };
 
-    if (gst_query_get_n_allocation_params (query) > 0) {
-      gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
-    } else {
-      allocator = gst_vvas_allocator_new (self->dev_index,
-          NEED_DMABUF, self->in_mem_bank, self->priv->kern_handle);
-      GST_INFO_OBJECT (self, "creating new xrt allocator %" GST_PTR_FORMAT
-          "at mem bank %d", allocator, self->in_mem_bank);
+      if (gst_query_get_n_allocation_params (query) > 0) {
+        gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+      } else {
+        /* Suggest VVAS allocator as allocator */
+        allocator = gst_vvas_allocator_new (self->dev_index,
+            NEED_DMABUF, self->in_mem_bank);
+        GST_INFO_OBJECT (self, "creating new xrt allocator %" GST_PTR_FORMAT
+            "at mem bank %d", allocator, self->in_mem_bank);
 
-      gst_query_add_allocation_param (query, allocator, &params);
+        gst_query_add_allocation_param (query, allocator, &params);
+      }
+
+      /* suggest VVAS buffer pool */
+      pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
+      GST_LOG_OBJECT (self, "allocated internal sink pool %p", pool);
+
+      structure = gst_buffer_pool_get_config (pool);
+
+      gst_video_alignment_reset (&align);
+      align.padding_bottom =
+          ALIGN (GST_VIDEO_INFO_HEIGHT (&info),
+          HEIGHT_ALIGN) - GST_VIDEO_INFO_HEIGHT (&info);
+      for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&info); idx++) {
+        align.stride_align[idx] = (WIDTH_ALIGN - 1);
+      }
+      gst_video_info_align (&info, &align);
+
+      gst_buffer_pool_config_add_option (structure,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      gst_buffer_pool_config_set_video_alignment (structure, &align);
+
+      size = GST_VIDEO_INFO_SIZE (&info);
+      gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
+      /* set allocator the the buffer pool */
+      gst_buffer_pool_config_set_allocator (structure, allocator, &params);
+      /* set option to attach GstVideoMeta */
+      gst_buffer_pool_config_add_option (structure,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+      if (allocator)
+        gst_object_unref (allocator);
+
+      if (!gst_buffer_pool_set_config (pool, structure))
+        goto config_failed;
+
+      GST_OBJECT_LOCK (self);
+      gst_query_add_allocation_pool (query, pool, size, 2, 0);
+
+      GST_OBJECT_UNLOCK (self);
+
+      gst_query_add_allocation_pool (query, pool, size, 2, 0);
+      gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+      gst_object_unref (pool);
     }
-
-    pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
-    GST_LOG_OBJECT (self, "allocated internal sink pool %p", pool);
-
-    structure = gst_buffer_pool_get_config (pool);
-
-    gst_video_alignment_reset (&align);
-    align.padding_top = 0;
-    align.padding_left = 0;
-    align.padding_right = vvas_xmulticrop_get_padding_right (self, &info);
-    align.padding_bottom =
-        ALIGN (GST_VIDEO_INFO_HEIGHT (&info),
-        HEIGHT_ALIGN) - GST_VIDEO_INFO_HEIGHT (&info);
-    gst_video_info_align (&info, &align);
-
-    gst_buffer_pool_config_add_option (structure,
-        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    gst_buffer_pool_config_set_video_alignment (structure, &align);
-
-    size = GST_VIDEO_INFO_SIZE (&info);
-    gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
-
-    gst_buffer_pool_config_set_allocator (structure, allocator, &params);
-
-    gst_buffer_pool_config_add_option (structure,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-    if (allocator)
-      gst_object_unref (allocator);
-
-    if (!gst_buffer_pool_set_config (pool, structure))
-      goto config_failed;
-
-    GST_OBJECT_LOCK (self);
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
-
-    GST_OBJECT_UNLOCK (self);
-
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
-    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-    gst_object_unref (pool);
   }
 
   return TRUE;
@@ -2016,7 +1614,13 @@ config_failed:
   return TRUE;
 }
 
-/* sink and src pad event handlers */
+/**
+ *  @fn static gboolean gst_vvas_xmulticrop_sink_event (GstBaseTransform * trans, GstEvent * event)
+ *  @param [in] trans   - Handle to GstVvasXMultiCrop typecasted to GstBaseTransform.
+ *  @param [in] event   - The GstEvent to handle.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  Handles GstEvent coming over the sink pad. Ex : EOS, New caps etc.
+ */
 static gboolean
 gst_vvas_xmulticrop_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
@@ -2029,6 +1633,8 @@ gst_vvas_xmulticrop_sink_event (GstBaseTransform * trans, GstEvent * event)
 
     case GST_EVENT_EOS:{
       if (self->enabled_pipeline) {
+        /* Got EOS and pipeline is enabled, need to process all pending
+         * buffers */
         GstFlowReturn fret = GST_FLOW_OK;
         GstBuffer *inbuf = NULL;
         GstBaseTransformClass *klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -2036,6 +1642,7 @@ gst_vvas_xmulticrop_sink_event (GstBaseTransform * trans, GstEvent * event)
         GST_INFO_OBJECT (self, "input copy queue has %d pending buffers",
             g_async_queue_length (self->priv->copy_outqueue));
 
+        /* process buffers pending in output copy queue */
         while (g_async_queue_length (self->priv->copy_outqueue) > 0) {
           GstBuffer *outbuf = NULL;
           inbuf = g_async_queue_pop (self->priv->copy_outqueue);
@@ -2052,6 +1659,7 @@ gst_vvas_xmulticrop_sink_event (GstBaseTransform * trans, GstEvent * event)
 
           if (outbuf) {
             GST_DEBUG_OBJECT (self, "output %" GST_PTR_FORMAT, outbuf);
+            /* push buffer downstream */
             fret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (trans), outbuf);
           }
           if (GST_FLOW_OK != fret) {
@@ -2071,20 +1679,35 @@ gst_vvas_xmulticrop_sink_event (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
+/**
+ *  @fn static gboolean vvas_xmulticrop_calculate_subbuffer_pool_size (GstVvasXMultiCrop * self)
+ *  @param [in] self    - GstVvasXMultiCrop object
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  This function it to calculate different sizes for different buffer pools
+ *  @details  This function divides the maximum input size into 10 parts, this info
+ *            will be used in gst_vvas_xmulticrop_get_suitable_buffer_pool()
+ */
 static gboolean
 vvas_xmulticrop_calculate_subbuffer_pool_size (GstVvasXMultiCrop * self)
 {
-
   GstVvasXMultiCropPrivate *priv = self->priv;
   GstVideoInfo out_info = { 0 };
   guint max_out_w, max_out_h;
   gsize size, maximum_out_size;
   gint idx;
 
+  /* Cropping will happen from the input buffer, hence maximum buffer size
+   * of the cropped buffer is the size of input buffer itself including
+   * the alignment requirement */
+
   max_out_w = vvas_xmulticrop_get_stride (self->subbuffer_format,
       GST_VIDEO_INFO_WIDTH (priv->in_vinfo));
-  max_out_w = ALIGN (max_out_w, WIDTH_ALIGN);
-  max_out_h = ALIGN (GST_VIDEO_INFO_HEIGHT (priv->in_vinfo), HEIGHT_ALIGN);
+  if (!self->software_scaling) {
+    max_out_w = ALIGN (max_out_w, WIDTH_ALIGN);
+    max_out_h = ALIGN (GST_VIDEO_INFO_HEIGHT (priv->in_vinfo), HEIGHT_ALIGN);
+  } else {
+    max_out_h = GST_VIDEO_INFO_HEIGHT (priv->in_vinfo);
+  }
 
   if (!gst_video_info_set_format (&out_info, self->subbuffer_format,
           max_out_w, max_out_h)) {
@@ -2092,12 +1715,21 @@ vvas_xmulticrop_calculate_subbuffer_pool_size (GstVvasXMultiCrop * self)
     return FALSE;
   }
 
+  /* This is the maximum size of cropped buffer */
   maximum_out_size = GST_VIDEO_INFO_SIZE (&out_info);
   GST_DEBUG_OBJECT (self, "max_out_w:%u, max_out_h:%u, maximum_out_size: %ld",
       max_out_w, max_out_h, maximum_out_size);
 
+  /* 1/10th of maximum size */
   size = (maximum_out_size / 10) + 1;
 
+  /* Divide the maximum size in 10 equal parts, with these size we'll
+   * create 10 buffer pools based on the requirement of size of the crop
+   * buffer, if size of buffer falls into range of already allocated pool,
+   * same pool will be used.
+   * Note that the size of crop buffer and the size of buffers from pool
+   * will not match, size of pool's buffer will always be higher.
+   * GstVideoMeta will be attached manually into the cropped buffer */
   for (idx = 0; idx < MAX_SUBBUFFER_POOLS; idx++) {
     priv->subbuffer_pool_size[idx] = size * (idx + 1);
 #ifdef DEBUG
@@ -2109,11 +1741,23 @@ vvas_xmulticrop_calculate_subbuffer_pool_size (GstVvasXMultiCrop * self)
   return TRUE;
 }
 
+/**
+ *  @fn static GstCaps *gst_vvas_xmulticrop_transform_caps (GstBaseTransform * trans,
+ *                                                          GstPadDirection direction,
+ *                                                          GstCaps * caps,
+ *                                                          GstCaps * filter)
+ *  @param [in] self        - Handle to GstVvasXMultiCrop typecasted to GstBaseTransform.
+ *  @param [in] direction   - Direction of the pad (src or sink)
+ *  @param [in] caps        - Given caps
+ *  @param [in] filter      - Caps to filter out, when given
+ *  @return transformed caps
+ *  @brief  Given the pad in this direction and the given caps, this function will find
+ *          what caps are allowed on the other pad in this element
+ */
 static GstCaps *
 gst_vvas_xmulticrop_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
   GstCaps *ret;
   GstStructure *structure;
@@ -2215,11 +1859,25 @@ gst_vvas_xmulticrop_transform_caps (GstBaseTransform * trans,
   return ret;
 }
 
+/**
+ *  @fn static GstCaps *gst_vvas_xmulticrop_fixate_caps (GstBaseTransform * trans,
+ *                                                       GstPadDirection direction,
+ *                                                       GstCaps * caps,
+ *                                                       GstCaps * othercaps)
+ *  @param [in] trans       - Handle to GstVvasXMultiCrop typecasted to GstBaseTransform.
+ *  @param [in] direction   - Direction of the pad (src or sink)
+ *  @param [in] caps        - Given caps
+ *  @param [in] othercaps   - Caps to fixate
+ *  @return Fixated version of "othercaps"
+ *  @brief  Given the pad in this direction and the given caps, fixate the caps on
+ *          the other pad.
+ *  @details  The function takes ownership of othercaps and returns a fixated
+ *            version of othercaps. Othercaps is not guaranteed to be writable.
+ */
 static GstCaps *
 gst_vvas_xmulticrop_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
@@ -2233,7 +1891,6 @@ gst_vvas_xmulticrop_fixate_caps (GstBaseTransform * trans,
 
   ins = gst_caps_get_structure (caps, 0);
   outs = gst_caps_get_structure (othercaps, 0);
-
   {
     const gchar *in_format;
 
@@ -2675,14 +2332,26 @@ done:
   return othercaps;
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps, GstCaps * out_caps)
+ *  @param [in] trans       - Handle to GstVvasXMultiCrop typecasted to GstBaseTransform.
+ *  @param [in] in_caps     - Direction of the pad (src or sink)
+ *  @param [in] out_caps    - Given caps
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  Allows the subclass to be notified of the actual caps set.
+ *  @note   Returning FALSE from this function will cause caps negotiation failure.
+ */
 static gboolean
 gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
   GstVvasXMultiCropPrivate *priv = self->priv;
-  guint input_width, input_height;
-  gboolean bret = TRUE;
+  VvasReturnType vret;
+  VvasScalerProp scaler_prop = { 0 };
+  VvasLogLevel core_log_level =
+      vvas_get_core_log_level (gst_debug_category_get_threshold
+      (gst_vvas_xmulticrop_debug_category));
 
   GST_DEBUG_OBJECT (self, "in_caps %p %" GST_PTR_FORMAT, in_caps, in_caps);
   GST_DEBUG_OBJECT (self, "out_caps %p %" GST_PTR_FORMAT, out_caps, out_caps);
@@ -2693,7 +2362,9 @@ gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
     return FALSE;
   }
 
-  if ((priv->in_vinfo->width % self->ppc)) {
+  /* In case of hardware accelerated scaler, the input width must be multiple
+   * of PPC(Pixel per clock) */
+  if (!self->software_scaling && (priv->in_vinfo->width % self->ppc)) {
     GST_ERROR_OBJECT (self, "Unsupported input resolution,"
         "width must be multiple of ppc i.e, %d", self->ppc);
     return FALSE;
@@ -2704,17 +2375,22 @@ gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
     return FALSE;
   }
 
-  if (priv->out_vinfo->width % self->ppc) {
+  /* In case of hardware accelerated scaler, output width must also be multiple
+   * of PPC(Pixel per clock) */
+  if (!self->software_scaling && priv->out_vinfo->width % self->ppc) {
     GST_ERROR_OBJECT (self, "Unsupported output resolution,"
         "width must be multiple of ppc i.e, %d", self->ppc);
     return FALSE;
   }
 
+  /* If static crop values are provided, need to validate them and also
+   * align them as per the IP requirement */
   if (TRUE != vvas_xmulticrop_align_crop_params (trans, &self->crop_params,
           self->ppc)) {
     return FALSE;
   }
 
+  /* The crop width/height must not be below a limit */
   if (self->crop_params.width || self->crop_params.height) {
     if ((self->crop_params.width < MIN_SCALAR_WIDTH) ||
         (self->crop_params.height < MIN_SCALAR_HEIGHT)) {
@@ -2724,34 +2400,50 @@ gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
     }
   }
 
-  if (self->crop_params.width && self->crop_params.height) {
-    input_width = self->crop_params.width;
-    input_height = self->crop_params.height;
-  } else {
-    input_width = GST_VIDEO_INFO_WIDTH (priv->in_vinfo);
-    input_height = GST_VIDEO_INFO_HEIGHT (priv->in_vinfo);
+
+  /* Create VVAS Context, Scaler context and Set Scaler Properties */
+  GST_DEBUG_OBJECT (self, "Creating VVAS context");
+  priv->vvas_ctx = vvas_context_create (self->dev_index, self->xclbin_path,
+      core_log_level, &vret);
+  if (!priv->vvas_ctx) {
+    GST_ERROR_OBJECT (self, "Couldn't create VVAS context");
+    return FALSE;
   }
 
-  if (!priv->dev_handle) {
-    /* create XRT context */
-    bret = vvas_xmulticrop_create_context (self);
-    if (!bret) {
-      GST_ERROR_OBJECT (self, "couldn't create XRT context");
-      return FALSE;
-    } else {
-      GST_DEBUG_OBJECT (self, "XRT context created");
-    }
+  GST_DEBUG_OBJECT (self, "Creating VVAS Scaler");
+  priv->vvas_scaler = vvas_scaler_create (priv->vvas_ctx, self->kern_name,
+      core_log_level);
+  if (!priv->vvas_scaler) {
+    GST_ERROR_OBJECT (self, "Couldn't create Scaler");
+    return FALSE;
   }
 
-  if (!priv->is_internal_buf_allocated) {
-    /* allocate internal buffers for processing of main buffer */
-    bret = vvas_xmulticrop_allocate_internal_buffers (self, 1);
-    if (!bret) {
-      GST_ERROR_OBJECT (self, "couldn't allocate internal buffers");
-      return FALSE;
-    }
-    priv->is_internal_buf_allocated = TRUE;
+  vret = vvas_scaler_prop_get (priv->vvas_scaler, &scaler_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Couldn't get scaler props");
   }
+
+  scaler_prop.coef_load_type = (VvasScalerCoefLoadType) self->coef_load_type;
+  scaler_prop.smode = (VvasScalerMode) self->scale_mode;
+  scaler_prop.ftaps = (VvasScalerFilterTaps) self->num_taps;
+  scaler_prop.ppc = self->ppc;
+  scaler_prop.mem_bank = self->in_mem_bank;
+
+  vret = vvas_scaler_prop_set (priv->vvas_scaler, &scaler_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Couldn't set scaler props");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "Scaler: coef_load_type: %d",
+      scaler_prop.coef_load_type);
+  GST_DEBUG_OBJECT (self, "Scaler: scaling mode: %d", scaler_prop.smode);
+  GST_DEBUG_OBJECT (self, "Scaler: filter taps: %d", scaler_prop.ftaps);
+  GST_DEBUG_OBJECT (self, "Scaler: ppc: %d", scaler_prop.ppc);
+  GST_DEBUG_OBJECT (self, "Scaler: mem_bank: %d", scaler_prop.mem_bank);
+
+  /* Get the Device handle from VVAS context for local use */
+  priv->dev_handle = priv->vvas_ctx->dev_handle;
 
   /* If user don't give sub-buffer's format, we will consider it same as input */
   self->subbuffer_format = self->subbuffer_format ? self->subbuffer_format :
@@ -2770,7 +2462,7 @@ gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
           " must be multiple of ppc[%d]", self->ppc);
       return FALSE;
     }
-
+    /* Allocate buffer pool for holding dynamically cropped sub buffers */
     priv->subbuffer_pools[0] = vvas_xmulticrop_allocate_buffer_pool (self,
         self->subbuffer_width, self->subbuffer_height, self->subbuffer_format);
     if (!priv->subbuffer_pools[0]) {
@@ -2778,36 +2470,29 @@ gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
       return FALSE;
     }
   } else {
+    /* User hasn't specified resolution of dynamically cropped buffers,
+     * this means we don't have to do scaling of these buffers, they should
+     * have their original resolution (with IP alignment adjustment).
+     * We can't use single buffer pool in this case, as the resolution of
+     * cropped buffers will be different even in a frame.
+     * For this we are dividing the input buffer size into 10 parts, more
+     * detail on this is in vvas_xmulticrop_calculate_subbuffer_pool_size()
+     */
     if (!vvas_xmulticrop_calculate_subbuffer_pool_size (self)) {
       return FALSE;
     }
   }
-
-  if (self->num_taps == 12) {
-    vvas_xmulticrop_prepare_coefficients_with_12tap (self, 0, input_width,
-        input_height,
-        GST_VIDEO_INFO_WIDTH (priv->out_vinfo),
-        GST_VIDEO_INFO_HEIGHT (priv->out_vinfo));
-  } else {
-    if (self->scale_mode == POLYPHASE) {
-      float scale = (float) input_height
-          / (float) GST_VIDEO_INFO_HEIGHT (priv->out_vinfo);
-      GST_INFO_OBJECT (self,
-          "preparing coefficients with scaling ration %f and taps %d", scale,
-          self->num_taps);
-      xlnx_multiscaler_coff_fill (priv->Hcoff[0].user_ptr,
-          priv->Vcoff[0].user_ptr, scale);
-    }
-  }
-
-#ifdef XLNX_PCIe_PLATFORM
-  if (!xlnx_multicrop_coeff_sync_bo (self))
-    return FALSE;
-#endif
-
   return TRUE;
 }
 
+/**
+ *  @fn static gpointer vvas_xmulticrop_input_copy_thread (gpointer data)
+ *  @param [in] data    - Data passed to this thread while creating it
+ *  @return Exit Status (NULL)
+ *  @brief  This thread makes non VVAS GstBuffer into VVAS GstBuffer
+ *  @details  This thread reads non VVAS buffer from copy_inqueue; copies it to
+ *            the VVAS GstBuffer and pushes it to copy_outqueue.
+ */
 static gpointer
 vvas_xmulticrop_input_copy_thread (gpointer data)
 {
@@ -2820,8 +2505,10 @@ vvas_xmulticrop_input_copy_thread (gpointer data)
     GstVideoFrame in_vframe, own_vframe;
     GstFlowReturn fret = GST_FLOW_OK;
 
+    /* Get buffer from input copy queue, block until we get any buffer */
     inbuf = (GstBuffer *) g_async_queue_pop (priv->copy_inqueue);
     if (inbuf == STOP_COMMAND) {
+      /* Exit this thread, when we get stop command */
       GST_DEBUG_OBJECT (self, "received stop command. exit copy thread");
       break;
     }
@@ -2847,6 +2534,7 @@ vvas_xmulticrop_input_copy_thread (gpointer data)
       GST_ERROR_OBJECT (self, "failed to map input buffer");
       goto error;
     }
+    /* slow copy data from in_vframe to own_vframe */
     gst_video_frame_copy (&own_vframe, &in_vframe);
 
     gst_video_frame_unmap (&in_vframe);
@@ -2856,6 +2544,7 @@ vvas_xmulticrop_input_copy_thread (gpointer data)
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, self,
         "slow copy to internal input pool buffer");
     gst_buffer_unref (inbuf);
+    /* Push VVAS buffer (own_inbuf) to output copy queue */
     g_async_queue_push (priv->copy_outqueue, own_inbuf);
   }
 
@@ -2863,6 +2552,12 @@ error:
   return NULL;
 }
 
+/**
+ *  @fn static gboolean vvas_xmulticrop_allocate_internal_pool (GstBaseTransform * trans)
+ *  @param [in, out] trans  - GstVvasXMultiCrop object typecasted to GstBaseTransform
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  This function allocates GstBufferPool for internal use.
+ */
 static gboolean
 vvas_xmulticrop_allocate_internal_pool (GstBaseTransform * trans)
 {
@@ -2875,6 +2570,8 @@ vvas_xmulticrop_allocate_internal_pool (GstBaseTransform * trans)
   GstCaps *caps = NULL;
   GstVideoAlignment align;
 
+  /* Allocate internal buffer pool for converting non VVAS input memory
+   * to VVAS memory */
   caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
 
   if (!gst_video_info_from_caps (&info, caps)) {
@@ -2888,20 +2585,21 @@ vvas_xmulticrop_allocate_internal_pool (GstBaseTransform * trans)
 
   config = gst_buffer_pool_get_config (pool);
   gst_video_alignment_reset (&align);
-  align.padding_top = 0;
-  align.padding_left = 0;
-  align.padding_right = vvas_xmulticrop_get_padding_right (self, &info);
   align.padding_bottom =
       ALIGN (GST_VIDEO_INFO_HEIGHT (&info),
       HEIGHT_ALIGN) - GST_VIDEO_INFO_HEIGHT (&info);
+  for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&info); idx++) {
+    align.stride_align[idx] = WIDTH_ALIGN - 1;
+  }
   gst_video_info_align (&info, &align);
 
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   gst_buffer_pool_config_set_video_alignment (config, &align);
 
+  /* Allocate new VVAS allocator for internal buffer pool */
   allocator = gst_vvas_allocator_new (self->dev_index,
-      NEED_DMABUF, self->in_mem_bank, self->priv->kern_handle);
+      NEED_DMABUF, self->in_mem_bank);
   gst_allocation_params_init (&alloc_params);
   alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
   alloc_params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
@@ -2909,10 +2607,12 @@ vvas_xmulticrop_allocate_internal_pool (GstBaseTransform * trans)
       "allocated %" GST_PTR_FORMAT " allocator at mem bank %d", allocator,
       self->in_mem_bank);
 
+  /* number of buffers this internal pool allocated is limited to 5 */
   gst_buffer_pool_config_set_params (config, caps, GST_VIDEO_INFO_SIZE (&info),
       3, 5);
 
   gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
+  /* set option to add GstVideoMeta into the buffers */
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   if (allocator)
@@ -2939,59 +2639,16 @@ error:
   return FALSE;
 }
 
-static gboolean
-vvas_xmulticrop_allocate_internal_buffers (GstVvasXMultiCrop * self,
-    guint buffer_count)
-{
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  gint iret;
-  guint idx = 0;
-  guint offset = priv->internal_buf_counter;
-
-  for (idx = 0; idx < buffer_count; idx++) {
-    iret = vvas_xrt_alloc_xrt_buffer (priv->dev_handle, COEFF_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->Hcoff[offset + idx]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate horizontal coefficients command buffer..");
-      goto error;
-    }
-
-    iret = vvas_xrt_alloc_xrt_buffer (priv->dev_handle, COEFF_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->Vcoff[offset + idx]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate vertical coefficients command buffer..");
-      goto error;
-    }
-
-    iret = vvas_xrt_alloc_xrt_buffer (priv->dev_handle, COEFF_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->msPtr[offset + idx]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self, "failed to allocate descriptor command buffer..");
-      goto error;
-    }
-#ifdef DEBUG
-    printf ("[%u] DESC phy %lx  virt  %p \n", offset + idx,
-        priv->msPtr[offset + idx].phy_addr, priv->msPtr[offset + idx].user_ptr);
-    printf ("[%u] HCoef phy %lx  virt  %p \n", offset + idx,
-        priv->Hcoff[offset + idx].phy_addr, priv->Hcoff[offset + idx].user_ptr);
-    printf ("[%u] VCoef phy %lx  virt  %p \n", offset + idx,
-        priv->Vcoff[offset + idx].phy_addr, priv->Vcoff[offset + idx].user_ptr);
-#endif
-
-    priv->internal_buf_counter++;
-    GST_LOG_OBJECT (self, "allocated internal buffer for %u, total: %u",
-        offset + idx, priv->internal_buf_counter);
-  }
-  return TRUE;
-
-error:
-  GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT, NULL,
-      ("failed to allocate memory"));
-  return FALSE;
-}
-
+/**
+ *  @fn static gboolean vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans, GstBuffer ** inbuf)
+ *  @param [in] self            - GstVvasXMultiCrop object
+ *  @param [in, out] inbuf      - Input GstBuffer
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  This function prepares the input buffer for processing using IP.
+ *  @details  This function checks whether input memory is VVAS memory or not, if not it converts it to
+ *            VVAS memory be copying the data into new VVAS buffer. It also avoids copy of data if input
+ *            memory is VVAS memory and lies into the same device.
+ */
 static gboolean
 vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
     GstBuffer ** inbuf)
@@ -3019,6 +2676,8 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
   if (gst_is_vvas_memory (in_mem)
       && gst_vvas_memory_can_avoid_copy (in_mem, self->dev_index,
           self->in_mem_bank)) {
+    /* Input memory is VVAS memory, and lies on the same device and same
+     * memory bank, no need to copy anything */
     phy_addr = gst_vvas_allocator_get_paddr (in_mem);
   } else if (gst_is_dmabuf_memory (in_mem)) {
     vvasBOHandle bo = NULL;
@@ -3046,6 +2705,8 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
       vvas_xrt_free_bo (bo);
 
   } else {
+    /* Input memory is neither VVAS nor DMA buf memory, need to make it VVAS
+     * memory */
     use_inpool = TRUE;
   }
 
@@ -3055,25 +2716,33 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
   if (use_inpool) {
     if (self->priv->validate_import) {
       if (!self->priv->input_pool) {
+        /* Allocate internal VVAS buffer pool */
         bret = vvas_xmulticrop_allocate_internal_pool (trans);
         if (!bret)
           goto error;
       }
       if (!gst_buffer_pool_is_active (self->priv->input_pool))
+        /* Activate internal buffer pool */
         gst_buffer_pool_set_active (self->priv->input_pool, TRUE);
       self->priv->validate_import = FALSE;
     }
 
     if (self->enabled_pipeline) {
+      /* Pipeline is enabled, Check if we have any buffer in the output
+       * queue which was submitted in the last call to this function */
       own_inbuf = g_async_queue_try_pop (priv->copy_outqueue);
       if (!own_inbuf && !priv->is_first_frame) {
+        /* output queue has buffer, we need to process this buffer */
         own_inbuf = g_async_queue_pop (priv->copy_outqueue);
       }
 
       priv->is_first_frame = FALSE;
+      /* Push current buffer to input copy queue, copy thread will make it
+       * VVAS buffer and push it to output copy queue */
       g_async_queue_push (priv->copy_inqueue, *inbuf);
 
       if (!own_inbuf) {
+        /* Don't have any buffer */
         GST_LOG_OBJECT (self, "copied input buffer is not available. return");
         *inbuf = NULL;
         return TRUE;
@@ -3081,6 +2750,8 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
 
       *inbuf = own_inbuf;
     } else {
+      /* Pipeline is not enabled, need to do slow copy of input buffer into
+       * VVAS buffer */
       /* acquire buffer from own input pool */
       fret =
           gst_buffer_pool_acquire_buffer (self->priv->input_pool, &own_inbuf,
@@ -3105,6 +2776,7 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
         GST_ERROR_OBJECT (self, "failed to map input buffer");
         goto error;
       }
+      /* slow copy data from input buffer to newly acquired buffer */
       gst_video_frame_copy (&own_vframe, &in_vframe);
 
       gst_video_frame_unmap (&in_vframe);
@@ -3112,7 +2784,7 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
       gst_buffer_copy_into (own_inbuf, *inbuf,
           (GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_METADATA
               | GST_BUFFER_COPY_TIMESTAMPS), 0, -1);
-
+      /* As we have copied inbuf to own_inbuf, free inbuf */
       gst_buffer_unref (*inbuf);
       *inbuf = own_inbuf;
     }
@@ -3128,27 +2800,16 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
     GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
     goto error;
   }
+  /* Get physical address of input memory */
   if (phy_addr == (uint64_t) - 1) {
     phy_addr = gst_vvas_allocator_get_paddr (in_mem);
   }
-#ifdef XLNX_PCIe_PLATFORM
   /* syncs data when XLNX_SYNC_TO_DEVICE flag is enabled */
   bret = gst_vvas_memory_sync_bo (in_mem);
   if (!bret)
     goto error;
-#endif
 
   gst_memory_unref (in_mem);
-
-  self->priv->phy_in_2 = 0;
-  self->priv->phy_in_1 = 0;
-  self->priv->phy_in_0 = phy_addr;
-  if (vmeta->n_planes > 1)
-    self->priv->phy_in_1 = phy_addr + vmeta->offset[1];
-  if (vmeta->n_planes > 2)
-    self->priv->phy_in_2 = phy_addr + vmeta->offset[2];
-
-  self->priv->meta_in_stride = *(vmeta->stride);
 
   return TRUE;
 
@@ -3163,6 +2824,13 @@ error:
   return FALSE;
 }
 
+/**
+ *  @fn static gboolean vvas_xmulticrop_prepare_output_buffer (GstVvasXMultiCrop * self, GstBuffer * outbuf)
+ *  @param [in] self            - GstVvasXMultiCrop object
+ *  @param [in, out] outbuf     - Output GstBuffer
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  This function prepares the output buffer for processing using IP
+ */
 static gboolean
 vvas_xmulticrop_prepare_output_buffer (GstVvasXMultiCrop * self,
     GstBuffer * outbuf)
@@ -3214,13 +2882,7 @@ vvas_xmulticrop_prepare_output_buffer (GstVvasXMultiCrop * self,
     goto error;
   }
 
-  self->priv->phy_out_0 = phy_addr;
-  self->priv->phy_out_1 = 0;
-  self->priv->phy_out_2 = 0;
-  if (vmeta->n_planes > 1)
-    self->priv->phy_out_1 = phy_addr + vmeta->offset[1];
-  if (vmeta->n_planes > 2)
-    self->priv->phy_out_2 = phy_addr + vmeta->offset[2];
+  GST_DEBUG_OBJECT (self, "Output buffer physical address 0x%lX", phy_addr);
 
   gst_memory_unref (mem);
   return TRUE;
@@ -3232,222 +2894,38 @@ error:
   return FALSE;
 }
 
-static gboolean
-vvas_xmulticrop_prepare_output_descriptor (GstVvasXMultiCrop * self)
-{
-
-  MULTI_SCALER_DESC_STRUCT *msPtr;
-  GstVideoMeta *meta_out;
-  GstVvasXMultiCropPrivate *priv = self->priv;
-  uint32_t width = priv->in_vinfo->width;
-  uint32_t height = priv->in_vinfo->height;
-
-  guint plane0_offset = 0, plane1_offset = 0, plane2_offset = 0;
-
-#ifdef ENABLE_PPE_SUPPORT
-  uint32_t val;
-#endif
-  uint32_t msc_inPixelFmt =
-      xlnx_multiscaler_colorformat (priv->in_vinfo->finfo->format);
-  uint32_t stride = self->priv->meta_in_stride;
-
-  if (stride != xlnx_multiscaler_stride_align (stride, WIDTH_ALIGN)) {
-    GST_WARNING_OBJECT (self, "input stide alignment mismatch");
-    GST_WARNING_OBJECT (self, "required  stride = %d in_stride = %d",
-        xlnx_multiscaler_stride_align (stride, WIDTH_ALIGN), stride);
-  }
-
-  if (self->crop_params.width && self->crop_params.height) {
-    guint x_cord, y_cord;
-
-    x_cord = self->crop_params.x;
-    y_cord = self->crop_params.y;
-    width = self->crop_params.width;
-    height = self->crop_params.height;
-
-    GST_DEBUG_OBJECT (self, "doing crop for x:%u, y:%u, width:%u, height:%u",
-        x_cord, y_cord, width, height);
-
-    switch (priv->in_vinfo->finfo->format) {
-      case GST_VIDEO_FORMAT_RGB:
-      case GST_VIDEO_FORMAT_BGR:
-        x_cord *= 3;
-        plane0_offset = ((stride * y_cord) + x_cord);
-        break;
-
-      case GST_VIDEO_FORMAT_NV12:
-        plane0_offset = ((stride * y_cord) + x_cord);
-        plane1_offset =
-            xlnx_multiscaler_stride_align (((stride * y_cord / 2) + x_cord),
-            (8 * self->ppc));
-        break;
-
-      case GST_VIDEO_FORMAT_GBR:
-        plane0_offset = ((stride * y_cord) + x_cord);
-        plane1_offset = ((stride * y_cord) + x_cord);
-        plane2_offset = ((stride * y_cord) + x_cord);
-        break;
-
-      default:{
-        GST_WARNING_OBJECT (self, "crop not supported for %d format",
-            priv->in_vinfo->finfo->format);
-        width = priv->in_vinfo->width;
-        height = priv->in_vinfo->height;
-      }
-        break;
-    }
-  }
-
-  msPtr = (MULTI_SCALER_DESC_STRUCT *) (priv->msPtr[0].user_ptr);
-  if (GST_VIDEO_FORMAT_GBR == priv->in_vinfo->finfo->format) {
-    //Multi-Scaler supports R_G_B8 only
-    msPtr->msc_srcImgBuf0 = (uint64_t) priv->phy_in_0 + plane2_offset;  /* plane 2 */
-    msPtr->msc_srcImgBuf1 = (uint64_t) priv->phy_in_1 + plane0_offset;  /* plane 0 */
-    msPtr->msc_srcImgBuf2 = (uint64_t) priv->phy_in_2 + plane1_offset;  /* plane 1 */
-  } else {
-    msPtr->msc_srcImgBuf0 = (uint64_t) priv->phy_in_0 + plane0_offset;  /* plane 0 */
-    msPtr->msc_srcImgBuf1 = (uint64_t) priv->phy_in_1 + plane1_offset;  /* plane 1 */
-    msPtr->msc_srcImgBuf2 = (uint64_t) priv->phy_in_2 + plane2_offset;  /* plane 2 */
-  }
-
-  meta_out = gst_buffer_get_video_meta (priv->outbuf);
-  if (GST_VIDEO_FORMAT_GBR == meta_out->format) {
-    msPtr->msc_dstImgBuf0 = (uint64_t) priv->phy_out_2; /* plane 2 */
-    msPtr->msc_dstImgBuf1 = (uint64_t) priv->phy_out_0; /* plane 0 */
-    msPtr->msc_dstImgBuf2 = (uint64_t) priv->phy_out_1; /* plane 1 */
-  } else {
-    msPtr->msc_dstImgBuf0 = (uint64_t) priv->phy_out_0; /* plane 0 */
-    msPtr->msc_dstImgBuf1 = (uint64_t) priv->phy_out_1; /* plane 1 */
-    msPtr->msc_dstImgBuf2 = (uint64_t) priv->phy_out_2; /* plane 2 */
-  }
-
-  msPtr->msc_widthIn = width;   /* 4 settings from pads */
-  msPtr->msc_heightIn = height;
-  msPtr->msc_inPixelFmt = msc_inPixelFmt;
-  msPtr->msc_strideIn = stride;
-  msPtr->msc_widthOut = meta_out->width;
-  msPtr->msc_heightOut = meta_out->height;
-
-#ifdef ENABLE_PPE_SUPPORT
-  if (self->ppe_on_main_buffer) {
-    msPtr->msc_alpha_0 = self->alpha_r;
-    msPtr->msc_alpha_1 = self->alpha_g;
-    msPtr->msc_alpha_2 = self->alpha_b;
-    val = (self->beta_r * (1 << 16));
-    msPtr->msc_beta_0 = val;
-    val = (self->beta_g * (1 << 16));
-    msPtr->msc_beta_1 = val;
-    val = (self->beta_b * (1 << 16));
-    msPtr->msc_beta_2 = val;
-  } else {
-    msPtr->msc_alpha_0 = 0;
-    msPtr->msc_alpha_1 = 0;
-    msPtr->msc_alpha_2 = 0;
-    val = (1 * (1 << 16));
-    msPtr->msc_beta_0 = val;
-    msPtr->msc_beta_1 = val;
-    msPtr->msc_beta_2 = val;
-  }
-#endif
-  msPtr->msc_lineRate =
-      (uint32_t) ((float) ((msPtr->msc_heightIn * STEP_PRECISION) +
-          ((msPtr->msc_heightOut) / 2)) / (float) msPtr->msc_heightOut);
-  msPtr->msc_pixelRate =
-      (uint32_t) ((float) (((msPtr->msc_widthIn) * STEP_PRECISION) +
-          ((msPtr->msc_widthOut) / 2)) / (float) msPtr->msc_widthOut);
-  msPtr->msc_outPixelFmt = xlnx_multiscaler_colorformat (meta_out->format);
-
-  msPtr->msc_strideOut = (*(meta_out->stride));
-
-  if (msPtr->msc_strideOut !=
-      xlnx_multiscaler_stride_align (*(meta_out->stride), WIDTH_ALIGN)) {
-    GST_WARNING_OBJECT (self, "output stide alignment mismatch");
-    GST_WARNING_OBJECT (self, "required  stride = %d out_stride = %d",
-        xlnx_multiscaler_stride_align (*(meta_out->stride), WIDTH_ALIGN),
-        msPtr->msc_strideOut);
-  }
-
-  msPtr->msc_blkmm_hfltCoeff = priv->Hcoff[0].phy_addr;
-  msPtr->msc_blkmm_vfltCoeff = priv->Vcoff[0].phy_addr;
-  msPtr->msc_nxtaddr = priv->msPtr[1].phy_addr;
-
-#ifdef DEGUB
-  GST_DEBUG_OBJECT (self, "Input width: %d, height:%d stride:%d format: %d",
-      msPtr->msc_widthIn, msPtr->msc_heightIn, msPtr->msc_strideIn,
-      msPtr->msc_inPixelFmt);
-  GST_DEBUG_OBJECT (self, "Output width: %d, height:%d stride:%d format: %d",
-      msPtr->msc_widthOut, msPtr->msc_heightOut, msPtr->msc_strideOut,
-      msPtr->msc_outPixelFmt);
-  GST_DEBUG_OBJECT (self, "msPtr->msc_nxtaddr: %lx", msPtr->msc_nxtaddr);
-#endif
-  return TRUE;
-}
-
+/**
+ *  @fn static gboolean vvas_xmulticrop_process (GstVvasXMultiCrop * self)
+ *  @param [in] self    - GstVvasXMultiCrop object
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  This function processes the output and dynamically crop buffers using IP.
+ */
 static gboolean
 vvas_xmulticrop_process (GstVvasXMultiCrop * self)
 {
   GstVvasXMultiCropPrivate *priv = self->priv;
-  int iret;
   uint32_t chan_id = 0;
-  uint64_t desc_addr = 0;
-  bool ret;
   GstMemory *mem = NULL;
-  unsigned int ms_status = 0;
-  int retry_count = MAX_EXEC_WAIT_RETRY_CNT;
+  VvasReturnType vret;
+
+  /* We will be always processing number of dynamic crop buffers + input buffer
+   * And at max it will be 40 */
   guint buffer_count = self->priv->sub_buffer_counter + 1;      //+1 for main buffer
 
-  /* set for output descriptor */
-  ret = vvas_xmulticrop_prepare_output_descriptor (self);
-  if (!ret)
-    return FALSE;
-
-#ifdef XLNX_PCIe_PLATFORM
-  ret = xlnx_multicrop_desc_sync_bo (self);
-  if (!ret)
-    return FALSE;
-
-  if (!xlnx_multicrop_coeff_sync_bo (self))
-    return FALSE;
-#endif
-
-  GST_LOG_OBJECT (self, "processing %u buffers", buffer_count);
-
-  desc_addr = priv->msPtr[0].phy_addr;
-  iret = vvas_xmulticrop_exec_buf (priv->dev_handle, priv->kern_handle,
-      &priv->run_handle, "ulppu", buffer_count, desc_addr, NULL, NULL,
-      ms_status);
-  if (iret) {
-    GST_ERROR_OBJECT (self, "failed to execute command %d", iret);
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, NULL,
-        ("failed to issue execute command. reason : %s", strerror (errno)));
+  vret = vvas_scaler_process_frame (self->priv->vvas_scaler);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Failed to process frame in scaler");
     return FALSE;
   }
-
-  do {
-    iret = vvas_xrt_exec_wait (priv->dev_handle, priv->run_handle,
-        MULTI_SCALER_TIMEOUT);
-    /* Lets try for MAX count unless there is a error or completion */
-    if (iret == ERT_CMD_STATE_TIMEOUT) {
-      GST_WARNING_OBJECT (self, "Timeout...retry execwait");
-      if (retry_count-- <= 0) {
-        GST_ERROR_OBJECT (self,
-            "Max retry count %d reached..returning error",
-            MAX_EXEC_WAIT_RETRY_CNT);
-        vvas_xrt_free_run_handle (priv->run_handle);
-        return FALSE;
-      }
-    } else if (iret == ERT_CMD_STATE_ERROR) {
-      GST_ERROR_OBJECT (self, "ExecWait ret = %d", iret);
-      vvas_xrt_free_run_handle (priv->run_handle);
-      return FALSE;
-    }
-  } while (iret != ERT_CMD_STATE_COMPLETED);
-
-  vvas_xrt_free_run_handle (priv->run_handle);
-
   for (chan_id = 0; chan_id < buffer_count; chan_id++) {
     if (0 == chan_id) {
       mem = gst_buffer_get_memory (priv->outbuf, 0);
+      /* When we are using software scaler and working on device memory proposed by downstream
+       * we have to sync the data back to device side to make data available for next plugin.
+       */
+      if (self->software_scaling && gst_is_vvas_memory (mem)) {
+        gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_TO_DEVICE);
+      }
     } else {
       mem = gst_buffer_get_memory (priv->sub_buf[chan_id - 1], 0);
     }
@@ -3456,20 +2934,27 @@ vvas_xmulticrop_process (GstVvasXMultiCrop * self)
           "chan-%d : failed to get memory from output buffer", chan_id);
       return FALSE;
     }
-#ifdef XLNX_PCIe_PLATFORM
-    gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_FROM_DEVICE);
-#endif
+    if (!self->software_scaling) {
+      gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_FROM_DEVICE);
+    }
     gst_memory_unref (mem);
   }
   return TRUE;
 }
 
-
+/**
+ *  @fn static GstBufferPool * gst_vvas_xmulticrop_get_suitable_buffer_pool (GstBaseTransform * trans,
+ *                                                                           GstVideoRegionOfInterestMeta * roi_meta)
+ *  @param [in] trans       - GstVvasXMultiCrop object typecasted to GstBaseTransform
+ *  @param [in] roi_meta    - dynamic crop meta (GstVideoRegionOfInterestMeta meta)
+ *  @return GstBufferPool or NULL
+ *  @brief  This function allocates a GstBufferPool (if not already allocated) based on the size
+ *          requirement of roi_meta and returns it.
+ */
 static GstBufferPool *
 gst_vvas_xmulticrop_get_suitable_buffer_pool (GstBaseTransform * trans,
     GstVideoRegionOfInterestMeta * roi_meta)
 {
-
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
   GstVvasXMultiCropPrivate *priv = self->priv;
   GstBufferPool *sub_pool = NULL;
@@ -3479,8 +2964,15 @@ gst_vvas_xmulticrop_get_suitable_buffer_pool (GstBaseTransform * trans,
   guint out_width, out_height;
 
   out_width = vvas_xmulticrop_get_stride (self->subbuffer_format, roi_meta->w);
-  out_width = ALIGN (out_width, WIDTH_ALIGN);
-  out_height = ALIGN (roi_meta->h, HEIGHT_ALIGN);
+  if (!self->software_scaling) {
+    /* As MultiScaler IP has alignment requirement, need to ensure that the
+     * width, height and size of the buffer are proper */
+    out_width = ALIGN (out_width, WIDTH_ALIGN);
+    out_height = ALIGN (roi_meta->h, HEIGHT_ALIGN);
+  } else {
+    out_width = roi_meta->w;
+    out_height = roi_meta->h;
+  }
 
   GST_DEBUG_OBJECT (self, "aligned width:%u, height:%u", out_width, out_height);
 
@@ -3490,8 +2982,10 @@ gst_vvas_xmulticrop_get_suitable_buffer_pool (GstBaseTransform * trans,
     return NULL;
   }
 
+  /* Get the required size of buffer */
   size_requested = GST_VIDEO_INFO_SIZE (&out_info);
 
+  /* Find the suitable buffer pool for this requested size */
   for (idx = 0; idx < MAX_SUBBUFFER_POOLS; idx++) {
     if (priv->subbuffer_pool_size[idx] > size_requested) {
       pool_idx = idx;
@@ -3499,20 +2993,21 @@ gst_vvas_xmulticrop_get_suitable_buffer_pool (GstBaseTransform * trans,
     }
   }
 
+  /* If we can't find suitable pool, we can't proceed ahead */
   if ((-1) == pool_idx) {
     GST_ERROR_OBJECT (self, "couldn't find any suitable subbuffer_pool");
     return NULL;
   }
 
   sub_pool = self->priv->subbuffer_pools[pool_idx];
-
   GST_DEBUG_OBJECT (self,
       "chosen sub buffer pool %p at index %d for requested buffer size %lu",
       sub_pool, pool_idx, size_requested);
 
   if (sub_pool == NULL) {
-    GstAllocator *allocator;
-    GstCaps *caps;
+    /* pool is not allocated */
+    GstAllocator *allocator = NULL;
+    GstCaps *caps = NULL;
     gsize pool_buf_size;
     gboolean bret;
     GstStructure *config;
@@ -3525,23 +3020,37 @@ gst_vvas_xmulticrop_get_suitable_buffer_pool (GstBaseTransform * trans,
 
     pool_buf_size = priv->subbuffer_pool_size[pool_idx];
 
-    sub_pool = gst_vvas_buffer_pool_new (1, 1);
+    /* We are creating the buffer pool with width and height alignment as 1,
+     * because we have already aligned it. */
+    if (!self->software_scaling) {
+      sub_pool = gst_vvas_buffer_pool_new (1, 1);
+
+      /* Here frame buffer is required from in_mem_bank as it is expected that
+       * input port is attached the bank where IP access internal data too */
+      allocator = gst_vvas_allocator_new (self->dev_index, NEED_DMABUF,
+          self->out_mem_bank);
+
+      config = gst_buffer_pool_get_config (sub_pool);
+
+      gst_allocation_params_init (&alloc_params);
+      alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
+      alloc_params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
+
+      /* Size of buffer allocated by the pool will always be greater than the
+       * size requested by the user, requesting minimum 2 buffers from the pool,
+       * but have no restriction on maximum buffers */
+      gst_buffer_pool_config_set_params (config, caps, pool_buf_size, 2, 0);
+      gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
+
+    } else {
+      /* Let't create a Gstreamer video pool with host memory */
+      sub_pool = gst_video_buffer_pool_new ();
+      config = gst_buffer_pool_get_config (sub_pool);
+      gst_buffer_pool_config_set_params (config, caps, pool_buf_size, 2, 0);
+    }
     GST_INFO_OBJECT (self, "allocated internal private pool %p with size %lu",
         sub_pool, pool_buf_size);
 
-    /* Here frame buffer is required from in_mem_bank as it is expected that
-     * input port is attached the bank where IP access internal data too */
-    allocator = gst_vvas_allocator_new (self->dev_index, NEED_DMABUF,
-        self->out_mem_bank, self->priv->kern_handle);
-
-    config = gst_buffer_pool_get_config (sub_pool);
-
-    gst_allocation_params_init (&alloc_params);
-    alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
-    alloc_params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
-
-    gst_buffer_pool_config_set_params (config, caps, pool_buf_size, 2, 0);
-    gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
     gst_caps_unref (caps);
 
     if (allocator)
@@ -3556,6 +3065,7 @@ gst_vvas_xmulticrop_get_suitable_buffer_pool (GstBaseTransform * trans,
         "setting config %" GST_PTR_FORMAT " on private pool %" GST_PTR_FORMAT,
         config, sub_pool);
 
+    /* Activate the buffer pool */
     bret = gst_buffer_pool_set_active (sub_pool, TRUE);
     if (!bret) {
       gst_object_unref (sub_pool);
@@ -3572,52 +3082,65 @@ error:
 
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xmulticrop_fill_video_meta (GstBaseTransform * trans,
+ *                                                           const GstVideoRegionOfInterestMeta * roi_meta,
+ *                                                           GstVideoMeta * vmeta)
+ *  @param [in] trans       - GstVvasXMultiCrop object typecasted to GstBaseTransform
+ *  @param [in] roi_meta    - dynamic crop meta (GstVideoRegionOfInterestMeta meta)
+ *  @param [out] vmeta      - GstVideoMeta to be filled
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief  This function fills stride and offset values in vmeta based on dynamic buffer's format
+ */
 static gboolean
 gst_vvas_xmulticrop_fill_video_meta (GstBaseTransform * trans,
     const GstVideoRegionOfInterestMeta * roi_meta, GstVideoMeta * vmeta)
 {
-
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
-  guint align_stride0, align_elevation;
+  GstVideoAlignment align_info;
+  GstVideoInfo vinfo;
 
-  align_stride0 =
-      vvas_xmulticrop_get_stride (self->subbuffer_format, roi_meta->w);
-  align_stride0 = ALIGN (align_stride0, WIDTH_ALIGN);
-  align_elevation = ALIGN (roi_meta->h, HEIGHT_ALIGN);
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, self->subbuffer_format, roi_meta->w,
+      roi_meta->h);
 
-  switch (self->subbuffer_format) {
-    case GST_VIDEO_FORMAT_NV12:
-      vmeta->stride[0] = vmeta->stride[1] = align_stride0;
-      vmeta->offset[0] = 0;
-      vmeta->offset[1] = vmeta->offset[0] + vmeta->stride[0] * align_elevation;
-      break;
-
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      vmeta->stride[0] = align_stride0;
-      vmeta->offset[0] = 0;
-      break;
-
-    case GST_VIDEO_FORMAT_GBR:
-      vmeta->stride[0] = vmeta->stride[1] = vmeta->stride[2] = align_stride0;
-      vmeta->offset[0] = 0;
-      vmeta->offset[1] = vmeta->offset[0] + vmeta->stride[0] * align_elevation;
-      vmeta->offset[2] = vmeta->offset[1] + vmeta->stride[1] * align_elevation;
-      break;
-
-    default:
-      GST_ERROR_OBJECT (self, "not yet supporting format %d",
-          self->subbuffer_format);
-      return FALSE;
+  /* Add padding information */
+  gst_video_alignment_reset (&align_info);
+  if (!self->software_scaling) {
+    align_info.padding_bottom = ALIGN (roi_meta->h, HEIGHT_ALIGN) - roi_meta->h;
+    for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&vinfo); idx++) {
+      align_info.stride_align[idx] = (WIDTH_ALIGN - 1);
+    }
+    gst_video_info_align (&vinfo, &align_info);
   }
+
+  for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&vinfo); idx++) {
+    vmeta->stride[idx] = vinfo.stride[idx];
+    vmeta->offset[idx] = vinfo.offset[idx];
+  }
+
+  GST_DEBUG_OBJECT (self,
+      "Align info: top: %u, bottom: %u, left: %u, right: %u",
+      align_info.padding_top, align_info.padding_bottom,
+      align_info.padding_left, align_info.padding_right);
+
+  gst_video_meta_set_alignment (vmeta, align_info);
+
   return TRUE;
 }
 
+/**
+ *  @fn static GstBuffer * gst_xmulticrop_prepare_subbuffer (GstBaseTransform * trans,
+ *                                                           GstVideoRegionOfInterestMeta * roi_meta)
+ *  @param [in] trans       - GstVvasXMultiCrop object typecasted to GstBaseTransform
+ *  @param [in] roi_meta    - dynamic crop meta (GstVideoRegionOfInterestMeta meta)
+ *  @return Allocated SubBuffer or NULL on failure
+ *  @brief  This function gets sub buffer from buffer pool and fills the required metadata
+ */
 static GstBuffer *
 gst_xmulticrop_prepare_subbuffer (GstBaseTransform * trans,
     GstVideoRegionOfInterestMeta * roi_meta)
 {
-
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
   GstVvasXMultiCropPrivate *priv = self->priv;
   GstBufferPool *subbuffer_pool = NULL;
@@ -3627,7 +3150,8 @@ gst_xmulticrop_prepare_subbuffer (GstBaseTransform * trans,
   gboolean add_meta = FALSE;
 
   if (self->subbuffer_width && self->subbuffer_height) {
-    //User has provided subbuffer's width and height, we need only 1 buffer pool
+    /* User has provided subbuffer's width and height,
+     * we need only 1 buffer pool */
     subbuffer_pool = self->priv->subbuffer_pools[0];
   } else {
     /* In this case we need to create pool of buffer pools for different sizes
@@ -3644,6 +3168,7 @@ gst_xmulticrop_prepare_subbuffer (GstBaseTransform * trans,
     return NULL;
   }
 
+  /* Acquire the sub buffer from the selected buffer pool */
   fret = gst_buffer_pool_acquire_buffer (subbuffer_pool, &sub_buffer, NULL);
   if (fret != GST_FLOW_OK) {
     GST_ERROR_OBJECT (self, "failed to allocate buffer from pool %p",
@@ -3655,12 +3180,17 @@ gst_xmulticrop_prepare_subbuffer (GstBaseTransform * trans,
       sub_buffer, subbuffer_pool, gst_buffer_get_size (sub_buffer));
 
   if (add_meta) {
+    /* In case where user wants the dynamically cropped buffers not to be
+     * scaled to any resolution, we need to add the GstVideoMeta metadata
+     * manually as buffer pool will not do that
+     */
     vmeta = gst_buffer_add_video_meta (sub_buffer, GST_VIDEO_FRAME_FLAG_NONE,
         self->subbuffer_format, roi_meta->w, roi_meta->h);
     if (vmeta)
       gst_vvas_xmulticrop_fill_video_meta (trans, roi_meta, vmeta);
   }
 
+  /* Just a sanity check, sub_buffer must have GstVideoMeta */
   vmeta = gst_buffer_get_video_meta (sub_buffer);
   if (vmeta == NULL) {
     GST_ERROR_OBJECT (self, "video meta not present in sub buffer");
@@ -3679,6 +3209,8 @@ gst_xmulticrop_prepare_subbuffer (GstBaseTransform * trans,
   }
 #endif
 
+  /* store this sub_buffer into our context and keep track of number of
+   * such buffers allocated */
   priv->sub_buf[priv->sub_buffer_counter] = sub_buffer;
   priv->sub_buffer_counter++;
   return sub_buffer;
@@ -3690,224 +3222,207 @@ error:
   return NULL;
 }
 
+/**
+ *  @fn static gboolean vvas_xmulticrop_add_scaler_output_buffer_chnnels (GstVvasXMultiCrop * self)
+ *  @param [in] self       - GstVvasXMultiCrop instance
+ *  @return TRUE on success.\n FALSE on failure.
+ *  @brief  This function will add the channel in Core Scaler for processing of output buffer.
+ */
 static gboolean
-vvas_xmulticrop_prepare_subbuffer_descriptor (GstVvasXMultiCrop * self,
-    GstBuffer * sub_buffer, const GstVideoRegionOfInterestMeta * roi_meta,
-    guint idx)
+vvas_xmulticrop_add_scaler_output_buffer_chnnels (GstVvasXMultiCrop * self)
 {
-
-  MULTI_SCALER_DESC_STRUCT *msPtr;
-  GstVideoMeta *meta_out;
   GstVvasXMultiCropPrivate *priv = self->priv;
-  uint32_t width;
-  uint32_t height;
-  guint plane0_offset = 0, plane1_offset = 0, plane2_offset = 0;
-  guint msptr_idx = 0;
-  GstMemory *mem = NULL;
-  guint64 buf_phy_addr = -1;
-  guint64 phy_addr[3] = { 0 };
+  VvasVideoFrame *output_frame;
+  VvasScalerRect src_rect = { 0 };
+  VvasScalerRect dst_rect = { 0 };
+  VvasReturnType vret;
 
 #ifdef ENABLE_PPE_SUPPORT
-  uint32_t val;
+  VvasScalerPpe ppe = { 0 };
+  ppe.mean_r = self->alpha_r;
+  ppe.mean_g = self->alpha_g;
+  ppe.mean_b = self->alpha_b;
+  ppe.scale_r = self->beta_r;
+  ppe.scale_g = self->beta_g;
+  ppe.scale_b = self->beta_b;
 #endif
-  uint32_t msc_inPixelFmt =
-      xlnx_multiscaler_colorformat (priv->in_vinfo->finfo->format);
-  uint32_t stride = self->priv->meta_in_stride;
 
-  if (roi_meta->w && roi_meta->h) {
-    guint x_cord, y_cord;
-
-    x_cord = roi_meta->x;
-    y_cord = roi_meta->y;
-    width = roi_meta->w;
-    height = roi_meta->h;
-
-    GST_DEBUG_OBJECT (self, "doing crop for x:%u, y:%u, width:%u, height:%u",
-        x_cord, y_cord, width, height);
-
-    switch (priv->in_vinfo->finfo->format) {
-      case GST_VIDEO_FORMAT_RGB:
-      case GST_VIDEO_FORMAT_BGR:
-        x_cord *= 3;
-        plane0_offset = ((stride * y_cord) + x_cord);
-        break;
-
-      case GST_VIDEO_FORMAT_NV12:
-        plane0_offset = ((stride * y_cord) + x_cord);
-        plane1_offset =
-            xlnx_multiscaler_stride_align (((stride * y_cord / 2) + x_cord),
-            (8 * self->ppc));
-        break;
-
-      case GST_VIDEO_FORMAT_GBR:
-        plane0_offset = ((stride * y_cord) + x_cord);
-        plane1_offset = ((stride * y_cord) + x_cord);
-        plane2_offset = ((stride * y_cord) + x_cord);
-        break;
-
-      default:{
-        GST_WARNING_OBJECT (self, "crop not supported for %d format",
-            priv->in_vinfo->finfo->format);
-        return FALSE;
-      }
-        break;
-    }
-  } else {
-    GST_DEBUG_OBJECT (self, "width and height not specified");
-    return TRUE;
-  }
-
-  meta_out = gst_buffer_get_video_meta (sub_buffer);
-
-  msptr_idx = idx + 1;          //+1 for main buffer
-
-  if (NULL == priv->msPtr[msptr_idx].user_ptr) {
-    GST_DEBUG_OBJECT (self, "impossible");
+  /* Convert GstBuffer to VvasVideoFrame required for Vvas Core Scaler */
+  output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+      self->out_mem_bank, priv->outbuf, priv->out_vinfo, GST_MAP_READ);
+  if (!output_frame) {
+    GST_ERROR_OBJECT (self, "Could convert output GstBuffer to VvasVideoFrame");
     return FALSE;
   }
 
-  if (self->num_taps == 12) {
-    vvas_xmulticrop_prepare_coefficients_with_12tap (self, msptr_idx,
-        roi_meta->w, roi_meta->h, meta_out->width, meta_out->height);
+  /* fill rect parameters */
+  if ((self->crop_params.width && self->crop_params.height)) {
+    src_rect.x = self->crop_params.x;
+    src_rect.y = self->crop_params.y;
+    src_rect.width = self->crop_params.width;
+    src_rect.height = self->crop_params.height;
   } else {
-    if (self->scale_mode == POLYPHASE) {
-      float scale = (float) roi_meta->h / (float) meta_out->height;
-      GST_INFO_OBJECT (self, "preparing coefficients with scaling ration %f"
-          " and taps %d", scale, self->num_taps);
-      xlnx_multiscaler_coff_fill (priv->Hcoff[msptr_idx].user_ptr,
-          priv->Vcoff[msptr_idx].user_ptr, scale);
-    }
+    src_rect.x = 0;
+    src_rect.y = 0;
+    src_rect.width = GST_VIDEO_INFO_WIDTH (priv->in_vinfo);
+    src_rect.height = GST_VIDEO_INFO_HEIGHT (priv->in_vinfo);
   }
+  src_rect.frame = priv->input_frame;
 
-  msPtr = (MULTI_SCALER_DESC_STRUCT *) (priv->msPtr[msptr_idx].user_ptr);
-  if (GST_VIDEO_FORMAT_GBR == priv->in_vinfo->finfo->format) {
-    //Multi-Scaler supports R_G_B8 only
-    msPtr->msc_srcImgBuf0 = (uint64_t) priv->phy_in_2 + plane2_offset;  /* plane 2 */
-    msPtr->msc_srcImgBuf1 = (uint64_t) priv->phy_in_0 + plane0_offset;  /* plane 0 */
-    msPtr->msc_srcImgBuf2 = (uint64_t) priv->phy_in_1 + plane1_offset;  /* plane 1 */
-  } else {
-    msPtr->msc_srcImgBuf0 = (uint64_t) priv->phy_in_0 + plane0_offset;  /* plane 0 */
-    msPtr->msc_srcImgBuf1 = (uint64_t) priv->phy_in_1 + plane1_offset;  /* plane 1 */
-    msPtr->msc_srcImgBuf2 = (uint64_t) priv->phy_in_2 + plane2_offset;  /* plane 2 */
-  }
+  dst_rect.x = 0;
+  dst_rect.y = 0;
+  dst_rect.width = GST_VIDEO_INFO_WIDTH (priv->out_vinfo);
+  dst_rect.height = GST_VIDEO_INFO_HEIGHT (priv->out_vinfo);;
+  dst_rect.frame = output_frame;
 
-  mem = gst_buffer_get_memory (sub_buffer, 0);
-  if (!mem) {
-    GST_ERROR_OBJECT (self, "failed to get memory from sub_buffer");
+  /* Add processing channel in Core Scaler */
+#ifdef ENABLE_PPE_SUPPORT
+  vret = vvas_scaler_channel_add (priv->vvas_scaler, &src_rect, &dst_rect,
+      self->ppe_on_main_buffer ? &ppe : NULL, NULL);
+#else
+  vret =
+      vvas_scaler_channel_add (priv->vvas_scaler, &src_rect, &dst_rect, NULL,
+      NULL);
+#endif
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "failed to add processing channel in scaler");
     return FALSE;
   }
 
-  if (gst_is_vvas_memory (mem)) {
-    buf_phy_addr = gst_vvas_allocator_get_paddr (mem);
-  } else if (gst_is_dmabuf_memory (mem)) {
-    vvasBOHandle bo = NULL;
-    gint dma_fd = -1;
+  GST_DEBUG_OBJECT (self, "Added processing channel for idx: 0");
 
-    dma_fd = gst_dmabuf_memory_get_fd (mem);
-    if (dma_fd < 0) {
-      GST_ERROR_OBJECT (self, "failed to get DMABUF FD");
-      return FALSE;
-    }
-
-    /* dmabuf but not from xrt */
-    bo = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd);
-    if (bo == NULL) {
-      GST_WARNING_OBJECT (self,
-          "failed to get XRT BO...fall back to copy input");
-    }
-
-    GST_INFO_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
-        bo);
-
-    buf_phy_addr = vvas_xrt_get_bo_phy_addres (bo);
-
-    if (bo != NULL)
-      vvas_xrt_free_bo (bo);
-  }
-
-  buf_phy_addr = gst_vvas_allocator_get_paddr (mem);
-
-  phy_addr[0] = buf_phy_addr;
-  phy_addr[1] = 0;
-  phy_addr[2] = 0;
-  if (meta_out->n_planes > 1)
-    phy_addr[1] = buf_phy_addr + meta_out->offset[1];
-  if (meta_out->n_planes > 2)
-    phy_addr[2] = buf_phy_addr + meta_out->offset[2];
-
-  if (GST_VIDEO_FORMAT_GBR == meta_out->format) {
-    msPtr->msc_dstImgBuf0 = (uint64_t) phy_addr[2];     /* plane 2 */
-    msPtr->msc_dstImgBuf1 = (uint64_t) phy_addr[0];     /* plane 0 */
-    msPtr->msc_dstImgBuf2 = (uint64_t) phy_addr[1];     /* plane 1 */
-  } else {
-    msPtr->msc_dstImgBuf0 = (uint64_t) phy_addr[0];     /* plane 0 */
-    msPtr->msc_dstImgBuf1 = (uint64_t) phy_addr[1];     /* plane 1 */
-    msPtr->msc_dstImgBuf2 = (uint64_t) phy_addr[2];     /* plane 2 */
-  }
-
-  msPtr->msc_widthIn = width;
-  msPtr->msc_heightIn = height;
-  msPtr->msc_inPixelFmt = msc_inPixelFmt;
-  msPtr->msc_strideIn = stride;
-  msPtr->msc_widthOut = meta_out->width;
-  msPtr->msc_heightOut = meta_out->height;
-#ifdef ENABLE_PPE_SUPPORT
-  msPtr->msc_alpha_0 = self->alpha_r;
-  msPtr->msc_alpha_1 = self->alpha_g;
-  msPtr->msc_alpha_2 = self->alpha_b;
-  val = (self->beta_r * (1 << 16));
-  msPtr->msc_beta_0 = val;
-  val = (self->beta_g * (1 << 16));
-  msPtr->msc_beta_1 = val;
-  val = (self->beta_b * (1 << 16));
-  msPtr->msc_beta_2 = val;
-#endif
-  msPtr->msc_lineRate =
-      (uint32_t) ((float) ((msPtr->msc_heightIn * STEP_PRECISION) +
-          ((msPtr->msc_heightOut) / 2)) / (float) msPtr->msc_heightOut);
-  msPtr->msc_pixelRate =
-      (uint32_t) ((float) (((msPtr->msc_widthIn) * STEP_PRECISION) +
-          ((msPtr->msc_widthOut) / 2)) / (float) msPtr->msc_widthOut);
-  msPtr->msc_outPixelFmt = xlnx_multiscaler_colorformat (meta_out->format);
-  msPtr->msc_strideOut = (*(meta_out->stride));
-  msPtr->msc_blkmm_hfltCoeff = priv->Hcoff[msptr_idx].phy_addr;
-  msPtr->msc_blkmm_vfltCoeff = priv->Vcoff[msptr_idx].phy_addr;
-  msPtr->msc_nxtaddr = priv->msPtr[msptr_idx + 1].phy_addr;
-
-  gst_memory_unref (mem);
-
-#ifdef DEBUG
-  GST_DEBUG_OBJECT (self, "Input width: %d, height:%d stride:%d format: %d",
-      msPtr->msc_widthIn, msPtr->msc_heightIn, msPtr->msc_strideIn,
-      msPtr->msc_inPixelFmt);
-  GST_DEBUG_OBJECT (self, "Output width: %d, height:%d stride:%d format: %d",
-      msPtr->msc_widthOut, msPtr->msc_heightOut, msPtr->msc_strideOut,
-      msPtr->msc_outPixelFmt);
-  GST_DEBUG_OBJECT (self, "msPtr->msc_nxtaddr: %lx", msPtr->msc_nxtaddr);
-#endif
+  priv->output_frames[0] = output_frame;
   return TRUE;
 }
 
+/**
+ *  @fn static gboolean vvas_xmulticrop_add_scaler_processing_chnnels (GstVvasXMultiCrop * self,
+ *                                                                     GstBuffer * sub_buffer,
+ *                                                                     const GstVideoRegionOfInterestMeta * roi_meta,
+ *                                                                     guint idx)
+ *  @param [in] self        - GstVvasXMultiCrop instance
+ *  @param [in] sub_buffer  - sub buffer (dynamic crop buffer)
+ *  @param [in] roi_meta    - dynamic crop meta (GstVideoRegionOfInterestMeta meta)
+ *  @param [in] idx         - Index
+ *  @return TRUE on success\n FALSE on failure.
+ *  @brief  This function prepares and adds this dynamic buffer/sub buffers to be processed by the Core Scaler.
+ */
+static gboolean
+vvas_xmulticrop_add_scaler_processing_chnnels (GstVvasXMultiCrop * self,
+    GstBuffer * sub_buffer, const GstVideoRegionOfInterestMeta * roi_meta,
+    guint idx)
+{
+  GstVvasXMultiCropPrivate *priv = self->priv;
+  VvasVideoFrame *output_frame;
+  VvasScalerRect src_rect = { 0 };
+  VvasScalerRect dst_rect = { 0 };
+  VvasReturnType vret;
+  GstVideoInfo vinfo = { 0 };
+  GstVideoMeta *meta_out;
+  GstCaps *caps;
 
+#ifdef ENABLE_PPE_SUPPORT
+  VvasScalerPpe ppe = { 0 };
+  ppe.mean_r = self->alpha_r;
+  ppe.mean_g = self->alpha_g;
+  ppe.mean_b = self->alpha_b;
+  ppe.scale_r = self->beta_r;
+  ppe.scale_g = self->beta_g;
+  ppe.scale_b = self->beta_b;
+#endif
+
+  meta_out = gst_buffer_get_video_meta (sub_buffer);
+  if (!meta_out) {
+    return FALSE;
+  }
+
+  /* This caps creation is just to get video info */
+  caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, gst_video_format_to_string (meta_out->format),
+      "width", G_TYPE_INT, meta_out->width,
+      "height", G_TYPE_INT, meta_out->height, NULL);
+
+  gst_video_info_from_caps (&vinfo, caps);
+  gst_caps_unref (caps);
+
+  /* Convert GstBuffer to VvasVideoFrame which is needed by VVAS Core Scaler */
+  output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+      self->out_mem_bank, sub_buffer, &vinfo, GST_MAP_READ);
+  if (!output_frame) {
+    GST_ERROR_OBJECT (self, "Could convert output GstBuffer to VvasVideoFrame");
+    return FALSE;
+  }
+
+  /* 0th index for main buffer processing */
+  idx++;
+  priv->output_frames[idx] = output_frame;
+
+  /* Prepare Source and Destination rects */
+  src_rect.x = roi_meta->x;
+  src_rect.y = roi_meta->y;
+  src_rect.width = roi_meta->w;
+  src_rect.height = roi_meta->h;
+  src_rect.frame = priv->input_frame;
+
+  dst_rect.x = 0;
+  dst_rect.y = 0;
+  dst_rect.width = self->subbuffer_width ? self->subbuffer_width : roi_meta->w;
+  dst_rect.height =
+      self->subbuffer_height ? self->subbuffer_height : roi_meta->h;
+  dst_rect.frame = output_frame;
+
+  /* Add processing channel to the Core Scaler */
+#ifdef ENABLE_PPE_SUPPORT
+  vret =
+      vvas_scaler_channel_add (priv->vvas_scaler, &src_rect, &dst_rect, &ppe,
+      NULL);
+#else
+  vret =
+      vvas_scaler_channel_add (priv->vvas_scaler, &src_rect, &dst_rect, NULL,
+      NULL);
+#endif
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "failed to add processing channel in scaler");
+    return FALSE;
+  }
+  GST_DEBUG_OBJECT (self, "Added processing channel for idx: %u", idx);
+
+  return TRUE;
+}
+
+/**
+ *  @fn static gboolean vvas_xmulticrop_prepare_crop_buffers (GstBaseTransform * trans, GstBuffer * inbuf)
+ *  @param [in] trans   - GstVvasXMultiCrop object typecasted to GstBaseTransform
+ *  @param [in] inbuf   - Input GstBuffer
+ *  @return TRUE on success\n FALSE on failure.
+ *  @brief  This function validates all the dynamic crop metadata (GstVideoRegionOfInterestMeta)
+ *          and prepares the output buffers for storing them, attaches them into the
+ *          same dynamic crop meta and prepares the descriptor for processing them using IP.
+ */
 static gboolean
 vvas_xmulticrop_prepare_crop_buffers (GstBaseTransform * trans,
     GstBuffer * inbuf)
 {
-
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (trans);
   GstBuffer *sub_buffer = NULL;
   GstStructure *s;
   guint roi_meta_counter = 0;
+  gboolean ret = TRUE;
+  VvasReturnType vret;
 
   gpointer state = NULL;
   GstMeta *_meta;
 
+  /* Iterate all GstVideoRegionOfInterestMeta */
   while ((_meta = gst_buffer_iterate_meta_filtered (inbuf, &state,
               GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE))) {
 
     GstVideoRegionOfInterestMeta *roi_meta;
     VvasCropParams subcrop_params = { 0 };
 
+    /* we can process only limited number of dynamic crops, if use has given
+     * more number of dynamic crops, we can't handle them
+     */
     if (roi_meta_counter >= (MAX_CHANNELS - 1)) {
       GST_DEBUG_OBJECT (self, "we can process only %d crop meta",
           (MAX_CHANNELS - 1));
@@ -3917,28 +3432,30 @@ vvas_xmulticrop_prepare_crop_buffers (GstBaseTransform * trans,
     roi_meta = (GstVideoRegionOfInterestMeta *) _meta;
 
     if (g_strcmp0 ("roi-crop-meta", g_quark_to_string (roi_meta->roi_type))) {
-      //This is not the metadata we are looking for
+      /* This is not the metadata we are looking for */
       continue;
     }
-    //Got the ROI crop metadata, prepare output buffer
+    /* Got the ROI crop metadata, prepare output buffer */
     GST_DEBUG_OBJECT (self, "Got roi-crop-meta[%u], parent_id:%d, id:%d, "
         "x:%u, y:%u, w:%u, h:%u",
         roi_meta_counter, roi_meta->parent_id, roi_meta->id, roi_meta->x,
         roi_meta->y, roi_meta->w, roi_meta->h);
 
-    //Adjust crop parameters;
     subcrop_params.x = roi_meta->x;
     subcrop_params.y = roi_meta->y;
     subcrop_params.width = roi_meta->w;
     subcrop_params.height = roi_meta->h;
 
+    /* Crop parameters must be validate and aligned as per the MultiScaler IP
+     * requirement */
     if (TRUE != vvas_xmulticrop_align_crop_params (trans, &subcrop_params, 4)) {
-      //crop params for sub buffer are not proper, skip to next
+      /* crop params for sub buffer are not proper, skip to next */
       GST_DEBUG_OBJECT (self, "crop params are not proper, skipping meta %d",
           roi_meta->id);
       continue;
     }
 
+    /* Multiscaler IP can't process video below a limited range */
     if ((subcrop_params.width < MIN_SCALAR_WIDTH) ||
         (subcrop_params.height < MIN_SCALAR_HEIGHT)) {
       GST_DEBUG_OBJECT (self, "dynamic crop width/height must be at least %u, "
@@ -3951,15 +3468,18 @@ vvas_xmulticrop_prepare_crop_buffers (GstBaseTransform * trans,
     roi_meta->w = subcrop_params.width;
     roi_meta->h = subcrop_params.height;
 
+    /* Prepare sub buffers to store dynamically cropped buffers */
     sub_buffer = gst_xmulticrop_prepare_subbuffer (trans, roi_meta);
     if (!sub_buffer) {
       GST_ERROR_OBJECT (self, "couldn't get sub buffer");
+      ret = FALSE;
       break;
     }
-    //Attach this sub_buffer into metadata
+    /* Attach this sub_buffer into metadata */
     s = gst_structure_new ("roi-buffer", "sub-buffer", GST_TYPE_BUFFER,
         sub_buffer, NULL);
     if (!s) {
+      ret = FALSE;
       break;
     }
 
@@ -3969,22 +3489,38 @@ vvas_xmulticrop_prepare_crop_buffers (GstBaseTransform * trans,
      */
     gst_video_region_of_interest_meta_add_param (roi_meta, s);
 
-    //prepare descriptor
-    vvas_xmulticrop_prepare_subbuffer_descriptor (self, sub_buffer, roi_meta,
-        roi_meta_counter);
-
+    /* Add Processing channels to the Core Scaler */
+    vret =
+        vvas_xmulticrop_add_scaler_processing_chnnels (self, sub_buffer,
+        roi_meta, roi_meta_counter);
+    if (VVAS_IS_ERROR (vret)) {
+      GST_ERROR_OBJECT (self, "Failed to process frame in scaler");
+      return FALSE;
+    }
     roi_meta_counter++;
   }
-  return TRUE;
+  return ret;
 }
 
+/**
+ *  @fn static guint gst_vvas_xmultirop_get_roi_meta_count (GstBuffer * buffer)
+ *  @param [in] buffer  - GstBuffer
+ *  @return Total number of GstVideoRegionOfInterestMeta having their roi_type
+ *          field set to roi-crop-meta.
+ *  @brief  This function gets the total number of GstVideoRegionOfInterestMeta
+ *          having their roi_type field set to roi-crop-meta.
+ */
 static inline guint
 gst_vvas_xmultirop_get_roi_meta_count (GstBuffer * buffer)
 {
   gpointer state = NULL;
   GstMeta *_meta;
   guint crop_roi_meta_count = 0;
-
+  /* Get total number of GstVideoRegionOfInterestMeta having their roi_type
+   * field set to roi-crop-meta.
+   * We expect user to send GstVideoRegionOfInterestMeta with its roi_type set
+   * to roi-crop-meta to consider it as metadata for dynamic cropping
+   */
   while ((_meta = gst_buffer_iterate_meta_filtered (buffer, &state,
               GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE))) {
     GstVideoRegionOfInterestMeta *roi_meta;
@@ -3996,6 +3532,14 @@ gst_vvas_xmultirop_get_roi_meta_count (GstBuffer * buffer)
   return crop_roi_meta_count;
 }
 
+/**
+ *  @fn static GstFlowReturn gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
+ *  @param [in] trans   - GstVvasXMultiCrop handle typecasted to GstBaseTransform
+ *  @param [out] outbuf - Output buffer
+ *  @return GstFlowReturn, GST_FLOW_OK on success.
+ *  @brief  Called after each new input buffer is submitted repeatedly until it
+ *          either generates an error or fails to generate an output buffer.
+ */
 static GstFlowReturn
 gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
     GstBuffer ** outbuf)
@@ -4008,26 +3552,31 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
   GstFlowReturn fret = GST_FLOW_OK;
   guint roi_meta_count, idx;
   gboolean bret;
+  VvasReturnType vret;
 
   *outbuf = NULL;
   if (NULL == trans->queued_buf) {
+    /* If there is no buffer from baseclass (input buffer), nothing can be done */
     return GST_FLOW_OK;
   }
-
+  /* Get input buffer from the baseclass */
   inbuf = trans->queued_buf;
   trans->queued_buf = NULL;
 
   GST_DEBUG_OBJECT (self, "received %" GST_PTR_FORMAT, inbuf);
 
-  //Prepare input buffer
-  bret = vvas_xmulticrop_prepare_input_buffer (trans, &inbuf);
-  if (!bret) {
-    goto error;
+  /* Prepare input buffer */
+  if (!self->software_scaling) {
+    bret = vvas_xmulticrop_prepare_input_buffer (trans, &inbuf);
+    if (!bret) {
+      goto error;
+    }
   }
 
   if (!inbuf)
     return GST_FLOW_OK;
 
+  /* Get the output buffer */
   fret =
       GST_BASE_TRANSFORM_CLASS
       (gst_vvas_xmulticrop_parent_class)->prepare_output_buffer (trans, inbuf,
@@ -4036,44 +3585,67 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
     goto error;
 
   /* prepare output buffer for main buffer processing */
-  bret = vvas_xmulticrop_prepare_output_buffer (self, cur_outbuf);
-  if (!bret)
-    goto error;
+  if (!self->software_scaling) {
+    bret = vvas_xmulticrop_prepare_output_buffer (self, cur_outbuf);
+    if (!bret)
+      goto error;
+  } else {
+    self->priv->outbuf = cur_outbuf;
+  }
 
+  /* Convert GstBuffer to VvasVideoFrame for Core Scaler */
+  priv->input_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+      self->in_mem_bank, inbuf, priv->in_vinfo, GST_MAP_READ);
+  if (!priv->input_frame) {
+    GST_ERROR_OBJECT (self, "Could convert input GstBuffer to VvasVideoFrame");
+    fret = GST_FLOW_ERROR;
+    goto error;
+  }
+
+  /* Add Output buffer to Core Scaler for processing */
+  vret = vvas_xmulticrop_add_scaler_output_buffer_chnnels (self);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Failed to add sub buffer channel");
+    fret = GST_FLOW_ERROR;
+    goto error;
+  }
+
+  /* Get total number of GstVideoRegionOfInterestMeta  metadata */
   roi_meta_count =
       gst_buffer_get_n_meta (inbuf, GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE);
 
   if (roi_meta_count) {
+    /* Get total count of roi-crop-meta metadata for dynamic crop */
     roi_meta_count = gst_vvas_xmultirop_get_roi_meta_count (inbuf);
     GST_DEBUG_OBJECT (self, "input buffer has %u roi_meta", roi_meta_count);
-
-    //we can handle only MAX_CHANNELS - 1 roi_meta
-    roi_meta_count = (roi_meta_count > (MAX_CHANNELS - 1))
-        ? (MAX_CHANNELS - 1) : roi_meta_count;
-
-    if (roi_meta_count >= priv->internal_buf_counter) {
-      /* Need to allocate more internal buffers, till now we have allocated
-       * internal_buf_counter number of buffers
-       */
-      guint required_internal_buffers =
-          (roi_meta_count - priv->internal_buf_counter) + 1;
-
-      GST_LOG_OBJECT (self, "Need to allocate %u more internal buffers",
-          required_internal_buffers);
-      if (FALSE == vvas_xmulticrop_allocate_internal_buffers (self,
-              required_internal_buffers)) {
-        GST_ERROR_OBJECT (self, "failed to allocate internal buffer");
-        fret = GST_FLOW_ERROR;
-        goto error;
-      }
+    bret = vvas_xmulticrop_prepare_crop_buffers (trans, inbuf);
+    if (!bret) {
+      fret = GST_FLOW_ERROR;
+      goto error;
     }
-    vvas_xmulticrop_prepare_crop_buffers (trans, inbuf);
   }
 
+  /* Process output and dynamic buffers */
   bret = vvas_xmulticrop_process (self);
-  if (!bret)
+  if (!bret) {
+    fret = GST_FLOW_ERROR;
     goto error;
+  }
 
+  /* Free all the VvasVideoFrames, as only GstBuffer is going to be pushed
+   * downstream */
+  for (idx = 0; idx < priv->sub_buffer_counter + 1; idx++) {
+    if (self->priv->output_frames[idx]) {
+      vvas_video_frame_free (self->priv->output_frames[idx]);
+      self->priv->output_frames[idx] = NULL;
+    }
+  }
+  if (self->priv->input_frame) {
+    vvas_video_frame_free (self->priv->input_frame);
+    self->priv->input_frame = NULL;
+  }
+
+  /* Copy metadta from input buffer to the output buffer */
   GST_DEBUG_OBJECT (self, "copying the metadta");
   gst_buffer_copy_into (cur_outbuf, inbuf,
       (GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META |
@@ -4102,6 +3674,8 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
   }
 
   if (self->priv->need_copy) {
+    /* Need to copy output buffer to another small buffer as downstream
+     * element doesn't understand GstVideoMeta */
     GstBuffer *new_outbuf;
     GstVideoFrame new_frame, out_frame;
     new_outbuf =
@@ -4115,6 +3689,7 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
     gst_video_frame_map (&out_frame, priv->out_vinfo, cur_outbuf, GST_MAP_READ);
     gst_video_frame_map (&new_frame, priv->out_vinfo, new_outbuf,
         GST_MAP_WRITE);
+    /* copy data from output buffer to the newly allocated buffer */
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, self,
         "slow copy data from %p to %p", cur_outbuf, new_outbuf);
     gst_video_frame_copy (&new_frame, &out_frame);
@@ -4123,12 +3698,14 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
 
     gst_buffer_copy_into (new_outbuf, cur_outbuf, GST_BUFFER_COPY_METADATA, 0,
         -1);
+    /* free current output buffer as we have copied data to the new buffer */
     gst_buffer_unref (cur_outbuf);
     cur_outbuf = new_outbuf;
   }
 
   GST_DEBUG_OBJECT (self, "output %" GST_PTR_FORMAT, cur_outbuf);
 
+  /* Return output buffer to the base class */
   *outbuf = cur_outbuf;
   fret = GST_FLOW_OK;
 
@@ -4148,20 +3725,50 @@ error:
   return fret;
 }
 
+/**
+ *  @fn static GstFlowReturn gst_vvas_xmulticrop_transform (GstBaseTransform * trans,
+ *                                                          GstBuffer * inbuf,
+ *                                                          GstBuffer * outbuf)
+ *  @param [in] trans       - GstVvasXMultiCrop handle typecasted to GstBaseTransform
+ *  @param [in] inbuf       - Input GstBuffer
+ *  @param [out] outbuf     - Output buffer
+ *  @return GstFlowReturn, GST_FLOW_OK on success.
+ *  @brief  Transforms one incoming buffer to one outgoing buffer.
+ *          The function is allowed to change size/timestamp/duration of the outgoing buffer.
+ */
 static GstFlowReturn
 gst_vvas_xmulticrop_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
+  /* All functionality is implemented in gst_vvas_xmulticrop_generate_output(),
+   * this method is registered to configure vvas_xmulticrop in transform mode
+   */
   return GST_FLOW_OK;
 }
 
+/**
+ *  @fn static void gst_vvas_xmulticrop_set_property (GObject * object,
+ *                                                    guint property_id,
+ *                                                    const GValue * value,
+ *                                                    GParamSpec * pspec)
+ *  @param [in] object      - GstVvasXMultiCrop typecasted to GObject
+ *  @param [in] property_id - ID as defined in VvasXMultiCropProperties enum
+ *  @param [in] value       - GValue which holds property value set by user
+ *  @param [in] pspec       - Metadata of a property with property ID \p property_id
+ *  @return None
+ *  @brief  This API stores values sent from the user in GstVvasXMultiCrop object members.
+ *  @details  This API is registered with GObjectClass by overriding GObjectClass::set_property
+ *            function pointer and this will be invoked when developer sets properties on GstVvasXMultiCrop
+ *            object. Based on property value type, corresponding g_value_get_xxx API will be called to get
+ *            property value from GValue handle.
+ */
 static void
 gst_vvas_xmulticrop_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (object);
   GST_DEBUG_OBJECT (self, "set_property, id: %u", property_id);
-
+  /* User has set the value, store it in our context */
   switch (property_id) {
     case PROP_KERN_NAME:
       if (GST_STATE (self) != GST_STATE_NULL) {
@@ -4211,6 +3818,9 @@ gst_vvas_xmulticrop_set_property (GObject * object, guint property_id,
       break;
     case PROP_ENABLE_PIPELINE:
       self->enabled_pipeline = g_value_get_boolean (value);
+      break;
+    case PROP_SOFTWARE_SCALING:
+      self->software_scaling = g_value_get_boolean (value);
       break;
 #ifdef ENABLE_PPE_SUPPORT
     case PROP_ALPHA_R:
@@ -4263,6 +3873,22 @@ gst_vvas_xmulticrop_set_property (GObject * object, guint property_id,
   }
 }
 
+/**
+ *  @fn static void gst_vvas_xmulticrop_get_property (GObject * object,
+ *                                                    guint prop_id,
+ *                                                    GValue * value,
+ *                                                    GParamSpec * pspec)
+ *  @param [in] object  - GstVvasXMultiCrop typecasted to GObject
+ *  @param [in] prop_id - ID as defined in VvasXMultiCropProperties enum
+ *  @param [out] value  - GValue which holds property value set by user
+ *  @param [in] pspec   - Metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief  This API stores values from the GstVvasXMultiCrop object members into the value for user.
+ *  @details  This API is registered with GObjectClass by overriding GObjectClass::get_property
+ *            function pointer and this will be invoked when developer gets properties on GstVvasXMultiCrop
+ *            object. Based on property value type, corresponding g_value_set_xxx API will be called to set
+ *            property value to GValue handle.
+ */
 static void
 gst_vvas_xmulticrop_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -4270,6 +3896,7 @@ gst_vvas_xmulticrop_get_property (GObject * object, guint prop_id,
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (object);
 
   GST_DEBUG_OBJECT (self, "get_property, id: %u", prop_id);
+  /* Based on the property asked by user set the values and return it */
 
   switch (prop_id) {
     case PROP_KERN_NAME:
@@ -4306,6 +3933,9 @@ gst_vvas_xmulticrop_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ENABLE_PIPELINE:
       g_value_set_boolean (value, self->enabled_pipeline);
+      break;
+    case PROP_SOFTWARE_SCALING:
+      g_value_set_boolean (value, self->software_scaling);
       break;
 #ifdef ENABLE_PPE_SUPPORT
     case PROP_ALPHA_R:
@@ -4358,13 +3988,22 @@ gst_vvas_xmulticrop_get_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ *  @fn void gst_vvas_xmulticrop_finalize (GObject * object)
+ *  @param [in] object  - GstVvasXMultiCrop handle typecasted to GObject.
+ *  @return None
+ *  @brief  This API will be called during GstVvasXMultiCrop object's destruction phase.
+ *          Close references to devices and free memories if any.
+ *  @note   After this API GstVvasXMultiCrop object \p object will be destroyed completely.
+ *          So free all the internal memories held by current object.
+ */
 static void
 gst_vvas_xmulticrop_finalize (GObject * object)
 {
   GstVvasXMultiCrop *self = GST_VVAS_XMULTICROP (object);
 
   GST_DEBUG_OBJECT (self, "finalize");
-
+  /* vvas_xmulticrop is getting de-structed, free the allocated resources */
   if (self->kern_name) {
     g_free (self->kern_name);
   }
@@ -4381,14 +4020,34 @@ gst_vvas_xmulticrop_finalize (GObject * object)
     gst_video_info_free (self->priv->out_vinfo);
   }
 
+  /* Destroy Core Scaler and VVAS Context */
+  if (self->priv->vvas_scaler) {
+    vvas_scaler_destroy (self->priv->vvas_scaler);
+  }
+
+  if (self->priv->vvas_ctx) {
+    vvas_context_destroy (self->priv->vvas_ctx);
+  }
+
   G_OBJECT_CLASS (gst_vvas_xmulticrop_parent_class)->finalize (object);
 }
 
+/**
+ *  @fn static GstBufferPool * vvas_xmulticrop_allocate_buffer_pool (GstVvasXMultiCrop * self,
+ *                                                                   guint width,
+ *                                                                   guint height,
+ *                                                                   GstVideoFormat format)
+ *  @param [in] self    - Handle to GstVvasXMultiCrop instance
+ *  @param [in] width   - width of the buffer
+ *  @param [in] height  - height of the buffer
+ *  @param [in] format  - format of the buffer
+ *  @return Allocated GstBufferPool
+ *  @brief  Allocates new VVAS buffer pool based on the width, height and format.
+ */
 static GstBufferPool *
 vvas_xmulticrop_allocate_buffer_pool (GstVvasXMultiCrop * self, guint width,
     guint height, GstVideoFormat format)
 {
-
   GstVideoInfo info;
   GstBufferPool *pool = NULL;
   GstStructure *config;
@@ -4397,6 +4056,7 @@ vvas_xmulticrop_allocate_buffer_pool (GstVvasXMultiCrop * self, guint width,
   GstCaps *caps = NULL;
   GstVideoAlignment align;
 
+  /* Create GstCaps from the given width, height and video format */
   caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, gst_video_format_to_string (format),
       "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
@@ -4407,44 +4067,63 @@ vvas_xmulticrop_allocate_buffer_pool (GstVvasXMultiCrop * self, guint width,
     return FALSE;
   }
 
-  pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
-  GST_LOG_OBJECT (self, "allocated buffer pool %p", pool);
+  if (!self->software_scaling) {
+    /* Create new VVAS buffer pool with width and height alignement */
+    pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
+    GST_LOG_OBJECT (self, "allocated buffer pool %p", pool);
 
-  config = gst_buffer_pool_get_config (pool);
-  gst_video_alignment_reset (&align);
-  align.padding_top = 0;
-  align.padding_left = 0;
-  align.padding_right = vvas_xmulticrop_get_padding_right (self, &info);
-  align.padding_bottom = ALIGN (GST_VIDEO_INFO_HEIGHT (&info), HEIGHT_ALIGN)
-      - GST_VIDEO_INFO_HEIGHT (&info);
-  gst_video_info_align (&info, &align);
+    config = gst_buffer_pool_get_config (pool);
+    gst_video_alignment_reset (&align);
+    /* Add padding info */
+    align.padding_bottom = ALIGN (GST_VIDEO_INFO_HEIGHT (&info), HEIGHT_ALIGN)
+        - GST_VIDEO_INFO_HEIGHT (&info);
+    for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&info); idx++) {
+      align.stride_align[idx] = (WIDTH_ALIGN - 1);
+    }
+    gst_video_info_align (&info, &align);
 
-  GST_DEBUG_OBJECT (self, "Align padding: top:%d, bottom:%d, left:%d, right:%d",
-      align.padding_top, align.padding_bottom, align.padding_left,
-      align.padding_right);
+    GST_DEBUG_OBJECT (self,
+        "Align padding: top:%d, bottom:%d, left:%d, right:%d",
+        align.padding_top, align.padding_bottom, align.padding_left,
+        align.padding_right);
 
-  gst_buffer_pool_config_add_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-  gst_buffer_pool_config_set_video_alignment (config, &align);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    gst_buffer_pool_config_set_video_alignment (config, &align);
 
-  allocator = gst_vvas_allocator_new (self->dev_index,
-      NEED_DMABUF, self->out_mem_bank, self->priv->kern_handle);
+    /* Allocate new VVAS allocator */
+    allocator = gst_vvas_allocator_new (self->dev_index,
+        NEED_DMABUF, self->out_mem_bank);
 
-  gst_allocation_params_init (&alloc_params);
-  alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
-  alloc_params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
-  GST_INFO_OBJECT (self,
-      "allocated %" GST_PTR_FORMAT " allocator at mem bank %d", allocator,
-      self->in_mem_bank);
+    gst_allocation_params_init (&alloc_params);
+    alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
+    alloc_params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
+    GST_INFO_OBJECT (self,
+        "allocated %" GST_PTR_FORMAT " allocator at mem bank %d", allocator,
+        self->in_mem_bank);
 
-  gst_buffer_pool_config_set_params (config, caps, GST_VIDEO_INFO_SIZE (&info),
-      3, 0);
+    /* Set configuration to the buffer pool, 3 minimum buffers are required, there
+     * is no max limit on the number of buffers, if there is no free buffer,
+     * the pool will allocate new buffer
+     */
+    gst_buffer_pool_config_set_params (config, caps,
+        GST_VIDEO_INFO_SIZE (&info), 3, 0);
 
-  gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
+    /* Add option to insert GstVideoMeta */
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  if (allocator)
-    gst_object_unref (allocator);
+    if (allocator)
+      gst_object_unref (allocator);
+  } else {
+    pool = gst_video_buffer_pool_new ();
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps,
+        GST_VIDEO_INFO_SIZE (&info), 3, 0);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (self, "Failed to set config on input pool");
@@ -4473,6 +4152,16 @@ error:
   return NULL;
 }
 
+/**
+ *  @fn static GstStateChangeReturn gst_vvas_xmulticrop_change_state (GstElement * element, GstStateChange transition)
+ *  @param [in] element     - Handle to GstVvasXMultiCrop typecasted to GstElement.
+ *  @param [in] transition  - The requested state transition.
+ *  @return Status of the state transition.
+ *  @brief  This API will be invoked whenever the pipeline is going into a state transition and in this function the
+ *          element can can initialize any sort of specific data needed by the element.
+ *  @details  This API is registered with GstElementClass by overriding GstElementClass::change_state function pointer
+ *            and this will be invoked whenever the pipeline is going into a state transition.
+ */
 static GstStateChangeReturn
 gst_vvas_xmulticrop_change_state (GstElement * element,
     GstStateChange transition)
@@ -4484,6 +4173,9 @@ gst_vvas_xmulticrop_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
       if (self->enabled_pipeline) {
+        /* READY -> PAUSED transition, pipeline is enabled by user, create
+         * input, output queue and input_copy_thread
+         */
         priv->is_first_frame = TRUE;
         priv->copy_inqueue =
             g_async_queue_new_full ((void (*)(void *)) gst_buffer_unref);
@@ -4510,23 +4202,27 @@ gst_vvas_xmulticrop_change_state (GstElement * element,
 
       if (self->enabled_pipeline) {
         if (priv->input_copy_thread) {
+          /* PAUSED -> READY transition, stop the input_copy_thread */
           g_async_queue_push (priv->copy_inqueue, STOP_COMMAND);
           GST_LOG_OBJECT (self, "waiting for copy input thread join");
           g_thread_join (priv->input_copy_thread);
           priv->input_copy_thread = NULL;
         }
 
+        /* Free input copy queue */
         if (priv->copy_inqueue) {
           g_async_queue_unref (priv->copy_inqueue);
           priv->copy_inqueue = NULL;
         }
 
+        /* Free input copy queue */
         if (priv->copy_outqueue) {
           g_async_queue_unref (priv->copy_outqueue);
           priv->copy_outqueue = NULL;
         }
       }
 
+      /* If input pool was active, stop and free it */
       if (self->priv->input_pool
           && gst_buffer_pool_is_active (self->priv->input_pool)) {
         if (!gst_buffer_pool_set_active (self->priv->input_pool, FALSE))
@@ -4536,6 +4232,7 @@ gst_vvas_xmulticrop_change_state (GstElement * element,
         self->priv->input_pool = NULL;
       }
 
+      /* Stop and free all the sub buffer pools */
       for (idx = 0; idx < MAX_SUBBUFFER_POOLS; idx++) {
         GstBufferPool *sub_pool = priv->subbuffer_pools[idx];
         if (sub_pool && gst_buffer_pool_is_active (sub_pool)) {
@@ -4546,10 +4243,6 @@ gst_vvas_xmulticrop_change_state (GstElement * element,
           priv->subbuffer_pools[idx] = NULL;
         }
       }
-
-      vvas_xmulticrop_free_internal_buffers (self);
-      self->priv->is_internal_buf_allocated = FALSE;
-      vvas_xmulticrop_destroy_context (self);
       break;
     }
 
@@ -4559,13 +4252,26 @@ gst_vvas_xmulticrop_change_state (GstElement * element,
   return ret;
 }
 
+/**
+ *  @fn static gboolean vvas_xmulticrop_plugin_init (GstPlugin * plugin)
+ *  @param [in] plugin - Handle to vvas_xmulticrop plugin
+ *  @return TRUE if plugin initialized successfully
+ *  @brief  This is a callback function that will be called by the loader at startup to register the plugin
+ *  @note   It create a new element factory capable of instantiating objects of the type
+ *          'GST_TYPE_VVAS_XMULTICROP' and adds the factory to plugin 'vvas_xmulticrop'
+ */
 static gboolean
 vvas_xmulticrop_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "vvas_xmulticrop", GST_RANK_NONE,
+  /* Register vvas_xmulticrop plugin */
+  return gst_element_register (plugin, "vvas_xmulticrop", GST_RANK_PRIMARY,
       GST_TYPE_VVAS_XMULTICROP);
 }
 
+/**
+ *  @brief This macro is used to define the entry point and meta data of a plugin.
+ *         This macro exports a plugin, so that it can be used by other applications
+ */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, vvas_xmulticrop,
     "Xilinx multi crop plugin to crop buffers statically and dynamically",
     vvas_xmulticrop_plugin_init, VVAS_API_VERSION, "MIT/X11",

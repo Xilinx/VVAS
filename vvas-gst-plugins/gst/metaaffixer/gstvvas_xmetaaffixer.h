@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2020 - 2021 Xilinx, Inc.  All rights reserved.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,23 +32,55 @@
 #include <gst/vvas/gstinferencemeta.h>
 
 G_BEGIN_DECLS
-/* #defines don't like whitespacey bits */
+/** @def GST_TYPE_VVAS_XMETAAFFIXER
+ *  @brief Macro to get GstVvas_XMetaAffixer object type
+ */
 #define GST_TYPE_VVAS_XMETAAFFIXER \
   (gst_vvas_xmetaaffixer_get_type())
+/** @def GST_VVAS_XMETAAFFIXER
+ *  @brief Macro to typecast parent object to GstVvas_XMetaAffixer object
+ */
 #define GST_VVAS_XMETAAFFIXER(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VVAS_XMETAAFFIXER,GstVvas_XMetaAffixer))
+/** @def GST_VVAS_XMETAAFFIXER_CLASS
+ *  @brief Macro to typecast parent class object to GstVvas_XMetaAffixerClass object
+ */
 #define GST_VVAS_XMETAAFFIXER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VVAS_XMETAAFFIXER,GstVvas_XMetaAffixerClass))
+/** @def GST_IS_VVAS_XMETAAFFIXER
+ *  @brief Macro to validate whether object is of GstVvas_XMetaAffixer type
+ */
 #define GST_IS_VVAS_XMETAAFFIXER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VVAS_XMETAAFFIXER))
+/** @def GST_IS_VVAS_XMETAAFFIXER_CLASS
+ *  @brief Macro to validate whether object class is of GstVvas_XMetaAffixerClass type
+ */
 #define GST_IS_VVAS_XMETAAFFIXER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VVAS_XMETAAFFIXER))
+/** @def GST_VVAS_XMETAAFFIXER_GET_CLASS
+ *  @brief Macro to get object GstVvas_XMetaAffixerClass object from GstVvas_XMetaAffixer object
+ */
 #define GST_VVAS_XMETAAFFIXER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VVAS_XMETAAFFIXER, GstVvas_XMetaAffixerClass))
+/** @def GST_TYPE_VVAS_XMETAAFFIXER_PAD
+ *  @brief Macro to get GstVvas_XMetaAffixerPad object type
+ */
 #define GST_TYPE_VVAS_XMETAAFFIXER_PAD (gst_vvas_xmetaaffixer_pad_get_type())
+/** @def GST_VVAS_XMETAAFFIXER_PAD
+ *  @brief Macro to typecast parent object to GstVvas_XMetaAffixerPad object
+ */
 #define GST_VVAS_XMETAAFFIXER_PAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VVAS_XMETAAFFIXER_PAD, GstVvas_XMetaAffixerPad))
+/** @def GST_VVAS_XMETAAFFIXER_PAD_CLASS
+ *  @brief Macro to typecast parent class object to GstVvas_XMetaAffixerPadClass object
+ */
 #define GST_VVAS_XMETAAFFIXER_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER_PAD, GstVvas_XMetaAffixerPadClass))
+/** @def GST_IS_VVAS_XMETAAFFIXER_PAD
+ *  @brief Macro to validate whether object is of GstVvas_XMetaAffixerPad type
+ */
 #define GST_IS_VVAS_XMETAAFFIXER_PAD(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VVAS_XMETAAFFIXER_PAD))
+/** @def GST_IS_VVAS_XMETAAFFIXER_PAD_CLASS
+ *  @brief Macro to validate whether object class is of GstVvas_XMetaAffixerPadClass type
+ */
 #define GST_IS_VVAS_XMETAAFFIXER_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VVAS_XMETAAFFIXER_PAD))
 typedef struct _GstVvas_XMetaAffixer GstVvas_XMetaAffixer;
 typedef struct _GstVvas_XMetaAffixerClass GstVvas_XMetaAffixerClass;
@@ -55,7 +88,8 @@ typedef struct _GstVvas_XMetaAffixerPad GstVvas_XMetaAffixerPad;
 typedef struct _GstVvas_XMetaAffixerPadClass GstVvas_XMetaAffixerPadClass;
 typedef struct _GstVvas_XMetaAffixerCollectData GstVvas_XMetaAffixerCollectData;
 
-typedef enum {
+typedef enum
+{
   VVAS_XMETAAFFIXER_STATE_FIRST_BUFFER,
   VVAS_XMETAAFFIXER_STATE_DROP_BUFFER,
   VVAS_XMETAAFFIXER_STATE_PROCESS_BUFFER,
@@ -63,23 +97,36 @@ typedef enum {
 
 struct _GstVvas_XMetaAffixerCollectData
 {
-  GstCollectData collectdata;   /* we extend the CollectData */
+  /* we extend the CollectData */
+  GstCollectData collectdata;
   GstVvas_XMetaAffixerPad *sinkpad;
 };
 
 struct _GstVvas_XMetaAffixerPad
 {
+  /** parent of GstVvas_XMetaAffixerPad object */
   GstPad parent;
+  /** Pointer to GstVvas_XMetaAffixerCollectData object */
   GstVvas_XMetaAffixerCollectData *collect;
+  /** Pointer to src pad object corresponding sink pad */
   GstPad *srcpad;
+  /** Width of the input frame */
   guint width;
+  /** Height of the input frame */
   guint height;
+  /** Frame duration */
   GstClockTime duration;
+  /** Presentation timestamp of the current frame */
   GstClockTime curr_pts;
+  /** flag indicating EOS received on this pad */
   gboolean eos_received;
+  /** GstVideoInfo object */
   GstVideoInfo vinfo;
+  /** Status of last operation on this pad */
   GstFlowReturn fret;
+  /** Flag indicates if EOS event is sent on the corresponding src pad */
   gboolean sent_eos;
+  /** State of the data on this pad */
   VVAS_XMETAAFFIXER_STREAM_STATE stream_state;
 };
 
@@ -87,32 +134,53 @@ struct _GstVvas_XMetaAffixerPad
 
 struct _GstVvas_XMetaAffixer
 {
+  /** Base class object */
   GstElement element;
+  /** Pointer to GstCollectPads object */
   GstCollectPads *collect;
+  /** Pointer to master sink pad object */
   GstVvas_XMetaAffixerPad *sink_master;
+  /** Array of slave sink pad object */
   GstVvas_XMetaAffixerPad *sink_slave[MAX_SLAVE_SOURCES];
+  /** Pointer to GstFlowCombiner object */
   GstFlowCombiner *flowcombiner;
+  /** Number of slave sink pads created */
   guint num_slaves;
+  /** Flag indicating use of PTS for meta data attachment */
   gboolean sync;
+  /** End time of previous buffer on master sink pad */
   GstClockTime prev_m_end_ts;
-  GstBuffer *prev_meta_buf; /* buffer holds metadata only but not data */
+  /** Buffer holding meta data of previous buffer on master sink pad
+   * buffer holds metadata only but not data */
+  GstBuffer *prev_meta_buf;
+  /** Pointer to GThread onject */
   GThread *timeout_thread;
+  /** Duration to wait before triggering recovery action in case
+   *  data flow getting stuck */
   gint64 retry_timeout;
+  /** Flag indicating timeout has hit */
   gboolean timeout_issued;
+  /** Flag indicating thread to be started */
   gboolean start_thread;
+  /** Flag indicating thread to be exited */
   gboolean stop_thread;
+  /** Condition for timeout */
   GCond timeout_cond;
+  /** Lock to protect handling related to timeout hit condition */
   GMutex timeout_lock;
+  /** Lock to protect handling related to all pads */
   GMutex collected_lock;
 };
 
 struct _GstVvas_XMetaAffixerPadClass
 {
+  /** Parent class object */
   GstPadClass parent_class;
 };
 
 struct _GstVvas_XMetaAffixerClass
 {
+  /** Parent class object */
   GstElementClass parent_class;
 };
 

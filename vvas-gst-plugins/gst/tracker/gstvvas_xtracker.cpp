@@ -1,5 +1,6 @@
 /*
  * Copyright 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,120 +23,192 @@
 #include <gst/vvas/gstinferencemeta.h>
 #include <gst/vvas/gstinferenceprediction.h>
 #include <gst/vvas/gstvvasallocator.h>
-
+#include <gst/vvas/gstvvascoreutils.h>
+#include <gst/vvas/gstvvassrcidmeta.h>
 #ifdef XLNX_PCIe_PLATFORM
 #include <experimental/xrt-next.h>
 #else
-#include <xrt/experimental/xrt-next.h>
-#endif
-#ifdef XLNX_EMBEDDED_PLATFORM
-#include <arm_neon.h>
-#include "NE10.h"
 #endif
 
 #include "gstvvas_xtracker.h"
-#include "tracker_algo/tracker.hpp"
-#include "tracker_algo/correlation_filter.hpp"
-
-#include "vvas/xrt_utils.h"
-
+#include <vvas_core/vvas_context.h>
+#include <vvas_core/vvas_tracker.hpp>
+#include <vvas_utils/vvas_node.h>
 extern "C"
 {
 #include <gst/vvas/gstvvasutils.h>
 }
 
+/**
+ *  @brief Defines a static GstDebugCategory global variable "gst_vvas_xtracker_debug"
+ */
 GST_DEBUG_CATEGORY_STATIC (gst_vvas_xtracker_debug);
-#define GST_CAT_DEFAULT gst_vvas_xtracker_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
-pthread_mutex_t count_mutex;
+/** @def GST_CAT_DEFAULT
+ *  @brief Setting gst_vvas_xtracker_debug as default debug category for logging
+ */
+#define GST_CAT_DEFAULT gst_vvas_xtracker_debug
+/**
+ *  @brief Defines a static GstDebugCategory global variable with name
+ *         GST_CAT_PERFORMANCE for performance logging purpose
+ */
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 typedef struct _GstVvas_XTrackerPrivate GstVvas_XTrackerPrivate;
 
+/** @enum
+ *  @brief  Contains properties related to tracker configuration
+ */
 enum
 {
+  /** default */
   PROP_0,
+  /** Tracker algorithm type */
   PROP_TRACKER_TYPE,
+  /** flag to use color based matching or not in IOU algorithm */
   PROP_IOU_USE_COLOR,
+  /** Color space to be used for object matching */
   PROP_USE_MATCHING_COLOR_SPACE,
+  /** Feature length for KCF tracker */
   PROP_FEATURE_LENGTH,
+  /** Enum to set search scales to be used in KCF tracker */
   PROP_SEARCH_SCALE,
-  PROP_DETECTION_INTERVAL,
+  /** Inactive time period for objects to stop tracking */
   PROP_INACTIVE_WAIT_INTERVAL,
+  /** Minimum object width for tracking */
   PROP_MIN_OBJECT_WIDTH,
+  /** Minimum object height for tracking */
   PROP_MIN_OBJECT_HEIGHT,
+  /** Maximum width above which objects are not tracked */
   PROP_MAX_OBJECT_WIDTH,
+  /** Maximum height above which objects are not tracked */
   PROP_MAX_OBJECT_HEIGHT,
+  /** Number of consecutive frames detection for considering tracking */
   PROP_NUM_FRAMES_CONFIDENCE,
+  /** IOU search scale for object matching */
   PROP_MATCHING_SEARCH_REGION,
+  /** Search scale for KCF tracker */
   PROP_RELATIVE_SEARCH_REGION,
+  /** Correlation threshold for object matching */
   PROP_CORRELATION_THRESHOLD,
+  /** Overlap threshold for object matching */
   PROP_OVERLAP_THRESHOLD,
+  /** Scale change threshold for object matching */
   PROP_SCALE_CHANGE_THRESHOLD,
+  /** Correlation weightage for object matching */
   PROP_CORRELATION_WEIGHT,
+  /** Overlap weightage for object matching */
   PROP_OVERLAP_WEIGHT,
+  /** Scale change wieghtage for object matching */
   PROP_SCALE_CHANGE_WEIGHT,
+  /** Occlusion threshold for considering objects are under occlusion */
   PROP_OCCLUSION_THRESHOLD,
+  /** Tracker confidence threshold to consider object tracked properly */
   PROP_CONFIDENCE_SCORE_THRESHOLD,
+  /** Flag to enable marking of inactive objects */
+  PROP_SKIP_INACTIVE_OBJS,
 };
 
+/** @struct TrackerInstances
+ *  @brief  Holds tracker instances
+ */
+struct TrackerInstances
+{
+  /** pointer to base tracker */
+  VvasTracker *vvasbase_tracker;
+};
+
+/** @struct _GstVvas_XTrackerPrivate
+ *  @brief  Holds private members related tracker
+ */
 struct _GstVvas_XTrackerPrivate
 {
+  /** Contains image properties from input caps */
   GstVideoInfo *in_vinfo;
-  GstVideoInfo *out_vinfo;
-  GstBufferPool *input_pool;
-  GstVideoFrame in_vframe;
-  VVASFrame *input[MAX_NUM_OBJECT];
-  int ids;
-  objs_data trk_objs;
-  int fr_count;
-  GstInferencePrediction *pr;
-  char *img_data;
-  tracker_handle trackers_data;
-  track_config tconfig;
+  /** Contains tracker configure information */
+  VvasTrackerconfig tconfig;
+  /** contains sourceId and tracker instances mapping */
+  GHashTable *tracker_instances_hash;
+  /** global context for vvas tracker */
+  VvasContext *vvas_gctx;
 };
 
+/**
+ *  @brief Defines sink pad template
+ */
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{NV12}")));
 
+/**
+ *  @brief Defines source pad template
+ */
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{NV12}")));
 
 #define gst_vvas_xtracker_parent_class parent_class
+
+/** @brief  Glib's convenience macro for GstVvas_XTracker type implementation.
+ *  @details This macro does below tasks:\n
+ *           - Declares a class initialization function with prefix gst_vvas_xtracker \n
+ */
 G_DEFINE_TYPE_WITH_PRIVATE (GstVvas_XTracker, gst_vvas_xtracker,
     GST_TYPE_BASE_TRANSFORM);
+
+/** @def GST_VVAS_XTRACKER_PRIVATE(self)
+ *  @brief Get instance of GstVvas_XTrackerPrivate structure
+ */
 #define GST_VVAS_XTRACKER_PRIVATE(self) (GstVvas_XTrackerPrivate *) (gst_vvas_xtracker_get_instance_private (self))
 
+/* Funtion declrations */
 static void gst_vvas_xtracker_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_vvas_xtracker_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstFlowReturn gst_vvas_xtracker_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
-static void gst_vvas_xtracker_finalize (GObject * obj);
+static gboolean gst_vvas_xtracker_sink_event(GstBaseTransform *trans,
+    GstEvent *event);
 
+/** @def GST_TYPE_VVAS_TRACKER_ALGO_TYPE
+ *  @brief Registers a new static enumeration type with the name GstVvasTrackerAlgoType
+ */
 #define GST_TYPE_VVAS_TRACKER_ALGO_TYPE (gst_vvas_tracker_tracker_algo_type ())
+
+/** @enum GstVvasTrackerAlgoType
+ *  @brief Enum representing tracker algorithm type
+ *  @note Algorithm to be used for tracking objects across frames
+ */
 typedef enum
 {
-  TRACKER_ALGO_IOU,
-  TRACKER_ALGO_MOSSE,
-  TRACKER_ALGO_KCF,
-  TRACKER_ALGO_NONE,
+  /** Intersection-Over-Union algorithm */
+  GST_TRACKER_ALGO_IOU,
+  /** Minimum Output Sum of Squared Error algorithm */
+  GST_TRACKER_ALGO_MOSSE,
+  /** Kernelized Correlation Filter algorithm */
+  GST_TRACKER_ALGO_KCF,
+  /** No Algorithm is specified. \p TRACKER_ALGO_KCF will be
+     set as default algorithm */
+  GST_TRACKER_ALGO_NONE,
 } GstVvasTrackerAlgoType;
 
+/**
+ *  @fn GType gst_vvas_tracker_tracker_algo_type (void)
+ *  @return enumeration identifier type
+ *  @brief  Registers a new static enumeration type with the GstVvasTrackerAlgoType
+ */
 static GType
 gst_vvas_tracker_tracker_algo_type (void)
 {
   static GType qtype = 0;
   if (qtype == 0) {
     static const GEnumValue tracker_algo_type[] = {
-      {TRACKER_ALGO_IOU, "Tracker IOU Algorithm", "IOU"},
-      {TRACKER_ALGO_MOSSE, "Tracker MOSSE Algorithm", "MOSSE"},
-      {TRACKER_ALGO_KCF, "Tracker KCF Algorithm", "KCF"},
+      {GST_TRACKER_ALGO_IOU, "Tracker IOU Algorithm", "IOU"},
+      {GST_TRACKER_ALGO_MOSSE, "Tracker MOSSE Algorithm", "MOSSE"},
+      {GST_TRACKER_ALGO_KCF, "Tracker KCF Algorithm", "KCF"},
       {0, NULL, NULL}
     };
     qtype =
@@ -144,7 +217,16 @@ gst_vvas_tracker_tracker_algo_type (void)
   return qtype;
 }
 
+/** @def GST_TYPE_VVAS_TRACKER_FEATURE_LENGTH
+ *  @brief Registers a new static enumeration type with the name GstVvasTrackerFeatureLength
+ */
 #define GST_TYPE_VVAS_TRACKER_FEATURE_LENGTH (gst_vvas_tracker_feature_length_type ())
+
+/**
+ *  @fn GType gst_vvas_tracker_feature_length_type (void)
+ *  @return enumeration identifier type
+ *  @brief  Registers a new static enumeration type with the GstVvasTrackerFeatureLength
+ */
 static GType
 gst_vvas_tracker_feature_length_type (void)
 {
@@ -162,24 +244,41 @@ gst_vvas_tracker_feature_length_type (void)
   return qtype;
 }
 
+/** @def GST_TYPE_VVAS_TRACKER_SEARCH_SCALE
+ *  @brief Registers a new static enumeration type with the name GstVvasTrackerSearchScale
+ */
 #define GST_TYPE_VVAS_TRACKER_SEARCH_SCALE (gst_vvas_tracker_search_scale_type ())
+
+/** @enum GstVvasTrackerSearchScale
+ *  @brief Enum representing search scales to be used for tracking
+ *  @note To set search scale to be used during tracking. Default searches in all scales.
+ */
 typedef enum
 {
-  SEARCH_SCALE_ALL,
-  SEARCH_SCALE_UP,
-  SEARCH_SCALE_DOWN,
-  SEARCH_SCALE_NONE,
+  /** Search for object both in up, same and down scale */
+  GST_SEARCH_SCALE_ALL,
+   /** Search for object in up and same scale only */
+  GST_SEARCH_SCALE_UP,
+  /** Search for object in down and same scale only */
+  GST_SEARCH_SCALE_DOWN,
+  /** Search for in same scale */
+  GST_SEARCH_SCALE_NONE,
 } GstVvasTrackerSearchScale;
 
+/**
+ *  @fn GType gst_vvas_tracker_search_scale_type (void)
+ *  @return enumeration identifier type
+ *  @brief  Registers a new static enumeration type with the GstVvasTrackerSearchScale
+ */
 static GType
 gst_vvas_tracker_search_scale_type (void)
 {
   static GType qtype = 0;
   if (qtype == 0) {
     static const GEnumValue search_scale_type[] = {
-      {SEARCH_SCALE_ALL, "Search all scales (up, down and same)", "all"},
-      {SEARCH_SCALE_UP, "Search up and same scale", "up"},
-      {SEARCH_SCALE_DOWN, "Search down and same scale", "down"},
+      {GST_SEARCH_SCALE_ALL, "Search all scales (up, down and same)", "all"},
+      {GST_SEARCH_SCALE_UP, "Search up and same scale", "up"},
+      {GST_SEARCH_SCALE_DOWN, "Search down and same scale", "down"},
       {0, NULL, NULL}
     };
     qtype =
@@ -188,21 +287,37 @@ gst_vvas_tracker_search_scale_type (void)
   return qtype;
 }
 
+/** @def GST_TYPE_VVAS_TRACKER_MATCHING_COLOR_SPACE
+ *  @brief Registers a new static enumeration type with the name GstVVasTrackerMatchColorSpace
+ */
 #define GST_TYPE_VVAS_TRACKER_MATCHING_COLOR_SPACE (gst_vvas_tracker_match_color_space ())
+
+/** @enum GstVVasTrackerMatchColorSpace
+ *  @brief Enum representing color space used for object matching
+ *  @note Color space to be used during object matching.  RGB is less complex
+ *        compare to HSV.
+ */
 typedef enum
 {
-  TRACKER_USE_RGB,
-  TRACKER_USE_HSV,
+  /** Use RGB color space for object matching */
+  GST_TRACKER_USE_RGB,
+  /** Use HSV (Hue-Saturation-Value) color space for object matching */
+  GST_TRACKER_USE_HSV,
 } GstVVasTrackerMatchColorSpace;
 
+/**
+ *  @fn GType gst_vvas_tracker_match_color_space (void)
+ *  @return enumeration identifier type
+ *  @brief  Registers a new static enumeration type with the GstVVasTrackerMatchColorSpace
+ */
 static GType
 gst_vvas_tracker_match_color_space (void)
 {
   static GType qtype = 0;
   if (qtype == 0) {
     static const GEnumValue match_color_space_type[] = {
-      {TRACKER_USE_RGB, "Uses rgb color space for matching", "rgb"},
-      {TRACKER_USE_HSV, "Uses hsv color space for matching", "hsv"},
+      {GST_TRACKER_USE_RGB, "Uses rgb color space for matching", "rgb"},
+      {GST_TRACKER_USE_HSV, "Uses hsv color space for matching", "hsv"},
       {0, NULL, NULL}
     };
     qtype =
@@ -212,311 +327,216 @@ gst_vvas_tracker_match_color_space (void)
   return qtype;
 }
 
-#define GST_VVAS_TRACKER_TRACKER_ALGO_DEFAULT           (TRACKER_ALGO_KCF)
+/** @def GST_VVAS_TRACKER_TRACKER_ALGO_DEFAULT
+ *  @brief Sets default algorithm for object tracking.
+ */
+#define GST_VVAS_TRACKER_TRACKER_ALGO_DEFAULT           (GST_TRACKER_ALGO_KCF)
+/** @def GST_VVAS_TRACKER_IOU_USE_COLOR_FEATURE
+ *  @brief Default setting to use color matching or not during IOU based tracking.
+ */
 #define GST_VVAS_TRACKER_IOU_USE_COLOR_FEATURE          (1)
-#define GST_VVAS_TRACKER_USE_MATCHING_COLOR_SPACE       (USE_HSV)
+/** @def GST_VVAS_TRACKER_USE_MATCHING_COLOR_SPACE
+ *  @brief Default color space for matching objects.
+ */
+#define GST_VVAS_TRACKER_USE_MATCHING_COLOR_SPACE       (GST_TRACKER_USE_HSV)
+/** @def GST_VVAS_TRACKER_FEATURE_LENGTH_DEFAULT
+ *  @brief Default feature length for KCF tracker.
+ */
 #define GST_VVAS_TRACKER_FEATURE_LENGTH_DEFAULT         (31)
-#define GST_VVAS_TRACKER_SEARCH_SCALE_DEFAULT           (SEARCH_SCALE_ALL)
-#define GST_VVAS_TRACKER_DETECTION_INTERVAL_DEFAULT     (5)
+/** @def GST_VVAS_TRACKER_SEARCH_SCALE_DEFAULT
+ *  @brief Default search scales to be used during KCF tracking.
+ */
+#define GST_VVAS_TRACKER_SEARCH_SCALE_DEFAULT           (GST_SEARCH_SCALE_ALL)
+
+/** @def GST_VVAS_TRACKER_INACTIVE_WAIT_INTERVAL_DEFAULT
+ *  @brief To set maximum inactive time period in terms of frames.
+ */
 #define GST_VVAS_TRACKER_INACTIVE_WAIT_INTERVAL_DEFAULT (200)
+
+/** @def GST_VVAS_TRACKER_MIN_OBJECT_WIDTH_DEFAULT
+ *  @brief Default minimum width of object for tracking.
+ */
 #define GST_VVAS_TRACKER_MIN_OBJECT_WIDTH_DEFAULT       (20)
+
+/** @def GST_VVAS_TRACKER_MIN_OBJECT_HEIGHT_DEFAULT
+ *  @brief Default minimum height of object for tracking.
+ */
 #define GST_VVAS_TRACKER_MIN_OBJECT_HEIGHT_DEFAULT      (60)
+
+/** @def GST_VVAS_TRACKER_MAX_OBJECT_WIDTH_DEFAULT
+ *  @brief Default maximum width above which object consider as noise.
+ */
 #define GST_VVAS_TRACKER_MAX_OBJECT_WIDTH_DEFAULT       (200)
+
+/** @def GST_VVAS_TRACKER_MAX_OBJECT_HEIGHT_DEFAULT
+ *  @brief Default maximum height above which object consider as noise.
+ */
 #define GST_VVAS_TRACKER_MAX_OBJECT_HEIGHT_DEFAULT      (360)
+
+/** @def GST_VVAS_TRACKER_NUM_FRAMES_CONFIDENCE_DEFAULT
+ *  @brief Default consecutive number of frame object need
+ *         to be detected for tracking.
+ */
 #define GST_VVAS_TRACKER_NUM_FRAMES_CONFIDENCE_DEFAULT  (3)
+
+/** @def GST_VVAS_TRACKER_MATCHING_SEARCH_REGION_DEFAULT
+ *  @brief Default scale for matching objects using IOU.
+ */
 #define GST_VVAS_TRACKER_MATCHING_SEARCH_REGION_DEFAULT (1.5)
+
+/** @def GST_VVAS_TRACKER_RELATIVE_SEARCH_REGION_DEFAULT
+ *  @brief Sets default search scale factor for KCF tracker.
+ */
 #define GST_VVAS_TRACKER_RELATIVE_SEARCH_REGION_DEFAULT (1.5)
+
+/** @def GST_VVAS_TRACKER_CORRELATION_THRESHOLD_DEFAULT
+ *  @brief Default correlation threshold for object matching.
+ */
 #define GST_VVAS_TRACKER_CORRELATION_THRESHOLD_DEFAULT  (0.7)
+
+/** @def GST_VVAS_TRACKER_OVERLAP_THRESHOLD_DEFAULT
+ *  @brief SDefault overlap threshold for object matching.
+ */
 #define GST_VVAS_TRACKER_OVERLAP_THRESHOLD_DEFAULT      (0.0)
+
+/** @def GST_VVAS_TRACKER_SCALE_CHANGE_THRESHOLD_DEFAULT
+ *  @brief Default scale change threshold for object matching.
+ */
 #define GST_VVAS_TRACKER_SCALE_CHANGE_THRESHOLD_DEFAULT (0.7)
+
+/** @def GST_VVAS_TRACKER_CORRELATION_WEIGHT_DEFAULT
+ *  @brief Default weightage for correlation during objects matching.
+ */
 #define GST_VVAS_TRACKER_CORRELATION_WEIGHT_DEFAULT      (0.7)
+
+/** @def GST_VVAS_TRACKER_OVERLAP_WEIGHT_DEFAULT
+ *  @brief Default weightage for overlap during objects matching.
+ */
 #define GST_VVAS_TRACKER_OVERLAP_WEIGHT_DEFAULT          (0.2)
+
+/** @def GST_VVAS_TRACKER_SCALE_CHANGE_WEIGHT_DEFAULT
+ *  @brief Default weightage for object scale change during objects matching.
+ */
 #define GST_VVAS_TRACKER_SCALE_CHANGE_WEIGHT_DEFAULT     (0.1)
+
+/** @def GST_VVAS_TRACKER_OCCLUSION_THRESHOLD_DEFAULT
+ *  @brief Default value to consider objects under occlusion.
+ */
 #define GST_VVAS_TRACKER_OCCLUSION_THRESHOLD_DEFAULT    (0.4)
+
+/** @def GST_VVAS_TRACKER_CONFIDENCE_SCORE_THRESHOLD_DEFAULT
+ *  @brief Default confidence threshold to consider object is tracked properly.
+ */
 #define GST_VVAS_TRACKER_CONFIDENCE_SCORE_THRESHOLD_DEFAULT (0.25)
 
-static inline VVASVideoFormat
-get_vvas_format (GstVideoFormat gst_fmt)
-{
-  switch (gst_fmt) {
-    case GST_VIDEO_FORMAT_GRAY8:
-      return VVAS_VFMT_Y8;
-    case GST_VIDEO_FORMAT_NV12:
-      return VVAS_VFMT_Y_UV8_420;
-    case GST_VIDEO_FORMAT_BGR:
-      return VVAS_VFMT_BGR8;
-    case GST_VIDEO_FORMAT_RGB:
-      return VVAS_VFMT_RGB8;
-    case GST_VIDEO_FORMAT_YUY2:
-      return VVAS_VFMT_YUYV8;
-    case GST_VIDEO_FORMAT_r210:
-      return VVAS_VFMT_RGBX10;
-    case GST_VIDEO_FORMAT_v308:
-      return VVAS_VFMT_YUV8;
-    case GST_VIDEO_FORMAT_GRAY10_LE32:
-      return VVAS_VFMT_Y10;
-    case GST_VIDEO_FORMAT_ABGR:
-      return VVAS_VFMT_ABGR8;
-    case GST_VIDEO_FORMAT_ARGB:
-      return VVAS_VFMT_ARGB8;
-    default:
-      GST_ERROR ("Not supporting %s yet", gst_video_format_to_string (gst_fmt));
-      return VVAS_VMFT_UNKNOWN;
-  }
-}
+/** @def GST_VVAS_TRACKER_SKIP_INACTIVE_OBJS_DEFAULT
+ *  @brief Default confidence threshold to consider object is tracked properly.
+ */
+#define GST_VVAS_TRACKER_SKIP_INACTIVE_OBJS_DEFAULT FALSE
 
-static gboolean
-input_each_node_to_tracker (GNode * node, gpointer new_objs_ptr)
-{
-  objs_data *ptr = (objs_data *) new_objs_ptr;
-  GstInferencePrediction *prediction = (GstInferencePrediction *) node->data;
-
-  if (ptr->num_objs >= MAX_OBJ_TRACK)
-    return FALSE;
-  else if (!node->parent)
-    return FALSE;
-  else {
-    int i = ptr->num_objs;
-    ptr->objs[i].x = prediction->bbox.x;
-    ptr->objs[i].y = prediction->bbox.y;
-    ptr->objs[i].width = prediction->bbox.width;
-    ptr->objs[i].height = prediction->bbox.height;
-    ptr->objs[i].map_id = prediction->prediction_id;
-    ptr->num_objs = i + 1;
-  }
-
-  return FALSE;
-}
-
-static gboolean
-update_each_node_with_results (GNode * node, gpointer kpriv_ptr)
-{
-  GstVvas_XTrackerPrivate *priv = (GstVvas_XTrackerPrivate *) kpriv_ptr;
-  GList *classes;
-  GstInferenceClassification *classification;
-  GstInferencePrediction *prediction = (GstInferencePrediction *) node->data;
-  bool flag = true;
-
-  if (!node->parent)
-    return FALSE;
-
-  for (int i = 0; i < MAX_OBJ_TRACK && flag; i++) {
-    if ((priv->trackers_data.trk_objs.objs[i].status == 1) &&
-        (prediction->prediction_id ==
-            priv->trackers_data.trk_objs.objs[i].map_id)) {
-      prediction->bbox.x = round (priv->trackers_data.trk_objs.objs[i].x);
-      prediction->bbox.y = round (priv->trackers_data.trk_objs.objs[i].y);
-      prediction->bbox.width =
-          round (priv->trackers_data.trk_objs.objs[i].width);
-      prediction->bbox.height =
-          round (priv->trackers_data.trk_objs.objs[i].height);
-      flag = false;
-      string str = to_string (priv->trackers_data.trk_objs.objs[i].trk_id);
-      prediction->obj_track_label = g_strdup (str.c_str ());
-    }
-  }
-
-  if (flag == true) {
-    prediction->bbox.x = 0;
-    prediction->bbox.y = 0;
-    prediction->bbox.width = 0;
-    prediction->bbox.height = 0;
-    classes = prediction->classifications;
-    classification = (GstInferenceClassification *) classes->data;
-    g_free (classification->class_label);
-    classification->class_label = NULL;
-  }
-
-  return FALSE;
-}
-
-static uint32_t
-vvas_tracker_start (GstVvas_XTracker * self, VVASFrame * input[MAX_NUM_OBJECT])
-{
-  GstVvas_XTrackerPrivate *priv = self->priv;
-  GstInferenceMeta *infer_meta = NULL;
-  Mat_img img;
-  VVASFrame *inframe = input[0];
-  int data_size = 0, half_data_size = 0;
-  GstMemory *in_mem = NULL;
-
-  img.width = input[0]->props.stride;   //width;
-  img.height = input[0]->props.height;
-  img.channels = 1;
-
-  if (priv->tconfig.tracker_type == ALGO_IOU) {
-    GST_ERROR_OBJECT (self, "tracker start failed");
-    return 0;
-  }
-
-  if (priv->tconfig.det_intvl <= 1 && priv->tconfig.tracker_type != ALGO_IOU) {
-    GST_WARNING ("If detection interval is one tracker type must set ALGO_IOU");
-  }
-
-  if (priv->tconfig.tracker_type == ALGO_IOU && !priv->tconfig.iou_use_color) {
-    img.data = NULL;
-  } else {
-    in_mem = gst_buffer_get_memory ((GstBuffer *) inframe->app_priv, 0);
-    if (in_mem == NULL) {
-      GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
-      return 0;
-    }
-
-    data_size = input[0]->props.stride * input[0]->props.height;
-    half_data_size = data_size >> 1;
-    if (gst_is_vvas_memory (in_mem)) {
-      if (priv->img_data == NULL)
-        priv->img_data = (char *) malloc (data_size + half_data_size);
-
-      memcpy (priv->img_data, inframe->vaddr[0], data_size);
-
-      if (!(priv->fr_count % priv->tconfig.det_intvl)) {
-        memcpy (priv->img_data + data_size, inframe->vaddr[1], half_data_size);
-        img.channels = 2;
-      }
-
-      img.data = (unsigned char *) priv->img_data;
-    } else {
-      if (((char *) inframe->vaddr[0] + data_size) !=
-          ((char *) inframe->vaddr[1])) {
-        GST_ERROR_OBJECT (self,
-            "Tracker requires image data continuous memory");
-        return 0;
-      }
-      img.data = (unsigned char *) inframe->vaddr[0];
-    }
-  }
-
-  if (!(priv->fr_count % priv->tconfig.det_intvl)) {
-    priv->trackers_data.new_objs.num_objs = 0;
-    objs_data *ptr = &priv->trackers_data.new_objs;
-
-    infer_meta = ((GstInferenceMeta *) gst_buffer_get_meta ((GstBuffer *)
-            inframe->app_priv, gst_inference_meta_api_get_type ()));
-    if (infer_meta != NULL) {
-      if (priv->fr_count != 0)
-        gst_inference_prediction_unref (priv->pr);
-
-      priv->pr = gst_inference_prediction_copy (infer_meta->prediction);
-      GST_DEBUG_OBJECT (self, "vvas_meta ptr %p", infer_meta);
-      g_node_traverse (infer_meta->prediction->predictions, G_PRE_ORDER,
-          G_TRAVERSE_LEAVES, -1, input_each_node_to_tracker, ptr);
-    }
-
-    run_tracker (img, priv->tconfig, &priv->trackers_data, true);
-    priv->fr_count = 0;
-  } else {
-    infer_meta = ((GstInferenceMeta *) gst_buffer_get_meta ((GstBuffer *)
-            inframe->app_priv, gst_inference_meta_api_get_type ()));
-    if (infer_meta != NULL) {
-      gst_inference_prediction_unref (infer_meta->prediction);
-      infer_meta->prediction = gst_inference_prediction_copy (priv->pr);
-    }
-
-    run_tracker (img, priv->tconfig, &priv->trackers_data, false);
-  }
-
-  priv->fr_count++;
-
-  infer_meta = ((GstInferenceMeta *) gst_buffer_get_meta ((GstBuffer *)
-          inframe->app_priv, gst_inference_meta_api_get_type ()));
-  if (infer_meta == NULL) {
-    GST_WARNING ("vvas meta data is not available");
-    return 1;
-  } else {
-    g_node_traverse (infer_meta->prediction->predictions, G_PRE_ORDER,
-        G_TRAVERSE_LEAVES, -1, update_each_node_with_results, priv);
-  }
-
-  return 1;
-}
-
-static gboolean
-vvas_xtracker_init (GstVvas_XTracker * self)
-{
-  GstVvas_XTrackerPrivate *priv = self->priv;
-  int iret;
-
-  priv->ids = 0;
-  priv->fr_count = 0;
-  priv->img_data = NULL;
-  priv->trackers_data.ids = priv->ids;
-  priv->tconfig.fixed_window = 1;
-  priv->tconfig.hog_feature = 1;
-
-  iret = init_tracker (&priv->trackers_data, &priv->tconfig);
-  if (iret < 0) {
-    GST_ERROR_OBJECT (self, "failed to do tracker init..");
-    return FALSE;
-  }
-
-  GST_INFO_OBJECT (self, "completed tracker init");
-
-  return TRUE;
-}
-
+/**
+ *  @fn gboolean vvas_xtracker_deinit (GstVvas_XTracker * self)
+ *  @param [inout] self - Pointer to GstVvas_XTracker structure.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  Free all allocated memory of trackers and image buffers
+ *  @note  Calls deinit_tracker function from tracker library to deallocate memory
+ *         of tracker objects.
+ *
+ */
 static gboolean
 vvas_xtracker_deinit (GstVvas_XTracker * self)
 {
-  GstVvas_XTrackerPrivate *priv = self->priv;
-  int iret;
+  bool iret = TRUE;
+  GHashTableIter iter;
+  gpointer key, value;
 
-  if (priv->input[0])
-    free (priv->input[0]);
-
-  iret = deinit_tracker (&priv->trackers_data);
-  if (iret < 0) {
-    GST_ERROR_OBJECT (self, "failed to do tracker deinit..");
+  g_hash_table_iter_init(&iter, self->priv->tracker_instances_hash);
+  while (g_hash_table_iter_next(&iter, &key, &value)) {
+    struct TrackerInstances *instance;
+    instance = (struct TrackerInstances *) value;
+    if (instance && instance->vvasbase_tracker) {
+      /* calling tracker deinitialization function */
+      iret = vvas_tracker_destroy(instance->vvasbase_tracker);
+      if (iret)
+        GST_DEBUG_OBJECT (self, "successfully completed tracker deinit");
+      else
+        GST_ERROR_OBJECT (self, "Failed to free tracker instances");
+    }
   }
-  free (priv->img_data);
-  priv->img_data = NULL;
 
-  gst_inference_prediction_unref (priv->pr);
-
-  GST_DEBUG_OBJECT (self, "successfully completed tracker deinit");
-
-  return TRUE;
+  g_hash_table_unref(self->priv->tracker_instances_hash);
+  return iret;
 }
 
+/**
+ *  @fn gboolean gst_vvas_xtracker_start (GstBaseTransform * trans)
+ *  @param [in] trans - Pointer to GstBaseTransform object.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  This API Allocates memory and sets the transform type.
+ *  @details This API is registered with GObjectClass by overriding GstBaseTransform::start function pointer and
+ *          this will be called when element start processing. It invokes tracker initialization and allocates memory.
+ */
 static gboolean
 gst_vvas_xtracker_start (GstBaseTransform * trans)
 {
   GstVvas_XTracker *self = GST_VVAS_XTRACKER (trans);
   GstVvas_XTrackerPrivate *priv = self->priv;
+  VvasReturnType vret;
 
   self->priv = priv;
   priv->in_vinfo = gst_video_info_new ();
-  priv->out_vinfo = gst_video_info_new ();
+
+  /* Create global context for vvas core */
+  priv->vvas_gctx = vvas_context_create (0, NULL, LOG_LEVEL_ERROR, &vret);
+  if (!priv->vvas_gctx || VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self,
+        "ERROR: Failed to create vvas global context for tracker\n");
+  }
 
   gst_base_transform_set_in_place (trans, true);
 
-  if (!vvas_xtracker_init (self))
-    goto error;
-
-  memset (priv->input, 0x0, sizeof (VVASFrame *) * MAX_NUM_OBJECT);
-  priv->input[0] = (VVASFrame *) calloc (1, sizeof (VVASFrame));
-  if (NULL == priv->input[0]) {
-    GST_ERROR_OBJECT (self, "failed to allocate memory");
-    return FALSE;
-  }
-
   return TRUE;
-
-error:
-  return FALSE;
 }
 
+/**
+ *  @fn gboolean gst_vvas_xtracker_stop (GstBaseTransform * trans)
+ *  @param [in] trans - Pointer to GstBaseTransform object.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  Free up Allocates memory.
+ *  @details This API is registered with GObjectClass by overriding GstBaseTransform::stop function pointer and
+ *          this will be called when element stops processing.
+ *          It invokes tracker de-initialization and free up allocated memory.
+ *
+ */
 static gboolean
 gst_vvas_xtracker_stop (GstBaseTransform * trans)
 {
   GstVvas_XTracker *self = GST_VVAS_XTRACKER (trans);
   GST_DEBUG_OBJECT (self, "stopping");
-  gst_video_info_free (self->priv->out_vinfo);
+
+  if (self->priv->vvas_gctx) {
+    vvas_context_destroy (self->priv->vvas_gctx);
+  }
   gst_video_info_free (self->priv->in_vinfo);
   vvas_xtracker_deinit (self);
   return TRUE;
 }
 
+/**
+ *  @fn gboolean gst_vvas_xtracker_set_caps (GstBaseTransform * trans,
+ *                                GstCaps * incaps, GstCaps * outcaps)
+ *  @param [in] trans - Pointer to GstBaseTransform object.
+ *  @param [in] incaps - Pointer to input caps of GstCaps object.
+ *  @param [in] outcaps - Pointer to output caps  of GstCaps object.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  API to get input and output capabilities.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_caps function pointer and
+ *          this will be called to get the input and output capabilities.
+ */
 static gboolean
 gst_vvas_xtracker_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
@@ -529,19 +549,25 @@ gst_vvas_xtracker_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       "incaps = %" GST_PTR_FORMAT "and outcaps = %" GST_PTR_FORMAT, incaps,
       outcaps);
 
+  /* Reading input caps into in_vinfo */
   if (!gst_video_info_from_caps (priv->in_vinfo, incaps)) {
     GST_ERROR_OBJECT (self, "Failed to parse input caps");
-    return FALSE;
-  }
-
-  if (!gst_video_info_from_caps (priv->out_vinfo, outcaps)) {
-    GST_ERROR_OBJECT (self, "Failed to parse output caps");
     return FALSE;
   }
 
   return bret;
 }
 
+/**
+ *  @fn static void gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
+ *  @param [in]klass  - Handle to GstVvas_XTrackerClass
+ *  @return None
+ *  @brief  Add properties and signals of GstVvas_XTracker to parent GObjectClass \n
+ *          and overrides function pointers present in itself and/or its parent class structures
+ *  @details This function publishes properties those can be set/get from application on GstVvas_XTracker object.
+ *           And, while publishing a property it also declares type, range of acceptable values, default value,
+ *           readability/writability and in which GStreamer state a property can be changed.
+ */
 static void
 gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
 {
@@ -555,12 +581,12 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
 
   gobject_class->set_property = gst_vvas_xtracker_set_property;
   gobject_class->get_property = gst_vvas_xtracker_get_property;
-  gobject_class->finalize = gst_vvas_xtracker_finalize;
 
   transform_class->start = gst_vvas_xtracker_start;
   transform_class->stop = gst_vvas_xtracker_stop;
   transform_class->set_caps = gst_vvas_xtracker_set_caps;
   transform_class->transform_ip = gst_vvas_xtracker_transform_ip;
+  transform_class->sink_event = gst_vvas_xtracker_sink_event;
 
   /* Tracker algorithm */
   g_object_class_install_property (gobject_class, PROP_TRACKER_TYPE,
@@ -574,7 +600,7 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
   /* IOU with or without color feature */
   g_object_class_install_property (gobject_class, PROP_IOU_USE_COLOR,
       g_param_spec_boolean ("IOU-with-color", "IOU algorithm with color info",
-          "To speicfiy whether to use color feature with IOU or not", 0,
+          "To specify whether to use color feature with IOU or not", 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* color space to be used for matching objects during detection */
@@ -598,14 +624,6 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
           "Scales to verify to localize the object",
           GST_TYPE_VVAS_TRACKER_SEARCH_SCALE,
           GST_VVAS_TRACKER_SEARCH_SCALE_DEFAULT,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-              GST_PARAM_MUTABLE_READY)));
-
-  /* Detection interval */
-  g_object_class_install_property (gobject_class, PROP_DETECTION_INTERVAL,
-      g_param_spec_uint ("detection-interval", "Object detection interval",
-          "Object detection interval in number of frames",
-          1, G_MAXUINT, GST_VVAS_TRACKER_DETECTION_INTERVAL_DEFAULT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               GST_PARAM_MUTABLE_READY)));
 
@@ -690,8 +708,8 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
   g_object_class_install_property (gobject_class, PROP_OVERLAP_THRESHOLD,
       g_param_spec_float ("overlap-threshold",
           "Object overlap threshold to consider for matching",
-          "Object overlap threshold to consider for matching",
-          0.001, 1.0, GST_VVAS_TRACKER_OVERLAP_THRESHOLD_DEFAULT,
+          "Percentage of objects overlap should be above overlap-threshold to consider for matching",
+          0.0, 1.0, GST_VVAS_TRACKER_OVERLAP_THRESHOLD_DEFAULT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               GST_PARAM_MUTABLE_READY)));
 
@@ -750,6 +768,14 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
           1.0, GST_VVAS_TRACKER_CONFIDENCE_SCORE_THRESHOLD_DEFAULT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               GST_PARAM_MUTABLE_READY)));
+  /* Enabling or disabling inactive objects */
+  g_object_class_install_property (gobject_class, PROP_SKIP_INACTIVE_OBJS,
+      g_param_spec_boolean ("skip-inactive-objs",
+          "Flag to enable marking of inactive objects",
+          "Flag to enable or disable marking of inactive objects. This marking of \
+           inactive objects helps downstream plugins to process further or not",
+          GST_VVAS_TRACKER_SKIP_INACTIVE_OBJS_DEFAULT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_details_simple (gstelement_class,
       "VVAS Tracker Plugin",
@@ -767,8 +793,12 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
-/* initialize the new element
- * initialize instance structure
+/**
+ *  @fn static void gst_vvas_xtracker_init (GstVvas_XTracker * self)
+ *  @param [in] self  - Handle to GstVvas_XTracker instance
+ *  @return None
+ *  @brief  Initializes GstVvas_XTracker member variables to default values
+ *
  */
 static void
 gst_vvas_xtracker_init (GstVvas_XTracker * self)
@@ -780,28 +810,27 @@ gst_vvas_xtracker_init (GstVvas_XTracker * self)
   self->search_scale = GST_VVAS_TRACKER_SEARCH_SCALE_DEFAULT;
   self->match_color = GST_VVAS_TRACKER_USE_MATCHING_COLOR_SPACE;
 
-  if (self->tracker_algo == TRACKER_ALGO_IOU)
-    priv->tconfig.tracker_type = ALGO_IOU;
-  else if (self->tracker_algo == TRACKER_ALGO_MOSSE)
-    priv->tconfig.tracker_type = ALGO_MOSSE;
-  else if (self->tracker_algo == TRACKER_ALGO_KCF)
-    priv->tconfig.tracker_type = ALGO_KCF;
+  if (self->tracker_algo == GST_TRACKER_ALGO_IOU)
+    priv->tconfig.tracker_type = TRACKER_ALGO_IOU;
+  else if (self->tracker_algo == GST_TRACKER_ALGO_MOSSE)
+    priv->tconfig.tracker_type = TRACKER_ALGO_MOSSE;
+  else if (self->tracker_algo == GST_TRACKER_ALGO_KCF)
+    priv->tconfig.tracker_type = TRACKER_ALGO_KCF;
 
-  if (self->search_scale == SEARCH_SCALE_ALL)
-    priv->tconfig.multiscale = 1;
-  else if (self->search_scale == SEARCH_SCALE_UP)
-    priv->tconfig.multiscale = 2;
-  else if (self->search_scale == SEARCH_SCALE_DOWN)
-    priv->tconfig.multiscale = 3;
+  if (self->search_scale == GST_SEARCH_SCALE_ALL)
+    priv->tconfig.search_scales = SEARCH_SCALE_ALL;
+  else if (self->search_scale == GST_SEARCH_SCALE_UP)
+    priv->tconfig.search_scales = SEARCH_SCALE_UP;
+  else if (self->search_scale == GST_SEARCH_SCALE_DOWN)
+    priv->tconfig.search_scales = SEARCH_SCALE_DOWN;
 
-  if (self->match_color == TRACKER_USE_RGB)
-    priv->tconfig.obj_match_color = USE_RGB;
-  else if (self->match_color == TRACKER_USE_HSV)
-    priv->tconfig.obj_match_color = USE_HSV;
+  if (self->match_color == GST_TRACKER_USE_RGB)
+    priv->tconfig.obj_match_color = TRACKER_USE_RGB;
+  else if (self->match_color == GST_TRACKER_USE_HSV)
+    priv->tconfig.obj_match_color = TRACKER_USE_HSV;
 
   priv->tconfig.iou_use_color = GST_VVAS_TRACKER_IOU_USE_COLOR_FEATURE;
   priv->tconfig.fet_length = GST_VVAS_TRACKER_FEATURE_LENGTH_DEFAULT;
-  priv->tconfig.det_intvl = GST_VVAS_TRACKER_DETECTION_INTERVAL_DEFAULT;
   priv->tconfig.min_width = GST_VVAS_TRACKER_MIN_OBJECT_WIDTH_DEFAULT;
   priv->tconfig.min_height = GST_VVAS_TRACKER_MIN_OBJECT_HEIGHT_DEFAULT;
   priv->tconfig.max_width = GST_VVAS_TRACKER_MAX_OBJECT_WIDTH_DEFAULT;
@@ -828,8 +857,26 @@ gst_vvas_xtracker_init (GstVvas_XTracker * self)
       GST_VVAS_TRACKER_OCCLUSION_THRESHOLD_DEFAULT;
   priv->tconfig.confidence_score =
       GST_VVAS_TRACKER_CONFIDENCE_SCORE_THRESHOLD_DEFAULT;
+  priv->tconfig.skip_inactive_objs =
+      GST_VVAS_TRACKER_SKIP_INACTIVE_OBJS_DEFAULT;
+  priv->tracker_instances_hash =
+      g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 }
 
+/**
+ *  @fn static void gst_vvas_xtracker_set_property (GObject * object, guint prop_id,
+ *                                                  const GValue * value, GParamSpec * pspec)
+ *  @param [in] object - Handle to GstVvas_XTracker typecast to GObject
+ *  @param [in] prop_id - Property ID as defined in properties enum
+ *  @param [in] value - value GValue which holds property value set by user
+ *  @param [in] pspec - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief This API stores values sent from the user in GstVvas_XTracker object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_property function pointer and
+ *           this will be invoked when developer sets properties on GstVvas_XTracker object.
+ *           Based on property value type, corresponding g_value_get_xxx API will be called to get
+ *           property value from GValue handle.
+ */
 static void
 gst_vvas_xtracker_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -840,12 +887,12 @@ gst_vvas_xtracker_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_TRACKER_TYPE:
       self->tracker_algo = g_value_get_enum (value);
-      if (self->tracker_algo == TRACKER_ALGO_IOU)
-        priv->tconfig.tracker_type = ALGO_IOU;
-      else if (self->tracker_algo == TRACKER_ALGO_MOSSE)
-        priv->tconfig.tracker_type = ALGO_MOSSE;
-      else if (self->tracker_algo == TRACKER_ALGO_KCF)
-        priv->tconfig.tracker_type = ALGO_KCF;
+      if (self->tracker_algo == GST_TRACKER_ALGO_IOU)
+        priv->tconfig.tracker_type = TRACKER_ALGO_IOU;
+      else if (self->tracker_algo == GST_TRACKER_ALGO_MOSSE)
+        priv->tconfig.tracker_type = TRACKER_ALGO_MOSSE;
+      else if (self->tracker_algo == GST_TRACKER_ALGO_KCF)
+        priv->tconfig.tracker_type = TRACKER_ALGO_KCF;
       else
         GST_ERROR_OBJECT (self, "Invalid Tracker type %d set\n",
             self->tracker_algo);
@@ -855,28 +902,25 @@ gst_vvas_xtracker_set_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_MATCHING_COLOR_SPACE:
       self->match_color = g_value_get_enum (value);
-      if (self->match_color == TRACKER_USE_RGB)
-        priv->tconfig.obj_match_color = USE_RGB;
-      else if (self->match_color == TRACKER_USE_HSV)
-        priv->tconfig.obj_match_color = USE_HSV;
+      if (self->match_color == GST_TRACKER_USE_RGB)
+        priv->tconfig.obj_match_color = TRACKER_USE_RGB;
+      else if (self->match_color == GST_TRACKER_USE_HSV)
+        priv->tconfig.obj_match_color = TRACKER_USE_HSV;
       break;
     case PROP_FEATURE_LENGTH:
       priv->tconfig.fet_length = g_value_get_enum (value);
       break;
     case PROP_SEARCH_SCALE:
       self->search_scale = g_value_get_enum (value);
-      if (self->search_scale == SEARCH_SCALE_ALL)
-        priv->tconfig.multiscale = 1;
-      else if (self->search_scale == SEARCH_SCALE_UP)
-        priv->tconfig.multiscale = 2;
-      else if (self->search_scale == SEARCH_SCALE_DOWN)
-        priv->tconfig.multiscale = 3;
+      if (self->search_scale == GST_SEARCH_SCALE_ALL)
+        priv->tconfig.search_scales = SEARCH_SCALE_ALL;
+      else if (self->search_scale == GST_SEARCH_SCALE_UP)
+        priv->tconfig.search_scales = SEARCH_SCALE_UP;
+      else if (self->search_scale == GST_SEARCH_SCALE_DOWN)
+        priv->tconfig.search_scales = SEARCH_SCALE_DOWN;
       else
         GST_ERROR_OBJECT (self, "Invalid Search scale %d set\n",
             self->search_scale);
-      break;
-    case PROP_DETECTION_INTERVAL:
-      priv->tconfig.det_intvl = g_value_get_uint (value);
       break;
     case PROP_INACTIVE_WAIT_INTERVAL:
       priv->tconfig.num_inactive_frames = g_value_get_uint (value);
@@ -926,12 +970,28 @@ gst_vvas_xtracker_set_property (GObject * object, guint prop_id,
     case PROP_CONFIDENCE_SCORE_THRESHOLD:
       priv->tconfig.confidence_score = g_value_get_float (value);
       break;
+    case PROP_SKIP_INACTIVE_OBJS:
+      priv->tconfig.skip_inactive_objs = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
+/**
+ *  @fn static void gst_vvas_xtracker_get_property (GObject * object, guint prop_id,
+ *                                                  const GValue * value, GParamSpec * pspec)
+ *  @param [in] object - Handle to GstVvas_XTracker typecasted to GObject
+ *  @param [in] prop_id - Property ID as defined in properties enum
+ *  @param [in] value - value GValue which holds property value set by user
+ *  @param [in] pspec - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief This API gets values from GstVvas_XTracker object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::get_property function pointer and
+ *           this will be invoked when developer want gets properties from GstVvas_XTracker object.
+ *           Based on property value type,corresponding g_value_set_xxx API will be called to set value of GValue type.
+ */
 static void
 gst_vvas_xtracker_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -954,9 +1014,6 @@ gst_vvas_xtracker_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SEARCH_SCALE:
       g_value_set_enum (value, self->search_scale);
-      break;
-    case PROP_DETECTION_INTERVAL:
-      g_value_set_uint (value, priv->tconfig.det_intvl);
       break;
     case PROP_INACTIVE_WAIT_INTERVAL:
       g_value_set_uint (value, priv->tconfig.num_inactive_frames);
@@ -1006,110 +1063,223 @@ gst_vvas_xtracker_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_CONFIDENCE_SCORE_THRESHOLD:
       g_value_set_float (value, priv->tconfig.confidence_score);
       break;
+   case PROP_SKIP_INACTIVE_OBJS:
+      g_value_set_boolean (value, priv->tconfig.skip_inactive_objs);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
-static void
-gst_vvas_xtracker_finalize (GObject * obj)
-{
-  GstVvas_XTracker *self = GST_VVAS_XTRACKER (obj);
+/**
+ *  @fn static gboolean gst_vvas_xtracker_sink_event (GstBaseTransform * trans, GstEvent * event)
+ *  @param [in] trans - xtracker's parents instance handle which will be type casted to xtracker instance
+ *  @param [in] event - GstEvent received by xtracker instance on sink pad
+ *  @return TRUE if event handled successfully
+ *          FALSE if event is not handled
+ *  @brief Handle the GstEvent and invokes parent's event vmethod if event is not handled by xtracker
+ */
 
-  if (self->priv->input_pool)
-    gst_object_unref (self->priv->input_pool);
-}
-
-static gboolean
-vvas_xtracker_prepare_input_frame (GstVvas_XTracker * self, GstBuffer * inbuf)
+static gboolean gst_vvas_xtracker_sink_event(GstBaseTransform *trans,
+                                            GstEvent *event)
 {
+  GstVvas_XTracker *self = GST_VVAS_XTRACKER(trans);
   GstVvas_XTrackerPrivate *priv = self->priv;
-  VVASFrame *vvas_frame = NULL;
-  guint plane_id;
-  GstVideoMeta *vmeta = NULL;
-  GstMapFlags map_flags;
-  gsize offset;
-  gint8 *base_vaddr;
+  gboolean bret = TRUE;
+  const GstStructure *structure = NULL;
+  guint pad_idx;
 
-  vvas_frame = priv->input[0];
+  switch (GST_EVENT_TYPE(event))
+  {
+    case GST_EVENT_STREAM_START:
+    {
+      struct TrackerInstances *instance;
+      structure = gst_event_get_structure(event);
+      gst_structure_get_uint(structure, "pad-index", &pad_idx);
+      if (!gst_structure_get_uint(structure, "pad-index", &pad_idx))
+      {
+        /* may be without funnel i.e., single stream */
+        pad_idx = 0;
+      }
+      instance = (struct TrackerInstances *)malloc(sizeof(struct TrackerInstances));
 
-  /* Soft IP */
-  map_flags = (GstMapFlags) (GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF
-      | GST_MAP_WRITE);
+      /* calling tracker initialization function */
+      instance->vvasbase_tracker = vvas_tracker_create(priv->vvas_gctx, &priv->tconfig);
+      if (instance->vvasbase_tracker == NULL)
+      {
+        GST_ERROR_OBJECT(self, "Failed to create tracker instance");
+        return FALSE;
+      }
+      g_hash_table_insert(priv->tracker_instances_hash, GUINT_TO_POINTER(pad_idx), instance);
 
-  if (!gst_video_frame_map (&(priv->in_vframe), self->priv->in_vinfo,
-          inbuf, map_flags)) {
-    GST_ERROR_OBJECT (self, "failed to map input buffer");
-    return FALSE;
-  }
-
-  vmeta = gst_buffer_get_video_meta (inbuf);
-  if (vmeta) {
-    vvas_frame->props.stride = vmeta->stride[0];
-  } else {
-    GST_DEBUG_OBJECT (self, "video meta not present in buffer");
-    vvas_frame->props.stride =
-        GST_VIDEO_INFO_PLANE_STRIDE (self->priv->in_vinfo, 0);
-  }
-
-  vvas_frame->props.width = GST_VIDEO_INFO_WIDTH (self->priv->in_vinfo);
-  vvas_frame->props.height = GST_VIDEO_INFO_HEIGHT (self->priv->in_vinfo);
-  vvas_frame->props.fmt =
-      get_vvas_format (GST_VIDEO_INFO_FORMAT (self->priv->in_vinfo));
-  vvas_frame->n_planes = GST_VIDEO_INFO_N_PLANES (self->priv->in_vinfo);
-  vvas_frame->app_priv = inbuf;
-
-  base_vaddr = (gint8*) GST_VIDEO_FRAME_PLANE_DATA (&(priv->in_vframe), 0);
-  for (plane_id = 0;
-      plane_id < GST_VIDEO_INFO_N_PLANES (self->priv->in_vinfo); plane_id++) {
-    if (vmeta) {
-      offset = vmeta->offset[plane_id];
-    } else {
-      offset = GST_VIDEO_INFO_PLANE_OFFSET (self->priv->in_vinfo, plane_id);
+      bret = gst_pad_event_default(trans->sinkpad,
+	            gst_element_get_parent(GST_ELEMENT(trans)), event);
+      break;
     }
-    vvas_frame->vaddr[plane_id] = base_vaddr + offset;
-    GST_LOG_OBJECT (self, "inbuf plane[%d] : offset = %lu, vaddr = %p",
-        plane_id, offset, vvas_frame->vaddr[plane_id]);
-  }
 
-  GST_LOG_OBJECT (self, "successfully prepared input vvas frame");
-  return TRUE;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      const GstStructure *structure = NULL;
+      guint pad_idx;
+      int iret;
+      structure = gst_event_get_structure(event);
+      if (!gst_structure_get_uint(structure, "pad-index", &pad_idx))
+      {
+        /* may be without funnel i.e., single stream */
+        pad_idx = 0;
+      }
+      if (!g_strcmp0(gst_structure_get_name(structure), "pad-eos"))
+      {
+        struct TrackerInstances *instance =
+	        (struct TrackerInstances *)g_hash_table_lookup(priv->tracker_instances_hash,
+		  GUINT_TO_POINTER(pad_idx));
+        GST_LOG_OBJECT(self, "received pad-eos");
+        if (instance)
+        {
+          /* calling tracker deinitialization function */
+          iret = vvas_tracker_destroy(instance->vvasbase_tracker);
+
+          if (iret)
+            GST_DEBUG_OBJECT(self, "successfully completed tracker deinit");
+          else
+            GST_ERROR_OBJECT(self, "Failed to free tracker instances");
+
+          g_hash_table_remove(priv->tracker_instances_hash,
+                              GINT_TO_POINTER(pad_idx));
+        }
+      }
+    }
+
+    default:
+    {
+      bret = gst_pad_event_default(trans->sinkpad,
+	            gst_element_get_parent(GST_ELEMENT(trans)), event);
+      break;
+    }
+  }
+  return bret;
 }
 
+/**
+ *  @fn gboolean gst_vvas_xtracker_transform_ip (GstBaseTransform * base, GstBuffer * buf)
+ *  @param [inout] base - Pointer to GstBaseTransform object.
+ *  @param [in] buf - Pointer to input buffer of type GstBuffer.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  This API called every frame for inplace processing to updates the tracking objects info
+ *  @details This API is registered with GObjectClass by overriding GstBaseTransform::transform_ip function pointer and
+ *          this will be called for every frame for inplace processing. It prepares the input buffer
+ *          for processing then invokes tracker. Upon processing updates prediction metadata with tracked objects.
+ */
 static GstFlowReturn
 gst_vvas_xtracker_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstVvas_XTracker *self = GST_VVAS_XTRACKER (base);
-  int ret;
-  gboolean bret = FALSE;
+  VvasReturnType vvas_ret = VVAS_RET_ERROR;
+  VvasVideoFrame *pFrame;
+  GstInferenceMeta *infer_meta = NULL;
+  VvasInferPrediction *vvas_infer_meta = NULL;
+  GstVvasSrcIDMeta *srcId_meta = NULL;
+  struct TrackerInstances *instance;
 
-  bret = vvas_xtracker_prepare_input_frame (self, buf);
-  if (!bret)
-    goto error;
+  /* Get inference metadata from the Gstbuffer */
+  infer_meta = ((GstInferenceMeta *) gst_buffer_get_meta (buf,
+          gst_inference_meta_api_get_type ()));
 
-  ret = vvas_tracker_start (self, self->priv->input);
-  if (!ret) {
-    GST_ERROR_OBJECT (self, "tracker start failed");
-    goto error;
+  /* Convert gstinference meta to inference meta if Gstinference meta
+     avalable. Else create inference meta structure */
+  if (infer_meta != NULL)
+    vvas_infer_meta = vvas_infer_from_gstinfer (infer_meta->prediction);
+
+  /* Get SrcId metadata from the Gstbuffer */
+  srcId_meta = ((GstVvasSrcIDMeta *)gst_buffer_get_meta(buf,
+                        gst_vvas_srcid_meta_api_get_type()));
+
+  if (srcId_meta)
+  {
+    instance = (struct TrackerInstances *)g_hash_table_lookup(
+		    self->priv->tracker_instances_hash,
+		    GUINT_TO_POINTER(srcId_meta->src_id));
+  }
+  else
+  {
+    /* may be single source... use index 0 */
+    instance = (struct TrackerInstances *)g_hash_table_lookup(
+		    self->priv->tracker_instances_hash, 0);
   }
 
-  if (self->priv->in_vframe.data[0]) {
-    gst_video_frame_unmap (&(self->priv->in_vframe));
+  /* Check if buffer is from pool.  If buffer is from pool use aligments from
+     pool to create vvas frame buffer */
+  pFrame = vvas_videoframe_from_gstbuffer (self->priv->vvas_gctx, -1, buf,
+      self->priv->in_vinfo, GST_MAP_READ);
+  if (pFrame == NULL) {
+    GST_ERROR_OBJECT (self, "Failed to convert gstbuffer to vvas video frame");
+    return GST_FLOW_ERROR;
+  }
+
+  /* Calling vvas-core tracker function for frame processing */
+  if (instance && instance->vvasbase_tracker) {
+    vvas_ret = vvas_tracker_process (instance->vvasbase_tracker,
+	                                 pFrame, &vvas_infer_meta);
+  }
+  else {
+    GST_ERROR_OBJECT (self, "Tracker instance is not created");
+    vvas_video_frame_free (pFrame);
+    return GST_FLOW_ERROR;
+  }
+
+  if (VVAS_IS_ERROR (vvas_ret)) {
+    GST_ERROR_OBJECT (self, "Failed to process frame");
+    vvas_video_frame_free (pFrame);
+    return GST_FLOW_ERROR;
+  }
+
+  vvas_video_frame_free (pFrame);
+
+  if (vvas_infer_meta != NULL) {
+    GstInferencePrediction *new_gst_pred = NULL;
+    VvasList *iter = NULL;
+    VvasList *pred_nodes = NULL;
+
+    if (infer_meta == NULL) {
+      infer_meta = (GstInferenceMeta *) gst_buffer_add_meta (buf,
+          gst_inference_meta_get_info (), NULL);
+    }
+
+    pred_nodes = vvas_inferprediction_get_nodes (vvas_infer_meta);
+    /** Convert root node */
+    new_gst_pred = gst_infer_node_from_vvas_infer (vvas_infer_meta);
+    /** Convert all leaf nodes and append to root */
+    for (iter = pred_nodes; iter != NULL; iter = iter->next) {
+      VvasInferPrediction *leaf = (VvasInferPrediction *) iter->data;
+      gst_inference_prediction_append (new_gst_pred,
+          gst_infer_node_from_vvas_infer (leaf));
+    }
+    vvas_list_free (pred_nodes);
+    if (infer_meta->prediction)
+      gst_inference_prediction_unref (infer_meta->prediction);
+    infer_meta->prediction = new_gst_pred;
+  }
+
+  if (vvas_infer_meta != NULL) {
+    vvas_inferprediction_free (vvas_infer_meta);
+    vvas_infer_meta = NULL;
   }
 
   GST_LOG_OBJECT (self, "processed buffer %p", buf);
 
   return GST_FLOW_OK;
-
-error:
-  return GST_FLOW_ERROR;
 }
 
+/* entry point to initialize the plug-in
+ * initialize the plug-in itself
+ * register the element factories and other features
+ */
 static gboolean
 plugin_init (GstPlugin * vvas_xtracker)
 {
-  return gst_element_register (vvas_xtracker, "vvas_xtracker", GST_RANK_NONE,
+  return gst_element_register (vvas_xtracker, "vvas_xtracker", GST_RANK_PRIMARY,
       GST_TYPE_VVAS_XTRACKER);
 }
 

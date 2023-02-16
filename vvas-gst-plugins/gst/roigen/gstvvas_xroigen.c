@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2020 - 2021 Xilinx, Inc.  All rights reserved.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -446,20 +447,20 @@ gst_vvas_xroigen_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       child = (GstInferencePrediction *) child_predictions->data;
 
       /* On each children, iterate through the different associated classes */
-      for (classes = child->classifications;
+      for (classes = (GList *) child->prediction.classifications;
           classes; classes = g_list_next (classes)) {
         guint x, y, w, h;
         classification = (GstInferenceClassification *) classes->data;
 
-        x = child->bbox.x;
-        y = child->bbox.y;
-        w = child->bbox.width;
-        h = child->bbox.height;
+        x = child->prediction.bbox.x;
+        y = child->prediction.bbox.y;
+        w = child->prediction.bbox.width;
+        h = child->prediction.bbox.height;
 
         if (w >= roigen->min_width && w <= roigen->max_width &&
             h >= roigen->min_height && h <= roigen->max_height &&
             vvas_xroigen_is_class_allowed (roigen,
-                (gchar *) classification->class_label)) {
+                (gchar *) classification->classification.class_label)) {
 
           if (roi_count == roigen->max_num) {
             GST_DEBUG_OBJECT (roigen, "reached max number of ROIs");
@@ -483,11 +484,12 @@ gst_vvas_xroigen_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
           GST_LOG_OBJECT (roigen,
               "attaching class %s with ROI position (%u x %u) and "
-              "wxh = (%u x %u) to buffer %p", classification->class_label, x, y,
-              w, h, buf);
+              "wxh = (%u x %u) to buffer %p",
+              classification->classification.class_label, x, y, w, h, buf);
 
           roi_meta = gst_buffer_add_video_region_of_interest_meta (buf,
-              (const gchar *) classification->class_label, x, y, w, h);
+              (const gchar *) classification->classification.class_label, x, y,
+              w, h);
 
           if (roigen->roi_type == VVAS_XROIGEN_ROI_TYPE_QP_LEVEL) {
             gst_video_region_of_interest_meta_add_param (roi_meta,
@@ -502,7 +504,7 @@ gst_vvas_xroigen_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         } else {
           GST_LOG_OBJECT (roigen,
               "skipping meta object <%u, %u, %u, %u> with label %s", x, y, w, h,
-              classification->class_label);
+              classification->classification.class_label);
         }
       }
 
@@ -583,7 +585,7 @@ static gboolean
 vvas_xroigen_init (GstPlugin * vvas_xroigen)
 {
   return gst_element_register (vvas_xroigen, "vvas_xroigen",
-      GST_RANK_NONE, GST_TYPE_VVAS_XROIGEN);
+      GST_RANK_PRIMARY, GST_TYPE_VVAS_XROIGEN);
 }
 
 /* PACKAGE: this is usually set by autotools depending on some _INIT macro

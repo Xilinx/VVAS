@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,40 +28,62 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+/** @def GST_TYPE_VVAS_XDEFUNNEL
+ *  @brief Macro to get GstVvas_XDeFunnel object type
+ */
 #define GST_TYPE_VVAS_XDEFUNNEL \
   (gst_vvas_xdefunnel_get_type())
+
+/** @def GST_VVAS_XDEFUNNEL
+ *  @brief Macro to typecast parent object to GstVvas_XDeFunnel object
+ */
 #define GST_VVAS_XDEFUNNEL(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VVAS_XDEFUNNEL, GstVvas_XDeFunnel))
+
+/** @def GST_VVAS_XDEFUNNEL_CLASS
+ *  @brief Macro to typecast parent class object to GstVvas_XDeFunnelClass object
+ */
 #define GST_VVAS_XDEFUNNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VVAS_XDEFUNNEL, GstVvas_XDeFunnelClass))
+
+/** @def GST_IS_VVAS_XDEFUNNEL
+ *  @brief Macro to validate whether object is of GstVvas_XDeFunnel type
+ */
 #define GST_IS_VVAS_XDEFUNNEL(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VVAS_XDEFUNNEL))
+
+/** @def GST_IS_VVAS_XDEFUNNEL_CLASS
+ *  @brief Macro to validate whether object class is of GstVvas_XDeFunnelClass type
+ */
 #define GST_IS_VVAS_XDEFUNNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VVAS_XDEFUNNEL))
+
 typedef struct _GstVvas_XDeFunnel GstVvas_XDeFunnel;
 typedef struct _GstVvas_XDeFunnelClass GstVvas_XDeFunnelClass;
 
-/**
- * GstVvas_XDeFunnel:
- *
- * The opaque #GstVvas_XDeFunnel data structure.
+/** @struct GstVvas_XDeFunnel
+ *  @brief  Contains context of GstVvas_XDeFunnel object
  */
 struct _GstVvas_XDeFunnel
 {
+  /** parent */
   GstElement element;
-
+  /** sink pad */
   GstPad *sinkpad;
-
+  /** Number of source pads */
   guint nb_srcpads;
+  /** Active pad */
   GstPad *active_srcpad;
-
-  /* This table contains srcpad and source ids */
+  /** Hash Table to keep pad-index/source_pad info */
   GHashTable *source_id_pairs;
+  /** Sink pad's caps */
   GstCaps *sink_caps;
 };
 
 struct _GstVvas_XDeFunnelClass
 {
+  /** parent class */
   GstElementClass parent_class;
 };
 

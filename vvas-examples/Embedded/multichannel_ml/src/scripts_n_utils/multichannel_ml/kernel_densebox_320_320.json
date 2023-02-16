@@ -1,20 +1,22 @@
 {
-  "vvas-library-repo": "/usr/lib/",
-  "inference-level": 1,
-  "attach-ppe-outbuf": false,
+  "attach-ppe-outbuf" : false,
+  "inference-level" : 1,
+  "low-latency" : false,
+  "inference-max-queue" : 0,
   "kernel" : {
-     "library-name":"libvvas_xdpuinfer.so",
-     "config": {
-        "batch-size" : 0,
-        "model-name" : "densebox_320_320",
-        "model-class" : "FACEDETECT",
-        "model-format" : "BGR",
-        "model-path" : "/usr/share/vitis_ai_library/models/",
-        "run_time_model" : false,
-        "need_preprocess" : false,
-        "performance_test" : false,
-        "debug_level" : 1,
-        "max-objects":3
-     }
+    "config": {
+      "batch-size" : 1,
+      "model-name" : "densebox_320_320",
+      "model-class" : "FACEDETECT",
+      "model-format" : "BGR",
+      "model-path" : "/usr/share/vitis_ai_library/models/",
+      "vitis-ai-preprocess" : false,
+      "performance-test" : false,
+      "max-objects" : 3,
+      "float-feature" : 1,
+      "segoutfactor" : 1.0,
+      "seg-out-format" : "BGR",
+      "debug-level" : 0
+    }
   }
 }

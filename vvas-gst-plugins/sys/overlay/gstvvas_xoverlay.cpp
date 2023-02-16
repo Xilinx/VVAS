@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,125 +28,235 @@
 #include <gst/vvas/gstvvasallocator.h>
 #include <gst/vvas/gstvvasbufferpool.h>
 #include <gst/allocators/gstdmabuf.h>
-#include <dlfcn.h>              /* for dlXXX APIs */
-#include <sys/mman.h>           /* for munmap */
-#include <jansson.h>
 #include <time.h>
-#include <vvas/xrt_utils.h>
+#include <vvas_core/vvas_device.h>
 #ifdef XLNX_PCIe_PLATFORM
 #include <experimental/xrt-next.h>
 #else
 #include <xrt/experimental/xrt-next.h>
 #endif
 #include <vvas/vvas_kernel.h>
+#include <vvas_core/vvas_overlay.h>
 #include "gstvvas_xoverlay.h"
 #include <gst/vvas/gstvvasutils.h>
 #include <gst/vvas/gstvvasoverlaymeta.h>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
+#include <gst/vvas/gstvvascoreutils.h>
+
+/** @def DEFAULT_KERNEL_NAME
+ *  @brief Default kernel name of boundingbox IP
+ */
+#define DEFAULT_KERNEL_NAME "boundingbox_accel:{boundingbox_accel_1}"
 
 #ifdef XLNX_PCIe_PLATFORM
+/**
+ * @brief Default value of the device index in case user has not provided
+ */
 #define DEFAULT_DEVICE_INDEX -1
-#define DEFAULT_KERNEL_NAME "boundingbox_accel:{boundingbox_accel_1}"
+/**
+ * @brief Default no dma buffer in PCIe
+ */
 #define USE_DMABUF 0
-#else /* Embedded */
-#define DEFAULT_DEVICE_INDEX 0  /* on Embedded only one device i.e. device 0 */
-#define DEFAULT_KERNEL_NAME "boundingbox_accel:{boundingbox_accel_1}"
-#define  USE_DMABUF 1
+#else
+/**
+ * @brief On Embedded only one device i.e. device 0
+ */
+#define DEFAULT_DEVICE_INDEX 0
+/**
+ * @brief Default use dma buffer in Embedded
+ */
+#define USE_DMABUF 1
 #endif
-#define MIN_POOL_BUFFERS 2
-#define OPT_FLOW_TIMEOUT 2000   // 1 sec
-#define ALIGN(size,align) (((size) + (align) - 1) & ~((align) - 1))
 
+/** @def OVERLAY_FLOW_TIMEOUT
+ *  @brief Default timeout for overlay bbox IP
+ */
+#define OVERLAY_BBOX_TIMEOUT 1000
+
+/** @def MAX_BOXES
+ *  @brief Maximum number of bounding boxes hardware can draw
+ */
 #define MAX_BOXES 5
-#define BBOX_TIMEOUT 1000
+
+/** @def DEFAULT_THICKNESS_LEVEL
+ *  @brief default thickness of bounding boxes for hardware ip
+ */
 #define DEFAULT_THICKNESS_LEVEL 1
 
+/**
+ *  @brief Defines a static GstDebugCategory global variable "gst_vvas_xoverlay_debug"
+ */
 GST_DEBUG_CATEGORY_STATIC (gst_vvas_xoverlay_debug);
+
+/** @def GST_CAT_DEFAULT
+ *  @brief Setting gst_vvas_xoverlay_debug as default debug category for logging
+ */
 #define GST_CAT_DEFAULT gst_vvas_xoverlay_debug
+/**
+ *  @brief Defines a static GstDebugCategory global variable with name GST_CAT_PERFORMANCE for
+ *         performance logging purpose
+ */
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+
+
+/**
+ * @brief Default width align for Edge
+ */
+#define WIDTH_ALIGN 1
+/**
+ * @brief Default height align for Edge
+ */
+#define HEIGHT_ALIGN 1
 
 typedef struct _GstVvas_XOverlayPrivate GstVvas_XOverlayPrivate;
 
-using namespace cv;
-
 enum
 {
+  /** default */
   PROP_0,
+  /** Index of the device */
   PROP_DEVICE_INDEX,
+  /** path of the xclbin */
   PROP_XCLBIN_LOCATION,
+  /** Memory bank from which memory need to be allocated */
   PROP_IN_MEM_BANK,
+  /** bool property to show clock on frame or not */
   PROP_DISPLAY_CLOCK,
-  PROP_USE_BBOX_ACCEL,
+  /** Font name from opencv to be used for clock display */
   PROP_CLOCK_FONT_NAME,
+  /** color to be used for clock display */
   PROP_CLOCK_FONT_COLOR,
+  /** Font scale to be used for clock display */
   PROP_CLOCK_FONT_SCALE,
+  /** Column start point of clock display */
   PROP_CLOCK_X_OFFSET,
+  /** Row start point of clock display */
   PROP_CLOCK_Y_OFFSET,
 };
 
+/**
+ *  @brief Defines sink pad template
+ */
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{NV12, RGB, BGR, GRAY8}")));
 
+/**
+ *  @brief Defines source pad template
+ */
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{NV12, RGB, BGR, GRAY8}")));
 
+
+/** @struct vvas_bbox_acc_roi
+ *  @brief  Holds number of bboxes and their info
+ */
 typedef struct _vvas_bbox_acc_roi
 {
+  /** Number of bbox to be draw */
   uint32_t nobj;
+  /** bbox info as xrt_buffer */
   xrt_buffer roi;
 } vvas_bbox_acc_roi;
 
+/** @struct _GstVvas_XOverlayPrivate
+ *  @brief  Holds private members related overlay
+ */
 struct _GstVvas_XOverlayPrivate
 {
+  /** Index of the device on which memory is going to allocated */
   guint dev_idx;
+  /** Name of the bbox kernel */
   gchar *kern_name;
+  /** Handle to FPGA device with index \p dev_idx */
   xclDeviceHandle dev_handle;
+  /** Handle to FPGA kernel object instance */
   vvasKernelHandle kern_handle;
+  /** Handle to kernel execution object */
   vvasRunHandle run_handle;
+  /** Location of xclbin for downloading*/
   gchar *xclbin_loc;
+  /** xclbin id  */
   uuid_t xclbinId;
+  /** Index of the device on which memory is going to allocated */
   gint cu_idx;
+  /** Physical address of first plane of input buf */
   guint64 img_p1_phy_addr;
+  /** Physical address of second plane of input buf */
   guint64 img_p2_phy_addr;
+  /** Pointer to the info of input caps */
   GstVideoInfo *in_vinfo;
+  /** Pointer to the input buffer pool */
   GstBufferPool *in_pool;
+  /** flag to display clock or not  */
   gboolean display_clock;
+  /** To store clock data as string */
   gchar clock_time_string[256];
+  /** flag to use bbox accelerator or not  */
   gboolean use_bbox_accel;
+  /** display clock font name from opencv */
   gint clock_font_name;
+  /** display clock font scale */
   gfloat clock_font_scale;
+  /** display clock font color */
   guint clock_font_color;
+  /** display clock column start position in frame */
   gint clock_x_offset;
+  /** display clock row start position in frame */
   gint clock_y_offset;
+  /** To store bbox information for bbox hardware IP */
   vvas_bbox_acc_roi roi_data;
+  /** stride information */
   uint32_t stride;
+        /** VVAS context handle  */
+  VvasContext *vvas_ctx;
 };
 
 #define gst_vvas_xoverlay_parent_class parent_class
+
+/** @brief  Glib's convenience macro for GstVvas_XOverlay type implementation.
+ *  @details This macro does below tasks:\n
+ *           - Declares a class initialization function with prefix gst_vvas_xoverlay
+ */
 G_DEFINE_TYPE_WITH_PRIVATE (GstVvas_XOverlay, gst_vvas_xoverlay,
     GST_TYPE_BASE_TRANSFORM);
 
+/** @def GST_VVAS_XOVERLAY_PRIVATE(self)
+ *  @brief Get instance of GstVvas_XOverlayPrivate structure
+ */
 #define GST_VVAS_XOVERLAY_PRIVATE(self) (GstVvas_XOverlayPrivate *) (gst_vvas_xoverlay_get_instance_private (self))
 
+/* Functions declaration */
 static void gst_vvas_xoverlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static void gst_vvas_xoverlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+/**
+ *  @fn uint32_t xlnx_bbox_align (uint32_t stride_in)
+ *  @return enumeration identifier type
+ */
 static uint32_t
 xlnx_bbox_align (uint32_t stride_in)
 {
   return stride_in / 4;
 }
 
+/**
+ *  @fn gboolean gst_vvas_xoverlay_set_caps (GstBaseTransform * trans,
+ *                                GstCaps * incaps, GstCaps * outcaps)
+ *  @param [in] trans - Pointer to GstBaseTransform object.
+ *  @param [in] incaps - Pointer to input caps of GstCaps object.
+ *  @param [in] outcaps - Pointer to output caps of GstCaps object.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  API to get input and output capabilities.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_caps function pointer and
+ *          this will be called to get the input and output capabilities.
+ */
 static gboolean
 gst_vvas_xoverlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
@@ -158,6 +269,7 @@ gst_vvas_xoverlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       "incaps = %" GST_PTR_FORMAT "and outcaps = %" GST_PTR_FORMAT, incaps,
       outcaps);
 
+  /* Update in_vinfo from input caps */
   if (!gst_video_info_from_caps (priv->in_vinfo, incaps)) {
     GST_ERROR_OBJECT (self, "Failed to parse input caps");
     return FALSE;
@@ -166,12 +278,23 @@ gst_vvas_xoverlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return bret;
 }
 
+/**
+ *  @fn gboolean vvas_xoverlay_init (GstVvas_XOverlay * self)
+ *  @param [inout] self - Pointer to GstVvas_XOverlay structure.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  Opens XRT context for bbox kernel
+ *  @note  Using bbox kernel name and location downloads xclbin.
+ *         Opens a context for XRT
+ *
+ */
 static gboolean
 vvas_xoverlay_init (GstVvas_XOverlay * self)
 {
   GstVvas_XOverlayPrivate *priv = self->priv;
   int iret;
 
+  /* get name of the optical flow kernel from default set */
   if (!priv->kern_name)
     priv->kern_name = g_strdup (DEFAULT_KERNEL_NAME);
 
@@ -182,6 +305,7 @@ vvas_xoverlay_init (GstVvas_XOverlay * self)
     return FALSE;
   }
 
+  /* get xclbin location */
   if (!priv->xclbin_loc) {
     GST_ERROR_OBJECT (self, "invalid xclbin location %s", priv->xclbin_loc);
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, (NULL),
@@ -189,6 +313,7 @@ vvas_xoverlay_init (GstVvas_XOverlay * self)
     return FALSE;
   }
 
+  /* download xclbin using kernel name and location */
   if (vvas_xrt_download_xclbin (priv->xclbin_loc,
           priv->dev_handle, &priv->xclbinId)) {
     GST_ERROR_OBJECT (self, "failed to initialize XRT");
@@ -197,6 +322,7 @@ vvas_xoverlay_init (GstVvas_XOverlay * self)
     return FALSE;
   }
 
+  /* create FPGA kernel object instance of bbox */
   iret = vvas_xrt_open_context (priv->dev_handle, priv->xclbinId,
       &priv->kern_handle, priv->kern_name, true);
   if (iret) {
@@ -204,6 +330,7 @@ vvas_xoverlay_init (GstVvas_XOverlay * self)
     return FALSE;
   }
 
+  /* allocates memory from in_mem_bank for storing bbox info */
   iret =
       vvas_xrt_alloc_xrt_buffer (priv->dev_handle,
       MAX_BOXES * 5 * sizeof (int), (vvas_bo_flags) XRT_BO_FLAGS_NONE,
@@ -216,37 +343,72 @@ vvas_xoverlay_init (GstVvas_XOverlay * self)
   return TRUE;
 }
 
+/**
+ *  @fn gboolean gst_vvas_xoverlay_start (GstBaseTransform * trans)
+ *  @param [in] trans - Pointer to GstBaseTransform object.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  Opens device handle and creates context for XRT.
+ *  @details This API is registered with GObjectClass by overriding GstBaseTransform::start function pointer and
+ *          this will be called when element start processing. It opens device context and allocates memory.
+ */
 static gboolean
 gst_vvas_xoverlay_start (GstBaseTransform * trans)
 {
   GstVvas_XOverlay *self = GST_VVAS_XOVERLAY (trans);
   GstVvas_XOverlayPrivate *priv = self->priv;
+  VvasReturnType vret;
 
   self->priv = priv;
   priv->in_vinfo = gst_video_info_new ();
 
+  VvasLogLevel core_log_level =
+      vvas_get_core_log_level (gst_debug_category_get_threshold
+      (gst_vvas_xoverlay_debug));
+
+  /* checks whether bbox accelerator enabled */
   if (self->priv->use_bbox_accel) {
+    /* get handle to XRT for the given device */
     if (!vvas_xrt_open_device (priv->dev_idx, &priv->dev_handle)) {
       GST_ERROR_OBJECT (self, "failed to open device index %u", priv->dev_idx);
       return FALSE;
     }
-
+    /* initialize bbox overlay context */
     if (!vvas_xoverlay_init (self)) {
-      GST_ERROR_OBJECT (self, "unable to initalize opticalflow context");
+      GST_ERROR_OBJECT (self, "unable to initialize overlay context");
       return FALSE;
     }
+  }
+
+  /* create a vvas context */
+  priv->vvas_ctx = vvas_context_create (priv->dev_idx, priv->xclbin_loc,
+      core_log_level, &vret);
+  if (vret != VVAS_RET_SUCCESS) {
+    GST_ERROR_OBJECT (self, "Couldn't create VVAS context");
+    return FALSE;
   }
 
   GST_INFO_OBJECT (self, "start completed");
   return TRUE;
 }
 
+/**
+ *  @fn gboolean vvas_xoverlay_deinit (GstVvas_XOverlay * self)
+ *  @param [inout] self - Pointer to GstVvas_XOverlay structure.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  API frees memory allocated and closes device context
+ *  @note  Frees all memories allocated including input pools and
+ *         closes context of XRT.
+ *
+ */
 static gboolean
 vvas_xoverlay_deinit (GstVvas_XOverlay * self)
 {
   GstVvas_XOverlayPrivate *priv = self->priv;
   gint cu_idx = -1;
 
+  /* free the input buffer pool */
   if (priv->in_pool && gst_buffer_pool_is_active (priv->in_pool)) {
     if (!gst_buffer_pool_set_active (priv->in_pool, FALSE)) {
       GST_ERROR_OBJECT (self, "failed to deactivate internal input pool");
@@ -256,6 +418,7 @@ vvas_xoverlay_deinit (GstVvas_XOverlay * self)
     }
   }
 
+  /* if use_bbox_accel true free all memory and closes XRT context */
   if (self->priv->use_bbox_accel) {
     if (priv->kern_name)
       free (priv->kern_name);
@@ -278,11 +441,22 @@ vvas_xoverlay_deinit (GstVvas_XOverlay * self)
   return TRUE;
 }
 
+/**
+ *  @fn gboolean gst_vvas_xoverlay_stop (GstBaseTransform * trans)
+ *  @param [in] trans - Pointer to GstBaseTransform object.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  Free up allocates memory and invokes vvas_xoverlay_deinit.
+ *  @details This API is registered with GObjectClass by overriding GstBaseTransform::stop function pointer and
+ *          this will be called when element stops processing.
+ *          It invokes vvas_xoverlay_deinit to free up allocated memory.
+ *
+ */
 static gboolean
 gst_vvas_xoverlay_stop (GstBaseTransform * trans)
 {
   GstVvas_XOverlay *self = GST_VVAS_XOVERLAY (trans);
-
+  GstVvas_XOverlayPrivate *priv = self->priv;
   GST_DEBUG_OBJECT (self, "stopping");
 
   if (self->priv->in_vinfo) {
@@ -290,11 +464,23 @@ gst_vvas_xoverlay_stop (GstBaseTransform * trans)
     self->priv->in_vinfo = NULL;
   }
 
+  if (priv->vvas_ctx) {
+    vvas_context_destroy (priv->vvas_ctx);
+  }
   vvas_xoverlay_deinit (self);
 
   return TRUE;
 }
 
+/**
+ *  @fn static void gst_vvas_xoverlay_finalize (GObject * obj)
+ *  @param [in] Handle to GstVvas_XOverlay typecast to GObject
+ *  @return None
+ *  @brief This API will be called during GstVvas_XOverlay object's destruction phase. Close references
+ *         to devices and free memories if any
+ *  @note After this API GstVvas_XOverlay object \p obj will be destroyed completely. So free all internal
+ *        memories held by current object
+ */
 static void
 gst_vvas_xoverlay_finalize (GObject * obj)
 {
@@ -305,8 +491,19 @@ gst_vvas_xoverlay_finalize (GObject * obj)
 
   self->priv->display_clock = 0;
   self->priv->use_bbox_accel = 0;
+
+  G_OBJECT_CLASS (gst_vvas_xoverlay_parent_class)->finalize (obj);
 }
 
+/**
+ *  @fn gboolean vvas_xoverlay_allocate_internal_pool (GstVvas_XOverlay * self)
+ *  @param [inout] self - Pointer to GstVvas_XOverlay structure.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  Creates buffer pool for allocating memory when required for input buffers.
+ *  @note  Create input pool structure based on info from sink pad caps.
+ *
+ */
 static gboolean
 vvas_xoverlay_allocate_internal_pool (GstVvas_XOverlay * self)
 {
@@ -317,31 +514,40 @@ vvas_xoverlay_allocate_internal_pool (GstVvas_XOverlay * self)
   GstAllocationParams alloc_params;
   GstCaps *caps = NULL;
 
+  /* get caps from sink pad */
   caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM (self)->sinkpad);
 
+  /* Parses caps and updates info */
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_WARNING_OBJECT (self, "Failed to parse caps %" GST_PTR_FORMAT, caps);
     gst_caps_unref (caps);
     return FALSE;
   }
 
+  /* Creates a buffer pool for allocating memory to video frames */
   pool = gst_video_buffer_pool_new ();
   GST_LOG_OBJECT (self, "allocated internal sink pool %p", pool);
 
+  /* create allocator to allocate from specific memory bank for the device */
   allocator = gst_vvas_allocator_new (self->priv->dev_idx, USE_DMABUF,
-      self->in_mem_bank, self->priv->kern_handle);
+      self->in_mem_bank);
+
+  /* Initializes allocator params with default value */
   gst_allocation_params_init (&alloc_params);
   alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
   GST_INFO_OBJECT (self, "allocated %" GST_PTR_FORMAT " allocator", allocator);
 
+  /* Gets a copy of the current configuration of the pool */
   config = gst_buffer_pool_get_config (pool);
 
+  /* Updates config with parameters */
   gst_buffer_pool_config_set_params (config, caps, GST_VIDEO_INFO_SIZE (&info),
       4, 5);
-
+  /* Updates config with allocator and allocator parameters */
   gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
+  /* Sets the configuration of the pool */
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (self, "Failed to set config on input pool");
     goto error;
@@ -363,6 +569,18 @@ error:
   return FALSE;
 }
 
+/**
+ *  @fn gboolean vvas_xoverlay_prepare_input_buffer (GstVvas_XOverlay * self,
+ *                           GstBuffer ** inbuf)
+ *  @param [inout] self - Pointer to GstVvas_XOverlay structure.
+ *  @param [in] inbuf - Pointer to input buffer of type GstBuffer.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  Prepares input buffer required for bbox hardware IP.
+ *  @note  If input buffer is hardware buffer (VVAS or DMA)physical address is obtain from memory structure.
+ *         If not a hardware buffer will be created from input pool and input buffer will be copied.
+ *
+ */
 static gboolean
 vvas_xoverlay_prepare_input_buffer (GstVvas_XOverlay * self, GstBuffer ** inbuf)
 {
@@ -380,26 +598,29 @@ vvas_xoverlay_prepare_input_buffer (GstVvas_XOverlay * self, GstBuffer ** inbuf)
   memset (&in_vframe, 0x0, sizeof (GstVideoFrame));
   memset (&inpool_vframe, 0x0, sizeof (GstVideoFrame));
 
+  /* Get GstMemory object from input GstBuffer */
   in_mem = gst_buffer_get_memory (*inbuf, 0);
   if (!in_mem) {
     GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
     goto error;
   }
 
+  /* check if input buffer is allocated from VVAS memory */
   if (gst_is_vvas_memory (in_mem)
       && gst_vvas_memory_can_avoid_copy (in_mem, self->priv->dev_idx,
           self->in_mem_bank)) {
     phy_addr = gst_vvas_allocator_get_paddr (in_mem);
   } else if (gst_is_dmabuf_memory (in_mem)) {
+    /* check for dma buffer type */
     gint dma_fd = -1;
-
+    /* Get the dma descriptor associated with in_mem */
     dma_fd = gst_dmabuf_memory_get_fd (in_mem);
     if (dma_fd < 0) {
       GST_ERROR_OBJECT (self, "failed to get DMABUF FD");
       goto error;
     }
 
-    /* dmabuf but not from xrt */
+    /* Get XRT BO handle for DMA memory */
     bo_handle = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd);
     if (bo_handle == NULL) {
       GST_WARNING_OBJECT (self,
@@ -408,16 +629,19 @@ vvas_xoverlay_prepare_input_buffer (GstVvas_XOverlay * self, GstBuffer ** inbuf)
 
     GST_DEBUG_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
         bo_handle);
+    /* Get physical address of the xrt bo */
     phy_addr = vvas_xrt_get_bo_phy_addres (bo_handle);
 
     if (bo_handle != NULL)
       vvas_xrt_free_bo (bo_handle);
 
   } else {
+    /* set to allocate memory for pool if memory is not of type VVAS or DMA */
     use_inpool = TRUE;
   }
 
   if (use_inpool) {
+    /* Check if input pool created. If not creates input pool */
     if (!self->priv->in_pool) {
       bret = vvas_xoverlay_allocate_internal_pool (self);
       if (!bret)
@@ -453,6 +677,8 @@ vvas_xoverlay_prepare_input_buffer (GstVvas_XOverlay * self, GstBuffer ** inbuf)
     gst_buffer_copy_into (inpool_buf, *inbuf,
         (GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS |
             GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_METADATA), 0, -1);
+
+    /* unref the input buffer and assign internal buffer as input buffer */
     gst_buffer_unref (*inbuf);
     *inbuf = inpool_buf;
   }
@@ -463,6 +689,7 @@ vvas_xoverlay_prepare_input_buffer (GstVvas_XOverlay * self, GstBuffer ** inbuf)
     goto error;
   }
 
+  /* check for validity of physical address */
   if (phy_addr == (uint64_t) - 1) {
 
     if (in_mem)
@@ -475,12 +702,10 @@ vvas_xoverlay_prepare_input_buffer (GstVvas_XOverlay * self, GstBuffer ** inbuf)
     }
     phy_addr = gst_vvas_allocator_get_paddr (in_mem);
   }
-#ifdef XLNX_PCIe_PLATFORM
   /* syncs data when XLNX_SYNC_TO_DEVICE flag is enabled */
   bret = gst_vvas_memory_sync_bo (in_mem);
   if (!bret)
     goto error;
-#endif
 
   self->priv->stride = *(vmeta->stride);
   gst_memory_unref (in_mem);
@@ -507,6 +732,20 @@ error:
   return FALSE;
 }
 
+/**
+ *  @fn int32_t vvas_xoverlay_exec_buf (vvasDeviceHandle dev_handle,
+ *      vvasKernelHandle kern_handle, vvasRunHandle * run_handle,
+ *            const char *format, ...)
+ *  @param [in] dev_handle - Handle to XRT device object created for specified device index
+ *  @param [in] kern_handle - Handle to FPGA kernel object instance created for optical flow
+ *  @param [in] vvasRunHandle - Handle to kernel execution object
+ *  @param [in] format - arguments descriptor
+ *  @return return 0 on success\n
+ *          1 on failure.
+ *
+ *  @brief  Function to call execution of bbox hardware IP.
+ *  @details Calls execution function using argument list as input
+ */
 static int32_t
 vvas_xoverlay_exec_buf (vvasDeviceHandle dev_handle,
     vvasKernelHandle kern_handle, vvasRunHandle * run_handle,
@@ -516,7 +755,7 @@ vvas_xoverlay_exec_buf (vvasDeviceHandle dev_handle,
   int32_t iret;
 
   va_start (args, format);
-
+  /* Calls VVAS XRT utility function for kernel execution */
   iret = vvas_xrt_exec_buf (dev_handle, kern_handle, run_handle, format, args);
 
   va_end (args);
@@ -524,6 +763,17 @@ vvas_xoverlay_exec_buf (vvasDeviceHandle dev_handle,
   return iret;
 }
 
+/**
+ *  @fn gboolean vvas_xoverlay_process (GstVvas_XOverlay * self)
+ *  @param [inout] self - Handle to GstVvas_XOverlay instance
+ *  @return TRUE on success\n
+ *          FALSE on failure.
+ *
+ *  @brief  Programmes hardware IP to draw bounding boxes in frame.
+ *  @details Programmes hardware IP to draw bounding boxes in frame.
+ *           Waits for buffer to process if process time exceeds OVERLAY_BBOX_TIMEOUT
+ *           return FALSE.
+ */
 static gboolean
 vvas_xoverlay_process (GstVvas_XOverlay * self)
 {
@@ -534,6 +784,8 @@ vvas_xoverlay_process (GstVvas_XOverlay * self)
   uint32_t height = priv->in_vinfo->height;
   int retry_count = MAX_EXEC_WAIT_RETRY_CNT;
 
+  /* check format of input frame.  RGB and BGR different set of descriptor from
+     NV12 format */
   if (gst_fmt == GST_VIDEO_FORMAT_BGR || gst_fmt == GST_VIDEO_FORMAT_RGB) {
     stride = GST_VIDEO_INFO_PLANE_STRIDE (priv->in_vinfo, 0);
     stride = xlnx_bbox_align (priv->stride);
@@ -556,6 +808,7 @@ vvas_xoverlay_process (GstVvas_XOverlay * self)
     return FALSE;
   }
 
+  /* check return value from hardware execution */
   if (iret) {
     GST_ERROR_OBJECT (self, "failed to execute command %d", iret);
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
@@ -563,9 +816,11 @@ vvas_xoverlay_process (GstVvas_XOverlay * self)
     return FALSE;
   }
 
+  /* Checks for completion of processing.  If processing is taking
+     more than predefined time function return FALSE */
   do {
     iret = vvas_xrt_exec_wait (priv->dev_handle, priv->run_handle,
-        OPT_FLOW_TIMEOUT);
+        OVERLAY_BBOX_TIMEOUT);
     if (iret == ERT_CMD_STATE_TIMEOUT) {
       GST_WARNING_OBJECT (self, "Timeout...retry execwait");
       if (retry_count-- <= 0) {
@@ -587,792 +842,87 @@ vvas_xoverlay_process (GstVvas_XOverlay * self)
   return TRUE;
 }
 
-/* Get y and uv color components corresponding to givne RGB color */
-void
-convert_rgb_to_yuv_clrs (VvasColorMetadata clr, unsigned char *y,
-    unsigned short *uv)
-{
-  Mat YUVmat;
-  Mat BGRmat (2, 2, CV_8UC3, Scalar (clr.red, clr.green, clr.blue));
-  cvtColor (BGRmat, YUVmat, cv::COLOR_BGR2YUV_I420);
-  *y = YUVmat.at < uchar > (0, 0);
-  *uv = YUVmat.at < uchar > (2, 0) << 8 | YUVmat.at < uchar > (2, 1);
-  return;
-}
-
-void
-vvas_draw_meta_gray (GstVvas_XOverlay * self,
-    GstVideoFrame * in_vframe, GstVvasOverlayMeta * overlay_meta)
-{
-  gint32 idx, mid_x, mid_y;
-  guint32 gray_val;
-  gint32 thickness, baseline;
-  Size textsize;
-  guint8 *in_plane1 = NULL;
-  guint img_height, img_width;
-
-  int stride, pos_y;
-  time_t curtime;
-  guint32 v1, v2, v3, val;
-
-  GST_INFO_OBJECT (self, "Overlaying on Gray image");
-
-  img_height = GST_VIDEO_INFO_HEIGHT (self->priv->in_vinfo);
-  img_width = GST_VIDEO_INFO_WIDTH (self->priv->in_vinfo);
-  in_plane1 = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (in_vframe, 0);
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_vframe, 0);
-
-  Mat img (img_height, img_width, CV_8UC1, in_plane1, stride);
-
-  if (self->priv->display_clock) {
-    time (&curtime);
-    sprintf (self->priv->clock_time_string, "%s", ctime (&curtime));
-
-    val = self->priv->clock_font_color;
-    val = val >> 8;
-    v3 = val & 0xff;
-    val = val >> 8;
-    v2 = val & 0xff;
-    val = val >> 8;
-    v1 = val & 0xff;
-
-    gray_val = (v1 + v2 + v3) / 3;
-
-    putText (img, self->priv->clock_time_string,
-        Point (self->priv->clock_x_offset, self->priv->clock_y_offset),
-        self->priv->clock_font_name, self->priv->clock_font_scale,
-        Scalar (gray_val), 1, 1);
-  }
-  //Drawing rectangles
-  if (overlay_meta->num_rects && !self->priv->use_bbox_accel) {
-    vvas_rect_params rect;
-    for (idx = 0; idx < overlay_meta->num_rects; idx++) {
-      rect = overlay_meta->rects[idx];
-      if (rect.apply_bg_color) {
-        thickness = FILLED;
-        gray_val = (rect.bg_color.red +
-            rect.bg_color.green + rect.bg_color.blue) / 3;
-      } else {
-        thickness = rect.thickness;
-        gray_val = (rect.rect_color.red +
-            rect.rect_color.green + rect.rect_color.blue) / 3;
-      }
-      rectangle (img, Rect (Point (rect.offset.x,
-                  rect.offset.y), Size (rect.width, rect.height)),
-          Scalar (gray_val), thickness, 1, 0);
-    }
-  }
-  //Drawing text
-  if (overlay_meta->num_text) {
-    vvas_text_params text_info;
-
-    for (idx = 0; idx < overlay_meta->num_text; idx++) {
-      text_info = overlay_meta->text[idx];
-
-      baseline = 0;
-      textsize = getTextSize (text_info.disp_text,
-          text_info.text_font.font_num,
-          text_info.text_font.font_size, 1, &baseline);
-
-      if (text_info.bottom_left_origin)
-        pos_y = text_info.offset.y - textsize.height;
-      else
-        pos_y = text_info.offset.y;
-
-      if (text_info.apply_bg_color) {
-        gray_val = (text_info.bg_color.red +
-            text_info.bg_color.green + text_info.bg_color.blue) / 3;
-
-        rectangle (img, Rect (Point (text_info.offset.x,
-                    pos_y), textsize), Scalar (gray_val), FILLED, 1, 0);
-      }
-
-      gray_val = (text_info.text_font.font_color.red +
-          text_info.text_font.font_color.green +
-          text_info.text_font.font_color.blue) / 3;
-
-      if (!text_info.bottom_left_origin)
-        pos_y = text_info.offset.y + textsize.height + text_info.text_font.font_size - 1;
-      else
-        pos_y = text_info.offset.y - text_info.text_font.font_size - 1;
-
-      putText (img, text_info.disp_text, Point (text_info.offset.x,
-              pos_y), text_info.text_font.font_num,
-          text_info.text_font.font_size, Scalar (gray_val), 1, 1);
-    }
-  }
-  //Drawing lines
-  if (overlay_meta->num_lines) {
-    vvas_line_params line_info;
-    for (idx = 0; idx < overlay_meta->num_lines; idx++) {
-      line_info = overlay_meta->lines[idx];
-      gray_val = (line_info.line_color.red +
-          line_info.line_color.green + line_info.line_color.blue) / 3;
-      line (img, Point (line_info.start_pt.x,
-              line_info.start_pt.y), Point (line_info.end_pt.x,
-              line_info.end_pt.y),
-          Scalar (gray_val), line_info.thickness, 1, 0);
-    }
-  }
-  //Drawing arrows
-  if (overlay_meta->num_arrows) {
-    vvas_arrow_params arrow_info;
-    for (idx = 0; idx < overlay_meta->num_arrows; idx++) {
-      arrow_info = overlay_meta->arrows[idx];
-      gray_val = (arrow_info.line_color.red +
-          arrow_info.line_color.green + arrow_info.line_color.blue) / 3;
-
-      thickness = arrow_info.thickness;
-      switch (arrow_info.arrow_direction) {
-        case AT_START:
-          arrowedLine (img, Point (arrow_info.end_pt.x,
-                  arrow_info.end_pt.y), Point (arrow_info.start_pt.x,
-                  arrow_info.start_pt.y), Scalar (gray_val),
-              thickness, 1, 0, arrow_info.tipLength);
-          break;
-        case AT_END:
-          arrowedLine (img, Point (arrow_info.start_pt.x,
-                  arrow_info.start_pt.y), Point (arrow_info.end_pt.x,
-                  arrow_info.end_pt.y), Scalar (gray_val),
-              thickness, 1, 0, arrow_info.tipLength);
-          break;
-        case BOTH_ENDS:
-          if (arrow_info.end_pt.x >= arrow_info.start_pt.x)
-            mid_x = arrow_info.start_pt.x + (arrow_info.end_pt.x -
-                arrow_info.start_pt.x) / 2;
-          else
-            mid_x = arrow_info.end_pt.x + (arrow_info.start_pt.x -
-                arrow_info.end_pt.x) / 2;
-
-          if (arrow_info.end_pt.y >= arrow_info.start_pt.y)
-            mid_y = arrow_info.start_pt.y + (arrow_info.end_pt.y -
-                arrow_info.start_pt.y) / 2;
-          else
-            mid_y = arrow_info.end_pt.y + (arrow_info.start_pt.y -
-                arrow_info.end_pt.y) / 2;
-
-          arrowedLine (img, Point (mid_x, mid_y),
-              Point (arrow_info.end_pt.x, arrow_info.end_pt.y),
-              Scalar (gray_val), thickness, 1, 0, arrow_info.tipLength / 2);
-
-          arrowedLine (img, Point (mid_x, mid_y),
-              Point (arrow_info.start_pt.x, arrow_info.start_pt.y),
-              Scalar (gray_val), thickness, 1, 0, arrow_info.tipLength / 2);
-          break;
-        default:
-          GST_ERROR_OBJECT (overlay_meta, "Arrow type is not supported");
-          break;
-      }
-    }
-  }
-  //Drawing cicles
-  if (overlay_meta->num_circles) {
-    vvas_circle_params circle_info;
-    for (idx = 0; idx < overlay_meta->num_circles; idx++) {
-      circle_info = overlay_meta->circles[idx];
-      gray_val = (circle_info.circle_color.red +
-          circle_info.circle_color.green + circle_info.circle_color.blue) / 3;
-      circle (img, Point (circle_info.center_pt.x,
-              circle_info.center_pt.y), circle_info.radius,
-          Scalar (gray_val), circle_info.thickness, 1, 0);
-    }
-  }
-  //Drawing polygons
-  if (overlay_meta->num_polys) {
-    vvas_polygon_params poly_info;
-    std::vector < Point > poly_pts;
-    gint32 np;
-    const Point *pts;
-    for (idx = 0; idx < overlay_meta->num_polys; idx++) {
-      poly_info = overlay_meta->polygons[idx];
-      gray_val = (poly_info.poly_color.red +
-          poly_info.poly_color.green + poly_info.poly_color.blue) / 3;
-
-      poly_pts.clear ();
-      for (np = 0; np < poly_info.num_pts; np++)
-        poly_pts.push_back (Point (poly_info.poly_pts[np].x,
-                poly_info.poly_pts[np].y));
-
-      pts = (const Point *) Mat (poly_pts).data;
-      polylines (img, &pts, &poly_info.num_pts, 1, true,
-          Scalar (gray_val), poly_info.thickness, 1, 0);
-    }
-  }
-}
-
-void
-vvas_draw_meta_rgb (GstVvas_XOverlay * self,
-    GstVideoFrame * in_vframe, GstVvasOverlayMeta * overlay_meta)
-{
-  gint32 idx;
-  gint32 thickness;
-  VvasColorMetadata ol_color;
-  gint32 mid_x, mid_y;
-  gint32 baseline;
-  Size textsize;
-  guint8 *in_plane1 = NULL;
-  guint img_height, img_width;
-  GstVideoFormat video_fmt;
-
-  int stride, pos_y;
-  time_t curtime;
-  guint32 v1, v2, v3, val;
-
-  GST_INFO_OBJECT (self, "Overlaying on RGB or BGR image");
-
-  video_fmt = GST_VIDEO_INFO_FORMAT (self->priv->in_vinfo);
-  img_height = GST_VIDEO_INFO_HEIGHT (self->priv->in_vinfo);
-  img_width = GST_VIDEO_INFO_WIDTH (self->priv->in_vinfo);
-  in_plane1 = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (in_vframe, 0);
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_vframe, 0);
-  Mat img (img_height, img_width, CV_8UC3, in_plane1, stride);
-
-  if (self->priv->display_clock) {
-    time (&curtime);
-    sprintf (self->priv->clock_time_string, "%s", ctime (&curtime));
-
-    val = self->priv->clock_font_color;
-    val = val >> 8;
-
-    v3 = val & 0xff;
-    val = val >> 8;
-    v2 = val & 0xff;
-    val = val >> 8;
-    v1 = val & 0xff;
-
-    putText (img, self->priv->clock_time_string,
-        Point (self->priv->clock_x_offset, self->priv->clock_y_offset),
-        self->priv->clock_font_name, self->priv->clock_font_scale, Scalar (v1,
-            v2, v3), 1, 1);
-  }
-  //Drawing rectangles
-  if (overlay_meta->num_rects && !self->priv->use_bbox_accel) {
-    vvas_rect_params rect;
-    for (idx = 0; idx < overlay_meta->num_rects; idx++) {
-      rect = overlay_meta->rects[idx];
-      if (rect.apply_bg_color) {
-        thickness = FILLED;
-        ol_color = rect.bg_color;
-      } else {
-        thickness = rect.thickness;
-        ol_color = rect.rect_color;
-      }
-
-      if (GST_VIDEO_FORMAT_BGR == video_fmt) {
-        v1 = ol_color.blue;
-        v2 = ol_color.green;
-        v3 = ol_color.red;
-      } else {
-        v1 = ol_color.red;
-        v2 = ol_color.green;
-        v3 = ol_color.blue;
-      }
-
-      rectangle (img, Rect (Point (rect.offset.x,
-                  rect.offset.y), Size (rect.width, rect.height)),
-          Scalar (v1, v2, v3), thickness, 1, 0);
-    }
-  }
-  //Drawing text
-  if (overlay_meta->num_text) {
-    vvas_text_params text_info;
-
-    for (idx = 0; idx < overlay_meta->num_text; idx++) {
-      text_info = overlay_meta->text[idx];
-      baseline = 0;
-      textsize = getTextSize (text_info.disp_text,
-          text_info.text_font.font_num,
-          text_info.text_font.font_size, 1, &baseline);
-
-      if (text_info.bottom_left_origin)
-        pos_y = text_info.offset.y - textsize.height;
-      else
-        pos_y = text_info.offset.y;
-
-      if (text_info.apply_bg_color) {
-        ol_color = text_info.bg_color;
-
-        if (GST_VIDEO_FORMAT_BGR == video_fmt) {
-          v1 = ol_color.blue;
-          v2 = ol_color.green;
-          v3 = ol_color.red;
-        } else {
-          v1 = ol_color.red;
-          v2 = ol_color.green;
-          v3 = ol_color.blue;
-        }
-
-        rectangle (img, Rect (Point (text_info.offset.x,
-                    pos_y), textsize), Scalar (v1, v2, v3), FILLED, 1, 0);
-      }
-
-      ol_color = text_info.text_font.font_color;
-
-      if (GST_VIDEO_FORMAT_BGR == video_fmt) {
-        v1 = ol_color.blue;
-        v2 = ol_color.green;
-        v3 = ol_color.red;
-      } else {
-        v1 = ol_color.red;
-        v2 = ol_color.green;
-        v3 = ol_color.blue;
-      }
-
-      if (!text_info.bottom_left_origin)
-        pos_y = text_info.offset.y + textsize.height + text_info.text_font.font_size - 1;
-      else
-        pos_y = text_info.offset.y - text_info.text_font.font_size - 1;
-
-      putText (img, text_info.disp_text, Point (text_info.offset.x,
-              pos_y), text_info.text_font.font_num,
-          text_info.text_font.font_size, Scalar (v1, v2, v3), 1, 1);
-    }
-  }
-  //Drawing lines
-  if (overlay_meta->num_lines) {
-    vvas_line_params line_info;
-    for (idx = 0; idx < overlay_meta->num_lines; idx++) {
-      line_info = overlay_meta->lines[idx];
-      ol_color = line_info.line_color;
-
-      if (GST_VIDEO_FORMAT_BGR == video_fmt) {
-        v1 = ol_color.blue;
-        v2 = ol_color.green;
-        v3 = ol_color.red;
-      } else {
-        v1 = ol_color.red;
-        v2 = ol_color.green;
-        v3 = ol_color.blue;
-      }
-      line (img, Point (line_info.start_pt.x,
-              line_info.start_pt.y), Point (line_info.end_pt.x,
-              line_info.end_pt.y),
-          Scalar (v1, v2, v3), line_info.thickness, 1, 0);
-    }
-  }
-  //Drawing arrows
-  if (overlay_meta->num_arrows) {
-    vvas_arrow_params arrow_info;
-    for (idx = 0; idx < overlay_meta->num_arrows; idx++) {
-      arrow_info = overlay_meta->arrows[idx];
-
-      ol_color = arrow_info.line_color;
-
-      if (GST_VIDEO_FORMAT_BGR == video_fmt) {
-        v1 = ol_color.blue;
-        v2 = ol_color.green;
-        v3 = ol_color.red;
-      } else {
-        v1 = ol_color.red;
-        v2 = ol_color.green;
-        v3 = ol_color.blue;
-      }
-      thickness = arrow_info.thickness;
-      switch (arrow_info.arrow_direction) {
-        case AT_START:
-          arrowedLine (img, Point (arrow_info.end_pt.x,
-                  arrow_info.end_pt.y), Point (arrow_info.start_pt.x,
-                  arrow_info.start_pt.y), Scalar (v1, v2, v3),
-              thickness, 1, 0, arrow_info.tipLength);
-          break;
-        case AT_END:
-          arrowedLine (img, Point (arrow_info.start_pt.x,
-                  arrow_info.start_pt.y), Point (arrow_info.end_pt.x,
-                  arrow_info.end_pt.y), Scalar (v1, v2, v3),
-              thickness, 1, 0, arrow_info.tipLength);
-          break;
-        case BOTH_ENDS:
-          if (arrow_info.end_pt.x >= arrow_info.start_pt.x)
-            mid_x = arrow_info.start_pt.x + (arrow_info.end_pt.x -
-                arrow_info.start_pt.x) / 2;
-          else
-            mid_x = arrow_info.end_pt.x + (arrow_info.start_pt.x -
-                arrow_info.end_pt.x) / 2;
-
-          if (arrow_info.end_pt.y >= arrow_info.start_pt.y)
-            mid_y = arrow_info.start_pt.y + (arrow_info.end_pt.y -
-                arrow_info.start_pt.y) / 2;
-          else
-            mid_y = arrow_info.end_pt.y + (arrow_info.start_pt.y -
-                arrow_info.end_pt.y) / 2;
-
-          arrowedLine (img, Point (mid_x, mid_y),
-              Point (arrow_info.end_pt.x, arrow_info.end_pt.y),
-              Scalar (v1, v2, v3), thickness, 1, 0, arrow_info.tipLength / 2);
-
-          arrowedLine (img, Point (mid_x, mid_y),
-              Point (arrow_info.start_pt.x, arrow_info.start_pt.y),
-              Scalar (v1, v2, v3), thickness, 1, 0, arrow_info.tipLength / 2);
-          break;
-        default:
-          GST_ERROR_OBJECT (overlay_meta, "Arrow type is not supported");
-          break;
-      }
-    }
-  }
-  //Drawing cicles
-  if (overlay_meta->num_circles) {
-    vvas_circle_params circle_info;
-    for (idx = 0; idx < overlay_meta->num_circles; idx++) {
-      circle_info = overlay_meta->circles[idx];
-      ol_color = circle_info.circle_color;
-
-      if (GST_VIDEO_FORMAT_BGR == video_fmt) {
-        v1 = ol_color.blue;
-        v2 = ol_color.green;
-        v3 = ol_color.red;
-      } else {
-        v1 = ol_color.red;
-        v2 = ol_color.green;
-        v3 = ol_color.blue;
-      }
-
-      circle (img, Point (circle_info.center_pt.x,
-              circle_info.center_pt.y), circle_info.radius,
-          Scalar (v1, v2, v3), circle_info.thickness, 1, 0);
-    }
-  }
-  //Drawing polygons
-  if (overlay_meta->num_polys) {
-    vvas_polygon_params poly_info;
-    std::vector < Point > poly_pts;
-    gint32 np;
-    const Point *pts;
-    for (idx = 0; idx < overlay_meta->num_polys; idx++) {
-      poly_info = overlay_meta->polygons[idx];
-      ol_color = poly_info.poly_color;
-
-      if (GST_VIDEO_FORMAT_BGR == video_fmt) {
-        v1 = ol_color.blue;
-        v2 = ol_color.green;
-        v3 = ol_color.red;
-      } else {
-        v1 = ol_color.red;
-        v2 = ol_color.green;
-        v3 = ol_color.blue;
-      }
-
-      poly_pts.clear ();
-      for (np = 0; np < poly_info.num_pts; np++)
-        poly_pts.push_back (Point (poly_info.poly_pts[np].x,
-                poly_info.poly_pts[np].y));
-
-      pts = (const Point *) Mat (poly_pts).data;
-      polylines (img, &pts, &poly_info.num_pts, 1, true,
-          Scalar (v1, v2, v3), poly_info.thickness, 1, 0);
-    }
-  }
-}
-
-void
-vvas_draw_meta_nv12 (GstVvas_XOverlay * self,
-    GstVideoFrame * in_vframe, GstVvasOverlayMeta * overlay_meta)
-{
-  gint32 idx;
-  guint8 yScalar;
-  guint16 uvScalar;
-  gint32 xmin, ymin, xmax, ymax;
-  int thickness;
-  gint32 mid_x, mid_y;
-  gint32 radius;
-  float tiplength;
-  gint32 baseline;
-  Size textsize;
-  guint8 *in_plane1 = NULL, *in_plane2 = NULL;
-  guint img_height, img_width;
-  int stride, pos_y;
-  time_t curtime;
-  guint32 v1, v2, v3, val;
-  VvasColorMetadata clr;
-
-  GST_INFO_OBJECT (self, "Overlaying on NV12 format image");
-
-  img_height = GST_VIDEO_INFO_HEIGHT (self->priv->in_vinfo);
-  img_width = GST_VIDEO_INFO_WIDTH (self->priv->in_vinfo);
-  in_plane1 = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (in_vframe, 0);
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_vframe, 0);
-
-  Mat img_y (img_height, img_width, CV_8UC1, in_plane1, stride);
-
-  in_plane2 = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (in_vframe, 1);
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_vframe, 1);
-  Mat img_uv (img_height / 2, img_width / 2, CV_16UC1, in_plane2, stride);
-
-  if (self->priv->display_clock) {
-    time (&curtime);
-    sprintf (self->priv->clock_time_string, "%s", ctime (&curtime));
-
-    val = self->priv->clock_font_color;
-    //v4 = val & 0xff;
-    val = val >> 8;
-    v3 = val & 0xff;
-    val = val >> 8;
-    v2 = val & 0xff;
-    val = val >> 8;
-    v1 = val & 0xff;
-
-    clr.red = v1;
-    clr.green = v2;
-    clr.blue = v3;
-
-    convert_rgb_to_yuv_clrs (clr, &yScalar, &uvScalar);
-
-    xmin = floor (self->priv->clock_x_offset / 2) * 2;
-    ymin = floor (self->priv->clock_y_offset / 2) * 2;
-
-    putText (img_y, self->priv->clock_time_string, Point (xmin, ymin),
-        self->priv->clock_font_name, self->priv->clock_font_scale,
-        Scalar (yScalar), 1, 1);
-
-    putText (img_uv, self->priv->clock_time_string, Point (xmin / 2, ymin / 2),
-        self->priv->clock_font_name, self->priv->clock_font_scale / 2,
-        Scalar (uvScalar), 1, 1);
-  }
-  //Drawing rectangles
-  if (overlay_meta->num_rects && !self->priv->use_bbox_accel) {
-    vvas_rect_params rect;
-    for (idx = 0; idx < overlay_meta->num_rects; idx++) {
-      rect = overlay_meta->rects[idx];
-      xmin = floor (rect.offset.x / 2) * 2;
-      ymin = floor (rect.offset.y / 2) * 2;
-      xmax = floor ((rect.width + rect.offset.x) / 2) * 2;
-      ymax = floor ((rect.height + rect.offset.y) / 2) * 2;
-      if (rect.apply_bg_color) {
-        thickness = FILLED;
-        convert_rgb_to_yuv_clrs (rect.bg_color, &yScalar, &uvScalar);
-      } else {
-        thickness = rect.thickness;
-        convert_rgb_to_yuv_clrs (rect.rect_color, &yScalar, &uvScalar);
-      }
-
-      rectangle (img_y, Rect (Point (xmin, ymin),
-              Point (xmax, ymax)), Scalar (yScalar), thickness, 1, 0);
-
-      rectangle (img_uv, Rect (Point (xmin / 2, ymin / 2),
-              Point (xmax / 2, ymax / 2)), Scalar (uvScalar), thickness, 1, 0);
-    }
-  }
-  //Drawing text
-  if (overlay_meta->num_text) {
-    vvas_text_params text_info;
-    for (idx = 0; idx < overlay_meta->num_text; idx++) {
-      text_info = overlay_meta->text[idx];
-      xmin = floor (text_info.offset.x / 2) * 2;
-      ymin = floor (text_info.offset.y / 2) * 2;
-
-      baseline = 0;
-      textsize = getTextSize (text_info.disp_text,
-          text_info.text_font.font_num,
-          text_info.text_font.font_size, 1, &baseline);
-
-      if (text_info.bottom_left_origin) {
-        pos_y = ymin - textsize.height;
-        pos_y = floor (pos_y / 2) * 2;
-      } else
-        pos_y = ymin;
-
-      if (text_info.apply_bg_color) {
-        convert_rgb_to_yuv_clrs (text_info.bg_color, &yScalar, &uvScalar);
-        rectangle (img_y, Rect (Point (xmin,
-                    pos_y), textsize), Scalar (yScalar), FILLED, 1, 0);
-
-        textsize.height /= 2;
-        textsize.width /= 2;
-        rectangle (img_uv, Rect (Point (xmin / 2,
-                    pos_y / 2), textsize), Scalar (uvScalar), FILLED, 1, 0);
-      }
-
-      if (!text_info.bottom_left_origin)
-        pos_y = ymin + textsize.height + text_info.text_font.font_size - 1;
-      else
-        pos_y = ymin - text_info.text_font.font_size - 1;
-
-      pos_y = floor (pos_y / 2) * 2;
-
-      convert_rgb_to_yuv_clrs (text_info.text_font.font_color, &yScalar,
-          &uvScalar);
-      putText (img_y, text_info.disp_text, Point (xmin, pos_y),
-          text_info.text_font.font_num, text_info.text_font.font_size,
-          Scalar (yScalar), 1, 1);
-
-      putText (img_uv, text_info.disp_text, Point (xmin / 2, pos_y / 2),
-          text_info.text_font.font_num, text_info.text_font.font_size / 2,
-          Scalar (uvScalar), 1, 1);
-    }
-  }
-  //Drawing lines
-  if (overlay_meta->num_lines) {
-    vvas_line_params line_info;
-    for (idx = 0; idx < overlay_meta->num_lines; idx++) {
-      line_info = overlay_meta->lines[idx];
-      convert_rgb_to_yuv_clrs (line_info.line_color, &yScalar, &uvScalar);
-      xmin = floor (line_info.start_pt.x / 2) * 2;
-      ymin = floor (line_info.start_pt.y / 2) * 2;
-      xmax = floor (line_info.end_pt.x / 2) * 2;
-      ymax = floor (line_info.end_pt.y / 2) * 2;
-
-      line (img_y, Point (xmin, ymin), Point (xmax, ymax),
-          Scalar (yScalar), line_info.thickness, 1, 0);
-
-      line (img_uv, Point (xmin / 2, ymin / 2), Point (xmax / 2, ymax / 2),
-          Scalar (uvScalar), line_info.thickness, 1, 0);
-    }
-  }
-  //Drawing arrows
-  if (overlay_meta->num_arrows) {
-    vvas_arrow_params arrow_info;
-    for (idx = 0; idx < overlay_meta->num_arrows; idx++) {
-      arrow_info = overlay_meta->arrows[idx];
-      convert_rgb_to_yuv_clrs (arrow_info.line_color, &yScalar, &uvScalar);
-      xmin = floor (arrow_info.start_pt.x / 2) * 2;
-      ymin = floor (arrow_info.start_pt.y / 2) * 2;
-      xmax = floor (arrow_info.end_pt.x / 2) * 2;
-      ymax = floor (arrow_info.end_pt.y / 2) * 2;
-      tiplength = arrow_info.tipLength; //floor(arrow_info.tipLength / 2) * 2;
-
-      thickness = arrow_info.thickness;
-      switch (arrow_info.arrow_direction) {
-        case AT_START:
-          arrowedLine (img_y, Point (xmax, ymax), Point (xmin, ymin),
-              Scalar (yScalar), thickness, 1, 0, tiplength);
-
-          arrowedLine (img_uv, Point (xmax / 2, ymax / 2), Point (xmin / 2,
-                  ymin / 2), Scalar (uvScalar), thickness, 1, 0, tiplength);
-          break;
-        case AT_END:
-          arrowedLine (img_y, Point (xmin, ymin), Point (xmax, ymax),
-              Scalar (yScalar), thickness, 1, 0, tiplength);
-
-          arrowedLine (img_uv, Point (xmin / 2, ymin / 2), Point (xmax / 2,
-                  ymax / 2), Scalar (uvScalar), thickness, 1, 0, tiplength);
-          break;
-        case BOTH_ENDS:
-          if (xmax >= xmin)
-            mid_x = floor ((xmin + (xmax - xmin) / 2) / 2) * 2;
-          else
-            mid_x = floor ((xmax + (xmin - xmax) / 2) / 2) * 2;
-
-          if (ymax >= ymin)
-            mid_y = floor ((ymin + (ymax - ymin) / 2) / 2) * 2;
-          else
-            mid_y = floor ((ymax + (ymin - ymax) / 2) / 2) * 2;
-
-          arrowedLine (img_y, Point (mid_x, mid_y),
-              Point (xmax, ymax), Scalar (yScalar),
-              thickness, 1, 0, tiplength / 2);
-
-          arrowedLine (img_y, Point (mid_x, mid_y),
-              Point (xmin, ymin), Scalar (yScalar),
-              thickness, 1, 0, tiplength / 2);
-
-          arrowedLine (img_uv, Point (mid_x / 2, mid_y / 2),
-              Point (xmax / 2, ymax / 2), Scalar (uvScalar),
-              thickness, 1, 0, tiplength / 2);
-
-          arrowedLine (img_uv, Point (mid_x / 2, mid_y / 2),
-              Point (xmin / 2, ymin / 2), Scalar (uvScalar),
-              thickness, 1, 0, tiplength / 2);
-          break;
-        default:
-          GST_ERROR_OBJECT (overlay_meta, "Arrow type is not supported");
-          break;
-      }
-    }
-  }
-  //Drawing cicles
-  if (overlay_meta->num_circles) {
-    vvas_circle_params circle_info;
-    for (idx = 0; idx < overlay_meta->num_circles; idx++) {
-      circle_info = overlay_meta->circles[idx];
-      convert_rgb_to_yuv_clrs (circle_info.circle_color, &yScalar, &uvScalar);
-      xmin = floor (circle_info.center_pt.x / 2) * 2;
-      ymin = floor (circle_info.center_pt.y / 2) * 2;
-      radius = floor (circle_info.radius / 2) * 2;
-
-      circle (img_y, Point (xmin, ymin), radius,
-          Scalar (yScalar), circle_info.thickness, 1, 0);
-
-      circle (img_uv, Point (xmin / 2, ymin / 2), radius / 2,
-          Scalar (uvScalar), circle_info.thickness, 1, 0);
-    }
-  }
-  //Drawing polygons
-  if (overlay_meta->num_polys) {
-    vvas_polygon_params poly_info;
-    std::vector < Point > poly_pts_y;
-    std::vector < Point > poly_pts_uv;
-    gint32 np;
-    const Point *pts;
-    for (idx = 0; idx < overlay_meta->num_polys; idx++) {
-      poly_info = overlay_meta->polygons[idx];
-
-      convert_rgb_to_yuv_clrs (poly_info.poly_color, &yScalar, &uvScalar);
-
-      poly_pts_y.clear ();
-      poly_pts_uv.clear ();
-      for (np = 0; np < poly_info.num_pts; np++) {
-        xmin = floor (poly_info.poly_pts[np].x / 2) * 2;
-        ymin = floor (poly_info.poly_pts[np].y / 2) * 2;
-        poly_pts_y.push_back (Point (xmin, ymin));
-        poly_pts_uv.push_back (Point (xmin / 2, ymin / 2));
-      }
-
-      pts = (const Point *) Mat (poly_pts_y).data;
-      polylines (img_y, &pts, &poly_info.num_pts, 1, true,
-          Scalar (yScalar), poly_info.thickness, 1, 0);
-
-      pts = (const Point *) Mat (poly_pts_uv).data;
-      polylines (img_uv, &pts, &poly_info.num_pts, 1, true,
-          Scalar (uvScalar), poly_info.thickness, 1, 0);
-    }
-  }
-}
-
+/**
+ *  @fn void prepare_bbox_data (GstVvas_XOverlay * self,
+ *          GstVvasOverlayMeta * overlay_meta, GstVideoFormat gst_fmt, gint32 str_idx)
+ *  @param [inout] self - Handle to GstVvas_XOverlay instance
+ *  @param [in] overlay_meta - Pointer to metadata type GstVvasOverlayMeta
+ *  @param [in] gst_fmt - Gstreamer based frame format
+ *  @param [in] str_idx - Starting point in a array bboxes to draw on frame
+ *  @return None
+ *
+ *  @brief  This API converts bounding box metadata from overlay meta to
+ *          sequence data as per expectations of bbox accelerator.
+ */
 void
 prepare_bbox_data (GstVvas_XOverlay * self,
-    GstVvasOverlayMeta * overlay_meta, GstVideoFormat gst_fmt, gint32 str_idx)
+    GstVvasOverlayMeta * overlay_meta, GstVideoFormat gst_fmt, guint32 str_idx)
 {
-  gint32 idx, end_idx, loop;
+  guint32 idx, end_idx, loop;
   GstVvas_XOverlayPrivate *priv = self->priv;
   gint32 *roi = (gint32 *) priv->roi_data.roi.user_ptr;
+  VvasList *head;
 
-  if ((str_idx + MAX_BOXES) > overlay_meta->num_rects)
-    end_idx = overlay_meta->num_rects;
+  /* check if number of bbox are less or more than MAX_BOXES */
+  if ((str_idx + MAX_BOXES) > overlay_meta->shape_info.num_rects)
+    end_idx = overlay_meta->shape_info.num_rects;
   else
     end_idx = str_idx + MAX_BOXES;
 
   priv->roi_data.nobj = 0;
-  idx = 0;
-  for (loop = str_idx; loop < end_idx; loop++) {
-    roi[priv->roi_data.nobj * 5] = overlay_meta->rects[idx].offset.x;
-    roi[(priv->roi_data.nobj * 5) + 1] = overlay_meta->rects[idx].offset.y;
-    roi[(priv->roi_data.nobj * 5) + 2] = overlay_meta->rects[idx].width;
-    roi[(priv->roi_data.nobj * 5) + 3] = overlay_meta->rects[idx].height;
+  idx = 1;
+  VvasOverlayRectParams *rect_params;
+
+  /* while loop to get VvasList pointer of nth element */
+  head = overlay_meta->shape_info.rect_params;
+  while (idx != str_idx && head) {
+    idx++;
+    head = head->next;
+  }
+  /* for loop to read bounding box info from starting at str_idx to end_idx */
+  for (loop = str_idx; (loop < end_idx) && (head != NULL); loop++) {
+    rect_params = (VvasOverlayRectParams *) head->data;
+    roi[priv->roi_data.nobj * 5] = rect_params->points.x;
+    roi[(priv->roi_data.nobj * 5) + 1] = rect_params->points.y;
+    roi[(priv->roi_data.nobj * 5) + 2] = rect_params->width;
+    roi[(priv->roi_data.nobj * 5) + 3] = rect_params->height;
 
     if (gst_fmt == GST_VIDEO_FORMAT_RGB) {
       roi[(priv->roi_data.nobj * 5) + 4] =
-          (overlay_meta->rects[idx].rect_color.red & 0xFF) << 24;
+          (rect_params->rect_color.red & 0xFF) << 24;
       roi[(priv->roi_data.nobj * 5) + 4] |=
-          (overlay_meta->rects[idx].rect_color.green & 0xFF) << 16;
+          (rect_params->rect_color.green & 0xFF) << 16;
       roi[(priv->roi_data.nobj * 5) + 4] |=
-          (overlay_meta->rects[idx].rect_color.blue & 0xFF) << 8;
+          (rect_params->rect_color.blue & 0xFF) << 8;
       roi[(priv->roi_data.nobj * 5) + 4] |=
-          (overlay_meta->rects[idx].rect_color.alpha & 0xFF);
+          (rect_params->rect_color.alpha & 0xFF);
     } else {
       roi[(priv->roi_data.nobj * 5) + 4] =
-          (overlay_meta->rects[idx].rect_color.blue & 0xFF) << 24;
+          (rect_params->rect_color.blue & 0xFF) << 24;
       roi[(priv->roi_data.nobj * 5) + 4] |=
-          (overlay_meta->rects[idx].rect_color.green & 0xFF) << 16;
+          (rect_params->rect_color.green & 0xFF) << 16;
       roi[(priv->roi_data.nobj * 5) + 4] |=
-          (overlay_meta->rects[idx].rect_color.red & 0xFF) << 8;
+          (rect_params->rect_color.red & 0xFF) << 8;
       roi[(priv->roi_data.nobj * 5) + 4] |=
-          (overlay_meta->rects[idx].rect_color.alpha & 0xFF);
+          (rect_params->rect_color.alpha & 0xFF);
     }
-    idx++;
+    head = head->next;
     priv->roi_data.nobj++;
   }
 }
 
+/**
+ *  @fn gboolean gst_vvas_xoverlay_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
+ *  @param [in] base - Pointer to GstBaseTransform object.
+ *  @param [out] outbuf - Pointer to output buffer of type GstBuffer.
+ *  @return TRUE on success \n
+ *          FALSE on failure
+ *  @brief  This API to draw overlay metadata on frames.  If use_bbox_accel set
+ *          uses bbox accelerator IP for drawing bounding boxes.
+ *  @details This API is registered with GObjectClass by overriding GstBaseTransform::generate_output
+ *           function pointer and this will be called for every frame. Bases on overlay metadata it
+ *           draws different geometric shapes, text and clock on frames.
+ */
 static GstFlowReturn
 gst_vvas_xoverlay_generate_output (GstBaseTransform * trans,
     GstBuffer ** outbuf)
@@ -1383,10 +933,12 @@ gst_vvas_xoverlay_generate_output (GstBaseTransform * trans,
   gboolean bret = FALSE;
   GstVvasOverlayMeta *overlay_meta;
   GstMapFlags map_flags;
-  GstVideoFrame in_vframe;
   GstVideoFormat gst_fmt;
   GstBuffer *inbuf = NULL;
-  gint32 idx;
+  guint32 idx;
+  VvasOverlayFrameInfo *ovlinfo;
+  VvasVideoFrame *vframe = NULL;
+
 
   inbuf = trans->queued_buf;
   trans->queued_buf = NULL;
@@ -1398,20 +950,28 @@ gst_vvas_xoverlay_generate_output (GstBaseTransform * trans,
 
   gst_fmt = GST_VIDEO_INFO_FORMAT (self->priv->in_vinfo);
 
+  /* Read overlay metadata from inbuf */
   overlay_meta = gst_buffer_get_vvas_overlay_meta (inbuf);
 
+  /* If no overlay metadata return without further processing */
   if (!overlay_meta) {
     *outbuf = inbuf;
     GST_LOG_OBJECT (self, "unable to get overlaymeta from input buffer");
     return GST_FLOW_OK;
   }
 
-  if (priv->use_bbox_accel && overlay_meta->num_rects > 0) {
+  /* Calls bbox hardware accelerator if use_bbox_accel true
+     and bbox metadata available */
+  if (priv->use_bbox_accel && overlay_meta->shape_info.num_rects > 0) {
+    /* prepares input buffer for bbox hardware accelerator */
     bret = vvas_xoverlay_prepare_input_buffer (self, &inbuf);
     if (!bret)
       goto error;
 
-    for (idx = 0; idx < overlay_meta->num_rects; idx += MAX_BOXES) {
+    /* for loop to call bbox accelerator to draw in groups of MAX_BOXES
+       because hardware can draw MAX_BOXES boxes at a time. */
+    for (idx = 0; idx < overlay_meta->shape_info.num_rects; idx += MAX_BOXES) {
+      /* Prepares bounding box info as per hardware IP */
       prepare_bbox_data (self, overlay_meta, gst_fmt, idx);
 
       bret = vvas_xoverlay_process (self);
@@ -1420,27 +980,49 @@ gst_vvas_xoverlay_generate_output (GstBaseTransform * trans,
     }
   }
 
+  /*Allocate memory for ovlerlay */
+  ovlinfo = (VvasOverlayFrameInfo *) calloc (1, sizeof (VvasOverlayFrameInfo));
+
   map_flags =
       (GstMapFlags) (GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF |
       GST_MAP_WRITE);
-
-  memset (&in_vframe, 0x0, sizeof (GstVideoFrame));
-  if (!gst_video_frame_map (&in_vframe, self->priv->in_vinfo, inbuf, map_flags)) {
-    GST_ERROR_OBJECT (self, "failed to map input buffer");
+  /* get vvasframe form gst buffer */
+  vframe = vvas_videoframe_from_gstbuffer (priv->vvas_ctx, DEFAULT_MEM_BANK,
+      inbuf, self->priv->in_vinfo, map_flags);
+  if (NULL == vframe) {
+    GST_ERROR_OBJECT (self, "Cannot convert input GstBuffer to VvasVideoFrame");
+    fret = GST_FLOW_ERROR;
     goto error;
   }
-  if (gst_fmt == GST_VIDEO_FORMAT_GRAY8) {
-    vvas_draw_meta_gray (self, &in_vframe, overlay_meta);
-  } else if (gst_fmt == GST_VIDEO_FORMAT_BGR || gst_fmt == GST_VIDEO_FORMAT_RGB) {
-    vvas_draw_meta_rgb (self, &in_vframe, overlay_meta);
-  } else if (gst_fmt == GST_VIDEO_FORMAT_NV12) {
-    vvas_draw_meta_nv12 (self, &in_vframe, overlay_meta);
+
+  /* Update video frame */
+  ovlinfo->frame_info = vframe;
+
+  /* Update shape info */
+  memcpy (&ovlinfo->shape_info, &overlay_meta->shape_info,
+      sizeof (VvasOverlayShapeInfo));
+
+  /* update clock data */
+  ovlinfo->clk_info.display_clock = self->priv->display_clock;
+  ovlinfo->clk_info.clock_font_name = self->priv->clock_font_name;
+  ovlinfo->clk_info.clock_font_scale = self->priv->clock_font_scale;
+  ovlinfo->clk_info.clock_font_color = self->priv->clock_font_color;
+  ovlinfo->clk_info.clock_x_offset = self->priv->clock_x_offset;
+  ovlinfo->clk_info.clock_y_offset = self->priv->clock_y_offset;
+
+  /* draw requested pattern on the image */
+  if (VVAS_RET_SUCCESS == vvas_overlay_process_frame (ovlinfo)) {
+    GST_DEBUG_OBJECT (self, "ovl process ret success");
   } else {
-    GST_ERROR_OBJECT (self, "Video format not supported");
-    goto error;
+    /*do we need to update fret here ?  */
+    GST_DEBUG_OBJECT (self, "ovl process failure");
   }
 
-  gst_video_frame_unmap (&in_vframe);
+  vvas_video_frame_free (vframe);
+
+  if (NULL != ovlinfo) {
+    free (ovlinfo);
+  }
 
   *outbuf = inbuf;
 
@@ -1448,6 +1030,16 @@ error:
   return fret;
 }
 
+/**
+ *  @fn static void gst_vvas_xoverlay_class_init (GstVvas_XOverlayClass * klass)
+ *  @param [in]klass  - Handle to GstVvas_XOverlayClass
+ *  @return None
+ *  @brief  Add properties and signals of GstVvas_XOverlay to parent GObjectClass \n
+ *          and overrides function pointers present in itself and/or its parent class structures
+ *  @details This function publishes properties those can be set/get from application on GstVvas_XOverlay object.
+ *           And, while publishing a property it also declares type, range of acceptable values, default value,
+ *           readability/writability and in which GStreamer state a property can be changed.
+ */
 static void
 gst_vvas_xoverlay_class_init (GstVvas_XOverlayClass * klass)
 {
@@ -1491,11 +1083,6 @@ gst_vvas_xoverlay_class_init (GstVvas_XOverlayClass * klass)
   g_object_class_install_property (gobject_class, PROP_DISPLAY_CLOCK,
       g_param_spec_boolean ("display-clock", "display clock flag",
           "flag to display time stamp on frames", 0,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (gobject_class, PROP_USE_BBOX_ACCEL,
-      g_param_spec_boolean ("use-bbox-accel", "bbox hw acclerator flag",
-          "flag for whether to use hw accelerator or not", 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_CLOCK_FONT_NAME,
@@ -1545,8 +1132,12 @@ gst_vvas_xoverlay_class_init (GstVvas_XOverlayClass * klass)
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
-/* initialize the new element
- * initialize instance structure
+/**
+ *  @fn static void gst_vvas_xoverlay_init (GstVvas_XOverlay * self)
+ *  @param [in] self  - Handle to GstVvas_XOverlay instance
+ *  @return None
+ *  @brief  Initilizes GstVvas_XOverlay member variables to default values
+ *
  */
 static void
 gst_vvas_xoverlay_init (GstVvas_XOverlay * self)
@@ -1563,6 +1154,20 @@ gst_vvas_xoverlay_init (GstVvas_XOverlay * self)
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (btrans), TRUE);
 }
 
+/**
+ *  @fn static void gst_vvas_xoverlay_set_property (GObject * object, guint prop_id,
+ *                                                  const GValue * value, GParamSpec * pspec)
+ *  @param [in] object - Handle to GstVvas_XOverlay typecast to GObject
+ *  @param [in] prop_id - Property ID as defined in enum
+ *  @param [in] value - GValue which holds property value set by user
+ *  @param [in] pspec - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief This API stores values sent from the user in GstVvas_XOverlay object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_property function pointer and
+ *           this will be invoked when developer sets properties on GstVvas_XOverlay object.
+ *           Based on property value type, corresponding g_value_get_xxx API will be called to get 
+ *           property value from GValue handle.
+ */
 static void
 gst_vvas_xoverlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1585,9 +1190,6 @@ gst_vvas_xoverlay_set_property (GObject * object, guint prop_id,
     case PROP_DISPLAY_CLOCK:
       self->priv->display_clock = g_value_get_boolean (value);
       break;
-    case PROP_USE_BBOX_ACCEL:
-      self->priv->use_bbox_accel = g_value_get_boolean (value);
-      break;
     case PROP_CLOCK_FONT_NAME:
       self->priv->clock_font_name = g_value_get_uint (value);
       break;
@@ -1609,6 +1211,19 @@ gst_vvas_xoverlay_set_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ *  @fn static void gst_vvas_xoverlay_get_property (GObject * object, guint prop_id,
+ *                                                  const GValue * value, GParamSpec * pspec)
+ *  @param [in] object - Handle to GstVvas_XOverlay typecast to GObject
+ *  @param [in] prop_id - Property ID as defined in properties enum
+ *  @param [in] value - value GValue which holds property value set by user
+ *  @param [in] pspec - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief This API gets values from GstVvas_XOverlay object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::get_property function pointer and
+ *           this will be invoked when developer want gets properties from GstVvas_XOverlay object.
+ *           Based on property value type,corresponding g_value_set_xxx API will be called to set value of GValue type.
+ */
 static void
 gst_vvas_xoverlay_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -1627,9 +1242,6 @@ gst_vvas_xoverlay_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DISPLAY_CLOCK:
       g_value_set_boolean (value, self->priv->display_clock);
-      break;
-    case PROP_USE_BBOX_ACCEL:
-      g_value_set_boolean (value, self->priv->use_bbox_accel);
       break;
     case PROP_CLOCK_FONT_NAME:
       g_value_set_uint (value, self->priv->clock_font_name);
@@ -1656,10 +1268,14 @@ gst_vvas_xoverlay_get_property (GObject * object, guint prop_id, GValue * value,
 #define PACKAGE "vvas_xoverlay"
 #endif
 
+/* entry point to initialize the plug-in
+ * initialize the plug-in itself
+ * register the element factories and other features
+ */
 static gboolean
 plugin_init (GstPlugin * vvas_xoverlay)
 {
-  return gst_element_register (vvas_xoverlay, "vvas_xoverlay", GST_RANK_NONE,
+  return gst_element_register (vvas_xoverlay, "vvas_xoverlay", GST_RANK_PRIMARY,
       GST_TYPE_VVAS_XOVERLAY);
 }
 

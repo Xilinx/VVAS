@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -54,7 +55,7 @@
 #include <dlfcn.h>
 #include <gst/vvas/gstvvasallocator.h>
 #include <gst/vvas/gstvvasbufferpool.h>
-#include <vvas/xrt_utils.h>
+#include <vvas_core/vvas_device.h>
 #include <inttypes.h>
 #include <stdint.h>
 #ifdef XLNX_PCIe_PLATFORM
@@ -62,9 +63,14 @@
 #else
 #include <xrt/experimental/xrt-next.h>
 #endif
-#include "multi_scaler_hw.h"
 #include "gstvvas_xcompositor.h"
 #include <math.h>
+
+#include <gst/vvas/gstvvascoreutils.h>
+#include <vvas_core/vvas_context.h>
+#include <vvas_core/vvas_common.h>
+#include <vvas_core/vvas_scaler.h>
+
 #ifdef ENABLE_XRM_SUPPORT
 #include <xrm.h>
 #include <xrm_limits.h>
@@ -73,184 +79,394 @@
 #endif
 
 #ifdef XLNX_PCIe_PLATFORM
+
+/** @def DEFAULT_DEVICE_INDEX
+ *  @brief Setting default device index as -1 in PCIe Platform.
+ */
 #define DEFAULT_DEVICE_INDEX -1
-#define DEFAULT_KERNEL_NAME "scaler:{scaler_1}"
+
+/** @def DEFAULT_KERNEL_NAME
+ *  @brief Setting default kernel name as image_processing:{image_processing_1} in PCIe Platform.
+ */
+#define DEFAULT_KERNEL_NAME "image_processing:{image_processing_1}"
+
+/** @def NEED_DMABUF
+ *  @brief Disabling DMA buffers in PCIe Platform.
+ */
 #define NEED_DMABUF 0
 #else
-#define DEFAULT_DEVICE_INDEX 0  /* on Embedded only one device i.e. device 0 */
-#define DEFAULT_KERNEL_NAME "v_multi_scaler:{v_multi_scaler_1}"
+
+/** @def DEFAULT_DEVICE_INDEX
+ *  @brief Setting default device index as 0 in EDGE Platform.
+ */
+#define DEFAULT_DEVICE_INDEX 0
+
+/** @def DEFAULT_KERNEL_NAME
+ *  @brief Setting default kernel name as image_processing:{image_processing_1} in EDGE Platform.
+ */
+#define DEFAULT_KERNEL_NAME "image_processing:{image_processing_1}"
+
+/** @def NEED_DMABUF
+ *  @brief Enabling DMA buffers in EDGE Platform.
+ */
 #define NEED_DMABUF 1
 #endif
 
-#define MULTI_SCALER_TIMEOUT 1000
-#define ALIGN(size,align) (((size) + (align) - 1) & ~((align) - 1))
-#define DIV_AND_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
-#define VVAS_XCOMPOSITOR_BEST_FIT_DEFAULT FALSE
-#define VVAS_XCOMPOSITOR_AVOID_OUTPUT_COPY_DEFAULT FALSE
-#define VVAS_XCOMPOSITOR_ENABLE_PIPELINE_DEFAULT FALSE
-#define STOP_COMMAND ((gpointer)GINT_TO_POINTER (g_quark_from_string("STOP")))
-
-/*256x64 for specific use-case only*/
-#ifdef XLNX_PCIe_PLATFORM
-#define WIDTH_ALIGN 256
-#define HEIGHT_ALIGN 64
-#else
-#define WIDTH_ALIGN (8 * self->ppc)
-#define HEIGHT_ALIGN 1
+#ifndef DEFAULT_MEM_BANK
+/** @def DEFAULT_MEM_BANK
+ *  @brief Default Memory bank
+ */
+#define DEFAULT_MEM_BANK 0
 #endif
 
+/** @def VVAS_XCOMPOSITOR_BEST_FIT_DEFAULT
+ *  @brief Disabling best fit by default.
+ */
+#define VVAS_XCOMPOSITOR_BEST_FIT_DEFAULT FALSE
+
+/** @def VVAS_XCOMPOSITOR_AVOID_OUTPUT_COPY_DEFAULT
+ *  @brief Setting avoid output copy to false by default.
+ */
+#define VVAS_XCOMPOSITOR_AVOID_OUTPUT_COPY_DEFAULT FALSE
+
+/** @def VVAS_XCOMPOSITOR_ENABLE_PIPELINE_DEFAULT
+ *  @brief Setting the enable pipeline off by default.
+ */
+#define VVAS_XCOMPOSITOR_ENABLE_PIPELINE_DEFAULT FALSE
+
+/** @def STOP_COMMAND
+ *  @brief Macro to replace the STOP quark
+ */
+#define STOP_COMMAND ((gpointer)GINT_TO_POINTER (g_quark_from_string("STOP")))
+
+/** @def WIDTH_ALIGN
+ *  @brief Alignment for width must be 8 * pixel per clock.
+ */
+#define WIDTH_ALIGN (8 * self->ppc)
+
+/** @def HEIGHT_ALIGN
+ *  @brief Alignment for height.
+ */
+#define HEIGHT_ALIGN 1
+
 #define MEM_BANK 0
+
+/** @def DEFAULT_PAD_XPOS
+ *  @brief Setting default x position to 0.
+ */
 #define DEFAULT_PAD_XPOS   0
+
+/** @def DEFAULT_PAD_YPOS
+ *  @brief Setting default y position to 0.
+ */
 #define DEFAULT_PAD_YPOS   0
+
+/** @def DEFAULT_PAD_WIDTH
+ *  @brief Setting default width to -1.
+ */
 #define DEFAULT_PAD_WIDTH  -1
+
+/** @def DEFAULT_PAD_HEIGHT
+ *  @brief Setting default height to -1.
+ */
 #define DEFAULT_PAD_HEIGHT -1
+
+/** @def DEFAULT_PAD_ZORDER
+ *  @brief Setting default zorder to -1.
+ */
 #define DEFAULT_PAD_ZORDER -1
+
+/** @def DEFAULT_PAD_EOS
+ *  @brief Macro to disable the is_eos to false at initialization.
+ */
 #define DEFAULT_PAD_EOS false
 
+/** @def DEFAULT_VVAS_DEBUG_LEVEL
+ *  @brief Default debug level for VVAS Core
+ */
+#define DEFAULT_VVAS_DEBUG_LEVEL        2
+
+/** @def DEFAULT_VVAS_SCALER_DEBUG_LEVEL
+ *  @brief Default debug level for VVAS Core Scaler
+ */
+#define DEFAULT_VVAS_SCALER_DEBUG_LEVEL 2
+
+/** @def GST_TYPE_VVAS_XCOMPOSITOR_PAD
+ *  @brief Macro to get GstVvasXCompositorPad object type
+ */
 #define GST_TYPE_VVAS_XCOMPOSITOR_PAD \
     (gst_vvas_xcompositor_pad_get_type())
+
+/** @def GST_VVAS_XCOMPOSITOR_PAD
+ *  @brief Macro to typecast parent object to GstVvasXCompositorPad object
+ */
 #define GST_VVAS_XCOMPOSITOR_PAD(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VVAS_XCOMPOSITOR_PAD, \
 				GstVvasXCompositorPad))
+
+/** @def GST_VVAS_XCOMPOSITOR_PAD_CLASS
+ *  @brief Macro to typecast parent class object to GstVvasXCompositorPadClass object
+ */
 #define GST_VVAS_XCOMPOSITOR_PAD_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VVAS_XCOMPOSITOR_PAD,\
 			     GstVvasXCompositorPadClass))
+
+/** @def GST_IS_VVAS_XCOMPOSITOR_PAD
+ *  @brief Macro to validate whether object is of GstVvasXCompositorPad type
+ */
 #define GST_IS_VVAS_XCOMPOSITOR_PAD(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VVAS_XCOMPOSITOR_PAD))
+
+/** @def GST_IS_VVAS_XCOMPOSITOR_PAD_CLASS
+ *  @brief Macro to validate whether object class  is of GstVvasXCompositorPadClass type
+ */
 #define GST_IS_VVAS_XCOMPOSITOR_PAD_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VVAS_XCOMPOSITOR_PAD))
+
+/** @def GST_VVAS_XCOMPOSITOR_PAD_CAST
+ *  @brief Macro to typecast parent object to GstVvasXCompositorPad object
+ */
 #define GST_VVAS_XCOMPOSITOR_PAD_CAST(obj) \
     ((GstVvasXCompositorPad *)(obj))
 
-#ifdef XLNX_PCIe_PLATFORM       /* default taps for PCIe platform 12 */
+#ifdef XLNX_PCIe_PLATFORM
+
+/** @def VVAS_XCOMPOSITOR_DEFAULT_NUM_TAPS
+ *  @brief Setting number of taps value to 12 in PCIe Platform.
+ */
 #define VVAS_XCOMPOSITOR_DEFAULT_NUM_TAPS 12
+
+/** @def VVAS_XCOMPOSITOR_DEFAULT_PPC
+ *  @brief Setting pixels per clock value to 4 in PCIe Platform.
+ */
 #define VVAS_XCOMPOSITOR_DEFAULT_PPC 4
+
+/** @def VVAS_XCOMPOSITOR_SCALE_MODE
+ *  @brief Setting sacle mode value to 2 (Polyphase) in PCIe Platform.
+ */
 #define VVAS_XCOMPOSITOR_SCALE_MODE 2
-#else /* default taps for Embedded platform 6 */
+#else
+
+/** @def VVAS_XCOMPOSITOR_DEFAULT_NUM_TAPS
+ *  @brief Setting number of taps value to 6 in EDGE Platform.
+ */
 #define VVAS_XCOMPOSITOR_DEFAULT_NUM_TAPS 6
+
+/** @def VVAS_XCOMPOSITOR_DEFAULT_PPC
+ *  @brief Setting pixels per clock value to 2 in EDGE Platform.
+ */
 #define VVAS_XCOMPOSITOR_DEFAULT_PPC 2
+
+/** @def VVAS_XCOMPOSITOR_SCALE_MODE
+ *  @brief Setting sacle mode value to 0 (Bilinear) in EDGE Platform.
+ */
 #define VVAS_XCOMPOSITOR_SCALE_MODE 0
 #endif
 
+/** @def VVAS_XCOMPOSITOR_NUM_TAPS_TYPE
+ *  @brief Macro to get GstVvasXCompositorNumTaps object type
+ */
 #define VVAS_XCOMPOSITOR_NUM_TAPS_TYPE (vvas_xcompositor_num_taps_type ())
+
+/** @def VVAS_XCOMPOSITOR_PPC_TYPE
+ *  @brief Macro to get GstVvasXCompositorPPC object type
+ */
 #define VVAS_XCOMPOSITOR_PPC_TYPE (vvas_xcompositor_ppc_type ())
 #ifdef XLNX_PCIe_PLATFORM
+
+/** @def VVAS_XCOMPOSITOR_DEFAULT_COEF_LOAD_TYPE
+ *  @brief Setting default coefficient load type to Auto Generate in PCIe platform.
+ */
 #define VVAS_XCOMPOSITOR_DEFAULT_COEF_LOAD_TYPE COEF_AUTO_GENERATE
 #else
+
+/** @def VVAS_XCOMPOSITOR_DEFAULT_COEF_LOAD_TYPE
+ *  @brief Setting default coefficient load type to Fixed in EDGE platform.
+ */
 #define VVAS_XCOMPOSITOR_DEFAULT_COEF_LOAD_TYPE COEF_FIXED
 #endif
 
+/** @def VVAS_XCOMPOSITOR_COEF_LOAD_TYPE
+ *  @brief Macro to get GstVvasXCompositorCoefLoad object type
+ */
 #define VVAS_XCOMPOSITOR_COEF_LOAD_TYPE (vvas_xcompositor_coef_load_type ())
-#define gst_vvas_xcompositor_sinkpad_at_index(self, idx) ((GstVvasXCompositorPad *)(g_list_nth ((self)->sinkpads, idx))->data)
+
+/** @def gst_vvas_xcompositor_sinkpad_at_index(self, idx)
+ *  @brief Macro to get the sinkpad at the provided index
+ */
+#define gst_vvas_xcompositor_sinkpad_at_index(self, idx) \
+	((GstVvasXCompositorPad *)(g_list_nth ((self)->sinkpads, idx))->data)
+
+/** @def gst_vvas_xcompositor_parent_class
+ *  @brief Macro to declare a static variable named parent_class pointing to the parent class
+ */
 #define gst_vvas_xcompositor_parent_class parent_class
+
+/** @def GST_CAT_DEFAULT
+ *  @brief Defines a static GstDebugCategory global variable "gst_vvas_xcompositor_debug"
+ */
 #define GST_CAT_DEFAULT gst_vvas_xcompositor_debug
 
 typedef struct _GstVvasXCompositorPad GstVvasXCompositorPad;
 typedef struct _GstVvasXCompositorPadClass GstVvasXCompositorPadClass;
 
-/*properties*/
+/** @enum VvasXCompositorProperties
+ *  @brief  Contains properties related to VVAS Compositor
+ */
 enum
 {
+  /** Default */
   PROP_0,
+  /** Property to set xclbin path */
   PROP_XCLBIN_LOCATION,
+  /** Property to set kernel name */
   PROP_KERN_NAME,
 #ifdef XLNX_PCIe_PLATFORM
+  /** Property to set device index */
   PROP_DEVICE_INDEX,
 #endif
+  /** Property to set input memory bank */
   PROP_IN_MEM_BANK,
+  /** Property to set output memory bank */
   PROP_OUT_MEM_BANK,
+  /** Property to set pixels per clock */
   PROP_PPC,
+  /** Property to set scale mode */
   PROP_SCALE_MODE,
+  /** Property to set number of taps */
   PROP_NUM_TAPS,
+  /** Property to set coefficient loading type */
   PROP_COEF_LOADING_TYPE,
+  /** Property to set best fit */
   PROP_BEST_FIT,
+  /** Property to set avoid output copy */
   PROP_AVOID_OUTPUT_COPY,
+  /** Property to set enable pipeline */
   PROP_ENABLE_PIPELINE,
 #ifdef ENABLE_XRM_SUPPORT
+  /** Property to set xrm reservation id */
   PROP_RESERVATION_ID,
 #endif
 };
 
-/* pad properties */
+/** @enum VvasXCompositorPadProperties
+ *  @brief  Contains properties related to VVAS Compositor Pad
+ */
 enum
 {
+  /** Default */
   PROP_PAD_0,
+  /** Pad property to set x position */
   PROP_PAD_XPOS,
+  /** Pad property to set y position */
   PROP_PAD_YPOS,
+  /** Pad property to set width */
   PROP_PAD_WIDTH,
+  /** Pad property to set height */
   PROP_PAD_HEIGHT,
+  /** Pad property to set zorder */
   PROP_PAD_ZORDER
 };
 
+/** @struct _GstVvasXCompositorPad
+ *  @brief  The opaque GstVavsXCompositorPad structure.
+ */
 struct _GstVvasXCompositorPad
 {
+  /** Parent Pad */
   GstVideoAggregatorPad compositor_pad;
-  guint xpos, ypos;
-  gint width, height;
+  /** Points to current frame's x position on output frame */
+  guint xpos;
+  /** Points to current frame's y position on output frame */
+  guint ypos;
+  /** Points to current frame's width on output frame */
+  gint width;
+  /** Points to current frame's height on output frame */
+  gint height;
+  /** Points to current pad's index */
   guint index;
+  /** Points to current frame's zorder on output frame */
   gint zorder;
+  /** Flag indicating End Of Stream */
   gboolean is_eos;
+  /** Pointer holding current pad's pool */
   GstBufferPool *pool;
+  /** Pointer holding current pad's video info */
   GstVideoInfo *in_vinfo;
+  /** Whether input buffer needs to be imported or not */
   gboolean validate_import;
 };
 
+/** @struct _GstVvasXCompositorPadClass
+ *  @brief  GstVvasXCompositorPadClass subclass for pads managed by GstVideoAggregatorPadClass
+ */
 struct _GstVvasXCompositorPadClass
 {
+  /** subclass */
   GstVideoAggregatorPadClass compositor_pad_class;
 };
 
+/** @struct _GstVvasXCompositorPrivate
+ *  @brief  Holds private members related VVAS Compositor instance
+ */
 struct _GstVvasXCompositorPrivate
 {
+  /** TRUE if internal buffers are allocated */
   gboolean is_internal_buf_allocated;
+  /** Video Information of the incoming streams */
   GstVideoInfo *in_vinfo[MAX_CHANNELS];
+  /** Video Information of the outgoing streams */
   GstVideoInfo *out_vinfo;
-  uint32_t meta_in_stride[MAX_CHANNELS];
+  /** Handle to FPGA device */
   vvasDeviceHandle dev_handle;
-  vvasKernelHandle kern_handle;
-  vvasRunHandle run_handle;
-  uint32_t cu_index;
-  bool is_coeff;
+  /** xclbin Id */
   uuid_t xclbinId;
-  xrt_buffer Hcoff[MAX_CHANNELS];
-  xrt_buffer Vcoff[MAX_CHANNELS];
+  /** Output Buffer to store the aggregated frame */
   GstBuffer *outbuf;
-  GstBuffer *inbufs[MAX_CHANNELS];      //to store input buffers from aggregate_frames
-  xrt_buffer msPtr[MAX_CHANNELS];
-  guint64 phy_in_0[MAX_CHANNELS];
-  guint64 phy_in_1[MAX_CHANNELS];
-  guint64 phy_in_2[MAX_CHANNELS];
+  /** To store input buffers from incoming streams */
+  GstBuffer *inbufs[MAX_CHANNELS];
+  /** Pad index of the Z-order */
   gint pad_of_zorder[MAX_CHANNELS];
-  guint64 phy_out_0;
-  guint64 phy_out_1;
-  guint64 phy_out_2;
-  guint64 out_offset;
+  /** Pool of output buffers */
   GstBufferPool *output_pool;
+  /** Flag to copy the buffer to downstream element */
   gboolean need_copy;
+  /** Thread to copy the input to speed up the pipeline */
   GThread *input_copy_thread;
+  /** Array of input queues */
   GAsyncQueue *copy_inqueue[MAX_CHANNELS];
+  /** Array of output queues */
   GAsyncQueue *copy_outqueue[MAX_CHANNELS];
+  /** Flag indicating first frame or not */
   gboolean is_first_frame[MAX_CHANNELS];
-
-#ifdef ENABLE_PPE_SUPPORT
-  gfloat alpha_r;
-  gfloat alpha_g;
-  gfloat alpha_b;
-  gfloat beta_r;
-  gfloat beta_g;
-  gfloat beta_b;
-#endif
+  /** VVAS Core Context */
+  VvasContext *vvas_ctx;
+  /** VVAS Core Scaler Context */
+  VvasScaler *vvas_scaler;
+  /** Reference of input VvasVideoFrames */
+  VvasVideoFrame *input_frames[MAX_CHANNELS];
+  /** Reference of output VvasVideoFrame */
+  VvasVideoFrame *output_frame;
 
 #ifdef ENABLE_XRM_SUPPORT
+  /** XRM Context */
   xrmContext xrm_ctx;
+  /** Pointer to structure holding compute resource */
   xrmCuResource *cu_resource;
+  /** Pointer to structure (version 2) holding compute resource */
   xrmCuResourceV2 *cu_resource_v2;
+  /** Current load for the kernel */
   gint cur_load;
+  /** XRM reservation id */
   guint64 reservation_id;
+  /** Flag indicating whether xrm has error or not */
   gboolean has_error;
 #endif
 };
 
+/**
+ *  @brief Defines plugin's source pad template.
+ */
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -258,6 +474,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         ("{RGBx, YUY2, r210, Y410, NV16, NV12, RGB, v308, I422_10LE, GRAY8, \
 	NV12_10LE32, BGRx, GRAY10_LE32, BGRx, UYVY, BGR, RGBA, BGRA, I420, GBR}")));
 
+/**
+ *  @brief Defines plugin's sink pad template.
+ */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
@@ -289,43 +508,57 @@ static GstFlowReturn gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator
 static GstFlowReturn
 gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
     GstBuffer ** outbuffer);
-void copy_filt_set (int16_t dest_filt[64][12], int set);
-void Generate_cardinal_cubic_spline (int src, int dst, int filterSize,
-    int64_t B, int64_t C, int16_t * CCS_filtCoeff);
 static gboolean vvas_xcompositor_open (GstVvasXCompositor * self);
-static void
-xlnx_multiscaler_coff_fill (void *Hcoeff_BufAddr, void *Vcoeff_BufAddr,
-    float scale);
-static gboolean
-vvas_xcompositor_prepare_coefficients_with_12tap (GstVvasXCompositor * self,
-    guint chan_id);
 static gpointer vvas_xcompositor_input_copy_thread (gpointer data);
-static guint
-vvas_xcompositor_get_padding_right (GstVvasXCompositor * self,
-    GstVideoInfo * info);
 static gboolean
 vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self);
 static void
 vvas_xcompositor_adjust_zorder_after_eos (GstVvasXCompositor * self,
     guint index);
 
-#ifdef XLNX_PCIe_PLATFORM
-static gboolean xlnx_abr_coeff_syncBO (GstVvasXCompositor * self);
-#endif
-
 GType gst_vvas_xcompositor_pad_get_type (void);
+
+/** @brief  Glib's convenience macro for GstVvasXCompositor type implementation.
+ *  @details This macro does below tasks:\n
+ *                  - Declares a class initialization function with prefix gst_vvas_xcompositor \n
+ *                  - Declares an instance initialization function\n
+ *                  - A static variable named gst_vvas_allocator_parent_class pointing to the GST_VIDEO_AGGREGATOR
+ *                  parrnt class\n
+ *                  - Defines a gst_vvas_xcompositor_get_type() function with below tasks\n
+ *                  - Initializes GTypeInfo function pointers\n
+ *                  - Registers GstVvasXCompositorPrivate as private structure to GstVvasXCompositor type\n
+ *                  - Adds interface to access the child properties from the parent element
+ */
 
 G_DEFINE_TYPE_WITH_CODE (GstVvasXCompositor, gst_vvas_xcompositor,
     GST_TYPE_VIDEO_AGGREGATOR, G_ADD_PRIVATE (GstVvasXCompositor)
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_vvas_xcompositor_child_proxy_init));
 
+/** @brief  Glib's convenience macro for GstVvasXCompositorPad type implementation.
+ *  @details This macro does below tasks:\n
+ *                  - Declares a class initialization function with prefix gst_vvas_xcompositor_pad \n
+ *                  - Declares an instance initialization function\n
+ */
 G_DEFINE_TYPE (GstVvasXCompositorPad, gst_vvas_xcompositor_pad,
     GST_TYPE_VIDEO_AGGREGATOR_PAD);
 
+/**
+ *  @brief *  Initialize new debug category vvas_xcompositor for logging
+ */
 GST_DEBUG_CATEGORY (gst_vvas_xcompositor_debug);
+
+/**
+ *  @brief Defines a static GstDebugCategory global variable with name GST_CAT_PERFORMANCE for
+ *  performance logging purpose
+ */
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
+/**
+ *  @fn static GType vvas_xcompositor_num_taps_type (void)
+ *  @return registered GType
+ *  @brief  This API registers a new static enumeration type with the name GstVvasXCompositorNumTapsType
+ */
 static GType
 vvas_xcompositor_num_taps_type (void)
 {
@@ -344,6 +577,11 @@ vvas_xcompositor_num_taps_type (void)
   return num_tap;
 }
 
+/**
+ *  @fn static GType vvas_xcompositor_ppc_type (void)
+ *  @return registered GType
+ *  @brief  This API registers a new static enumeration type with the name GstVvasXCompositorPPCType
+ */
 static GType
 vvas_xcompositor_ppc_type (void)
 {
@@ -361,6 +599,11 @@ vvas_xcompositor_ppc_type (void)
   return num_ppc;
 }
 
+/**
+ *  @fn static GType vvas_xcompositor_coef_load_type (void)
+ *  @return registered GType
+ *  @brief  This API registers a new static enumeration type with the name GstVvasXCompositorCoefLoadType
+ */
 static GType
 vvas_xcompositor_coef_load_type (void)
 {
@@ -378,6 +621,14 @@ vvas_xcompositor_coef_load_type (void)
   return load_type;
 }
 
+/**
+ *  @fn static guint vvas_xcompositor_get_stride (GstVideoInfo * info, guint width)
+ *  @param [in] *info	- Information describing video properties.
+ *  @param [in] width	- width of the video.
+ *  @return on Success stride value\n 
+ *          on Failure 0.
+ *  @brief  This API calculates the stride value based on video format and video width.
+ */
 static guint
 vvas_xcompositor_get_stride (GstVideoInfo * info, guint width)
 {
@@ -422,6 +673,16 @@ vvas_xcompositor_get_stride (GstVideoInfo * info, guint width)
   return stride;
 }
 
+/**
+ *  @fn static gboolean vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
+ *  @param [in] agg         - Handle to GstAggregator typecasted to GObject.
+ *  @param [in] query       - Response for the allocation query.
+ *  @return On Success returns TRUE
+ *          On Failure returns FALSE
+ *  @brief  This function will decide allocation strategy based on the preference from downstream element.
+ *  @details The proposed query will be parsed through, verified if the proposed pool is VVAS and alignments
+ *           are quoted. Otherwise it will be discarded and new pool,allocator will be created.
+ */
 static gboolean
 vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
@@ -437,8 +698,9 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   GstVideoInfo out_vinfo;
   guint chan_id;
 
-  /* we got configuration from our peer or the decide_allocation method,
-   * parse them */
+ /** we got configuration from our peer or the decide_allocation method,
+  *  parse them 
+  */
   if (gst_query_get_n_allocation_params (query) > 0) {
     /* try the allocator */
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
@@ -450,12 +712,14 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     gst_allocation_params_init (&params);
   }
 
+  /* Fetch the video information from requested caps */
   gst_query_parse_allocation (query, &outcaps, NULL);
   if (outcaps && !gst_video_info_from_caps (&out_vinfo, outcaps)) {
     GST_ERROR_OBJECT (self, "failed to get video info from outcaps");
     goto error;
   }
   self->priv->out_vinfo = gst_video_info_copy (&out_vinfo);
+  /* Get the pool parameters in query */
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     size = MAX (size, out_vinfo.size);
@@ -463,6 +727,7 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     if (min == 0)
       min = 3;
   } else {
+    /* If there are no proposed pools create a new pool */
     pool = NULL;
     min = 3;
     max = 0;
@@ -470,8 +735,10 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     update_pool = FALSE;
   }
 
-  /* Check if the proposed pool is VVAS Buffer Pool and stride is aligned with (8 * ppc)
-   * If otherwise, discard the pool. Will create a new one */
+ /** Check if the proposed pool is VVAS Buffer Pool and stride
+  *  is aligned with (8 * ppc)
+  *  If otherwise, discard the pool. Will create a new one
+  */
   if (pool) {
     GstVideoAlignment video_align = { 0, };
     guint padded_width = 0;
@@ -482,8 +749,10 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
             GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
       gst_buffer_pool_config_get_video_alignment (config, &video_align);
 
-      /* We have adding padding_right and padding_left in pixels.
-       * We need to convert them to bytes for finding out the complete stride with alignment */
+      /** We have adding padding_right and padding_left in pixels.
+       *  We need to convert them to bytes for finding out the complete stride
+       *  with alignment
+       */
       padded_width =
           out_vinfo.width + video_align.padding_right +
           video_align.padding_left;
@@ -495,8 +764,8 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
         return FALSE;
       gst_structure_free (config);
       config = NULL;
-      multiscaler_req_stride = 8 * self->ppc;
-
+      multiscaler_req_stride = WIDTH_ALIGN;
+      /* Discard the pool to create a new pool with alignment requirements */
       if (stride % multiscaler_req_stride) {
         GST_WARNING_OBJECT (self, "Discarding the propsed pool, "
             "Alignment not matching with 8 * self->ppc");
@@ -506,13 +775,14 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
 
         self->out_stride_align = multiscaler_req_stride;
         self->out_elevation_align = 1;
-        GST_DEBUG_OBJECT (self, "Going to allocate pool with stride_align %d and \
-			elevation_align %d", self->out_stride_align,
+        GST_DEBUG_OBJECT (self, "Going to allocate pool with stride_align %d"
+            "and elevation_align %d", self->out_stride_align,
             self->out_elevation_align);
       }
     } else {
-      /* VVAS Buffer Pool but no alignment information.
-       * Discard to create pool with scaler alignment requirements*/
+      /** VVAS Buffer Pool but no alignment information.
+       *  Discard to create pool with scaler alignment requirements
+       */
       if (config) {
         gst_structure_free (config);
         config = NULL;
@@ -542,7 +812,7 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
 #endif
 
   if (pool && !GST_IS_VVAS_BUFFER_POOL (pool)) {
-    /* create own pool */
+    /* If pool is not a vvas pool , discard it to create a new pool */
     gst_object_unref (pool);
     pool = NULL;
     update_pool = FALSE;
@@ -560,7 +830,7 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   if (!allocator) {
     /* making vvas allocator for the HW mode without dmabuf */
     allocator = gst_vvas_allocator_new (self->dev_index,
-        NEED_DMABUF, self->out_mem_bank, self->priv->kern_handle);
+        NEED_DMABUF, self->out_mem_bank);
     params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
     params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
     GST_INFO_OBJECT (self, "creating new xrt allocator %" GST_PTR_FORMAT
@@ -576,8 +846,10 @@ next:
     gst_query_add_allocation_param (query, allocator, &params);
 
 
-  /* If there is no pool allignment requirement from downstream or if scaling dimention
-   * is not aligned to (8 * ppc), then we will create a new pool*/
+  /** If there is no pool allignment requirement from downstream or
+   *  if scaling dimension
+   *  is not aligned to (8 * ppc), then we will create a new pool
+   */
 
   if (!pool && (self->out_stride_align == 1)
       && ((out_vinfo.stride[0] % WIDTH_ALIGN)
@@ -589,22 +861,24 @@ next:
 
   if (!pool) {
     GstVideoAlignment align;
-
+    /* Create a new pool, if pool is discarded */
     pool =
         gst_vvas_buffer_pool_new (self->out_stride_align,
         self->out_elevation_align);
     GST_INFO_OBJECT (self, "created new pool %p %" GST_PTR_FORMAT, pool, pool);
 
+    /* Update the newly created pool at 0th index,
+     * if there are more pools in query */
+    update_pool = TRUE;
     config = gst_buffer_pool_get_config (pool);
     gst_video_alignment_reset (&align);
-    align.padding_top = 0;
-    align.padding_left = 0;
-    align.padding_right = vvas_xcompositor_get_padding_right (self, &out_vinfo);
     align.padding_bottom =
         ALIGN (GST_VIDEO_INFO_HEIGHT (&out_vinfo),
         self->out_elevation_align) - GST_VIDEO_INFO_HEIGHT (&out_vinfo);
-    if (align.padding_right == -1)
-      goto error;
+    for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&out_vinfo); idx++) {
+      align.stride_align[idx] = (self->out_stride_align - 1);
+    }
+
     gst_video_info_align (&out_vinfo, &align);
     /* size updated in vinfo based on alignment */
     size = out_vinfo.size;
@@ -635,8 +909,10 @@ next:
       goto error;
     }
   }
-  /*  Since self->out_stride_align is common for all channels
-   *  reset the output stride to 1 (its default), so that other channels are not affected */
+  /**  Since self->out_stride_align is common for all channels
+   *   reset the output stride to 1 (its default), so that other channels
+   *   are not affected
+   */
   self->out_stride_align = 1;
   self->out_elevation_align = 1;
 /* avoid output frames copy when downstream supports video meta */
@@ -650,13 +926,13 @@ next:
     GST_INFO_OBJECT (self, "Don't copy output frames");
   }
   GST_INFO_OBJECT (self,
-      "allocated pool %p with parameters : size %u, min_buffers = %u, max_buffers = %u",
-      pool, size, min, max);
+      "allocated pool %p with parameters : size %u, min_buffers = %u, "
+      "max_buffers = %u", pool, size, min, max);
 
   if (allocator)
     gst_object_unref (allocator);
 
-  if (update_pool)
+  if (update_pool && (gst_query_get_n_allocation_pools (query) > 0))
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
@@ -685,9 +961,16 @@ next:
       priv->copy_outqueue[chan_id] =
           g_async_queue_new_full ((void (*)(void *)) gst_buffer_unref);
     }
+    /** create a new copy thread to copy the input buffers for
+     *  improving performance
+     */
     priv->input_copy_thread = g_thread_new ("compositor-input-copy-thread",
         vvas_xcompositor_input_copy_thread, self);
   }
+
+  /** When all the pools are configured successfully, open the resources for
+   *  compositor plugin
+   */
   if (!vvas_xcompositor_open (self))
     return FALSE;
 
@@ -708,6 +991,15 @@ error:
 }
 
 #ifdef ENABLE_XRM_SUPPORT
+
+/**
+ *  @fn static gchar * vvas_xcompositor_prepare_request_json_string (GstVvasXCompositor * compositor)
+ *  @param [in] compositor  - Handle to GstVvasXCompositor object.
+ *  @return On Success returns prepared json string\n
+ *          On Failure returns NULL
+ *  @brief  This API prepares a json string based on input and output video information, which is later used
+ *          in calculating xrm load.
+ */
 static gchar *
 vvas_xcompositor_prepare_request_json_string (GstVvasXCompositor * compositor)
 {
@@ -859,6 +1151,14 @@ error:
   return NULL;
 }
 
+/**
+ *  @fn static gchar * vvas_xcompositor_calculate_load (GstVvasXCompositor * self, gint * load)
+ *  @param [in] self    - Handle to GstVvasXCompositor object.
+ *  @parm [out] load    - Pointer to store the calculated load.
+ *  @return On Success returns True
+ *          On Failure returns False
+ *  @brief  This API calculates the XRM load
+ */
 static gboolean
 vvas_xcompositor_calculate_load (GstVvasXCompositor * self, gint * load)
 {
@@ -919,8 +1219,18 @@ vvas_xcompositor_calculate_load (GstVvasXCompositor * self, gint * load)
   return TRUE;
 }
 
+/**
+ *  @fn static gboolean vvas_xcompositor_allocate_xrm_resource (GstVvasXCompositor * self, gint compositor_load)
+ *  @param [in] self                - Handle to GstVvasXCompositor object.
+ *  @param [in] compositor_load     - calculated xrm load
+ *  @return On Success returns True
+ *          On Failure returns False
+ *  @brief  This API allocates the compute unit resources using XRM APIs.
+ *  @details This API allocates the compute unit resources on scaler kernel on different
+ *            available devices using XRM APIS.
+ */
 static gboolean
-vvas_xcompositor_allocate_resource (GstVvasXCompositor * self,
+vvas_xcompositor_allocate_xrm_resource (GstVvasXCompositor * self,
     gint compositor_load)
 {
   GstVvasXCompositorPrivate *priv = self->priv;
@@ -929,10 +1239,12 @@ vvas_xcompositor_allocate_resource (GstVvasXCompositor * self,
   GST_INFO_OBJECT (self, "going to request %d%% load using xrm",
       (compositor_load * 100) / XRM_MAX_CU_LOAD_GRANULARITY_1000000);
 
-  if (getenv ("XRM_RESERVE_ID") || priv->reservation_id) {      /* use reservation_id to allocate compositor */
+  if (getenv ("XRM_RESERVE_ID") || priv->reservation_id) {
+    /* use reservation_id to allocate compositor */
     int xrm_reserve_id = 0;
     xrmCuPropertyV2 compositor_prop;
     xrmCuResourceV2 *cu_resource;
+    guint k_name_len;
 
     memset (&compositor_prop, 0, sizeof (xrmCuPropertyV2));
 
@@ -955,7 +1267,12 @@ vvas_xcompositor_allocate_resource (GstVvasXCompositor * self,
 
     compositor_prop.poolId = xrm_reserve_id;
 
-    strcpy (compositor_prop.kernelName, strtok (self->kern_name, ":"));
+    k_name_len = strchr (self->kern_name, ':') - self->kern_name;
+
+    if (!k_name_len || (k_name_len >= XRM_MAX_NAME_LEN)) {
+      return FALSE;
+    }
+    strncpy (compositor_prop.kernelName, self->kern_name, k_name_len);
     strcpy (compositor_prop.kernelAlias, "SCALER_MPSOC");
     compositor_prop.devExcl = false;
     compositor_prop.requestLoad =
@@ -983,13 +1300,14 @@ vvas_xcompositor_allocate_resource (GstVvasXCompositor * self,
     }
 
     self->dev_index = cu_resource->deviceId;
-    priv->cu_index = cu_resource->cuId;
     uuid_copy (priv->xclbinId, cu_resource->uuid);
     priv->cu_resource_v2 = cu_resource;
 
-  } else {                      /* use user specified device to allocate compositor */
+  } else {
+    /* use user specified device to allocate compositor */
     xrmCuProperty compositor_prop;
     xrmCuResource *cu_resource;
+    guint k_name_len;
 
     memset (&compositor_prop, 0, sizeof (xrmCuProperty));
 
@@ -1004,8 +1322,12 @@ vvas_xcompositor_allocate_resource (GstVvasXCompositor * self,
       cu_resource = priv->cu_resource;
     }
 
+    k_name_len = strchr (self->kern_name, ':') - self->kern_name;
 
-    strcpy (compositor_prop.kernelName, strtok (self->kern_name, ":"));
+    if (!k_name_len || (k_name_len >= XRM_MAX_NAME_LEN)) {
+      return FALSE;
+    }
+    strncpy (compositor_prop.kernelName, self->kern_name, k_name_len);
     strcpy (compositor_prop.kernelAlias, "SCALER_MPSOC");
     compositor_prop.devExcl = false;
     compositor_prop.requestLoad =
@@ -1029,71 +1351,77 @@ vvas_xcompositor_allocate_resource (GstVvasXCompositor * self,
     }
 
     self->dev_index = cu_resource->deviceId;
-    priv->cu_index = cu_resource->cuId;
     uuid_copy (priv->xclbinId, cu_resource->uuid);
     priv->cu_resource = cu_resource;
   }
 
-
   return TRUE;
 }
-#endif
 
+/**
+ *  @fn static gboolean vvas_xcompositor_destroy_xrm_resource (GstVvasXCompositor * self)
+ *  @param [in] self  - Handle to GstVvasXCompositor instance.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  Cleans up XRM and XRT context.
+ *  @details Cleans up XRM and XRT context.
+ */
 static gboolean
-vvas_xcompositor_allocate_internal_buffers (GstVvasXCompositor * self)
+vvas_xcompositor_destroy_xrm_resource (GstVvasXCompositor * self)
 {
   GstVvasXCompositorPrivate *priv = self->priv;
-  gint chan_id, iret;
+  gboolean has_error = FALSE;
+  gint iret;
 
-  GST_INFO_OBJECT (self, "allocating internal buffers at mem bank %d",
-      self->in_mem_bank);
-
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-    iret =
-        vvas_xrt_alloc_xrt_buffer (priv->dev_handle, COEFF_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->Hcoff[chan_id]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate horizontal coefficients command buffer..");
-      goto error;
+  if (priv->cu_resource_v2) {
+    gboolean bret;
+    /* Release XRM Compute Unit resource back to pool */
+    bret = xrmCuReleaseV2 (priv->xrm_ctx, priv->cu_resource_v2);
+    if (!bret) {
+      GST_ERROR_OBJECT (self, "failed to release CU");
+      has_error = TRUE;
     }
-
-    iret =
-        vvas_xrt_alloc_xrt_buffer (priv->dev_handle, COEFF_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->Vcoff[chan_id]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate vertical coefficients command buffer..");
-      goto error;
+    /* Clean up XRM context */
+    iret = xrmDestroyContext (priv->xrm_ctx);
+    if (iret != XRM_SUCCESS) {
+      GST_ERROR_OBJECT (self, "failed to destroy xrm context");
+      has_error = TRUE;
     }
-
-    iret =
-        vvas_xrt_alloc_xrt_buffer (priv->dev_handle, DESC_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->msPtr[chan_id]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate vertical coefficients command buffer..");
-      goto error;
-    }
+    free (priv->cu_resource_v2);
+    priv->cu_resource_v2 = NULL;
+    GST_INFO_OBJECT (self, "released CU and destroyed xrm context");
   }
-#ifdef DEBUG
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-    printf ("DESC phy %lx  virt  %p \n", priv->msPtr[chan_id].phy_addr,
-        priv->msPtr[chan_id].user_ptr);
-    printf ("HCoef phy %lx  virt  %p \n", priv->Hcoff[chan_id].phy_addr,
-        priv->Hcoff[i].user_ptr);
-    printf ("VCoef phy %lx  virt  %p \n", priv->Vcoff[chan_id].phy_addr,
-        priv->Vcoff[chan_id].user_ptr);
-  }
-#endif
-  return TRUE;
 
-error:
-  GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT, NULL,
-      ("failed to allocate memory"));
-  return FALSE;
+  if (priv->cu_resource) {
+    gboolean bret;
+    /* Release XRM Compute Unit resource back to pool */
+    bret = xrmCuRelease (priv->xrm_ctx, priv->cu_resource);
+    if (!bret) {
+      GST_ERROR_OBJECT (self, "failed to release CU");
+      has_error = TRUE;
+    }
+    /* Clean up XRM context */
+    iret = xrmDestroyContext (priv->xrm_ctx);
+    if (iret != XRM_SUCCESS) {
+      GST_ERROR_OBJECT (self, "failed to destroy xrm context");
+      has_error = TRUE;
+    }
+    free (priv->cu_resource);
+    priv->cu_resource = NULL;
+    GST_INFO_OBJECT (self, "released CU and destroyed xrm context");
+  }
+
+  return has_error ? FALSE : TRUE;
 }
+#endif
 
+/**
+ *  @fn static void vvas_xcompositor_adjust_zorder_after_eos (GstVvasXCompositor * self, guint pad_index)
+ *  @param [in] self  		- pointer to the vvas compositor instance.
+ *  @param [in] pad_index 	- the index of the pad that got eos.
+ *  @return None.
+ *  @brief  This API adjusts the Z-order of the pads when a pad receives eos.
+ *          It moves the eos pad to bottom of all the pads.
+ */
 static void
 vvas_xcompositor_adjust_zorder_after_eos (GstVvasXCompositor * self,
     guint pad_index)
@@ -1113,6 +1441,12 @@ vvas_xcompositor_adjust_zorder_after_eos (GstVvasXCompositor * self,
         zorder_index, self->priv->pad_of_zorder[zorder_index]);
 }
 
+/**
+ *  @fn static gboolean vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self)
+ *  @param [in] *self  - pointer to the vvas compositor instance.
+ *  @return TRUE on success.\nFALSE on failure.
+ *  @brief  This API fills the Z-order if it is not set from the command line pad properties .
+ */
 static gboolean
 vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self)
 {
@@ -1125,7 +1459,7 @@ vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self)
       (gint *) malloc (sizeof (gint) * self->num_request_pads);
   gint *unfilled_pads_data =
       (gint *) malloc (sizeof (gint) * self->num_request_pads);
-  /* Initialising  missing_zorders_list list from 0 to number of request pads */
+  /* Initializing  missing_zorders_list list from 0 to number of request pads */
   for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
     missing_zorders_data[chan_id] = chan_id;
     missing_zorders_list =
@@ -1139,8 +1473,8 @@ vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self)
       zorder[index] = pad->zorder;
     else {
       GST_ERROR_OBJECT (self,
-          "zorder value %d of pad sink_%d exceeding current limit %d or invalid",
-          pad->zorder, index, self->num_request_pads - 1);
+          "zorder value %d of pad sink_%d exceeding current limit %d "
+          "or invalid", pad->zorder, index, self->num_request_pads - 1);
       g_free (missing_zorders_data);
       g_free (unfilled_pads_data);
       return FALSE;
@@ -1153,7 +1487,9 @@ vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self)
           g_list_append (unfilled_pads_list,
           (gpointer) (&unfilled_pads_data[index]));
 
-    /* Removing already assigned zorders from already initialised missing list */
+    /** Removing already assigned z-orders from already
+     *  initialized missing list
+     */
     else {
       missing_zorders_list =
           g_list_remove (missing_zorders_list,
@@ -1168,7 +1504,7 @@ vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self)
 
     zorder[chan_id] = *((gint *) g_list_nth_data (missing_zorders_list, index));
   }
-  /* Mapping a pad for each zorder */
+  /* Finalizing a pad for each zorder */
   for (index = 0; index < self->num_request_pads; index++)
     self->priv->pad_of_zorder[zorder[index]] = index;
   g_free (missing_zorders_data);
@@ -1177,20 +1513,34 @@ vvas_xcompositor_set_zorder_from_pads (GstVvasXCompositor * self)
     GST_INFO_OBJECT (self, "Final zorder at pad %d is %d ", index,
         zorder[index]);
 
+  g_list_free (missing_zorders_list);
+  g_list_free (unfilled_pads_list);
   return TRUE;
 }
 
+/**
+ *  @fn static gboolean vvas_xcompositor_open (GstVvasXCompositor * self)
+ *  @param [in] self  - pointer to the vvas compositor instance.
+ *  @return TRUE on Success.\nFALSE on Failure.
+ *  @brief  This API opens all the resources and sets all the required parameters for the plugin
+ *  @details It opens the xrt context, kernel handle and device handle. Also downloads the xclbin to the FPGA
+ */
 static gboolean
 vvas_xcompositor_open (GstVvasXCompositor * self)
 {
   GstVvasXCompositorPrivate *priv = self->priv;
   guint chan_id = 0;
   gboolean bret;
+  VvasReturnType vret;
+  VvasScalerProp scaler_prop = { 0 };
 #ifdef ENABLE_XRM_SUPPORT
   gint load = -1;
 #endif
 
-  self->priv->is_coeff = true;
+  VvasLogLevel core_log_level =
+      vvas_get_core_log_level (gst_debug_category_get_threshold
+      (GST_CAT_DEFAULT));
+
   GST_DEBUG_OBJECT (self, "Xlnx Compositor open");
 
   if (!self->kern_name) {
@@ -1206,7 +1556,7 @@ vvas_xcompositor_open (GstVvasXCompositor * self)
 
   priv->cur_load = load;
   /* gets cu index & device id (using reservation id) */
-  bret = vvas_xcompositor_allocate_resource (self, priv->cur_load);
+  bret = vvas_xcompositor_allocate_xrm_resource (self, priv->cur_load);
   if (!bret)
     return FALSE;
 #endif
@@ -1220,50 +1570,53 @@ vvas_xcompositor_open (GstVvasXCompositor * self)
   }
 #endif
 
-  if (!vvas_xrt_open_device (self->dev_index, &priv->dev_handle)) {
-    GST_ERROR_OBJECT (self, "failed to open device index %u", self->dev_index);
-    return FALSE;
-  }
-/* TODO: Need to uncomment after CR-1122125 is resolved */
-//#ifndef ENABLE_XRM_SUPPORT
 
-  if (!self->xclbin_path) {
-    GST_ERROR_OBJECT (self, "invalid xclbin path %s", self->xclbin_path);
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, (NULL),
-        ("xclbin path not set"));
-    return FALSE;
-  }
-
-
-  GST_INFO_OBJECT (self, "xclbin path %s", self->xclbin_path);
-/* We have to download the xclbin irrespective of XRM or not as there
-   * mismatch of UUID between XRM and XRT Native. CR-1122125 raised */
-  if (vvas_xrt_download_xclbin (self->xclbin_path,
-          priv->dev_handle, &(priv->xclbinId))) {
-    GST_ERROR_OBJECT (self, "failed to initialize XRT");
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("xclbin download failed"));
+  /* Create VVAS Context, Create Scaler context and Set Scaler Properties */
+  GST_DEBUG_OBJECT (self, "Creating VVAS context, XclBin: %s",
+      self->xclbin_path);
+  priv->vvas_ctx =
+      vvas_context_create (self->dev_index, self->xclbin_path,
+      core_log_level, &vret);
+  if (!priv->vvas_ctx) {
+    GST_ERROR_OBJECT (self, "Couldn't create VVAS context");
     return FALSE;
   }
 
-  if (!self->kern_name)
-    self->kern_name = g_strdup (DEFAULT_KERNEL_NAME);
-
-
-//#endif
-  if (vvas_xrt_open_context (priv->dev_handle, priv->xclbinId,
-          &priv->kern_handle, self->kern_name, true)) {
-
-    GST_ERROR_OBJECT (self, "failed to open XRT context ...");
+  GST_DEBUG_OBJECT (self, "Creating VVAS Scaler, kernel: %s", self->kern_name);
+  priv->vvas_scaler = vvas_scaler_create (priv->vvas_ctx, self->kern_name,
+      core_log_level);
+  if (!priv->vvas_scaler) {
+    GST_ERROR_OBJECT (self, "Couldn't create Scaler");
     return FALSE;
   }
-  if (!priv->is_internal_buf_allocated) {
-    /* allocate internal buffers */
-    bret = vvas_xcompositor_allocate_internal_buffers (self);
-    if (!bret)
-      return FALSE;
-    priv->is_internal_buf_allocated = TRUE;
+
+  vret = vvas_scaler_prop_get (priv->vvas_scaler, &scaler_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Couldn't get scaler props");
   }
+
+  scaler_prop.coef_load_type = (VvasScalerCoefLoadType) self->coef_load_type;
+  scaler_prop.smode = (VvasScalerMode) self->scale_mode;
+  scaler_prop.ftaps = (VvasScalerFilterTaps) self->num_taps;
+  scaler_prop.ppc = self->ppc;
+  scaler_prop.mem_bank = self->in_mem_bank;
+
+  vret = vvas_scaler_prop_set (priv->vvas_scaler, &scaler_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Couldn't set scaler props");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "Scaler: coef_load_type: %d",
+      scaler_prop.coef_load_type);
+  GST_DEBUG_OBJECT (self, "Scaler: scaling mode: %d", scaler_prop.smode);
+  GST_DEBUG_OBJECT (self, "Scaler: filter taps: %d", scaler_prop.ftaps);
+  GST_DEBUG_OBJECT (self, "Scaler: ppc: %d", scaler_prop.ppc);
+  GST_DEBUG_OBJECT (self, "Scaler: mem_bank: %d", scaler_prop.mem_bank);
+
+  /* Get the Device handle from VVAS context for local use */
+  priv->dev_handle = priv->vvas_ctx->dev_handle;
+
   bret = vvas_xcompositor_set_zorder_from_pads (self);
   if (!bret)
     return FALSE;
@@ -1273,21 +1626,6 @@ vvas_xcompositor_open (GstVvasXCompositor * self)
           "width must be multiple of ppc i.e, %d", chan_id, self->ppc);
       return FALSE;
     }
-
-    if (self->num_taps == 12) {
-      vvas_xcompositor_prepare_coefficients_with_12tap (self, chan_id);
-    } else {
-      if (self->scale_mode == POLYPHASE) {
-        float scale =
-            (float) GST_VIDEO_INFO_HEIGHT (self->priv->in_vinfo[chan_id]) /
-            (float) GST_VIDEO_INFO_HEIGHT (self->priv->out_vinfo);
-        GST_INFO_OBJECT (self,
-            "preparing coefficients with scaling ration %f and taps %d",
-            scale, self->num_taps);
-        xlnx_multiscaler_coff_fill (priv->Hcoff[chan_id].user_ptr,
-            priv->Vcoff[chan_id].user_ptr, scale);
-      }
-    }
   }
 
   if (GST_VIDEO_INFO_WIDTH (self->priv->out_vinfo) % self->ppc) {
@@ -1295,52 +1633,27 @@ vvas_xcompositor_open (GstVvasXCompositor * self)
         "width must be multiple of ppc i.e, %d", self->ppc);
     return FALSE;
   }
-#ifdef XLNX_PCIe_PLATFORM
-  if (!xlnx_abr_coeff_syncBO (self))
-    return FALSE;
-#endif
   return TRUE;
 }
 
-static void
-vvas_xcompositor_free_internal_buffers (GstVvasXCompositor * self)
-{
-  GstVvasXCompositorPrivate *priv = self->priv;
-  guint chan_id;
-
-  GST_DEBUG_OBJECT (self, "freeing internal buffers");
-
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-    if (priv->Hcoff[chan_id].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->Hcoff[chan_id]);
-      memset (&(self->priv->Hcoff[chan_id]), 0x0, sizeof (xrt_buffer));
-    }
-    if (priv->Vcoff[chan_id].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->Vcoff[chan_id]);
-      memset (&(self->priv->Vcoff[chan_id]), 0x0, sizeof (xrt_buffer));
-    }
-    if (priv->msPtr[chan_id].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->msPtr[chan_id]);
-      memset (&(self->priv->msPtr[chan_id]), 0x0, sizeof (xrt_buffer));
-    }
-  }
-}
-
+/**
+ *  @fn static void vvas_xcompositor_close (GstVvasXCompositor * self)
+ *  @param [in] self  - pointer to the vvas compositor instance.
+ *  @return None.
+ *  @brief  This API closes/frees the resources that are opened during vvas_xcompositor_open call.
+ *  @details This API closes the xrm/xrt context, device handle and kernel handle.
+ */
 static void
 vvas_xcompositor_close (GstVvasXCompositor * self)
 {
   guint chan_id;
   GstVvasXCompositorPad *sinkpad;
-  GstVvasXCompositorPrivate *priv = self->priv;
-  gboolean iret = FALSE;
   GST_DEBUG_OBJECT (self, "Closing");
 
-  vvas_xcompositor_free_internal_buffers (self);
-  self->priv->is_internal_buf_allocated = FALSE;
-
-  //clear all buffer pools here
+  /* clear output buffer pool */
   gst_clear_object (&self->priv->output_pool);
 
+  /* clear all input buffer pools */
   for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
     sinkpad = gst_vvas_xcompositor_sinkpad_at_index (self, chan_id);
     if (sinkpad && sinkpad->pool) {
@@ -1349,19 +1662,17 @@ vvas_xcompositor_close (GstVvasXCompositor * self)
       gst_clear_object (&sinkpad->pool);
     }
   }
-
-  if (priv->dev_handle) {
-    iret = vvas_xrt_close_context (priv->kern_handle);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self, "failed to close xrt context");
-    }
-    vvas_xrt_close_device (priv->dev_handle);
-    priv->dev_handle = NULL;
-    GST_INFO_OBJECT (self, "closed xrt context");
-  }
-
+#ifdef ENABLE_XRM_SUPPORT
+  vvas_xcompositor_destroy_xrm_resource (self);
+#endif
 }
 
+/**
+ *  @fn static gpointer vvas_xcompositor_input_copy_thread (gpointer data)
+ *  @param [in] data  - pointer to the vvas compositor instance.
+ *  @brief  This API is a thread function that copies input buffer to plugins internal
+ *          pool in separate thread to improve performance.
+ */
 static gpointer
 vvas_xcompositor_input_copy_thread (gpointer data)
 {
@@ -1425,6 +1736,16 @@ error:
   return NULL;
 }
 
+/**
+ *  @fn static GstStateChangeReturn gst_vvas_xcompositor_change_state (GstElement * element, GstStateChange transition)
+ *  @param [in] element       - Handle to GstVvasXCompositor typecasted to GObject.
+ *  @param [in] transition    - The requested state transition.
+ *  @return Status of the state transition.
+ *  @brief  This API will be invoked whenever the pipeline is going into a state transition and in this function
+ *          the element can initialize/free up any sort of specific data needed by the element.
+ *  @details This API is registered with GstElementClass by overriding GstElementClass::change_state function
+ *           pointer and this will be invoked whenever the pipeline is going into a state transition.
+ */
 static GstStateChangeReturn
 gst_vvas_xcompositor_change_state (GstElement * element,
     GstStateChange transition)
@@ -1441,10 +1762,12 @@ gst_vvas_xcompositor_change_state (GstElement * element,
       break;
   }
 
+  /* getting the GstStateChangeReturn from parent class */
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      /* Closing the compositor resources if state is changing to NULL */
       vvas_xcompositor_close (self);
       break;
 
@@ -1455,6 +1778,22 @@ gst_vvas_xcompositor_change_state (GstElement * element,
   return ret;
 }
 
+/**
+ *  @fn static void gst_vvas_xcompositor_pad_get_property (GObject * object,
+ *                                                         guint prop_id,
+ *                                                         GValue * value,
+ *                                                         GParamSpec * pspec)
+ *  @param [in] object     - Handle to GstVvasXCompositorPad typecasted to GObject
+ *  @param [in] prop_id    - Property ID as defined in VvasXCompositorPad proprties enum
+ *  @param [out] value     - GValue which holds property value set by user
+ *  @param [in] pspec      - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief   This API gives out values asked from the user in GstVvasXCompositorPad object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::get_property function pointer and
+ *           this will be invoked when developer gets properties on GstVvasXCompositorPad object. Based on
+ *           property value type, corresponding g_value_get_xxx API will be called to get property
+ *           value from GValue handle.
+ */
 static void
 gst_vvas_xcompositor_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -1484,6 +1823,23 @@ gst_vvas_xcompositor_pad_get_property (GObject * object, guint prop_id,
   }
 }
 
+
+/**
+ *  @fn static void gst_vvas_xcompositor_pad_set_property (GObject * object,
+ *                                                         guint prop_id,
+ *                                                         const GValue * value,
+ *                                                         GParamSpec * pspec)
+ *  @param [in] object     - Handle to GstVvasXCompositorPad typecasted to GObject
+ *  @param [in] prop_id    - Property ID as defined in VvasXCompositor properties enum
+ *  @param [in] value      - GValue which holds property value set by user
+ *  @param [in] pspec      - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief   This API stores values sent from the user in GstVvasXCompositorPad object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_property function pointer and
+ *           this will be invoked when developer sets properties on GstVvasXCompositorPad object. Based on
+ *           property value type, corresponding g_object_get_xxx API will be called to
+ *           get property value from GValue handle.
+ */
 static void
 gst_vvas_xcompositor_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1512,14 +1868,27 @@ gst_vvas_xcompositor_pad_set_property (GObject * object, guint prop_id,
   }
 }
 
-
+/**
+ *  @fn static void gst_vvas_xcompositor_pad_class_init (GstVvasXCompositorPadClass * klass)
+ *  @param [in]klass  - Handle to GstVvasXAbrScalerClass
+ *  @return None
+ *  @brief  Add properties and signals of GstVvasXCompositorPadClass to parent GObjectClass and ovverrides
+ *          function pointers present in itself and/or its parent class structures
+ *  @details This function publishes properties those can be set/get from application on GstVvasXCompositorPad object.
+ *           And, while publishing a property it also declares type, range of acceptable values, default value,
+ *           readability/writability and in which GStreamer state a property can be changed.
+ */
 static void
 gst_vvas_xcompositor_pad_class_init (GstVvasXCompositorPadClass * klass)
 {
   GObjectClass *gobject_class;
   gobject_class = (GObjectClass *) klass;
+
+  /* Update GobjectClass callback functions */
   gobject_class->set_property = gst_vvas_xcompositor_pad_set_property;
   gobject_class->get_property = gst_vvas_xcompositor_pad_get_property;
+
+  /* Install GstVvasXCompositorPad properties */
   g_object_class_install_property (gobject_class, PROP_PAD_XPOS,
       g_param_spec_uint ("xpos", "X Position",
           "X Position of the picture",
@@ -1553,6 +1922,13 @@ gst_vvas_xcompositor_pad_class_init (GstVvasXCompositorPadClass * klass)
 
 }
 
+/**
+ *  @fn static void gst_vvas_xcompositor_pad_init (GstVvasXCompositorPad * pad)
+ *  @param [in] pad - Handle to GstVvasXCompositorPad instance
+ *  @return None
+ *  @brief  Initializes GstVvasXCompositorPad member variables to default and does one time object/memory
+ *          allocations in object's lifecycle.
+ */
 static void
 gst_vvas_xcompositor_pad_init (GstVvasXCompositorPad * pad)
 {
@@ -1564,7 +1940,16 @@ gst_vvas_xcompositor_pad_init (GstVvasXCompositorPad * pad)
   pad->is_eos = DEFAULT_PAD_EOS;
 }
 
-
+/**
+ *  @fn static void gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
+ *  @param [in] klass  - Handle to GstVvasXCompositorClass
+ *  @return None
+ *  @brief  Add properties and signals of GstGstVvasXCompositorClass to parent GObjectClass and ovverrides
+ *          function pointers present in itself and/or its parent class structures
+ *  @details This function publishes properties those can be set/get from application on GstVvasXCompositor object.
+ *           And, while publishing a property it also declares type, range of acceptable values, default value,
+ *           readability/writability and in which GStreamer state a property can be changed.
+ */
 static void
 gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
 {
@@ -1574,9 +1959,13 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
       (GstVideoAggregatorClass *) klass;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
 
+  /* Initilizing debug category structure */
+
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vvas_xcompositor", 0,
       "VVAS Compositor");
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
+
+  /* Update gobject class callback functions */
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_vvas_xcompositor_finalize);
 
   gobject_class->get_property = gst_vvas_xcompositor_get_property;
@@ -1585,17 +1974,22 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
   gst_element_class_set_metadata (element_class, "VVAS Compositor",
       "Vvas Compositor", "VVAS Compositor", "Xilinx Inc <www.xilinx.com>");
 
+  /* Add src pad template */
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &src_factory, GST_TYPE_AGGREGATOR_PAD);
+  /* Add sink pad template */
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &sink_factory, GST_TYPE_VVAS_XCOMPOSITOR_PAD);
 
+  /* Update element class callback functions */
   element_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_vvas_xcompositor_request_new_pad);
   element_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_vvas_xcompositor_release_pad);
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_vvas_xcompositor_change_state);
+
+  /* Update aggregator class callback functions */
   agg_class->stop = gst_vvas_xcompositor_stop;
   agg_class->start = gst_vvas_xcompositor_start;
 
@@ -1604,10 +1998,13 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
 
   agg_class->decide_allocation = vvas_xcompositor_decide_allocation;
 
+  /* Update video aggregator class callback functions */
   videoaggregator_class->aggregate_frames =
       gst_vvas_xcompositor_aggregate_frames;
   videoaggregator_class->create_output_buffer =
       gst_vvas_xcompositor_create_output_buffer;
+
+  /* Install Vvas_XCompositor pad properties */
   g_object_class_install_property (gobject_class, PROP_XCLBIN_LOCATION,
       g_param_spec_string ("xclbin-location", "xclbin file location",
           "Location of the xclbin to program devices", NULL, (GParamFlags)
@@ -1640,9 +2037,9 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
           G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
   g_object_class_install_property (gobject_class, PROP_SCALE_MODE,
-      g_param_spec_int ("scale-mode", "Scaling Mode", "Scale Mode configured in Multiscaler kernel. 	\
-		0: BILINEAR \n 1: BICUBIC \n2: POLYPHASE", 0, 2, VVAS_XCOMPOSITOR_SCALE_MODE, G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
+      g_param_spec_int ("scale-mode", "Scaling Mode", "Scale Mode configured "
+          "in Multiscaler kernel. 	\
+		0: BILINEAR \n 1: BICUBIC \n2: POLYPHASE", 0, 2, VVAS_XCOMPOSITOR_SCALE_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
 
   g_object_class_install_property (gobject_class, PROP_IN_MEM_BANK,
       g_param_spec_uint ("in-mem-bank",
@@ -1691,7 +2088,8 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
   g_object_class_install_property (gobject_class, PROP_ENABLE_PIPELINE,
       g_param_spec_boolean ("enable-pipeline",
           "Enable pipelining",
-          "Enable buffer pipelining to improve performance in non zero-copy use cases",
+          "Enable buffer pipelining to improve performance in non "
+          "zero-copy use cases",
           VVAS_XCOMPOSITOR_ENABLE_PIPELINE_DEFAULT,
           G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
@@ -1706,6 +2104,13 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
 
 }
 
+/**
+ *  @fn static void gst_vvas_xcompositor_init (GstVvasXCompositor * self)
+ *  @param [in] self - Handle to GstVvasXCompositor instance
+ *  @return None
+ *  @brief  Initializes GstVvasXCompositor member variables to default and does one time object/memory
+ *          allocations in object's lifecycle
+ */
 static void
 gst_vvas_xcompositor_init (GstVvasXCompositor * self)
 {
@@ -1726,14 +2131,6 @@ gst_vvas_xcompositor_init (GstVvasXCompositor * self)
   self->out_mem_bank = DEFAULT_MEM_BANK;
   self->avoid_output_copy = VVAS_XCOMPOSITOR_AVOID_OUTPUT_COPY_DEFAULT;
   self->enabled_pipeline = VVAS_XCOMPOSITOR_ENABLE_PIPELINE_DEFAULT;
-#ifdef ENABLE_PPE_SUPPORT
-  self->priv->alpha_r = 0;
-  self->priv->alpha_g = 0;
-  self->priv->alpha_b = 0;
-  self->priv->beta_r = 1;
-  self->priv->beta_g = 1;
-  self->priv->beta_b = 1;
-#endif
 #ifdef ENABLE_XRM_SUPPORT
   self->priv->xrm_ctx = NULL;
   self->priv->cu_resource = NULL;
@@ -1741,15 +2138,25 @@ gst_vvas_xcompositor_init (GstVvasXCompositor * self)
   self->priv->reservation_id = 0;
   self->priv->has_error = FALSE;
 #endif
-  self->priv->is_internal_buf_allocated = FALSE;
   self->kern_name = g_strdup (DEFAULT_KERNEL_NAME);
   self->priv->need_copy = TRUE;
+  self->priv->vvas_ctx = NULL;
+  self->priv->vvas_scaler = NULL;
   for (int chan_id = 0; chan_id < MAX_CHANNELS; chan_id++) {
     self->priv->in_vinfo[chan_id] = gst_video_info_new ();
     self->priv->pad_of_zorder[chan_id] = chan_id;
   }
 }
 
+/**
+ *  @fn static void gst_vvas_xcompositor_finalize (GObject * object)
+ *  @param [in] object - Handle to GstVvasXCompositor typecasted to GObject
+ *  @return None
+ *  @brief This API will be called during GstVvasXCompositor object's destruction phase. Close references to devices
+ *         and free memories if any
+ *  @note After this API GstVvasXCompositor object \p obj will be destroyed completely. So free all internal memories
+ *        held by current object
+ */
 static void
 gst_vvas_xcompositor_finalize (GObject * object)
 {
@@ -1759,9 +2166,26 @@ gst_vvas_xcompositor_finalize (GObject * object)
   gst_video_info_free (self->priv->out_vinfo);
   g_free (self->xclbin_path);
   g_free (self->kern_name);
+
+  /* Destroy Scaler and VVAS Context */
+  if (self->priv->vvas_scaler) {
+    vvas_scaler_destroy (self->priv->vvas_scaler);
+  }
+  if (self->priv->vvas_ctx) {
+    vvas_context_destroy (self->priv->vvas_ctx);
+  }
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xcompositor_query_caps (GstPad * pad, GstAggregator * agg, GstQuery * query)
+ *  @param [in] pad     - Pointer to GstPad on which query has been received.
+ *  @param [in] agg     - Pointer to GstAggregator holding compositor instance pointer
+ *  @param [in] query   - Query requested on the plugin
+ *  @return Return always TRUE.
+ *  @brief  This API checks whether the requested caps are supported by the plugin mentioned in pad template
+ *          and give response to the query in gst_query_set_caps_result during negotiation.
+ */
 static gboolean
 gst_vvas_xcompositor_query_caps (GstPad * pad, GstAggregator * agg,
     GstQuery * query)
@@ -1774,9 +2198,11 @@ gst_vvas_xcompositor_query_caps (GstPad * pad, GstAggregator * agg,
     caps = gst_pad_get_pad_template_caps (agg->srcpad);
   }
 
+  /* Checking caps are supported by plugin from pad template */
   if (filter)
     caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
 
+  /* setting the response to query */
   gst_query_set_caps_result (query, caps);
 
   gst_caps_unref (caps);
@@ -1784,6 +2210,14 @@ gst_vvas_xcompositor_query_caps (GstPad * pad, GstAggregator * agg,
   return TRUE;
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xcompositor_src_query (GstAggregator * agg, GstQuery * query)
+ *  @param [in] agg     - Pointer to GstAggregator holding compositor instance pointer
+ *  @param [in] query   - Query requested on the plugin
+ *  @return TRUE on success\n
+            FALSE on failure
+ *  @brief  Callback function called when a query is received on the src pad.
+ */
 static gboolean
 gst_vvas_xcompositor_src_query (GstAggregator * agg, GstQuery * query)
 {
@@ -1805,6 +2239,17 @@ gst_vvas_xcompositor_src_query (GstAggregator * agg, GstQuery * query)
   return GST_AGGREGATOR_CLASS (parent_class)->src_query (agg, query);
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xcompositor_pad_sink_acceptcaps (GstPad * pad,
+ *                                                                GstVvasXCompositor * compositor,
+ *                                                                GstCaps * caps)
+ *  @param [in] pad   		    - Pointer to GstPad on which query has been received.
+ *  @param [in] compositor	    - Pointer to GstVvasXCompositor instance
+ *  @param [in] caps     	    - caps that are received on the pad
+ *  @return TRUE on success\n
+ *          FALSE on failure.
+ *  @brief  This API checks whether the requested caps are supported by the plugin mentioned in pad template
+ */
 static gboolean
 gst_vvas_xcompositor_pad_sink_acceptcaps (GstPad * pad,
     GstVvasXCompositor * compositor, GstCaps * caps)
@@ -1825,64 +2270,16 @@ gst_vvas_xcompositor_pad_sink_acceptcaps (GstPad * pad,
   return ret;
 }
 
-static guint
-vvas_xcompositor_get_padding_right (GstVvasXCompositor * self,
-    GstVideoInfo * info)
-{
-  guint padding_pixels = -1;
-  guint plane_stride = GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
-  guint padding_bytes =
-      ALIGN (plane_stride, self->out_stride_align) - plane_stride;
-
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_NV12:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_r210:
-    case GST_VIDEO_FORMAT_Y410:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBA:
-      padding_pixels = padding_bytes / 4;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      padding_pixels = padding_bytes / 2;
-      break;
-    case GST_VIDEO_FORMAT_NV16:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_BGR:
-      padding_pixels = padding_bytes / 3;
-      break;
-    case GST_VIDEO_FORMAT_I422_10LE:
-      padding_pixels = padding_bytes / 2;
-      break;
-    case GST_VIDEO_FORMAT_NV12_10LE32:
-      padding_pixels = (padding_bytes * 3) / 4;
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_GRAY10_LE32:
-      padding_pixels = (padding_bytes * 3) / 4;
-      break;
-    case GST_VIDEO_FORMAT_I420:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_I420_10LE:
-      padding_pixels = padding_bytes / 2;
-      break;
-    default:
-      GST_ERROR_OBJECT (self, "not yet supporting format %d",
-          GST_VIDEO_INFO_FORMAT (info));
-  }
-  return padding_pixels;
-}
-
+/**
+ *  @fn static gboolean vvas_xcompositor_propose_allocation (GstVvasXCompositor * self, GstQuery * query)
+ *  @param [in] self    - Handle that is holding GstVvasXCompositor instance
+ *  @param [out] query	- Return the query with proposed allocation parameters
+ *  @return TRUE on success\n
+ *          FALSE on failure.
+ *  @brief  Propose buffer allocation parameters for upstream element
+ *  @details The proposed query will be parsed through, verified if the proposed pool is VVAS and alignments
+ *           are quoted. Otherwise it will be discarded and new pool, allocator will be created.
+ */
 static gboolean
 vvas_xcompositor_propose_allocation (GstVvasXCompositor * self,
     GstQuery * query)
@@ -1901,12 +2298,15 @@ vvas_xcompositor_propose_allocation (GstVvasXCompositor * self,
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
+  /** Parse the received query to find the pool array size
+   *  of the query's structure
+   */
   if (gst_query_get_n_allocation_pools (query) == 0) {
     GstStructure *structure;
     GstAllocator *allocator = NULL;
     GstAllocationParams params =
         { GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS, 0, 0, 0 };
-
+    /* Get the allocator and its params from the query */
     if (gst_query_get_n_allocation_params (query) > 0) {
       gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
     } else {
@@ -1916,26 +2316,30 @@ vvas_xcompositor_propose_allocation (GstVvasXCompositor * self,
          return FALSE;
          }
          #endif */
+      /** Create a new allocator if the query doesn't
+       *  have any allocator params
+       */
       allocator = gst_vvas_allocator_new (self->dev_index,
-          NEED_DMABUF, self->in_mem_bank, self->priv->kern_handle);
+          NEED_DMABUF, self->in_mem_bank);
       GST_INFO_OBJECT (self, "creating new xrt allocator %" GST_PTR_FORMAT
           "at mem bank %d", allocator, self->in_mem_bank);
 
       gst_query_add_allocation_param (query, allocator, &params);
     }
 
+    /* Create new video buffer pool */
     pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
     GST_LOG_OBJECT (self, "allocated internal sink pool %p", pool);
 
     structure = gst_buffer_pool_get_config (pool);
 
     gst_video_alignment_reset (&align);
-    align.padding_top = 0;
-    align.padding_left = 0;
-    align.padding_right = vvas_xcompositor_get_padding_right (self, &info);
     align.padding_bottom =
         ALIGN (GST_VIDEO_INFO_HEIGHT (&info),
         HEIGHT_ALIGN) - GST_VIDEO_INFO_HEIGHT (&info);
+    for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&info); idx++) {
+      align.stride_align[idx] = (WIDTH_ALIGN - 1);
+    }
     gst_video_info_align (&info, &align);
 
     gst_buffer_pool_config_add_option (structure,
@@ -1957,11 +2361,13 @@ vvas_xcompositor_propose_allocation (GstVvasXCompositor * self,
       goto config_failed;
 
     GST_OBJECT_LOCK (self);
+    /* Set the pool parameters in query */
     gst_query_add_allocation_pool (query, pool, size, 2, 0);
 
     GST_OBJECT_UNLOCK (self);
 
     gst_query_add_allocation_pool (query, pool, size, 2, 0);
+    /* Add GST_VIDEO_META_API_TYPE as one of supported metadata API to query */
     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
     gst_object_unref (pool);
   }
@@ -1977,6 +2383,17 @@ config_failed:
   }
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xcompositor_sink_query (GstAggregator * agg,
+ *                                                       GstAggregatorPad * bpad,
+ *                                                       GstQuery * query)
+ *  @param [in] agg     - Pointer to GstAggregator holding compositor instance pointer
+ *  @param [in] bpad    - Pointer to GstAggregatorPad holding GstVvasXCompositorPad instance pointer
+ *  @param [in] query   - Query requested on the pad
+ *  @return TRUE on success\n
+ *          FALSE on failure
+ *  @brief  Callback function called when a query is received on the sink pad.
+ */
 static gboolean
 gst_vvas_xcompositor_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     GstQuery * query)
@@ -1993,6 +2410,7 @@ gst_vvas_xcompositor_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
       GstCaps *mycaps;
       gst_query_parse_caps (query, &tmp);
       mycaps = gst_pad_get_pad_template_caps (GST_PAD (bpad));
+      /* set supported caps response to the query */
       gst_query_set_caps_result (query, mycaps);
       return TRUE;
     }
@@ -2003,12 +2421,15 @@ gst_vvas_xcompositor_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
       int pad_idx;
       gst_query_parse_accept_caps (query, &caps);
 
+      /* Accept the supported caps */
       ret =
           gst_vvas_xcompositor_pad_sink_acceptcaps (GST_PAD (bpad), self, caps);
       if (ret) {
         pad_idx = sinkpad->index;
+        /* store the incoming caps video information of the current pad  */
         gst_video_info_from_caps (self->priv->in_vinfo[pad_idx], caps);
       }
+      /* set the response to the accep caps query */
       gst_query_set_accept_caps_result (query, ret);
     }
       return TRUE;
@@ -2016,16 +2437,28 @@ gst_vvas_xcompositor_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
 
     case GST_QUERY_ALLOCATION:
     {
+      /* Propose allocation if the query is allocation type */
       ret = vvas_xcompositor_propose_allocation (self, query);
       return ret;
     }
       break;
 
+      /* call the parent class sink_query callback in default case */
     default:
       return GST_AGGREGATOR_CLASS (parent_class)->sink_query (agg, bpad, query);
   }
 }
 
+/**
+ *  @fn gboolean vvas_xcompositor_allocate_internal_pool (GstVvasXCompositor * self, GstVvasXCompositorPad * sinkpad)
+ *  @param [in] self  	- GstVvasXCompositor plugin handle.
+ *  @param [in] sinkpad - Pointer that holds GstVvasXCompositorPad.
+ *  @return On Success returns TRUE\n
+ *          On Failure returns FALSE
+ *  @brief  Allocates internal buffer pool.
+ *  @details This function will be invoked to create internal buffer pool when
+ *           the received buffer is non VVAS buffer or non DMA buffer.
+ */
 static gboolean
 vvas_xcompositor_allocate_internal_pool (GstVvasXCompositor * self,
     GstVvasXCompositorPad * sinkpad)
@@ -2046,25 +2479,30 @@ vvas_xcompositor_allocate_internal_pool (GstVvasXCompositor * self,
     return FALSE;
   }
 
+  /* Create a new vvas buffer pool */
   pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
   GST_LOG_OBJECT (self, "allocated internal sink pool %p", pool);
 
   config = gst_buffer_pool_get_config (pool);
+  /* Align the buffers */
   gst_video_alignment_reset (&align);
-  align.padding_top = 0;
-  align.padding_left = 0;
-  align.padding_right = vvas_xcompositor_get_padding_right (self, &info);
   align.padding_bottom =
       ALIGN (GST_VIDEO_INFO_HEIGHT (&info),
       HEIGHT_ALIGN) - GST_VIDEO_INFO_HEIGHT (&info);
+  for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&info); idx++) {
+    align.stride_align[idx] = (WIDTH_ALIGN - 1);
+  }
+
   gst_video_info_align (&info, &align);
 
+  /* Add the updated alignment parameters to pool */
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   gst_buffer_pool_config_set_video_alignment (config, &align);
 
+  /* Create a new allocator */
   allocator = gst_vvas_allocator_new (self->dev_index,
-      NEED_DMABUF, self->in_mem_bank, self->priv->kern_handle);
+      NEED_DMABUF, self->in_mem_bank);
   gst_allocation_params_init (&alloc_params);
   alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
   alloc_params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
@@ -2072,6 +2510,7 @@ vvas_xcompositor_allocate_internal_pool (GstVvasXCompositor * self,
       "allocated %" GST_PTR_FORMAT " allocator at mem bank %d",
       allocator, self->in_mem_bank);
 
+  /* Configure the Min Max buffers of the pool */
   gst_buffer_pool_config_set_params (config, caps,
       GST_VIDEO_INFO_SIZE (&info), 3, 5);
 
@@ -2086,6 +2525,7 @@ vvas_xcompositor_allocate_internal_pool (GstVvasXCompositor * self,
     goto error;
   }
 
+  /* Unreff the older pool if any and assign the new pool */
   if (sinkpad->pool)
     gst_object_unref (sinkpad->pool);
 
@@ -2102,84 +2542,19 @@ error:
   return FALSE;
 }
 
-#ifdef XLNX_PCIe_PLATFORM
-static gboolean
-xlnx_abr_coeff_syncBO (GstVvasXCompositor * self)
-{
-  GstVvasXCompositorPrivate *priv = self->priv;
-  int chan_id;
-  int iret;
-
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-
-    iret = vvas_xrt_write_bo (priv->Hcoff[chan_id].bo,
-        priv->Hcoff[chan_id].user_ptr, priv->Hcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to write horizontal coefficients. reason : %s",
-          strerror (errno));
-      return FALSE;
-    }
-    iret = vvas_xrt_sync_bo (priv->Hcoff[chan_id].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->Hcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync horizontal coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync horizontal coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-
-    iret = vvas_xrt_write_bo (priv->Vcoff[chan_id].bo,
-        priv->Vcoff[chan_id].user_ptr, priv->Vcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to write vertical coefficients. reason : %s",
-          strerror (errno));
-      return FALSE;
-    }
-    iret = vvas_xrt_sync_bo (priv->Vcoff[chan_id].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->Vcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync vertical coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync vertical coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
-static gboolean
-xlnx_abr_desc_syncBO (GstVvasXCompositor * self)
-{
-  GstVvasXCompositorPrivate *priv = self->priv;
-  int chan_id;
-  int iret;
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-
-    iret = vvas_xrt_sync_bo (priv->msPtr[chan_id].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->msPtr[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync horizontal coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync  horizontal coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-
-  }
-  return TRUE;
-}
-#endif
-
+/**
+ *  @fn gboolean vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
+ *                                                      GstVvasXCompositorPad * sinkpad,
+ *                                                      GstBuffer ** inbuf)
+ *  @param [in] self  		- Handle that holds the GstVvasXCompositor instance.
+ *  @param [in] sinkpad 	- Pointer that holds the GstVvasXCompositorPad object.
+ *  @param [in] inbuf  		- input buffer coming from upstream.
+ *  @return On Success returns TRUE\n
+ *          On Failure returns FALSE
+ *  @brief   Decides and prepares internal buffer pool if necessary.
+ *  @details Checks if the incoming buffer is VVAS memory or DMA buffer, if
+ *           neither of them, then it creates an internal buffer pool.
+ */
 static gboolean
 vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
     GstVvasXCompositorPad * sinkpad, GstBuffer ** inbuf)
@@ -2195,18 +2570,23 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
   gboolean use_inpool = FALSE;
   guint pad_idx = sinkpad->index;
 
+  /* Clear the video frames */
   memset (&in_vframe, 0x0, sizeof (GstVideoFrame));
   memset (&own_vframe, 0x0, sizeof (GstVideoFrame));
 
+  /* Get memory from the input buffer */
   in_mem = gst_buffer_get_memory (*inbuf, 0);
   if (!in_mem) {
     GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
     goto error;
   }
 
+  /* Check whether the input memory is a vvas memory */
   if (gst_is_vvas_memory (in_mem)
       && gst_vvas_memory_can_avoid_copy (in_mem, self->dev_index,
           self->in_mem_bank)) {
+
+    /* Fetch the physical address from vvas memory */
     phy_addr = gst_vvas_allocator_get_paddr (in_mem);
   } else if (gst_is_dmabuf_memory (in_mem)) {
     vvasBOHandle bo = NULL;
@@ -2227,18 +2607,22 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
 
     GST_DEBUG_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
         bo);
+
+    /* Fetch the physical address from dma memory */
     phy_addr = vvas_xrt_get_bo_phy_addres (bo);
 
     if (bo != NULL)
       vvas_xrt_free_bo (bo);
 
   } else {
+    /* If not a vvas or dma memory, use internal pool buffers */
     use_inpool = TRUE;
   }
 
   gst_memory_unref (in_mem);
   in_mem = NULL;
 
+  /* If not a vvas or dma memory use internal pool buffers */
   if (use_inpool) {
     if (sinkpad->validate_import) {
       if (!sinkpad->pool) {
@@ -2251,6 +2635,7 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
       sinkpad->validate_import = FALSE;
     }
 
+    /* if pipeline is enabled deal with the already copied input buffer */
     if (self->enabled_pipeline) {
       own_inbuf = g_async_queue_try_pop (priv->copy_outqueue[sinkpad->index]);
       if (!own_inbuf && !priv->is_first_frame) {
@@ -2268,7 +2653,7 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
 
       *inbuf = own_inbuf;
     } else {
-      /* acquire buffer from own input pool */
+      /* if pipeline is disabled acquire buffer from own input pool */
       fret = gst_buffer_pool_acquire_buffer (sinkpad->pool, &own_inbuf, NULL);
       if (fret != GST_FLOW_OK) {
         GST_ERROR_OBJECT (sinkpad,
@@ -2295,6 +2680,8 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
 
       gst_video_frame_unmap (&in_vframe);
       gst_video_frame_unmap (&own_vframe);
+
+      /* copy the input buffer to own buffer from internal pool and reassign to inbuf */
       gst_buffer_copy_into (own_inbuf, *inbuf,
           (GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS |
               GST_BUFFER_COPY_TIMESTAMPS), 0, -1);
@@ -2302,43 +2689,36 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
     }
 
   } else {
+    /* Use the incoming input buffer if it is vvas buffer or dma buffer */
     gst_buffer_ref (*inbuf);
   }
 
+  /* Get the video data from input buffer */
   vmeta = gst_buffer_get_video_meta (*inbuf);
   if (vmeta == NULL) {
     GST_ERROR_OBJECT (self, "video meta not present in buffer");
     goto error;
   }
 
+  /* Get the memory from decided input buffer */
   in_mem = gst_buffer_get_memory (*inbuf, 0);
   if (!in_mem) {
     GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
     goto error;
   }
 
+  /* Get the physical address of the decided input buffer's memory */
   if (phy_addr == (uint64_t) - 1) {
     phy_addr = gst_vvas_allocator_get_paddr (in_mem);
   }
-#ifdef XLNX_PCIe_PLATFORM
   /* syncs data when XLNX_SYNC_TO_DEVICE flag is enabled */
   bret = gst_vvas_memory_sync_bo (in_mem);
   if (!bret)
     goto error;
-#endif
 
   gst_memory_unref (in_mem);
 
   GST_LOG_OBJECT (self, "input paddr %p", (void *) phy_addr);
-  self->priv->phy_in_2[pad_idx] = 0;
-  self->priv->phy_in_1[pad_idx] = 0;
-  self->priv->phy_in_0[pad_idx] = phy_addr;
-  if (vmeta->n_planes > 1)
-    self->priv->phy_in_1[pad_idx] = phy_addr + vmeta->offset[1];
-  if (vmeta->n_planes > 2)
-    self->priv->phy_in_2[pad_idx] = phy_addr + vmeta->offset[2];
-
-  self->priv->meta_in_stride[pad_idx] = *(vmeta->stride);
 
   return TRUE;
 
@@ -2353,6 +2733,17 @@ error:
   return FALSE;
 }
 
+/**
+ *  @fn gboolean vvas_xcompositor_prepare_output_buffer (GstVvasXCompositor * self, GstBuffer * outbuf)
+ *
+ *  @param [in] self  	- Handle that holds GstVvasXCompositor instance.
+ *  @param [in] outbuf	- pointer to output buffer.
+ *  @return On Success returns TRUE\n
+ *          On Failure returns FALSE
+ *  @brief   Prepare the output buffer as per its type.
+ *  @details This API gets physical address of output buffer
+ *           based on whether it's a VVAS allocator memory or DMA memory.
+ */
 static gboolean
 vvas_xcompositor_prepare_output_buffer (GstVvasXCompositor * self,
     GstBuffer * outbuf)
@@ -2368,10 +2759,13 @@ vvas_xcompositor_prepare_output_buffer (GstVvasXCompositor * self,
     GST_ERROR_OBJECT (self, "failed to get memory from output buffer");
     goto error;
   }
-  /* No need to check whether memory is from device or not here.
-   * Because, we have made sure memory is allocated from device in decide_allocation
+  /** No need to check whether memory is from device or not here.
+   *  Because, we have made sure memory is allocated from device in
+   *  decide_allocation
    */
   if (gst_is_vvas_memory (mem)) {
+
+    /* Get the physical address of the output buffer */
     phy_addr = gst_vvas_allocator_get_paddr (mem);
   } else if (gst_is_dmabuf_memory (mem)) {
     vvasBOHandle bo = NULL;
@@ -2383,7 +2777,7 @@ vvas_xcompositor_prepare_output_buffer (GstVvasXCompositor * self,
       goto error;
     }
 
-    /* dmabuf but not from xrt */
+    /* Get the dmabuf but not from xrt */
     bo = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd);
     if (bo == NULL) {
       GST_WARNING_OBJECT (self,
@@ -2392,24 +2786,20 @@ vvas_xcompositor_prepare_output_buffer (GstVvasXCompositor * self,
     GST_INFO_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
         bo);
 
+    /* Get the physical address of dma buf */
     phy_addr = vvas_xrt_get_bo_phy_addres (bo);
     if (bo != NULL)
       vvas_xrt_free_bo (bo);
   }
 
+  /* Get the video meta data of the output buffer */
   vmeta = gst_buffer_get_video_meta (outbuf);
   if (vmeta == NULL) {
     GST_ERROR_OBJECT (self, "video meta not present in buffer");
     goto error;
   }
 
-  self->priv->phy_out_0 = phy_addr;
-  self->priv->phy_out_1 = 0;
-  self->priv->phy_out_2 = 0;
-  if (vmeta->n_planes > 1)
-    self->priv->phy_out_1 = phy_addr + vmeta->offset[1];
-  if (vmeta->n_planes > 2)
-    self->priv->phy_out_2 = phy_addr + vmeta->offset[2];
+  GST_DEBUG_OBJECT (self, "Output buffer phy address: %lu", phy_addr);
 
   gst_memory_unref (mem);
 
@@ -2422,709 +2812,118 @@ error:
   return FALSE;
 }
 
-static uint32_t
-xlnx_multiscaler_colorformat (uint32_t col)
+/**
+ *  @fn static void vvas_xcompositor_free_vvas_video_frame (GstVvasXCompositor * self)
+ *  @param [in] self    - Handle to GstVvasXCompositor instance.
+ *  @return None
+ *  @brief  This function will free all the VvasVideoFrames.
+ */
+static inline void
+vvas_xcompositor_free_vvas_video_frame (GstVvasXCompositor * self)
 {
-  switch (col) {
-    case GST_VIDEO_FORMAT_RGBx:
-      return XV_MULTI_SCALER_RGBX8;
-    case GST_VIDEO_FORMAT_YUY2:
-      return XV_MULTI_SCALER_YUYV8;
-    case GST_VIDEO_FORMAT_r210:
-      return XV_MULTI_SCALER_RGBX10;
-    case GST_VIDEO_FORMAT_Y410:
-      return XV_MULTI_SCALER_YUVX10;
-    case GST_VIDEO_FORMAT_NV16:
-      return XV_MULTI_SCALER_Y_UV8;
-    case GST_VIDEO_FORMAT_NV12:
-      return XV_MULTI_SCALER_Y_UV8_420;
-    case GST_VIDEO_FORMAT_RGB:
-      return XV_MULTI_SCALER_RGB8;
-    case GST_VIDEO_FORMAT_v308:
-      return XV_MULTI_SCALER_YUV8;
-    case GST_VIDEO_FORMAT_I422_10LE:
-      return XV_MULTI_SCALER_Y_UV10;
-    case GST_VIDEO_FORMAT_NV12_10LE32:
-      return XV_MULTI_SCALER_Y_UV10_420;
-    case GST_VIDEO_FORMAT_GRAY8:
-      return XV_MULTI_SCALER_Y8;
-    case GST_VIDEO_FORMAT_GRAY10_LE32:
-      return XV_MULTI_SCALER_Y10;
-    case GST_VIDEO_FORMAT_BGRx:
-      return XV_MULTI_SCALER_BGRX8;
-    case GST_VIDEO_FORMAT_UYVY:
-      return XV_MULTI_SCALER_UYVY8;
-    case GST_VIDEO_FORMAT_BGR:
-      return XV_MULTI_SCALER_BGR8;
-    case GST_VIDEO_FORMAT_BGRA:
-      return XV_MULTI_SCALER_BGRA8;
-    case GST_VIDEO_FORMAT_RGBA:
-      return XV_MULTI_SCALER_RGBA8;
-    default:
-      GST_ERROR ("Not supporting %s yet",
-          gst_video_format_to_string ((GstVideoFormat) col));
-      return XV_MULTI_SCALER_NONE;
+  guint chan_id = 0;
+  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
+    if (self->priv->input_frames[chan_id]) {
+      vvas_video_frame_free (self->priv->input_frames[chan_id]);
+      self->priv->input_frames[chan_id] = NULL;
+    }
+  }
+
+  if (self->priv->output_frame) {
+    vvas_video_frame_free (self->priv->output_frame);
+    self->priv->output_frame = NULL;
   }
 }
 
-static uint32_t
-xlnx_multiscaler_stride_align (uint32_t stride_in, uint16_t AXIMMDataWidth)
-{
-  uint32_t stride;
-  stride =
-      (((stride_in) + AXIMMDataWidth - 1) / AXIMMDataWidth) * AXIMMDataWidth;
-  return stride;
-}
-
-static void
-xlnx_multiscaler_coff_fill (void *Hcoeff_BufAddr, void *Vcoeff_BufAddr,
-    float scale)
-{
-  uint16_t *hpoly_coeffs, *vpoly_coeffs;        /* int need to check */
-  int uy = 0;
-  int temp_p;
-  int temp_t;
-
-  hpoly_coeffs = (uint16_t *) Hcoeff_BufAddr;
-  vpoly_coeffs = (uint16_t *) Vcoeff_BufAddr;
-
-  if ((scale >= 2) && (scale < 2.5)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-  }
-
-  if ((scale >= 2.5) && (scale < 3)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS >= 10) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      } else {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-    }
-  }
-
-  if ((scale >= 3) && (scale < 3.5)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 12) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 8) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 10) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-    }
-  }
-
-  if ((scale >= 3.5) || (scale < 2 && scale >= 1)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-      for (temp_p = 0; temp_p < 64; temp_p++) {
-        if (temp_p > 60) {
-        }
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-      }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 8) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 10) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 12) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-  }
-
-  if (scale < 1) {
-    for (temp_p = 0; temp_p < 64; temp_p++)
-      for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-        *(hpoly_coeffs + uy) =
-            XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-        *(vpoly_coeffs + uy) =
-            XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-        uy = uy + 1;
-      }
-  }
-
-}
-
-static int
-log2_val (unsigned int val)
-{
-  int cnt = 0;
-  while (val > 1) {
-    val = val >> 1;
-    cnt++;
-  }
-  return cnt;
-}
-
-static gboolean
-feasibilityCheck (int src, int dst, int *filterSize)
-{
-  int sizeFactor = 4;
-  int xInc = (((int64_t) src << 16) + (dst >> 1)) / dst;
-  if (xInc <= 1 << 16)
-    *filterSize = 1 + sizeFactor;       // upscale
-  else
-    *filterSize = 1 + (sizeFactor * src + dst - 1) / dst;
-
-  if (*filterSize > MAX_FILTER_SIZE) {
-    GST_ERROR
-        ("FilterSize %d for %d to %d is greater than maximum taps(%d)",
-        *filterSize, src, dst, MAX_FILTER_SIZE);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-void
-copy_filt_set (int16_t dest_filt[64][12], int set)
-{
-  int i = 0, j = 0;
-
-  for (i = 0; i < 64; i++) {
-    for (j = 0; j < 12; j++) {
-      switch (set) {
-        case XLXN_FIXED_COEFF_SR13:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR13_0[i][j];    //<1.5SR
-          break;
-        case XLXN_FIXED_COEFF_SR15:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR15_0[i][j];    //1.5SR
-          break;
-        case XLXN_FIXED_COEFF_SR2:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps8_12C[i][j];  //2SR //8tap
-          break;
-        case XLXN_FIXED_COEFF_SR25:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR25_0[i][j];    //2.5SR
-          break;
-        case XLXN_FIXED_COEFF_TAPS_10:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps10_12C[i][j]; //10tap
-          break;
-        case XLXN_FIXED_COEFF_TAPS_12:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps12_12C[i][j]; //12tap
-          break;
-        case XLXN_FIXED_COEFF_TAPS_6:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps6_12C[i][j];  //6tap: Always used for up scale
-          break;
-        default:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps12_12C[i][j]; //12tap
-          break;
-      }
-    }
-  }
-}
-
-void
-Generate_cardinal_cubic_spline (int src, int dst, int filterSize, int64_t B,
-    int64_t C, int16_t * CCS_filtCoeff)
-{
-#ifdef COEFF_DUMP
-  FILE *fp;
-  char fname[512];
-  sprintf (fname, "coeff_%dTO%d.csv", src, dst);
-  fp = fopen (fname, "w");
-  /*FILE *fph;
-     sprintf(fname,"phase_%dTO%d_2Inc.txt",src,dst);
-     fph=fopen(fname,"w"); */
-  //fprintf(fp,"src:%d => dst:%d\n\n",src,dst);
-#endif
-  int one = (1 << 14);
-  int64_t *coeffFilter = NULL;
-  int64_t *coeffFilter_reduced = NULL;
-  int16_t *outFilter = NULL;
-  int16_t *coeffFilter_normalized = NULL;
-  int lumXInc = (((int64_t) src << 16) + (dst >> 1)) / dst;
-  int srt = src / dst;
-  int lval = log2_val (srt);
-  int th0 = 8;
-  int lv0 = MIN (lval, th0);
-  const int64_t fone = (int64_t) 1 << (54 - lv0);
-  int64_t thr1 = ((int64_t) 1 << 31);
-  int64_t thr2 = ((int64_t) 1 << 54) / fone;
-  int i, xInc, outFilterSize;
-  int num_phases = 64;
-  int phase_set[64] = { 0 };
-  int64_t xDstInSrc;
-  int xx, j, p, t;
-  int64_t d = 0, coeff = 0, dd = 0, ddd = 0;
-  int phase_cnt = 0;
-  int64_t error = 0, sum = 0, v = 0;
-  int intV = 0;
-  int fstart_Idx = 0, fend_Idx = 0, half_Idx = 0, middleIdx = 0;
-  unsigned int PhaseH = 0, offset = 0, WriteLoc = 0, WriteLocNext =
-      0, ReadLoc = 0, OutputWrite_En = 0;
-  int OutPixels = dst;
-  int PixelRate =
-      (int) ((float) ((src * STEP_PRECISION) + (dst / 2)) / (float) dst);
-  int ph_max_sum = 1 << MAX_FILTER_SIZE;
-  int sumVal = 0, maxIdx = 0, maxVal = 0, diffVal = 0;
-
-  xInc = lumXInc;
-  filterSize = MAX (filterSize, 1);
-  coeffFilter = (int64_t *) calloc (num_phases * filterSize, sizeof (int64_t));
-  xDstInSrc = xInc - (1 << 16);
-
-  // coefficient generation based on scaler IP
-  for (i = 0; i < src; i++) {
-    PhaseH =
-        ((offset >> (STEP_PRECISION_SHIFT - NR_PHASE_BITS))) & (NR_PHASES - 1);
-    WriteLoc = WriteLocNext;
-
-    if ((offset >> STEP_PRECISION_SHIFT) != 0) {
-      // Take a new sample from input, but don't process anything
-      ReadLoc++;
-      offset = offset - (1 << STEP_PRECISION_SHIFT);
-      OutputWrite_En = 0;
-      WriteLocNext = WriteLoc;
-    }
-
-    if (((offset >> STEP_PRECISION_SHIFT) == 0) && (WriteLoc < OutPixels)) {
-      // Produce a new output sample
-      offset += PixelRate;
-      OutputWrite_En = 1;
-      WriteLocNext = WriteLoc + 1;
-    }
-
-    if (OutputWrite_En) {
-      xDstInSrc = ReadLoc * (1 << 17) + PhaseH * (1 << 11);
-      xx = ReadLoc - (filterSize - 2) / 2;
-
-      d = (ABS (((int64_t) xx * (1 << 17)) - xDstInSrc)) << 13;
-
-      //count number of phases used for this SR
-      if (phase_set[PhaseH] == 0)
-        phase_cnt += 1;
-
-      //Filter coeff generation
-      for (j = 0; j < filterSize; j++) {
-        d = (ABS (((int64_t) xx * (1 << 17)) - xDstInSrc)) << 13;
-        if (xInc > 1 << 16) {
-          d = (int64_t) (d * dst / src);
-        }
-
-        if (d >= thr1) {
-          coeff = 0.0;
-        } else {
-          dd = (int64_t) (d * d) >> 30;
-          ddd = (int64_t) (dd * d) >> 30;
-          if (d < 1 << 30) {
-            coeff = (12 * (1 << 24) - 9 * B - 6 * C) * ddd +
-                (-18 * (1 << 24) + 12 * B + 6 * C) * dd +
-                (6 * (1 << 24) - 2 * B) * (1 << 30);
-          } else {
-            coeff = (-B - 6 * C) * ddd +
-                (6 * B + 30 * C) * dd +
-                (-12 * B - 48 * C) * d + (8 * B + 24 * C) * (1 << 30);
-          }
-        }
-
-        coeff = coeff / thr2;
-        coeffFilter[PhaseH * filterSize + j] = coeff;
-        xx++;
-      }
-      if (phase_set[PhaseH] == 0) {
-        phase_set[PhaseH] = 1;
-      }
-    }
-  }
-
-  coeffFilter_reduced =
-      (int64_t *) calloc ((num_phases * filterSize), sizeof (int64_t));
-  memcpy (coeffFilter_reduced, coeffFilter,
-      sizeof (int64_t) * num_phases * filterSize);
-  outFilterSize = filterSize;
-  outFilter =
-      (int16_t *) calloc ((num_phases * outFilterSize), sizeof (int16_t));
-  coeffFilter_normalized =
-      (int16_t *) calloc ((num_phases * outFilterSize), sizeof (int16_t));
-
-  /* normalize & store in outFilter */
-  for (i = 0; i < num_phases; i++) {
-    error = 0;
-    sum = 0;
-
-    for (j = 0; j < filterSize; j++) {
-      sum += coeffFilter_reduced[i * filterSize + j];
-    }
-    sum = (sum + one / 2) / one;
-    if (!sum) {
-      sum = 1;
-    }
-    for (j = 0; j < outFilterSize; j++) {
-      v = coeffFilter_reduced[i * filterSize + j] + error;
-      intV = ROUNDED_DIV (v, sum);
-      coeffFilter_normalized[i * (outFilterSize) + j] = intV;
-      coeffFilter_normalized[i * (outFilterSize) + j] = coeffFilter_normalized[i * (outFilterSize) + j] >> 2;   //added to negate double increment and match our precision
-      error = v - intV * sum;
-    }
-  }
-
-  for (p = 0; p < num_phases; p++) {
-    for (t = 0; t < filterSize; t++) {
-      outFilter[p * filterSize + t] =
-          coeffFilter_normalized[p * filterSize + t];
-    }
-  }
-
-  /*incorporate filter less than 12 tap into a 12 tap */
-  fstart_Idx = 0, fend_Idx = 0, half_Idx = 0;
-  middleIdx = (MAX_FILTER_SIZE / 2);    //center location for 12 tap
-  half_Idx = (outFilterSize / 2);
-  if ((outFilterSize - (half_Idx << 1)) == 0) { //evenOdd
-    fstart_Idx = middleIdx - half_Idx;
-    fend_Idx = middleIdx + half_Idx;
-  } else {
-    fstart_Idx = middleIdx - (half_Idx);
-    fend_Idx = middleIdx + half_Idx + 1;
-  }
-
-  for (i = 0; i < num_phases; i++) {
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-
-      CCS_filtCoeff[i * MAX_FILTER_SIZE + j] = 0;
-      if ((j >= fstart_Idx) && (j < fend_Idx))
-        CCS_filtCoeff[i * MAX_FILTER_SIZE + j] =
-            outFilter[i * (outFilterSize) + (j - fstart_Idx)];
-    }
-  }
-
-  /*Make sure filterCoeffs within a phase sum to 4096 */
-  for (i = 0; i < num_phases; i++) {
-    sumVal = 0;
-    maxVal = 0;
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-      sumVal += CCS_filtCoeff[i * MAX_FILTER_SIZE + j];
-      if (CCS_filtCoeff[i * MAX_FILTER_SIZE + j] > maxVal) {
-        maxVal = CCS_filtCoeff[i * MAX_FILTER_SIZE + j];
-        maxIdx = j;
-      }
-    }
-    diffVal = ph_max_sum - sumVal;
-    if (diffVal > 0)
-      CCS_filtCoeff[i * MAX_FILTER_SIZE + maxIdx] =
-          CCS_filtCoeff[i * MAX_FILTER_SIZE + maxIdx] + diffVal;
-  }
-
-
-#ifdef COEFF_DUMP
-  fprintf (fp, "taps/phases, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\n");
-  for (i = 0; i < num_phases; i++) {
-    fprintf (fp, "%d, ", i + 1);
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-      fprintf (fp, "%d,  ", CCS_filtCoeff[i * MAX_FILTER_SIZE + j]);
-    }
-    fprintf (fp, "\n");
-  }
-#endif
-
-  free (coeffFilter);
-  free (coeffFilter_reduced);
-  free (outFilter);
-  free (coeffFilter_normalized);
-#ifdef COEFF_DUMP
-  fclose (fp);
-#endif
-}
-
-static gboolean
-vvas_xcompositor_prepare_coefficients_with_12tap (GstVvasXCompositor * self,
-    guint chan_id)
-{
-  GstVvasXCompositorPrivate *priv = self->priv;
-  GstVvasXCompositorPad *srcpad = NULL;
-  GstCaps *out_caps;
-  GstVideoInfo out_vinfo;
-  gint filter_size;
-  guint in_width, in_height, out_width, out_height;
-  int64_t B = 0 * (1 << 24);
-  int64_t C = 0.6 * (1 << 24);
-  float scale_ratio[2] = { 0, 0 };
-  int upscale_enable[2] = { 0, 0 };
-  int filterSet[2] = { 0, 0 };
-  guint d;
-  gboolean bret;
-  srcpad = GST_VVAS_XCOMPOSITOR_PAD_CAST (self->srcpad);
-  if (!srcpad) {
-    GST_ERROR_OBJECT (self, "failed to get srcpad");
-    return FALSE;
-  }
-
-  out_caps = gst_pad_get_current_caps ((GstPad *) srcpad);
-  if (!out_caps) {
-    GST_ERROR_OBJECT (self, "failed to get output caps ");
-    return FALSE;
-  }
-
-  bret = gst_video_info_from_caps (&out_vinfo, out_caps);
-  if (!bret) {
-    GST_ERROR_OBJECT (self, "failed to get videoinfo from output caps ");
-    gst_caps_unref (out_caps);
-    return FALSE;
-  }
-
-  in_width = GST_VIDEO_INFO_WIDTH (self->priv->in_vinfo[chan_id]);
-  in_height = GST_VIDEO_INFO_HEIGHT (self->priv->in_vinfo[chan_id]);
-  out_width = GST_VIDEO_INFO_WIDTH (&out_vinfo);
-  out_height = GST_VIDEO_INFO_HEIGHT (&out_vinfo);
-
-  /* store width scaling ratio  */
-  if (in_width >= out_width) {
-    scale_ratio[0] = (float) in_width / (float) out_width;      //downscale
-  } else {
-    scale_ratio[0] = (float) out_width / (float) in_width;      //upscale
-    upscale_enable[0] = 1;
-  }
-
-  /* store height scaling ratio */
-  if (in_height >= out_height) {
-    scale_ratio[1] = (float) in_height / (float) out_height;    //downscale
-  } else {
-    scale_ratio[1] = (float) out_height / (float) in_height;    //upscale
-    upscale_enable[1] = 1;
-  }
-
-  for (d = 0; d < 2; d++) {
-    if (upscale_enable[d] == 1) {
-      /* upscaling default use 6 taps */
-      filterSet[d] = XLXN_FIXED_COEFF_TAPS_6;
-    } else {
-      /* Get index of downscale fixed filter */
-      if (scale_ratio[d] < 1.5)
-        filterSet[d] = XLXN_FIXED_COEFF_SR13;
-      else if ((scale_ratio[d] >= 1.5) && (scale_ratio[d] < 2))
-        filterSet[d] = XLXN_FIXED_COEFF_SR15;
-      else if ((scale_ratio[d] >= 2) && (scale_ratio[d] < 2.5))
-        filterSet[d] = XLXN_FIXED_COEFF_SR2;
-      else if ((scale_ratio[d] >= 2.5) && (scale_ratio[d] < 3))
-        filterSet[d] = XLXN_FIXED_COEFF_SR25;
-      else if ((scale_ratio[d] >= 3) && (scale_ratio[d] < 3.5))
-        filterSet[d] = XLXN_FIXED_COEFF_TAPS_10;
-      else
-        filterSet[d] = XLXN_FIXED_COEFF_TAPS_12;
-    }
-    GST_INFO_OBJECT (self,
-        "%s scaling ratio = %f and chosen filter type = %d",
-        d == 0 ? "width" : "height", scale_ratio[d], filterSet[d]);
-  }
-
-  if (self->coef_load_type == COEF_AUTO_GENERATE) {
-    /* prepare horizontal coefficients */
-    bret = feasibilityCheck (in_width, out_width, &filter_size);
-    if (bret && !upscale_enable[0]) {
-      GST_INFO_OBJECT (self,
-          "Generate cardinal cubic horizontal coefficients "
-          "with filter size %d", filter_size);
-      Generate_cardinal_cubic_spline (in_width, out_width, filter_size, B,
-          C, (int16_t *) priv->Hcoff[chan_id].user_ptr);
-    } else {
-      /* get fixed horizontal filters */
-      GST_INFO_OBJECT (self,
-          "Consider predefined horizontal filter coefficients");
-      copy_filt_set (priv->Hcoff[chan_id].user_ptr, filterSet[0]);
-    }
-
-    /* prepare vertical coefficients */
-    bret = feasibilityCheck (in_height, out_height, &filter_size);
-    if (bret && !upscale_enable[1]) {
-      GST_INFO_OBJECT (self,
-          "Generate cardinal cubic vertical coefficients "
-          "with filter size %d", filter_size);
-      Generate_cardinal_cubic_spline (in_height, out_height, filter_size,
-          B, C, (int16_t *) priv->Vcoff[chan_id].user_ptr);
-    } else {
-      /* get fixed vertical filters */
-      GST_INFO_OBJECT (self,
-          "Consider predefined vertical filter coefficients");
-      copy_filt_set (priv->Vcoff[chan_id].user_ptr, filterSet[1]);
-    }
-  } else if (self->coef_load_type == COEF_FIXED) {
-    /* get fixed horizontal filters */
-    GST_INFO_OBJECT (self,
-        "Consider predefined horizontal filter coefficients");
-    copy_filt_set (priv->Hcoff[chan_id].user_ptr, filterSet[0]);
-
-    /* get fixed vertical filters */
-    GST_INFO_OBJECT (self, "Consider predefined vertical filter coefficients");
-    copy_filt_set (priv->Vcoff[chan_id].user_ptr, filterSet[1]);
-  }
-  gst_caps_unref (out_caps);
-  return TRUE;
-}
-
+/**
+ *  @fn static bool vvas_xcompsitor_add_processing_channels (GstVvasXCompositor * self)
+ *  @param [in] self    - Handle to GstVvasXCompositor instance.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will add the channels into the VVAS CORE Scaler library for processing.
+ */
 static bool
-xlnx_multiscaler_descriptor_create (GstVvasXCompositor * self)
+vvas_xcompsitor_add_processing_channels (GstVvasXCompositor * self)
 {
   GstVideoMeta *meta_out;
-  MULTI_SCALER_DESC_STRUCT *msPtr;
   guint chan_id;
   guint quad_in_each_row_column = (guint) ceil (sqrt (self->num_request_pads));
   gfloat in_width_scale_factor = 1, in_height_scale_factor = 1;
   GstVvasXCompositorPrivate *priv = self->priv;
-  guint quadrant_height, quadrant_width;
+
   for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
     /* setting input output values based on zoder for that pad */
     GstVvasXCompositorPad *pad;
-    uint64_t phy_in_0 = priv->phy_in_0[self->priv->pad_of_zorder[chan_id]];
-    uint64_t phy_in_1 = priv->phy_in_1[self->priv->pad_of_zorder[chan_id]];
-    uint64_t phy_in_2 = priv->phy_in_2[self->priv->pad_of_zorder[chan_id]];
-    uint32_t in_width =
-        priv->in_vinfo[self->priv->pad_of_zorder[chan_id]]->width;
-    uint32_t in_height =
-        priv->in_vinfo[self->priv->pad_of_zorder[chan_id]]->height;
+    uint32_t out_width = 0, out_height = 0;
+    uint32_t in_width, in_height;
     uint32_t xpos_offset = 0;
     uint32_t ypos_offset = 0;
+    GstBuffer *input_buffer;
+    GstVideoInfo *vinfo;
+    VvasVideoFrame *input_frame;
+    VvasReturnType vret;
+    VvasScalerRect src_rect = { 0 };
+    VvasScalerRect dst_rect = { 0 };
 
-    uint32_t msc_inPixelFmt =
-        xlnx_multiscaler_colorformat (priv->in_vinfo[self->
-            priv->pad_of_zorder[chan_id]]->finfo->format);
-    uint32_t stride =
-        self->priv->meta_in_stride[self->priv->pad_of_zorder[chan_id]];
-#ifdef ENABLE_PPE_SUPPORT
-    uint32_t val;
-#endif
-    if (stride != xlnx_multiscaler_stride_align (stride, WIDTH_ALIGN)) {
-      GST_WARNING_OBJECT (self, "input stide alignment mismatch");
-      GST_WARNING_OBJECT (self, "required  stride = %d in_stride = %d",
-          xlnx_multiscaler_stride_align (stride, WIDTH_ALIGN), stride);
+    in_width = priv->in_vinfo[self->priv->pad_of_zorder[chan_id]]->width;
+    in_height = priv->in_vinfo[self->priv->pad_of_zorder[chan_id]]->height;
+
+    input_buffer = priv->inbufs[self->priv->pad_of_zorder[chan_id]];
+    vinfo = priv->in_vinfo[self->priv->pad_of_zorder[chan_id]];
+
+    /* Convert GstBuffer to VvasVideoFrame required for Vvas Core Scaler */
+    input_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+        self->in_mem_bank, input_buffer, vinfo, GST_MAP_READ);
+    if (!input_frame) {
+      GST_ERROR_OBJECT (self,
+          "[%u] Couldn't convert input GstBuffer to VvasVideoFrame", chan_id);
+      return FALSE;
     }
-    pad =
-        gst_vvas_xcompositor_sinkpad_at_index (self,
-        self->priv->pad_of_zorder[chan_id]);
-    msPtr = (MULTI_SCALER_DESC_STRUCT *) (priv->msPtr[chan_id].user_ptr);
 
-    msPtr->msc_widthIn = in_width;
-    msPtr->msc_heightIn = in_height;
-    msPtr->msc_inPixelFmt = msc_inPixelFmt;
-    msPtr->msc_strideIn = stride;
+    priv->input_frames[self->priv->pad_of_zorder[chan_id]] = input_frame;
+
+    pad = gst_vvas_xcompositor_sinkpad_at_index (self,
+        self->priv->pad_of_zorder[chan_id]);
+
     meta_out = gst_buffer_get_video_meta (priv->outbuf);
-    quadrant_width = (int) (meta_out->width / quad_in_each_row_column);
-    quadrant_height = (int) (meta_out->height / quad_in_each_row_column);
+    if (!meta_out) {
+      return FALSE;
+    }
 
     if (self->best_fit) {
-      msPtr->msc_widthOut = quadrant_width;
-      msPtr->msc_heightOut = quadrant_height;
+      guint quadrant_height, quadrant_width;
+      quadrant_width = (int) (meta_out->width / quad_in_each_row_column);
+      quadrant_height = (int) (meta_out->height / quad_in_each_row_column);
+      out_width = quadrant_width;
+      out_height = quadrant_height;
+      xpos_offset = quadrant_width * (chan_id % quad_in_each_row_column);
+      ypos_offset = quadrant_height * (chan_id / quad_in_each_row_column);
     } else {
       if (pad->width != -1) {
-        msPtr->msc_widthOut = pad->width;
+        out_width = pad->width;
         if (pad->width < -1 || pad->width > meta_out->width || pad->width == 0) {
           GST_ERROR_OBJECT (self, "width of sink_%d is invalid",
               self->priv->pad_of_zorder[chan_id]);
           return false;
         }
-      } else
-        msPtr->msc_widthOut = in_width;
+      } else {
+        out_width = in_width;
+      }
+
       if (pad->height != -1) {
-        msPtr->msc_heightOut = pad->height;
+        out_height = pad->height;
         if (pad->height < -1 || pad->height > meta_out->height
             || pad->height == 0) {
           GST_ERROR_OBJECT (self, "height of sink_%d is invalid",
               self->priv->pad_of_zorder[chan_id]);
           return false;
         }
-      } else
-        msPtr->msc_heightOut = in_height;
+      } else {
+        out_height = in_height;
+      }
+
       xpos_offset = pad->xpos;
       ypos_offset = pad->ypos;
+
       if (xpos_offset < 0 || xpos_offset > meta_out->width) {
         GST_ERROR_OBJECT (self, "xpos of sink_%d is invalid",
             self->priv->pad_of_zorder[chan_id]);
@@ -3135,195 +2934,119 @@ xlnx_multiscaler_descriptor_create (GstVvasXCompositor * self)
             self->priv->pad_of_zorder[chan_id]);
         return false;
       }
-      /* Aligning xpos and ypos as per IP requirement before calculating cropping params */
-      xpos_offset = (xpos_offset / (8 * self->ppc)) * (8 * self->ppc);
-      ypos_offset = (ypos_offset / 2) * 2;
+
       /* cropping the image  at right corner if xpos exceeds output width */
-      if (xpos_offset + msPtr->msc_widthOut > meta_out->width) {
-        in_width_scale_factor = ((float) in_width / msPtr->msc_widthOut);
-        msPtr->msc_widthIn =
+      if (xpos_offset + out_width > meta_out->width) {
+        in_width_scale_factor = ((float) in_width / out_width);
+        in_width =
             (int) ((meta_out->width - xpos_offset) * in_width_scale_factor);
-        msPtr->msc_widthOut = meta_out->width - xpos_offset;
+        out_width = meta_out->width - xpos_offset;
       }
-      /* cropping the image  at bottom corner if xpos exceeds output width */
-      if (ypos_offset + msPtr->msc_heightOut > meta_out->height) {
-        in_height_scale_factor = ((float) in_height / msPtr->msc_heightOut);
-        msPtr->msc_heightIn =
+      /* cropping the image  at bottom corner if ypos exceeds output height */
+      if (ypos_offset + out_height > meta_out->height) {
+        in_height_scale_factor = ((float) in_height / out_height);
+        in_height =
             (int) ((meta_out->height - ypos_offset) * in_height_scale_factor);
-        msPtr->msc_heightOut = meta_out->height - ypos_offset;
+        out_height = meta_out->height - ypos_offset;
       }
 
     }
-    /* Align values as per the IP requirement */
-    msPtr->msc_widthIn = (msPtr->msc_widthIn / self->ppc) * self->ppc;
-    msPtr->msc_heightIn = (msPtr->msc_heightIn / 2) * 2;
-    msPtr->msc_widthOut =
-        xlnx_multiscaler_stride_align (msPtr->msc_widthOut, self->ppc);
-    msPtr->msc_heightOut =
-        xlnx_multiscaler_stride_align (msPtr->msc_heightOut, 2);
 
     GST_INFO_OBJECT (self,
         "Height scale factor %f and Width scale factor %f ",
         in_height_scale_factor, in_width_scale_factor);
-    GST_INFO_OBJECT (self, "Input height %d and width %d ", msPtr->msc_heightIn,
-        msPtr->msc_widthIn);
+    GST_INFO_OBJECT (self, "Input height %d and width %d ", in_height,
+        in_width);
     GST_INFO_OBJECT (self,
         "Aligned params are for sink_%d xpos %d ypos %d out_width %d out_height %d ",
         self->priv->pad_of_zorder[chan_id], xpos_offset, ypos_offset,
-        msPtr->msc_widthOut, msPtr->msc_heightOut);
+        out_width, out_height);
 
-#ifdef ENABLE_PPE_SUPPORT
-    msPtr->msc_alpha_0 = self->priv->alpha_r;
-    msPtr->msc_alpha_1 = self->priv->alpha_g;
-    msPtr->msc_alpha_2 = self->priv->alpha_b;
-    val = (self->priv->beta_r * (1 << 16));
-    msPtr->msc_beta_0 = val;
-    val = (self->priv->beta_g * (1 << 16));
-    msPtr->msc_beta_1 = val;
-    val = (self->priv->beta_b * (1 << 16));
-    msPtr->msc_beta_2 = val;
-#endif
+    /* Fill rect parameters */
+    src_rect.x = 0;
+    src_rect.y = 0;
+    src_rect.width = in_width;
+    src_rect.height = in_height;
+    src_rect.frame = input_frame;
 
-    msPtr->msc_lineRate =
-        (uint32_t) ((float) ((msPtr->msc_heightIn * STEP_PRECISION) +
-            ((msPtr->msc_heightOut) / 2)) / (float) msPtr->msc_heightOut);
-    msPtr->msc_pixelRate = (uint32_t) ((float)
-        (((msPtr->msc_widthIn) * STEP_PRECISION) +
-            ((msPtr->msc_widthOut) / 2)) / (float) msPtr->msc_widthOut);
-    msPtr->msc_outPixelFmt = xlnx_multiscaler_colorformat (meta_out->format);
+    dst_rect.x = xpos_offset;
+    dst_rect.y = ypos_offset;
+    dst_rect.width = out_width;
+    dst_rect.height = out_height;
+    dst_rect.frame = priv->output_frame;
 
-    msPtr->msc_strideOut = (*(meta_out->stride));
-
-    if (msPtr->msc_strideOut !=
-        xlnx_multiscaler_stride_align (*(meta_out->stride), WIDTH_ALIGN)) {
-      GST_WARNING_OBJECT (self, "output stide alignment mismatch");
-      GST_WARNING_OBJECT (self, "required  stride = %d out_stride = %d",
-          xlnx_multiscaler_stride_align (*
-              (meta_out->stride), WIDTH_ALIGN), msPtr->msc_strideOut);
+    /* Add processing channel into Core Scaler */
+    vret =
+        vvas_scaler_channel_add (priv->vvas_scaler, &src_rect, &dst_rect, NULL,
+        NULL);
+    if (VVAS_IS_ERROR (vret)) {
+      GST_ERROR_OBJECT (self, "[%u] failed to add processing channel in scaler",
+          chan_id);
+      return FALSE;
     }
-
-    msPtr->msc_srcImgBuf0 = (uint64_t) phy_in_0;        /* plane 0 */
-    msPtr->msc_srcImgBuf1 = (uint64_t) phy_in_1;        /* plane 1 */
-    msPtr->msc_srcImgBuf2 = (uint64_t) phy_in_2;        /* plane 2 */
-    if (self->best_fit) {
-      msPtr->msc_dstImgBuf0 =
-          (uint64_t) priv->phy_out_0 +
-          quadrant_width * (chan_id % quad_in_each_row_column)
-          + (msPtr->msc_strideOut * quadrant_height) * (chan_id / quad_in_each_row_column);     /* plane 0 */
-      msPtr->msc_dstImgBuf1 =
-          (uint64_t) priv->phy_out_1 +
-          quadrant_width * (chan_id % quad_in_each_row_column)
-          + (msPtr->msc_strideOut * quadrant_height / 2) * (chan_id / quad_in_each_row_column); /* plane 1 */
-
-      msPtr->msc_dstImgBuf2 =
-          (uint64_t) priv->phy_out_2 +
-          quadrant_width * (chan_id % quad_in_each_row_column)
-          + (msPtr->msc_strideOut * quadrant_height / 2) * (chan_id / quad_in_each_row_column); /* plane 2 */
-    } else {
-      msPtr->msc_dstImgBuf0 = (uint64_t) priv->phy_out_0 + xpos_offset + ypos_offset * msPtr->msc_strideOut;    /* plane 0 */
-
-      msPtr->msc_dstImgBuf1 = (uint64_t) priv->phy_out_1 + xpos_offset + ypos_offset * msPtr->msc_strideOut / 2;        /* plane 1 */
-
-      msPtr->msc_dstImgBuf2 = (uint64_t) priv->phy_out_2 + xpos_offset + ypos_offset * msPtr->msc_strideOut / 2;        /* plane 2 */
-
-    }
-
-    msPtr->msc_blkmm_hfltCoeff = 0;
-    msPtr->msc_blkmm_vfltCoeff = 0;
-    if (chan_id == (self->num_request_pads - 1))
-      msPtr->msc_nxtaddr = 0;
-    else
-      msPtr->msc_nxtaddr = priv->msPtr[chan_id + 1].phy_addr;
-    msPtr->msc_blkmm_hfltCoeff = priv->Hcoff[chan_id].phy_addr;
-    msPtr->msc_blkmm_vfltCoeff = priv->Vcoff[chan_id].phy_addr;
-
+    GST_DEBUG_OBJECT (self, "Added processing channel for idx: %u", chan_id);
   }
-  priv->is_coeff = false;
   return TRUE;
 }
 
-static int32_t
-vvas_xcompositor_exec_buf (vvasDeviceHandle dev_handle,
-    vvasKernelHandle kern_handle, vvasRunHandle * run_handle,
-    const char *format, ...)
-{
-  va_list args;
-  int32_t iret;
-  va_start (args, format);
-
-  iret = vvas_xrt_exec_buf (dev_handle, kern_handle, run_handle, format, args);
-
-
-  va_end (args);
-  return iret;
-}
-
+/**
+ *  @fn gboolean vvas_xcompositor_process (GstVvasXCompositor * self)
+ *  @param [In] self   - Handle to GstVvasXCompositor instance.
+ *  @return On Success returns TRUE\n
+ *          On Failure returns FALSE
+ *  @brief   This function does the processing of the incoming buffers using Core Scaler.
+ */
 static gboolean
 vvas_xcompositor_process (GstVvasXCompositor * self)
 {
   GstVvasXCompositorPrivate *priv = self->priv;
-  int iret;
-  uint64_t desc_addr = 0;
   bool ret;
   GstMemory *mem = NULL;
-  unsigned int ms_status = 0;
-  int retry_count = MAX_EXEC_WAIT_RETRY_CNT;
-  ret = xlnx_multiscaler_descriptor_create (self);
-  if (!ret)
-    return FALSE;
-#ifdef XLNX_PCIe_PLATFORM
-  ret = xlnx_abr_desc_syncBO (self);
-  if (!ret)
-    return FALSE;
-#endif
+  VvasReturnType vret;
 
-  desc_addr = self->priv->msPtr[0].phy_addr;
-  iret = vvas_xcompositor_exec_buf (priv->dev_handle, priv->kern_handle,
-      &priv->run_handle,
-      "ulppu", self->num_request_pads, desc_addr, NULL, NULL, ms_status);
-
-  if (iret) {
-    GST_ERROR_OBJECT (self, "failed to execute command %d", iret);
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, NULL,
-        ("failed to issue execute command. reason : %s", strerror (errno)));
+  priv->output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+      self->out_mem_bank, priv->outbuf, priv->out_vinfo, GST_MAP_READ);
+  if (!priv->output_frame) {
+    GST_ERROR_OBJECT (self, "Could convert output GstBuffer to VvasVideoFrame");
     return FALSE;
   }
 
-  do {
-    iret = vvas_xrt_exec_wait (priv->dev_handle, priv->run_handle,
-        MULTI_SCALER_TIMEOUT);
-    /* Lets try for MAX count unless there is a error or completion */
-    if (iret == ERT_CMD_STATE_TIMEOUT) {
-      GST_WARNING_OBJECT (self, "Timeout...retry execwait");
-      if (retry_count-- <= 0) {
-        GST_ERROR_OBJECT (self,
-            "Max retry count %d reached..returning error",
-            MAX_EXEC_WAIT_RETRY_CNT);
-        vvas_xrt_free_run_handle (priv->run_handle);
-        return FALSE;
-      }
-    } else if (iret == ERT_CMD_STATE_ERROR) {
-      GST_ERROR_OBJECT (self, "ExecWait ret = %d", iret);
-      vvas_xrt_free_run_handle (priv->run_handle);
+  ret = vvas_xcompsitor_add_processing_channels (self);
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "couldn't add processing channels");
+    return FALSE;
+  }
 
-      return FALSE;
-    }
-  } while (iret != ERT_CMD_STATE_COMPLETED);
-  vvas_xrt_free_run_handle (priv->run_handle);
+  vret = vvas_scaler_process_frame (self->priv->vvas_scaler);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Failed to process frame in scaler");
+    return FALSE;
+  }
+
   mem = gst_buffer_get_memory (priv->outbuf, 0);
   if (mem == NULL) {
     GST_ERROR_OBJECT (self,
         "chan-%d : failed to get memory from output buffer", 0);
     return FALSE;
   }
-#ifdef XLNX_PCIe_PLATFORM
+  /* sync from device to host */
   gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_FROM_DEVICE);
-#endif
   gst_memory_unref (mem);
 
   return TRUE;
 }
 
+
+/**
+ *  @fn void vvas_xcompositor_get_empty_buffer (GstVvasXCompositor * self,
+ *               GstVvasXCompositorPad * sinkpad, GstBuffer ** inbuf)
+ *  @param [in] self  		- Handle that holds the GstVvasXCompositor instance.
+ *  @param [in] sinkpad 	- Pointer that holds the GstVvasXCompositorPad object.
+ *  @param [out] inbuf  	- pointer to input buffer.
+ *  @return None
+ *  @brief  This API assigns an empty buffer to input buffer
+ *  @details It acquires an empty buffer from own pool and assigns it to input buffer.
+ */
 static void
 vvas_xcompositor_get_empty_buffer (GstVvasXCompositor * self,
     GstVvasXCompositorPad * sinkpad, GstBuffer ** inbuf)
@@ -3352,6 +3075,18 @@ vvas_xcompositor_get_empty_buffer (GstVvasXCompositor * self,
   gst_buffer_unref (*inbuf);
 }
 
+/**
+ *  @fn static GstFlowReturn  gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
+ *                                                                       GstBuffer ** outbuf)
+ *  @param [in] videoaggregator - GstVideoAggregator pointer that holds the GstVvasXCompositor instance.
+ *  @param [out] outbuf         - pointer to output buffer.
+ *  @return GST_FLOW_OK on Success.\n
+ *          GST_FLOW_ERROR on Failure.
+ *  @brief  This is a callback function which provides output buffer.
+ *  @details This is a callback function which is called by
+ *           VideoAggregator class provides output buffer to be used as @outbuffer of
+ *           the gst_vvas_xcompositor_aggregate_frames method.
+ */
 static GstFlowReturn
 gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
     GstBuffer ** outbuf)
@@ -3363,6 +3098,7 @@ gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
 
   pool = gst_aggregator_get_buffer_pool (aggregator);
 
+  /* Allocate buffers from the pool */
   if (pool && !self->priv->need_copy) {
     if (!gst_buffer_pool_is_active (pool)) {
       if (!gst_buffer_pool_set_active (pool, TRUE)) {
@@ -3375,7 +3111,10 @@ gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
 
     ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL);
     gst_object_unref (pool);
-  } else {                      /* going to allocate the sw buffers of size out_vinfo which are not padded */
+  } else {
+    /** going to allocate the sw buffers of size out_vinfo
+     *  which are not padded
+     */
     if (pool)
       gst_object_unref (pool);
     *outbuf =
@@ -3392,6 +3131,18 @@ gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
   return ret;
 }
 
+/**
+ *  @fn static GstFlowReturn gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
+ *  @param [in] *vagg   - VideoAggregator instance.
+ *  @param [in] *outbuf - output buffer to store the aggregated frame.
+ *  @return GstFlowOK on Success.\n
+ *          GstFlowError on Failure.
+ *
+ *  @ brief It is a callback function which aggregate the frames.
+ *  @details It is a callback function that called from the GstVideoAggregator class
+ *           when the data on all the sinkpads are ready. It internally calls the
+ *           prepare_input_buffer , prepare_output_buffer and process/aggregate the frames.
+ */
 static GstFlowReturn
 gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
     GstBuffer * outbuf)
@@ -3408,19 +3159,26 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
     GstVideoFrame *prepared_frame;
     if (!sinkpad->is_eos)
       if (gst_aggregator_pad_is_eos ((GstAggregatorPad *) pad)) {
-        vvas_xcompositor_adjust_zorder_after_eos (self, sinkpad->index);
+        if (!self->best_fit) {
+          /* When Best Filt is enabled, zorder will not change after EOS */
+          vvas_xcompositor_adjust_zorder_after_eos (self, sinkpad->index);
+        }
         sinkpad->is_eos = true;
       }
+    /** Fetch the currently prepared video frame of the pad
+     *  that has to be aggregated into the current output frame.
+     */
     prepared_frame = gst_video_aggregator_pad_get_prepared_frame (pad);
 
     if (!prepared_frame) {
-      /*to pass and empty buffer in case we get eos on some of the pads */
+      /* to pass and empty buffer in case we get eos on some of the pads */
       vvas_xcompositor_get_empty_buffer (self, sinkpad,
           &self->priv->inbufs[pad_id]);
     } else {
       self->priv->inbufs[pad_id] = prepared_frame->buffer;
     }
 
+    /* prepare input buffer from the data on sinkpad */
     bret =
         vvas_xcompositor_prepare_input_buffer (self, sinkpad,
         &self->priv->inbufs[pad_id]);
@@ -3429,6 +3187,9 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
 
     pad_id++;
   }
+  /** Creating a multi scaler aligned buffer, as the default buffer allocated is
+   *  unaligned to multiscaler if the downstream does not understand video meta
+   */
   if (self->priv->need_copy && self->priv->output_pool) {
     GstBuffer *aligned_buffer = NULL;
     if (!gst_buffer_pool_is_active (self->priv->output_pool)) {
@@ -3446,19 +3207,26 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
     gst_buffer_copy_into (aligned_buffer, outbuf,
         GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS |
         GST_BUFFER_COPY_FLAGS, 0, -1);
+    /* Prepare aligned output buffer in case of no video meta data */
     bret = vvas_xcompositor_prepare_output_buffer (self, aligned_buffer);
   } else {
+    /* Prepare output buffer which is acquired from the pool */
     bret = vvas_xcompositor_prepare_output_buffer (self, outbuf);
   }
   if (!bret)
     goto error;
-
+  /** Aggregate the frames using multi scaler kernel after
+   *  preparing i/p and o/p buffers
+   */
   bret = vvas_xcompositor_process (self);
   if (!bret)
     goto error;
+  /* If copy is needed, copy the aligned buffer' s data to unaligned buffer */
   if (self->priv->need_copy) {
     GstVideoFrame new_frame, out_frame;
-    /* aligned buffer pointer is assigned to self->priv->outbuf so using for a slow copy */
+    /** aligned buffer pointer is assigned to
+     *  self->priv->outbuf so using for a slow copy
+     */
     gst_video_frame_map (&out_frame, self->priv->out_vinfo, self->priv->outbuf,
         GST_MAP_READ);
     gst_video_frame_map (&new_frame, self->priv->out_vinfo, outbuf,
@@ -3475,6 +3243,7 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
     if (self->priv->outbuf)
       gst_buffer_unref (self->priv->outbuf);
   }
+
   GST_LOG_OBJECT (self,
       "pushing buffer %p with pts = %" GST_TIME_FORMAT " dts = %"
       GST_TIME_FORMAT " duration = %" GST_TIME_FORMAT "size is %ld", outbuf,
@@ -3484,15 +3253,32 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
       gst_buffer_get_size (outbuf));
   for (pad_id = 0; pad_id < self->num_request_pads; pad_id++)
     gst_buffer_unref (self->priv->inbufs[pad_id]);
+
+  vvas_xcompositor_free_vvas_video_frame (self);
   return GST_FLOW_OK;
 
 error:
   fret = GST_FLOW_ERROR;
+  vvas_xcompositor_free_vvas_video_frame (self);
   for (pad_id = 0; pad_id < self->num_request_pads; pad_id++)
     gst_buffer_unref (self->priv->inbufs[pad_id]);
   return fret;
 }
 
+/**
+ *  @fn static void gst_vvas_xcompositor_get_property (GObject * object,
+ *                                                     guint prop_id,
+ *                                                     const GValue * value,
+ *                                                     GParamSpec * pspec)
+ *  @param [in] object  - Handle to GstVvasXCompositor typecasted to GObject
+ *  @param [in] prop_id - Property ID as defined in GstVvasXCompositor properties enum
+ *  @param [in] value   - GValue which holds property value returned by the function
+ *  @param [in] pspec   - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief This API returns values of the property with property ID \p prop_id.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::get_property function pointer and
+ *           this will be invoked when user requests to get properties of GstVvasXCompositor object.
+ */
 static void
 gst_vvas_xcompositor_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -3543,12 +3329,28 @@ gst_vvas_xcompositor_get_property (GObject * object, guint prop_id,
       g_value_set_uint64 (value, self->priv->reservation_id);
       break;
 #endif
-
+    default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
+/**
+ *  @fn static void gst_vvas_xcompositor_set_property (GObject * object,
+ *                                                     guint prop_id,
+ *                                                     const GValue * value,
+ *                                                     GParamSpec * pspec)
+ *  @param [in] object  - Handle to GstVvasXCompositor typecasted to GObject
+ *  @param [in] prop_id - Property ID as defined in GstVvasXCompositor properties enum
+ *  @param [in] value   - GValue which holds property value set by user
+ *  @param [in] pspec   - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief This API stores values sent from the user in GstVvasXCompositor object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_property function pointer and
+ *           this will be invoked when user sets properties on GstVvasXCompositor object. Based on property
+ *           value type, corresponding g_value_get_xxx API will be called to get property value
+ *           from GValue handle.
+ */
 static void
 gst_vvas_xcompositor_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -3619,6 +3421,20 @@ gst_vvas_xcompositor_set_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ *  @def static GstPad * gst_vvas_xcompositor_request_new_pad (GstElement * element,
+ *  					                                       GstPadTemplate * templ,
+ *  					                                       const gchar * req_name,
+ *  					                                       const GstCaps * caps)
+ *  @param [in] element 	- pointer to GstVvasXCompositor
+ *  @param [in] templ 		- pointer to sink pad template
+ *  @param [in] req_name 	- name of the pad to be create
+ *  @param [in] caps 		- Capabilities of the data received on this pad
+ *  @return Pointer to pad on SUCCESS\n
+            NULL on FAILURE
+ *  @brief This function is called by the framework when a new pad of type "request pad" is to be created.
+ *         This request comes for sink pad. Once sink pad is created, corresponding src pad is also created.
+ */
 static GstPad *
 gst_vvas_xcompositor_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
@@ -3627,6 +3443,7 @@ gst_vvas_xcompositor_request_new_pad (GstElement * element,
   GstPad *pad;
   GstVvasXCompositor *self = GST_VVAS_XCOMPOSITOR (element);
 
+  /* Check for the maximum number of supported channels */
   if (self->num_request_pads > (MAX_CHANNELS - 1)) {
     GST_DEBUG_OBJECT (element, "Maximum num of pads supported is only 16");
     return NULL;
@@ -3639,11 +3456,13 @@ gst_vvas_xcompositor_request_new_pad (GstElement * element,
   if (pad == NULL)
     goto could_not_create;
 
+  /*Emit the child-added signal */
   gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (pad),
       GST_OBJECT_NAME (pad));
 
   newpad = (GstVvasXCompositorPad *) pad;
 
+  /* Update the pad parameters */
   newpad->index = self->num_request_pads;
   newpad->validate_import = TRUE;
   newpad->pool = NULL;
@@ -3659,6 +3478,13 @@ could_not_create:
   }
 }
 
+/**
+ *  @def static void gst_vvas_xcompositor_release_pad (GstElement * element, GstPad * pad)
+ *  @param [in] element 	- pointer to GstVvasXCompositor
+ *  @param [in] pad 		- pad to be released
+ *  @return none
+ *  @brief This function is called by the framework when a request pad is to be released.
+ */
 static void
 gst_vvas_xcompositor_release_pad (GstElement * element, GstPad * pad)
 {
@@ -3674,11 +3500,13 @@ gst_vvas_xcompositor_release_pad (GstElement * element, GstPad * pad)
     GST_ERROR_OBJECT (self, "could not find pad to release");
     return;
   }
+  /* Clear the pad parameters */
   gst_video_info_free (compositor_pad->in_vinfo);
   self->sinkpads = g_list_remove (self->sinkpads, compositor_pad);
   index = compositor_pad->index;
   GST_DEBUG_OBJECT (self, "releasing pad with index = %d", index);
 
+  /* Emits the child-removed signal. */
   gst_child_proxy_child_removed (GST_CHILD_PROXY (element), G_OBJECT (pad),
       GST_OBJECT_NAME (pad));
 
@@ -3688,12 +3516,24 @@ gst_vvas_xcompositor_release_pad (GstElement * element, GstPad * pad)
 
 }
 
+/**
+ *  @def static gboolean gst_vvas_xcompositor_start (GstAggregator * agg)
+ *  @param [in] agg - pointer to GstAggregator.
+ *  @return TRUE
+ *  @brief This function is called by the framework when the element goes from READY to PAUSED.
+ */
 static gboolean
 gst_vvas_xcompositor_start (GstAggregator * agg)
 {
   return TRUE;
 }
 
+/**
+ *  @def static gboolean gst_vvas_xcompositor_stop (GstAggregator * agg)
+ *  @param [in] agg - pointer to GstAggregator.
+ *  @return TRUE
+ *  @brief This function is called by the framework when the element goes from PAUSED to READY.
+ */
 static gboolean
 gst_vvas_xcompositor_stop (GstAggregator * agg)
 {
@@ -3701,7 +3541,15 @@ gst_vvas_xcompositor_stop (GstAggregator * agg)
 }
 
 
-/* GstChildProxy implementation */
+/**
+ *  @def static GObject * gst_vvas_xcompositor_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+ *                                                                             guint index)
+ *  @param [in] child_proxy     - The parent object to get the child from.
+ *  @param [in] index           - The child's position in the child list.
+ *  @return the child object or NULL if not found.
+ *  @brief This function fetches a child by its number.
+ *  @details Fetches a child by its number.
+ */
 static GObject *
 gst_vvas_xcompositor_child_proxy_get_child_by_index (GstChildProxy *
     child_proxy, guint index)
@@ -3718,6 +3566,13 @@ gst_vvas_xcompositor_child_proxy_get_child_by_index (GstChildProxy *
   return obj;
 }
 
+/**
+ *  @def guint gst_vvas_xcompositor_child_proxy_get_children_count (GstChildProxy * child_proxy)
+ *  @param [in] child_proxy -  the parent object to get the child from.
+ *  @return the number of child objects
+ *  @brief This function gets the number of child objects this parent contains.
+ *  @details Gets the number of child objects this parent contains.
+ */
 static guint
 gst_vvas_xcompositor_child_proxy_get_children_count (GstChildProxy *
     child_proxy)
@@ -3733,6 +3588,14 @@ gst_vvas_xcompositor_child_proxy_get_children_count (GstChildProxy *
   return count;
 }
 
+/**
+ *  @def static void gst_vvas_xcompositor_child_proxy_init (gpointer g_iface, gpointer iface_data)
+ *  @param [in] g_iface     - The interface structure to initialize.
+ *  @param [in] iface_data  - The interface_data supplied via the GInterfaceInfo structure.
+ *  @return None
+ *  @brief A callback function used by the type system to initialize a new interface.
+ *  @details A callback function used by the type system to initialize a new interface.
+ */
 static void
 gst_vvas_xcompositor_child_proxy_init (gpointer g_iface, gpointer iface_data)
 {
@@ -3744,15 +3607,25 @@ gst_vvas_xcompositor_child_proxy_init (gpointer g_iface, gpointer iface_data)
       gst_vvas_xcompositor_child_proxy_get_children_count;
 }
 
+/**
+ *  @fn static gboolean vvas_xcompositor_init (GstPlugin * vvas_xcompositor)
+ *  @param [in] vvas_xlookahead - Handle to vvas_xcompositor plugin
+ *  @return TRUE if plugin initialized successfully
+ *  @brief This is a callback function that will be called by the loader at startup to register the plugin
+ *  @note It create a new element factory capable of instantiating objects of the type
+ *        'GST_TYPE_VVAS_XCOMPOSITOR' and add the factory to plugin 'vvas_xcompositor'
+ */
 static gboolean
 vvas_xcompositor_init (GstPlugin * vvas_xcompositor)
 {
   return gst_element_register (vvas_xcompositor, "vvas_xcompositor",
-      GST_RANK_NONE, GST_TYPE_VVAS_XCOMPOSITOR);
+      GST_RANK_PRIMARY, GST_TYPE_VVAS_XCOMPOSITOR);
 }
 
-
-
+/**
+ *  @brief This macro is used to define the entry point and meta data of a plugin.
+ *         This macro exports a plugin, so that it can be used by other applications
+ */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, vvas_xcompositor,
     "Xilinx VVAS Compositor plugin", vvas_xcompositor_init, VVAS_API_VERSION,
     "LGPL", "Xilinx VVAS SDK plugin", "http://xilinx.com/")

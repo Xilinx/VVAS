@@ -1,5 +1,6 @@
 /*
- * Copyright 2020 Xilinx, Inc.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,25 +21,9 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <string.h>
+#include <vvas_core/vvas_dpucommon.h>
 
 G_BEGIN_DECLS
-
-typedef enum
-{
-  VVAS_XCLASS_YOLOV3,
-  VVAS_XCLASS_FACEDETECT,
-  VVAS_XCLASS_CLASSIFICATION,
-  VVAS_XCLASS_SSD,
-  VVAS_XCLASS_REID,
-  VVAS_XCLASS_REFINEDET,
-  VVAS_XCLASS_TFSSD,
-  VVAS_XCLASS_YOLOV2,
-  VVAS_XCLASS_SEGMENTATION,
-  VVAS_XCLASS_PLATEDETECT,
-  VVAS_XCLASS_PLATENUM,
-
-  VVAS_XCLASS_NOTFOUND
-}VvasClass;
 
 typedef struct _GstVvasInpInferMeta GstVvasInpInferMeta;
 

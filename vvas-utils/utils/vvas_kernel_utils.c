@@ -1,5 +1,6 @@
 /*
- * Copyright 2020 Xilinx, Inc.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +17,7 @@
 
 /* Update of this file by the user is not encouraged */
 #include <vvas/vvas_kernel.h>
-#include <xrt_utils.h>
+#include <vvas_core/vvas_device.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>

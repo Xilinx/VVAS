@@ -1,0 +1,16 @@
+{
+  "xclbin-location" : "/run/media/mmcblk0p1/dpu.xclbin",
+  "device-index": 0,
+  "kernel" :{
+    "kernel-name":"image_processing:{image_processing_1}",
+    "library-name": "libvvas_xpreprocessor.so",
+    "config": {
+      "ppc": 2,
+      "in-mem-bank": 0,
+      "out-mem-bank": 0,
+      "inference-level" : 1,
+      "debug_level" : 0
+    }
+  }
+}
+

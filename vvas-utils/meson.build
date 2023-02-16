@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -15,7 +16,7 @@
 #########################################################################
 
 project('vvas-utils', 'c', 'cpp',
-  version : '2.0.0',
+  version : '3.0.0',
   meson_version : '>= 0.54.1',
   default_options : [ 'warning_level=1', 'cpp_std=c++14',
                       'buildtype=debugoptimized' ])
@@ -115,6 +116,11 @@ xrt_dep = dependency('xrt', version : xrt_req, required : true)
 dl_dep = cc.find_library('dl', required : true)
 uuid_dep = cc.find_library('uuid', required : true)
 jansson_dep = dependency('jansson', version : '>= 2.7', required: true)
+vvascore_dep = dependency('vvas-core', version : '>= 1.0', required: true)
+
+glib_req = '>= 2.44.0'
+glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
+             dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 
 plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
 if get_option('default_library') == 'shared'

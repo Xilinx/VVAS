@@ -3,6 +3,7 @@ under the terms of the:
 Apache License, Version 2.0
 
 Copyright 2022 Xilinx, Inc.
+Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,5 +21,16 @@ This product will also download various third party sources during run time.
 All these sources and their corrosponding copy right information is downloadable
 from www.xilinx.com at the following location:
 
-Below mentioned link is not enabled currently. Will be updated when the pre-built binaries will be available. 
-https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip
+Various third party sources used in pre-built binaries for this product and 
+their copy right information location will be available along with the 
+pre-built binaries download location on the respective example design pages 
+when these pre-built binaries will be available for download.
+
+The pre-built binaries will be made available for the two example designs 
+mentioned below:
+
+1. smart-model-select
+2. Multichannel_ML
+
+The information about these example designs are available at VVAS Product page: https://xilinx.github.io/VVAS/
+

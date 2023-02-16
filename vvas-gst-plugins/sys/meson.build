@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -21,9 +22,13 @@ foreach plugin : ['filter', 'multisrc', 'abrscaler', 'infer', 'overlay', 'optflo
 endforeach
 
 if host_machine.cpu_family() == 'x86_64'
-  foreach plugin : ['vcudec', 'vcuenc', 'lookahead']
-    if not get_option(plugin).disabled()
-      subdir(plugin)
-    endif
-   endforeach
+  if get_option('pci_platform') == 'U30'
+    cdata.set('XLNX_U30_PLATFORM ', 1)
+  else
+    cdata.set('XLNX_V70_PLATFORM ', 1)
+  endif
+
+  if not get_option('videodec').disabled()
+    subdir('videodec')
+  endif
 endif

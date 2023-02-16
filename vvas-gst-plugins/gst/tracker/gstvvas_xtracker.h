@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,29 +31,56 @@
 
 G_BEGIN_DECLS
 
+/** @def GST_TYPE_VVAS_XTRACKER
+ *  @brief Macro to get GstVvas_XTracker object type
+ */
 #define GST_TYPE_VVAS_XTRACKER (gst_vvas_xtracker_get_type())
+
+/** @def GST_VVAS_XTRACKER
+ *  @brief Macro to typecast parent object to GstVvas_XTracker object
+ */
 #define GST_VVAS_XTRACKER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VVAS_XTRACKER,GstVvas_XTracker))
+
+/** @def GST_VVAS_XTRACKER_CLASS
+ *  @brief Macro to typecast parent class object to GstVvas_XTrackerClass object
+ */
 #define GST_VVAS_XTRACKER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VVAS_XTRACKER,GstVvas_XTrackerClass))
+
+/** @def GST_IS_VVAS_XTRACKER
+ *  @brief Macro to validate whether object is of GstVvas_XTracker type
+ */
 #define GST_IS_VVAS_XTRACKER(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VVAS_XTRACKER))
+
+/** @def GST_IS_VVAS_XTRACKER_CLASS
+ *  @brief Macro to validate whether object class  is of GstVvas_XTrackerClass type
+ */
 #define GST_IS_VVAS_XTRACKER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VVAS_XTRACKER))
 
 typedef struct _GstVvas_XTracker GstVvas_XTracker;
 typedef struct _GstVvas_XTrackerClass GstVvas_XTrackerClass;
 typedef struct _GstVvas_XTrackerPrivate GstVvas_XTrackerPrivate;
 
+/** @struct _GstVvas_XTracker
+ *  @brief Structure to create GstVvas_XTracker object from GstBaseTransform
+ */
 struct _GstVvas_XTracker {
+  /** parent of GstVvas_XTracker object */
   GstBaseTransform element;
+  /** Pointer instance's private structure for each of access */
   GstVvas_XTrackerPrivate *priv;
-
-  gchar *json_file;
-  gchar *dyn_config;
-  gint reservation_id;
+  /** Algorithm to be used for tracking objects */
   guint32 tracker_algo;
+  /** Search scales to be used for object matching */
   guint32 search_scale;
+  /** Color space used for matching objects */
   guint32 match_color;
 };
 
+/** @struct _GstVvas_XTrackerClass
+ *  @brief Structure to create GstVvas_XTrackerClass from GstBaseTransformClass
+ */
 struct _GstVvas_XTrackerClass {
+  /** parent class */
   GstBaseTransformClass parent_class;
 };
 

@@ -28,91 +28,59 @@
 #ifndef __GST_INFERENCE_PREDICTION__
 #define __GST_INFERENCE_PREDICTION__
 
+#include <vvas_core/vvas_infer_prediction.h>
 #include <gst/vvas/gstinferenceclassification.h>
+#include <gst/vvas/gstvvasinpinfer.h>
 #include <gst/video/video.h>
 #include <vvas/vvasmeta.h>
 #include <math.h>
+#include <stdbool.h>
 
 G_BEGIN_DECLS
-
 typedef struct _BoundingBox BoundingBox;
-typedef struct _Segmentation Segmentation;
 typedef struct _GstInferencePrediction GstInferencePrediction;
 
 /**
- * BoundingBox:
- * @x: horizontal coordinate of the upper left position of the
- * bounding box in pixels
- * @y: vertical coordinate of the upper left position of the bounding
- * box in pixels
- * @width: width of the bounding box in pixels
- * @height: height of the bounding box in pixels
- *
- * Size and coordinates of a prediction region
+ * @struct _BoundingBox
+ * @brief Size and coordinates of a prediction region
  */
 struct _BoundingBox
 {
+  /** horizontal coordinate of the upper left position of the bounding box in pixels */
   gint x;
+  /** vertical coordinate of the upper left position of the bounding box in pixels */
   gint y;
+  /** width of the bounding box in pixels */
   guint width;
+  /** height of the bounding box in pixels */
   guint height;
+  /** Color of the box */
   VvasColorMetadata box_color;
 };
 
-enum seg_type
-{
-  SEMANTIC = 0,
-  MEDICAL,
-  SEG3D,
-};
-
-struct _Segmentation
-{
-  enum seg_type type;
-  guint width;
-  guint height;
-  char fmt[5];
-  void * data;
-  GstBuffer *buffer;
-};
-
 /**
- * GstInferencePrediction:
- * @prediction_id: unique id for this specific prediction
- * @enabled: flag indicating wether or not this prediction should be
- * used for further inference
- * @bbox: the BoundingBox for this specific prediction
- * @classifications: a linked list of GstInfereferenceClassification
- * associated to this prediction
- * @predictions: a n-ary tree of child predictions within this
- * specific prediction. It is recommended to to access the tree
- * directly, but to use this module's API to interact with the
- * children.
- *
- * Abstraction that represents a prediction
+ * @struct _GstInferencePrediction
+ * @brief Abstraction that represents a prediction
  */
 struct _GstInferencePrediction
 {
-  /*<private>*/
+  /** private base object */
   GstMiniObject base;
+  /** mutex */
   GMutex mutex;
 
-  /*<public>*/
-  guint64 prediction_id;
-  gboolean enabled;
-  BoundingBox bbox;
-  GList * classifications;
-  GNode * predictions;
+  /** buffer contains cropped images for cascade usecase */
   GstBuffer *sub_buffer;
-  gboolean bbox_scaled; /* bbox co-ordinates scaled to root node resolution or not */
-  Segmentation segmentation;
-  gchar *obj_track_label;
-  /* for future extension */
-  void * reserved_1;
-  void * reserved_2;
-  void * reserved_3;
-  void * reserved_4;
-  void * reserved_5;
+  
+	/** for future extension */
+  void *reserved_1;
+  void *reserved_2;
+  void *reserved_3;
+  void *reserved_4;
+  void *reserved_5;
+ 
+  /** Vvas Infer prediction */
+  VvasInferPrediction prediction;
 };
 
 /**
@@ -125,7 +93,7 @@ struct _GstInferencePrediction
  *
  * Returns: A newly allocated and initialized GstInferencePrediction.
  */
-GstInferencePrediction * gst_inference_prediction_new (void);
+GstInferencePrediction *gst_inference_prediction_new (void);
 
 /**
  * gst_inference_prediction_new_full:
@@ -136,7 +104,8 @@ GstInferencePrediction * gst_inference_prediction_new (void);
  *
  * Returns: A newly allocated and initialized GstInferencePrediction.
  */
-GstInferencePrediction * gst_inference_prediction_new_full (BoundingBox *bbox);
+GstInferencePrediction *gst_inference_prediction_new_full (VvasBoundingBox *
+    bbox);
 
 /**
  * gst_inference_prediction_reset:
@@ -157,7 +126,8 @@ void gst_inference_prediction_reset (GstInferencePrediction * self);
  *
  * Returns: a newly allocated copy of the original prediction
  */
-GstInferencePrediction * gst_inference_prediction_copy (const GstInferencePrediction * self);
+GstInferencePrediction *gst_inference_prediction_copy (const
+    GstInferencePrediction * self);
 
 /**
  * gst_inference_prediction_ref:
@@ -167,7 +137,8 @@ GstInferencePrediction * gst_inference_prediction_copy (const GstInferencePredic
  *
  * Returns: the same prediction, for convenience purposes.
  */
-GstInferencePrediction * gst_inference_prediction_ref (GstInferencePrediction * self);
+GstInferencePrediction *gst_inference_prediction_ref (GstInferencePrediction *
+    self);
 
 /**
  * gst_inference_prediction_unref:
@@ -188,7 +159,7 @@ void gst_inference_prediction_unref (GstInferencePrediction * self);
  *
  * Returns: a string representing the prediction.
  */
-gchar * gst_inference_prediction_to_string (GstInferencePrediction * self);
+gchar *gst_inference_prediction_to_string (GstInferencePrediction * self);
 
 /**
  * gst_inference_prediction_append:
@@ -199,7 +170,8 @@ gchar * gst_inference_prediction_to_string (GstInferencePrediction * self);
  * children. The parent takes ownership, use
  * gst_inference_prediction_ref() if you wish to keep a reference.
  */
-void gst_inference_prediction_append (GstInferencePrediction * self, GstInferencePrediction * child);
+void gst_inference_prediction_append (GstInferencePrediction * self,
+    GstInferencePrediction * child);
 
 /**
  * gst_inference_prediction_get_children:
@@ -211,7 +183,7 @@ void gst_inference_prediction_append (GstInferencePrediction * self, GstInferenc
  *
  * Returns: A linked list of the child predictions.
  */
-GSList * gst_inference_prediction_get_children (GstInferencePrediction * self);
+GSList *gst_inference_prediction_get_children (GstInferencePrediction * self);
 
 /**
  * gst_inference_prediction_append_classification:
@@ -221,8 +193,8 @@ GSList * gst_inference_prediction_get_children (GstInferencePrediction * self);
  * A new GstInferenceClassification to associate with this
  * prediction. The prediction takes ownership of the classification
  */
-void gst_inference_prediction_append_classification (GstInferencePrediction * self,
-    GstInferenceClassification * c);
+void gst_inference_prediction_append_classification (GstInferencePrediction *
+    self, GstInferenceClassification * c);
 
 /**
  * gst_inference_prediction_scale:
@@ -237,8 +209,8 @@ void gst_inference_prediction_append_classification (GstInferencePrediction * se
  *
  * Returns: a newly allocated and scaled prediction.
  */
-GstInferencePrediction * gst_inference_prediction_scale (GstInferencePrediction * self,
-    GstVideoInfo * to, GstVideoInfo * from);
+GstInferencePrediction *gst_inference_prediction_scale (GstInferencePrediction *
+    self, GstVideoInfo * to, GstVideoInfo * from);
 
 /**
  * gst_inference_prediction_scale_ip:
@@ -265,8 +237,8 @@ void gst_inference_prediction_scale_ip (GstInferencePrediction * self,
  * Returns: a reference to the prediction with id or NULL if not
  * found. Unref after usage.
  */
-GstInferencePrediction * gst_inference_prediction_find (GstInferencePrediction * self,
-    guint64 id);
+GstInferencePrediction *gst_inference_prediction_find (GstInferencePrediction *
+    self, guint64 id);
 
 /**
  * gst_inference_prediction_get_enabled:
@@ -276,7 +248,7 @@ GstInferencePrediction * gst_inference_prediction_find (GstInferencePrediction *
  *
  * Returns: a GList of predictions that are enabled.
  */
-GList * gst_inference_prediction_get_enabled (GstInferencePrediction * self);
+GList *gst_inference_prediction_get_enabled (GstInferencePrediction * self);
 
 /**
  * gst_inference_prediction_merge:
@@ -287,7 +259,8 @@ GList * gst_inference_prediction_get_enabled (GstInferencePrediction * self);
  *
  * Returns: TRUE if new sub-predictions were added, FALSE otherwise.
  */
-gboolean gst_inference_prediction_merge (GstInferencePrediction * src, GstInferencePrediction * dst);
+gboolean gst_inference_prediction_merge (GstInferencePrediction * src,
+    GstInferencePrediction * dst);
 
 /**
  * GST_INFERENCE_PREDICTION_LOCK:
@@ -307,5 +280,4 @@ gboolean gst_inference_prediction_merge (GstInferencePrediction * src, GstInfere
 #define GST_INFERENCE_PREDICTION_UNLOCK(p) g_mutex_unlock (&((p)->mutex))
 
 G_END_DECLS
-
 #endif // __GST_INFERENCE_PREDICTION__

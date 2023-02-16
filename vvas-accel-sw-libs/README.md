@@ -39,37 +39,17 @@ Following packages need to be available in sysroot :
 
 ***Enable/disable accelerator sw libraries/features***
 By default, all libraries are enabled in build process. User can selectively enable/disable libraries in build using build option “-D”.<br />
-Below is example to disable vvas_xboundingbox library in build process 
+Below is example to disable vvas_xmongodblib library in build process 
 ```
-meson -Dvvas_xboundingbox=disabled --libdir=/usr/local/lib/vvas/ build;  
-```
-Also, you can include different model class in build process. To enable/disable the model class use the “-D” option with 0/1: 
-meson -DMODELCLASS=0 --libdir=/usr/local/lib/vvas/ build;
-where MODELCLASS supported by VVAS are 
-```
-YOLOV3
-SSD
-CLASSIFICATION
-FACEDETECT 
-REFINEDET
-TFSSD
-YOLOV2
+meson -Dvvas_xmongodblib=disabled --libdir=/usr/local/lib/vvas/ build;  
 ```
 
-***Example to enable all models and accel sw libraries in meson build is***
+***Example to enable all accel sw libraries in meson build is***
 
 ```
-meson -DYOLOV3=1 -DSSD=1 -DREID=0 -DCLASSIFICATION=1 -DFACEDETECT=1 -DREFINEDET=1 -DTFSSD=1 -DYOLOV2=1 -Dvvas_xboundingbox=enabled --libdir=/usr/local/lib/vvas/ build;
+meson -Dvvas_xmongodblib=enabled --libdir=/usr/local/lib/vvas/ build;
 cd build;
 ninja;
 sudo ninja install;
 ```
 
-
-## Test Setup
----
-```
-cd ../vvas_xdpuinfer/
-Copy resnet model to /usr/share/vitis_ai_library/models/
-./cmd_resnet50.sh
-```

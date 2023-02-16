@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -52,101 +53,212 @@
 #include <gst/video/video.h>
 #include <sys/mman.h>
 #include <dlfcn.h>
+#include <vvas/vvas_structure.h>
 #include <gst/vvas/gstvvasallocator.h>
 #include <gst/vvas/gstvvasbufferpool.h>
 #include <gst/vvas/gstinferencemeta.h>
 #include <gst/vvas/gstvvashdrmeta.h>
 #include <gst/vvas/gstvvasoverlaymeta.h>
-#include <vvas/xrt_utils.h>
 #ifdef XLNX_PCIe_PLATFORM
 #include <experimental/xrt-next.h>
 #else
 #include <xrt/experimental/xrt-next.h>
 #endif
 #include "gstvvas_xabrscaler.h"
-#include "multi_scaler_hw.h"
+
+#include <gst/vvas/gstvvascoreutils.h>
+#include <vvas_core/vvas_context.h>
+#include <vvas_core/vvas_common.h>
+#include <vvas_core/vvas_scaler.h>
 
 #ifdef ENABLE_XRM_SUPPORT
 #include <xrm.h>
 #include <xrm_limits.h>
 #include <jansson.h>
+/** @def XRM_PRECISION_1000000_BIT_MASK
+ *  @brief Request load of the CU must be in the granularity of 1000000 and should in bit[27 -  8]
+ */
 #define XRM_PRECISION_1000000_BIT_MASK(load) ((load << 8))
 #endif
 
 #ifdef XLNX_PCIe_PLATFORM
+/** @def DEFAULT_DEVICE_INDEX
+ *  @brief Default device index value.
+ */
 #define DEFAULT_DEVICE_INDEX -1
-#define DEFAULT_KERNEL_NAME "scaler:{scaler_1}"
+/** @def DEFAULT_KERNEL_NAME
+ *  @brief Default FPGA kernel name for scaler IP.
+ */
+#define DEFAULT_KERNEL_NAME "image_processing:{image_processing_1}"
+/** @def NEED_DMABUF
+ *  @brief Default value of option for exporting as DMA buffer in VVAS allocator.
+ */
 #define NEED_DMABUF 0
-#else
+#else /* Embedded Platform */
+/** @def DEFAULT_DEVICE_INDEX
+ *  @brief Default device index value.
+ */
 #define DEFAULT_DEVICE_INDEX 0  /* on Embedded only one device i.e. device 0 */
-#define DEFAULT_KERNEL_NAME "v_multi_scaler:{v_multi_scaler_1}"
+/** @def DEFAULT_KERNEL_NAME
+ *  @brief Default FPGA kernel name for scaler IP.
+ */
+#define DEFAULT_KERNEL_NAME "image_processing:{image_processing_1}"
+/** @def NEED_DMABUF
+ *  @brief Default option for exporint DMA buffer in VVAS allocator.
+ */
 #define NEED_DMABUF 1
 #endif
 
-#define MULTI_SCALER_TIMEOUT 1000       // 1 sec
-#define ALIGN(size,align) (((size) + (align) - 1) & ~((align) - 1))
-#define DIV_AND_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
+/** @def VVAS_XABRSCALER_AVOID_OUTPUT_COPY_DEFAULT
+ *  @brief Default value for avoid-output-copy property.
+ */
 #define VVAS_XABRSCALER_AVOID_OUTPUT_COPY_DEFAULT FALSE
+/** @def VVAS_XABRSCALER_ENABLE_PIPELINE_DEFAULT
+ *  @brief Default value for enable-pipeline property.
+ */
 #define VVAS_XABRSCALER_ENABLE_PIPELINE_DEFAULT FALSE
+/** @def VVAS_XABRSCALER_ENABLE_SOFTWARE_SCALING_DEFAULT
+ *  @brief Default value for software-scaling property.
+ */
+#define VVAS_XABRSCALER_ENABLE_SOFTWARE_SCALING_DEFAULT FALSE
+/** @def STOP_COMMAND
+ *  @brief Command to stop the input copy thread.
+ */
 #define STOP_COMMAND ((gpointer)GINT_TO_POINTER (g_quark_from_string("STOP")))
 
-/*256x64 for specific use-case only*/
-#ifdef XLNX_PCIe_PLATFORM
-#define WIDTH_ALIGN 256
-#define HEIGHT_ALIGN 64
-#else
+/** @def WIDTH_ALIGN
+ *  @brief Alignment for width must be 8 * pixel per clock in case of embedded.
+ */
 #define WIDTH_ALIGN (8 * self->ppc)
+/** @def HEIGHT_ALIGN
+ *  @brief Alignment for height in case of embedded.
+ */
 #define HEIGHT_ALIGN 1
+
+/** @def MIN_SCALAR_WIDTH
+ *  @brief Minimum width for cropping, as per the alignment requirement of Scaler IP.
+ */
+#define MIN_SCALAR_WIDTH    16
+/** @def MIN_SCALAR_HEIGHT
+ *  @brief Minimum height for cropping, as per the alignment requirement of Scaler IP.
+ */
+#define MIN_SCALAR_HEIGHT   16
+
+/** @def PP_ALPHA_DEFAULT_VALUE 
+ *  @brief Default value for pre-processing alpha value.
+ */
+#define PP_ALPHA_DEFAULT_VALUE  0
+
+/** @def PP_BETA_DEFAULT_VALUE 
+ *  @brief Default value for pre-processing beta value.
+ */
+#define PP_BETA_DEFAULT_VALUE   1
+
+#ifndef DEFAULT_MEM_BANK
+/** @def DEFAULT_MEM_BANK
+ *  @brief Default memory bank.
+ */
+#define DEFAULT_MEM_BANK 0
 #endif
 
-#define MIN_SCALAR_WIDTH    64
-#define MIN_SCALAR_HEIGHT   64
+/** @def DEFAULT_VVAS_DEBUG_LEVEL
+ *  @brief Default debug level for VVAS CORE.
+ */
+#define DEFAULT_VVAS_DEBUG_LEVEL        2
 
-pthread_mutex_t count_mutex;
+/** @def DEFAULT_VVAS_SCALER_DEBUG_LEVEL
+ *  @brief Default debug level for VVAS CORE Scaler.
+ */
+#define DEFAULT_VVAS_SCALER_DEBUG_LEVEL 2
+
+/**
+ *  @brief Defines a static GstDebugCategory global variable "gst_vvas_xabrscaler_debug"
+ */
 GST_DEBUG_CATEGORY_STATIC (gst_vvas_xabrscaler_debug);
 #define GST_CAT_DEFAULT gst_vvas_xabrscaler_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
-enum
+
+/** @enum    VvasXAbrscalerProperties
+ *  @brief   Enum for plugin properties.
+ *  @note   Enum for plugin properties.
+ */
+typedef enum
 {
+  /** Gstreamer default added dummy property */
   PROP_0,
+  /** Location of the xclbin to program devices */
   PROP_XCLBIN_LOCATION,
+  /** String defining the kernel name and instance as mentioned in xclbin */
   PROP_KERN_NAME,
 #ifdef XLNX_PCIe_PLATFORM
+  /** Property to set device index, when there are multiple devices in a given card */
   PROP_DEVICE_INDEX,
 #endif
+  /** VVAS input memory bank to allocate memory */
   PROP_IN_MEM_BANK,
+  /** VVAS output memory bank to allocate memory */
   PROP_OUT_MEM_BANK,
+  /** Pixel per clock configured in Scaler kernel */
   PROP_PPC,
+  /** Scale Mode configured in Scaler kernel. */
   PROP_SCALE_MODE,
+  /** Number of filter taps to be used for scaling */
   PROP_NUM_TAPS,
+  /** coefficients loading type for scaling */
   PROP_COEF_LOADING_TYPE,
+  /** Avoid output frames copy on all source pads even when downstream does not support GstVideoMeta metadata */
   PROP_AVOID_OUTPUT_COPY,
+  /** Enable buffer pipelining to improve performance in non zero-copy use cases */
   PROP_ENABLE_PIPELINE,
 #ifdef ENABLE_PPE_SUPPORT
+  /** PreProcessing parameter alpha red channel value */
   PROP_ALPHA_R,
+  /** PreProcessing parameter alpha green channel value */
   PROP_ALPHA_G,
+  /** PreProcessing parameter alpha blue channel value */
   PROP_ALPHA_B,
+  /** PreProcessing parameter beta red channel value */
   PROP_BETA_R,
+  /** PreProcessing parameter beta green channel value */
   PROP_BETA_G,
+  /** PreProcessing parameter beta blue channel value */
   PROP_BETA_B,
 #endif
 #ifdef ENABLE_XRM_SUPPORT
+  /** XRM Compute Unit Resource Pool Reservation id */
   PROP_RESERVATION_ID,
 #endif
+  /** Crop X coordinate */
   PROP_CROP_X,
+  /** Crop Y coordinate */
   PROP_CROP_Y,
+  /** Width of the cropping segment */
   PROP_CROP_WIDTH,
+  /** Height of the cropping segment */
   PROP_CROP_HEIGHT,
-};
+  /** Software scaling */
+  PROP_SOFTWARE_SCALING,
+} VvasXAbrscalerProperties;
 
+/** @enum ColorDomain
+ *  @brief Enum for representing different color domain based input/output format.
+ *  @note Enum for representing different color domain based input/output format.
+ */
 typedef enum ColorDomain
 {
+  /** YUV color format */
   COLOR_DOMAIN_YUV,
+  /** RGB color format */
   COLOR_DOMAIN_RGB,
+  /** GRAY color format */
   COLOR_DOMAIN_GRAY,
+  /** When its none of above formats */
   COLOR_DOMAIN_UNKNOWN,
 } ColorDomain;
 
+/**
+ *  @brief Defines plugin's sink pad template.
+ */
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -154,6 +266,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         ("{RGBx, YUY2, r210, Y410, NV16, NV12, RGB, v308, I422_10LE, GRAY8, \
 	NV12_10LE32, BGRx, GRAY10_LE32, BGRx, UYVY, BGR, RGBA, BGRA, I420, GBR}")));
 
+/**
+ *  @brief Defines plugin's source pad template.
+ */
 static GstStaticPadTemplate src_request_template =
 GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
@@ -167,52 +282,110 @@ static GType gst_vvas_xabrscaler_pad_get_type (void);
 typedef struct _GstVvasXAbrScalerPad GstVvasXAbrScalerPad;
 typedef struct _GstVvasXAbrScalerPadClass GstVvasXAbrScalerPadClass;
 
+/** @struct _GstVvasXAbrScalerPad
+ *  @brief  Structure for GstVvasXAbrScaler's source pad of GstPad parent.
+ */
 struct _GstVvasXAbrScalerPad
 {
   GstPad parent;
+  /** Index of this pad in the list of source pads created */
   guint index;
+  /** Pool of output buffers */
   GstBufferPool *pool;
+  /** Video Info of input buffer */
   GstVideoInfo *in_vinfo;
+  /** Video Info of output buffer */
   GstVideoInfo *out_vinfo;
-  xrt_buffer *out_xrt_buf;
 };
 
+/** @struct _GstVvasXAbrScalerPadClass
+ *  @brief  Structure for GstVvasXAbrScalerPad class of GstPadClass parent class type.
+ */
 struct _GstVvasXAbrScalerPadClass
 {
   GstPadClass parent;
 };
 
+/** @def GST_TYPE_VVAS_XABRSCALER_PAD
+ *  @brief Macro to get GstVvasXAbrScalerPad object type
+ */
 #define GST_TYPE_VVAS_XABRSCALER_PAD \
   (gst_vvas_xabrscaler_pad_get_type())
+
+/** @def GST_VVAS_XABRSCALER_PAD
+ *  @brief Macro to typecast parent object to GstVvasXAbrScalerPad object
+ */
 #define GST_VVAS_XABRSCALER_PAD(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VVAS_XABRSCALER_PAD, \
              GstVvasXAbrScalerPad))
+
+/** @def GST_VVAS_XABRSCALER_PAD_CLASS
+ *  @brief Macro to typecast parent class to GstVvasXAbrScalerPadClass
+ */
 #define GST_VVAS_XABRSCALER_PAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VVAS_XABRSCALER_PAD, \
           GstVvasXAbrScalerPadClass))
+
+/** @def GST_IS_VVAS_XABRSCALER_PAD
+ *  @brief Macro to validate whether object is of GstVvasXAbrScalerPad type
+ */
 #define GST_IS_VVAS_XABRSCALER_PAD(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VVAS_XABRSCALER_PAD))
+
+/** @def GST_IS_VVAS_XABRSCALER_PAD_CLASS
+ *  @brief Macro to validate whether class is of GstVvasXAbrScalerPadClass type
+ */
 #define GST_IS_VVAS_XABRSCALER_PAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VVAS_XABRSCALER_PAD))
+
+/** @def GST_VVAS_XABRSCALER_PAD_CAST
+ *  @brief Macro to typecast parent object to GstVvasXAbrScalerPad object
+ */
 #define GST_VVAS_XABRSCALER_PAD_CAST(obj) \
   ((GstVvasXAbrScalerPad *)(obj))
 
+/** @def G_DEFINE_TYPE
+ *  @brief Macro to define a new type GstVvasXAbrScalerPad, of parent type GST_TYPE_PAD
+ */
 G_DEFINE_TYPE (GstVvasXAbrScalerPad, gst_vvas_xabrscaler_pad, GST_TYPE_PAD);
 
+/** @def gst_vvas_xabrscaler_srcpad_at_index
+ *  @brief Macro function to return source pad (GstVvasXAbrScalerPad) at index "idx" in the list.
+ */
 #define gst_vvas_xabrscaler_srcpad_at_index(self, idx) ((GstVvasXAbrScalerPad *)(g_list_nth ((self)->srcpads, idx))->data)
+
+/** @def gst_vvas_xabrscaler_srcpad_get_index
+ *  @brief Macro function to return the index of source pad (GstVvasXAbrScalerPad) in the list.
+ */
 #define gst_vvas_xabrscaler_srcpad_get_index(self, srcpad) (g_list_index ((self)->srcpads, (gconstpointer)srcpad))
 
+/** @def DEFAULT_CROP_PARAMS
+ *  @brief Macro for default value of crop parameters.
+ */
 #define DEFAULT_CROP_PARAMS 0
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_pad_class_init (GstVvasXAbrScalerPadClass * klass)
+ *  @param [in] klass  - Handle to GstVvasXAbrScalerPadClass
+ *  @return None
+ *  @brief  One of the constructor functions called for GstVvasXAbrScalerPad
+ */
 static void
 gst_vvas_xabrscaler_pad_class_init (GstVvasXAbrScalerPadClass * klass)
 {
   /* nothing */
 }
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_pad_init (GstVvasXAbrScalerPad * pad)
+ *  @param [in] pad  - Handle to GstVvasXAbrScalerPad instance
+ *  @return None
+ *  @brief  One of the constructor functions called for GstVvasXAbrScalerPad
+ */
 static void
 gst_vvas_xabrscaler_pad_init (GstVvasXAbrScalerPad * pad)
 {
+  /* nothing */
 }
 
 static void gst_vvas_xabrscaler_set_property (GObject * object, guint prop_id,
@@ -234,66 +407,172 @@ static GstPad *gst_vvas_xabrscaler_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name_templ, const GstCaps * caps);
 static void gst_vvas_xabrscaler_release_pad (GstElement * element,
     GstPad * pad);
-void copy_filt_set (int16_t dest_filt[64][12], int set);
-void Generate_cardinal_cubic_spline (int src, int dst, int filterSize,
-    int64_t B, int64_t C, int16_t * CCS_filtCoeff);
 
+static gboolean remove_infer_meta (GstBuffer * buffer, GstMeta ** meta,
+    gpointer user_data);
+
+/** @struct _GstVvasXAbrScalerPrivate
+ *  @brief  Structure with internal private data members for abrscaler plugin.
+ */
 struct _GstVvasXAbrScalerPrivate
 {
-  gboolean is_internal_buf_allocated;
+  /** Holds the Video info of input video buffers */
   GstVideoInfo *in_vinfo;
-  uint32_t meta_in_stride;
+  /** Handle to XRT device object created for specified device index */
   vvasDeviceHandle dev_handle;
-  vvasKernelHandle kern_handle;
-  vvasRunHandle run_handle;
-  uint32_t cu_index;
-  bool is_coeff;
-  uuid_t xclbinId;
-  xrt_buffer Hcoff[MAX_CHANNELS];
-  xrt_buffer Vcoff[MAX_CHANNELS];
+  /** Array of output buffers to be pushed out for each input */
   GstBuffer *outbufs[MAX_CHANNELS];
-  xrt_buffer msPtr[MAX_CHANNELS];
-  guint64 phy_in_0;
-  guint64 phy_in_1;
-  guint64 phy_in_2;
-  guint64 phy_out_0[MAX_CHANNELS];
-  guint64 phy_out_1[MAX_CHANNELS];
-  guint64 phy_out_2[MAX_CHANNELS];
+  /** Input buffer pool */
   GstBufferPool *input_pool;
+  /** Flag to check if the internal buffer pool is set to active */
   gboolean validate_import;
+  /** Boolean flag to specify if buffer copy is required before pushing the buffer */
   gboolean need_copy[MAX_CHANNELS];
+  /** Thread ID for thread doing the input buffer copy to internal buffers */
   GThread *input_copy_thread;
+  /** Queue to hold incoming buffers */
   GAsyncQueue *copy_inqueue;
+  /** Queue to hold input internal buffers  */
   GAsyncQueue *copy_outqueue;
+  /** Flag to mark first frame arrival */
   gboolean is_first_frame;
+  /** XCLBIN Identifier, which will be available after xclbin download */
+  uuid_t xclbinId;
+  /** VVAS Core Context */
+  VvasContext *vvas_ctx;
+  /** VVAS Core Scaler Context */
+  VvasScaler *vvas_scaler;
+  /** Reference of input VvasVideoFrames */
+  VvasVideoFrame *input_frame[MAX_CHANNELS];
+  /** Reference of output VvasVideoFrames */
+  VvasVideoFrame *output_frame[MAX_CHANNELS];
 #ifdef ENABLE_XRM_SUPPORT
+  /** XRM Context handle */
   xrmContext xrm_ctx;
+  /** XRM Compute Resource handle */
   xrmCuResource *cu_resource;
+  /** XRM Compute Resource handle version 2 */
   xrmCuResourceV2 *cu_resource_v2;
+  /** Holds the current Compute Unit load requirement */
   gint cur_load;
+  /** Reservation id is to allocate cu from specified resource pool. */
   guint64 reservation_id;
+  /** Flag to mark if any error during XRM APIs*/
   gboolean has_error;
 #endif
 };
 
+/** @def gst_vvas_xabrscaler_parent_class
+ *  @brief Macro to declare a static variable named parent_class pointing to the parent class
+ */
 #define gst_vvas_xabrscaler_parent_class parent_class
+
+/** @def G_DEFINE_TYPE_WITH_PRIVATE
+ *  @brief Macro to define a new type GstVvasXAbrScaler, of parent type GST_TYPE_ELEMENT
+ */
 G_DEFINE_TYPE_WITH_PRIVATE (GstVvasXAbrScaler, gst_vvas_xabrscaler,
     GST_TYPE_ELEMENT);
+
+/** @def GST_VVAS_XABRSCALER_PRIVATE
+ *  @brief Macro to get GstVvasXAbrScalerPrivate object instance of GstVvasXAbrScaler
+ */
 #define GST_VVAS_XABRSCALER_PRIVATE(self) (GstVvasXAbrScalerPrivate *) (gst_vvas_xabrscaler_get_instance_private (self))
 
-#ifdef XLNX_PCIe_PLATFORM       /* default taps for PCIe platform 12 */
+#ifdef XLNX_PCIe_PLATFORM
+/** @def VVAS_XABRSCALER_DEFAULT_NUM_TAPS
+ *  @brief Default taps for PCIe platform 12
+ */
 #define VVAS_XABRSCALER_DEFAULT_NUM_TAPS 12
-#define VVAS_XABRSCALER_DEFAULT_PPC 4
-#define VVAS_XABRSCALER_SCALE_MODE 2
-#else /* default taps for Embedded platform 6 */
-#define VVAS_XABRSCALER_DEFAULT_NUM_TAPS 6
-#define VVAS_XABRSCALER_DEFAULT_PPC 2
-#define VVAS_XABRSCALER_SCALE_MODE 0
-#endif
 
+/** @def VVAS_XABRSCALER_DEFAULT_PPC
+ *  @brief Default PPC for PCIe platform 4
+ */
+#define VVAS_XABRSCALER_DEFAULT_PPC 4
+
+/** @def VVAS_XABRSCALER_SCALE_MODE
+ *  @brief Default scaling mode set to POLYPHASE
+ */
+#define VVAS_XABRSCALER_SCALE_MODE 2
+
+#else /* Xilinx Embedded Platform */
+
+/** @def VVAS_XABRSCALER_DEFAULT_NUM_TAPS
+ *  @brief Default taps for Embedded platform 6
+ */
+#define VVAS_XABRSCALER_DEFAULT_NUM_TAPS 6
+
+/** @def VVAS_XABRSCALER_DEFAULT_PPC
+ *  @brief Default PPC for Embedded platform 2
+ */
+#define VVAS_XABRSCALER_DEFAULT_PPC 2
+
+/** @def VVAS_XABRSCALER_SCALE_MODE
+ *  @brief Default scaling mode set to BILINEAR
+ */
+#define VVAS_XABRSCALER_SCALE_MODE 0
+
+#endif /* End of XLNX_PCIe_PLATFORM */
+
+/** @def VVAS_XABRSCALER_NUM_TAPS_TYPE
+ *  @brief Macro just for the replaement of function call vvas_xabrscaler_num_taps_type ()
+ */
 #define VVAS_XABRSCALER_NUM_TAPS_TYPE (vvas_xabrscaler_num_taps_type ())
+
+/** @def VVAS_XABRSCALER_PPC_TYPE
+ *  @brief Macro just for the replaement of function call vvas_xabrscaler_ppc_type ()
+ */
 #define VVAS_XABRSCALER_PPC_TYPE (vvas_xabrscaler_ppc_type ())
 
+/**
+ *  @fn static GstCaps *vvas_xabrscaler_generate_caps (void)
+ *  @return Returns GstCaps pointer.
+ *  @brief This function generates GstCaps based on scaler capabilities
+ */
+static GstCaps *
+vvas_xabrscaler_generate_caps (void)
+{
+  GstStructure *s;
+  GValue format = G_VALUE_INIT;
+  GstCaps *caps = NULL;
+  int i;
+  VvasScalerProp sc_prop = { 0, };
+
+  vvas_scaler_prop_get (NULL, &sc_prop);
+
+  if (sc_prop.n_fmts) {
+    g_value_init (&format, GST_TYPE_LIST);
+
+    s = gst_structure_new ("video/x-raw",
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+    for (i = 0; i < sc_prop.n_fmts; i++) {
+      GValue v = G_VALUE_INIT;
+      g_value_init (&v, G_TYPE_STRING);
+
+      g_value_set_static_string (&v,
+          gst_video_format_to_string (gst_coreutils_get_gst_fmt_from_vvas
+              (sc_prop.supported_fmts[i])));
+      gst_value_list_append_and_take_value (&format, &v);
+    }
+
+    gst_structure_take_value (s, "format", &format);
+    caps = gst_caps_new_full (s, NULL);
+
+  }
+
+  return caps;
+}
+
+/**
+ *  @fn static guint vvas_xabrscaler_get_stride (GstVideoInfo * info, guint width)
+ *  @param [in] info           - Video Info
+ *  @param [in] width          - Width of the frame
+ *  @return Returns stride for given width.
+ *  @brief  This function calculates the stride for given width as per the format of the
+ *          buffer.
+ */
 static guint
 vvas_xabrscaler_get_stride (GstVideoInfo * info, guint width)
 {
@@ -339,65 +618,13 @@ vvas_xabrscaler_get_stride (GstVideoInfo * info, guint width)
   return stride;
 }
 
-static guint
-vvas_xabrscaler_get_padding_right (GstVvasXAbrScaler * self,
-    GstVideoInfo * info)
-{
-  guint padding_pixels = -1;
-  guint plane_stride = GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
-  guint padding_bytes =
-      ALIGN (plane_stride, self->out_stride_align) - plane_stride;
-
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_GBR:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_r210:
-    case GST_VIDEO_FORMAT_Y410:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBA:
-      padding_pixels = padding_bytes / 4;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      padding_pixels = padding_bytes / 2;
-      break;
-    case GST_VIDEO_FORMAT_NV16:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_BGR:
-      padding_pixels = padding_bytes / 3;
-      break;
-    case GST_VIDEO_FORMAT_I422_10LE:
-      padding_pixels = padding_bytes / 2;
-      break;
-    case GST_VIDEO_FORMAT_NV12_10LE32:
-      padding_pixels = (padding_bytes * 3) / 4;
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_GRAY10_LE32:
-      padding_pixels = (padding_bytes * 3) / 4;
-      break;
-    case GST_VIDEO_FORMAT_I420:
-      padding_pixels = padding_bytes;
-      break;
-    case GST_VIDEO_FORMAT_I420_10LE:
-      padding_pixels = padding_bytes / 2;
-      break;
-    default:
-      GST_ERROR_OBJECT (self, "not yet supporting format %d",
-          GST_VIDEO_INFO_FORMAT (info));
-  }
-  return padding_pixels;
-}
-
+/**
+ *  @fn static ColorDomain vvas_xabrscaler_get_color_domain (const gchar * color_format)
+ *  @param [in] color_format           - Gstreamer format string.
+ *  @return Returns ColorDomain for corresponding format string passed.
+ *  @brief  This function maps the Gstreamer format string to ColorDomain enum.
+ *
+ */
 static ColorDomain
 vvas_xabrscaler_get_color_domain (const gchar * color_format)
 {
@@ -419,12 +646,20 @@ vvas_xabrscaler_get_color_domain (const gchar * color_format)
   return color_domain;
 }
 
+/**
+ *  @fn static GType vvas_xabrscaler_num_taps_type (void)
+ *  @param void
+ *  @return Returns the GEnumValue for all supported scaler filter co-efficient taps
+ *  @brief  This function just returns the GEnumValue for all taps supported by scaler IP filter
+ *          co-efficients.
+ */
 static GType
 vvas_xabrscaler_num_taps_type (void)
 {
   static GType num_tap = 0;
 
   if (!num_tap) {
+    /* List of number of taps to be chosen for co-efficients */
     static const GEnumValue taps[] = {
       {6, "6 taps filter for scaling", "6"},
       {8, "8 taps filter for scaling", "8"},
@@ -432,102 +667,88 @@ vvas_xabrscaler_num_taps_type (void)
       {12, "12 taps filter for scaling", "12"},
       {0, NULL, NULL}
     };
+    /* Registers a new static enumeration type with the name GstVvasXAbrScalerNumTapsType. */
     num_tap = g_enum_register_static ("GstVvasXAbrScalerNumTapsType", taps);
   }
   return num_tap;
 }
 
+/**
+ *  @fn static GType vvas_xabrscaler_ppc_type (void)
+ *  @param void
+ *  @return Returns the GEnumValue for all PPC supported by scaler IP.
+ *  @brief  This function just returns the GEnumValue for all pixel per clock (PPC) supported by scaler IP.
+ *          co-efficients.
+ */
 static GType
 vvas_xabrscaler_ppc_type (void)
 {
   static GType num_ppc = 0;
 
   if (!num_ppc) {
+    /* List of PPC supported by scaler IP */
     static const GEnumValue ppc[] = {
       {1, "1 Pixel Per Clock", "1"},
       {2, "2 Pixels Per Clock", "2"},
       {4, "4 Pixels Per Clock", "4"},
       {0, NULL, NULL}
     };
+    /* Registers a new static enumeration type with the name GstVvasXAbrScalerPPCType. */
     num_ppc = g_enum_register_static ("GstVvasXAbrScalerPPCType", ppc);
   }
   return num_ppc;
 }
 
 #ifdef XLNX_PCIe_PLATFORM
+/** @def VVAS_XABRSCALER_DEFAULT_COEF_LOAD_TYPE
+ *  @brief Default coefficient loading type
+ */
 #define VVAS_XABRSCALER_DEFAULT_COEF_LOAD_TYPE COEF_AUTO_GENERATE
 #else
+/** @def VVAS_XABRSCALER_DEFAULT_COEF_LOAD_TYPE
+ *  @brief Default coefficient loading type
+ */
 #define VVAS_XABRSCALER_DEFAULT_COEF_LOAD_TYPE COEF_FIXED
 #endif
 
+/** @def VVAS_XABRSCALER_COEF_LOAD_TYPE
+ *  @brief Macro just for the replacement of function call vvas_xabrscaler_coef_load_type ()
+ */
 #define VVAS_XABRSCALER_COEF_LOAD_TYPE (vvas_xabrscaler_coef_load_type ())
 
+/**
+ *  @fn static GType vvas_xabrscaler_coef_load_type (void)
+ *  @param void
+ *  @return Returns the GEnumValue for co-efficients types supported by scaler IP.
+ *  @brief  This function just returns the GEnumValue for co-efficients types supported by scaler IP.
+ */
 static GType
 vvas_xabrscaler_coef_load_type (void)
 {
   static GType load_type = 0;
 
   if (!load_type) {
+    /* List of co-efficient load types supported */
     static const GEnumValue load_types[] = {
       {COEF_FIXED, "Use fixed filter coefficients", "fixed"},
       {COEF_AUTO_GENERATE, "Auto generate filter coefficients", "auto"},
       {0, NULL, NULL}
     };
+    /* Registers a new static enumeration type with the name GstVvasXAbrScalerCoefLoadType. */
     load_type =
         g_enum_register_static ("GstVvasXAbrScalerCoefLoadType", load_types);
   }
   return load_type;
 }
 
-static uint32_t
-xlnx_multiscaler_colorformat (uint32_t col)
-{
-  switch (col) {
-    case GST_VIDEO_FORMAT_RGBx:
-      return XV_MULTI_SCALER_RGBX8;
-    case GST_VIDEO_FORMAT_YUY2:
-      return XV_MULTI_SCALER_YUYV8;
-    case GST_VIDEO_FORMAT_r210:
-      return XV_MULTI_SCALER_RGBX10;
-    case GST_VIDEO_FORMAT_Y410:
-      return XV_MULTI_SCALER_YUVX10;
-    case GST_VIDEO_FORMAT_NV16:
-      return XV_MULTI_SCALER_Y_UV8;
-    case GST_VIDEO_FORMAT_NV12:
-      return XV_MULTI_SCALER_Y_UV8_420;
-    case GST_VIDEO_FORMAT_RGB:
-      return XV_MULTI_SCALER_RGB8;
-    case GST_VIDEO_FORMAT_v308:
-      return XV_MULTI_SCALER_YUV8;
-    case GST_VIDEO_FORMAT_I422_10LE:
-      return XV_MULTI_SCALER_Y_UV10;
-    case GST_VIDEO_FORMAT_NV12_10LE32:
-      return XV_MULTI_SCALER_Y_UV10_420;
-    case GST_VIDEO_FORMAT_GRAY8:
-      return XV_MULTI_SCALER_Y8;
-    case GST_VIDEO_FORMAT_GRAY10_LE32:
-      return XV_MULTI_SCALER_Y10;
-    case GST_VIDEO_FORMAT_BGRx:
-      return XV_MULTI_SCALER_BGRX8;
-    case GST_VIDEO_FORMAT_UYVY:
-      return XV_MULTI_SCALER_UYVY8;
-    case GST_VIDEO_FORMAT_BGR:
-      return XV_MULTI_SCALER_BGR8;
-    case GST_VIDEO_FORMAT_BGRA:
-      return XV_MULTI_SCALER_BGRA8;
-    case GST_VIDEO_FORMAT_RGBA:
-      return XV_MULTI_SCALER_RGBA8;
-    case GST_VIDEO_FORMAT_I420:
-      return XV_MULTI_SCALER_I420;
-    case GST_VIDEO_FORMAT_GBR:
-      return XV_MULTI_SCALER_R_G_B8;
-    default:
-      GST_ERROR ("Not supporting %s yet",
-          gst_video_format_to_string ((GstVideoFormat) col));
-      return XV_MULTI_SCALER_NONE;
-  }
-}
-
+/**
+ *  @fn static uint32_t xlnx_multiscaler_stride_align (uint32_t stride_in, uint16_t AXIMMDataWidth)
+ *  @param [in] stride_in           - Stride to verify.
+ *  @param [in] AXIMMDataWidth      - Scaler's AXI memory mapped data width.
+ *  @return Returns the stride aligned to AXIMMDataWidth.
+ *  @brief  Stride must be aligned to AXIMMDataWidth, this function will make it aligned to
+ *          AXIMMDataWidth.
+ */
 static uint32_t
 xlnx_multiscaler_stride_align (uint32_t stride_in, uint16_t AXIMMDataWidth)
 {
@@ -537,396 +758,17 @@ xlnx_multiscaler_stride_align (uint32_t stride_in, uint16_t AXIMMDataWidth)
   return stride;
 }
 
-static int
-log2_val (unsigned int val)
-{
-  int cnt = 0;
-  while (val > 1) {
-    val = val >> 1;
-    cnt++;
-  }
-  return cnt;
-}
-
-static gboolean
-feasibilityCheck (int src, int dst, int *filterSize)
-{
-  int sizeFactor = 4;
-  int xInc = (((int64_t) src << 16) + (dst >> 1)) / dst;
-  if (xInc <= 1 << 16)
-    *filterSize = 1 + sizeFactor;       // upscale
-  else
-    *filterSize = 1 + (sizeFactor * src + dst - 1) / dst;
-
-  if (*filterSize > MAX_FILTER_SIZE) {
-    GST_ERROR ("FilterSize %d for %d to %d is greater than maximum taps(%d)",
-        *filterSize, src, dst, MAX_FILTER_SIZE);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-void
-copy_filt_set (int16_t dest_filt[64][12], int set)
-{
-  int i = 0, j = 0;
-
-  for (i = 0; i < 64; i++) {
-    for (j = 0; j < 12; j++) {
-      switch (set) {
-        case XLXN_FIXED_COEFF_SR13:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR13_0[i][j];    //<1.5SR
-          break;
-        case XLXN_FIXED_COEFF_SR15:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR15_0[i][j];    //1.5SR
-          break;
-        case XLXN_FIXED_COEFF_SR2:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps8_12C[i][j];  //2SR //8tap
-          break;
-        case XLXN_FIXED_COEFF_SR25:
-          dest_filt[i][j] = XV_multiscaler_fixed_coeff_SR25_0[i][j];    //2.5SR
-          break;
-        case XLXN_FIXED_COEFF_TAPS_10:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps10_12C[i][j]; //10tap
-          break;
-        case XLXN_FIXED_COEFF_TAPS_12:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps12_12C[i][j]; //12tap
-          break;
-        case XLXN_FIXED_COEFF_TAPS_6:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps6_12C[i][j];  //6tap: Always used for up scale
-          break;
-        default:
-          dest_filt[i][j] = XV_multiscaler_fixedcoeff_taps12_12C[i][j]; //12tap
-          break;
-      }
-    }
-  }
-}
-
-void
-Generate_cardinal_cubic_spline (int src, int dst, int filterSize, int64_t B,
-    int64_t C, int16_t * CCS_filtCoeff)
-{
-#ifdef COEFF_DUMP
-  FILE *fp;
-  char fname[512];
-  sprintf (fname, "coeff_%dTO%d.csv", src, dst);
-  fp = fopen (fname, "w");
-  /*FILE *fph;
-     sprintf(fname,"phase_%dTO%d_2Inc.txt",src,dst);
-     fph=fopen(fname,"w"); */
-  //fprintf(fp,"src:%d => dst:%d\n\n",src,dst);
-#endif
-  int one = (1 << 14);
-  int64_t *coeffFilter = NULL;
-  int64_t *coeffFilter_reduced = NULL;
-  int16_t *outFilter = NULL;
-  int16_t *coeffFilter_normalized = NULL;
-  int lumXInc = (((int64_t) src << 16) + (dst >> 1)) / dst;
-  int srt = src / dst;
-  int lval = log2_val (srt);
-  int th0 = 8;
-  int lv0 = MIN (lval, th0);
-  const int64_t fone = (int64_t) 1 << (54 - lv0);
-  int64_t thr1 = ((int64_t) 1 << 31);
-  int64_t thr2 = ((int64_t) 1 << 54) / fone;
-  int i, xInc, outFilterSize;
-  int num_phases = 64;
-  int phase_set[64] = { 0 };
-  int64_t xDstInSrc;
-  int xx, j, p, t;
-  int64_t d = 0, coeff = 0, dd = 0, ddd = 0;
-  int phase_cnt = 0;
-  int64_t error = 0, sum = 0, v = 0;
-  int intV = 0;
-  int fstart_Idx = 0, fend_Idx = 0, half_Idx = 0, middleIdx = 0;
-  unsigned int PhaseH = 0, offset = 0, WriteLoc = 0, WriteLocNext = 0, ReadLoc =
-      0, OutputWrite_En = 0;
-  int OutPixels = dst;
-  int PixelRate =
-      (int) ((float) ((src * STEP_PRECISION) + (dst / 2)) / (float) dst);
-  int ph_max_sum = 1 << MAX_FILTER_SIZE;
-  int sumVal = 0, maxIdx = 0, maxVal = 0, diffVal = 0;
-
-  xInc = lumXInc;
-  filterSize = MAX (filterSize, 1);
-  coeffFilter = (int64_t *) calloc (num_phases * filterSize, sizeof (int64_t));
-  xDstInSrc = xInc - (1 << 16);
-
-  // coefficient generation based on scaler IP
-  for (i = 0; i < src; i++) {
-    PhaseH =
-        ((offset >> (STEP_PRECISION_SHIFT - NR_PHASE_BITS))) & (NR_PHASES - 1);
-    WriteLoc = WriteLocNext;
-
-    if ((offset >> STEP_PRECISION_SHIFT) != 0) {
-      // Take a new sample from input, but don't process anything
-      ReadLoc++;
-      offset = offset - (1 << STEP_PRECISION_SHIFT);
-      OutputWrite_En = 0;
-      WriteLocNext = WriteLoc;
-    }
-
-    if (((offset >> STEP_PRECISION_SHIFT) == 0) && (WriteLoc < OutPixels)) {
-      // Produce a new output sample
-      offset += PixelRate;
-      OutputWrite_En = 1;
-      WriteLocNext = WriteLoc + 1;
-    }
-
-    if (OutputWrite_En) {
-      xDstInSrc = ReadLoc * (1 << 17) + PhaseH * (1 << 11);
-      xx = ReadLoc - (filterSize - 2) / 2;
-
-      d = (ABS (((int64_t) xx * (1 << 17)) - xDstInSrc)) << 13;
-
-      //count number of phases used for this SR
-      if (phase_set[PhaseH] == 0)
-        phase_cnt += 1;
-
-      //Filter coeff generation
-      for (j = 0; j < filterSize; j++) {
-        d = (ABS (((int64_t) xx * (1 << 17)) - xDstInSrc)) << 13;
-        if (xInc > 1 << 16) {
-          d = (int64_t) (d * dst / src);
-        }
-
-        if (d >= thr1) {
-          coeff = 0.0;
-        } else {
-          dd = (int64_t) (d * d) >> 30;
-          ddd = (int64_t) (dd * d) >> 30;
-          if (d < 1 << 30) {
-            coeff = (12 * (1 << 24) - 9 * B - 6 * C) * ddd +
-                (-18 * (1 << 24) + 12 * B + 6 * C) * dd +
-                (6 * (1 << 24) - 2 * B) * (1 << 30);
-          } else {
-            coeff = (-B - 6 * C) * ddd +
-                (6 * B + 30 * C) * dd +
-                (-12 * B - 48 * C) * d + (8 * B + 24 * C) * (1 << 30);
-          }
-        }
-
-        coeff = coeff / thr2;
-        coeffFilter[PhaseH * filterSize + j] = coeff;
-        xx++;
-      }
-      if (phase_set[PhaseH] == 0) {
-        phase_set[PhaseH] = 1;
-      }
-    }
-  }
-
-  coeffFilter_reduced =
-      (int64_t *) calloc ((num_phases * filterSize), sizeof (int64_t));
-  memcpy (coeffFilter_reduced, coeffFilter,
-      sizeof (int64_t) * num_phases * filterSize);
-  outFilterSize = filterSize;
-  outFilter =
-      (int16_t *) calloc ((num_phases * outFilterSize), sizeof (int16_t));
-  coeffFilter_normalized =
-      (int16_t *) calloc ((num_phases * outFilterSize), sizeof (int16_t));
-
-  /* normalize & store in outFilter */
-  for (i = 0; i < num_phases; i++) {
-    error = 0;
-    sum = 0;
-
-    for (j = 0; j < filterSize; j++) {
-      sum += coeffFilter_reduced[i * filterSize + j];
-    }
-    sum = (sum + one / 2) / one;
-    if (!sum) {
-      sum = 1;
-    }
-    for (j = 0; j < outFilterSize; j++) {
-      v = coeffFilter_reduced[i * filterSize + j] + error;
-      intV = ROUNDED_DIV (v, sum);
-      coeffFilter_normalized[i * (outFilterSize) + j] = intV;
-      coeffFilter_normalized[i * (outFilterSize) + j] = coeffFilter_normalized[i * (outFilterSize) + j] >> 2;   //added to negate double increment and match our precision
-      error = v - intV * sum;
-    }
-  }
-
-  for (p = 0; p < num_phases; p++) {
-    for (t = 0; t < filterSize; t++) {
-      outFilter[p * filterSize + t] =
-          coeffFilter_normalized[p * filterSize + t];
-    }
-  }
-
-  /*incorporate filter less than 12 tap into a 12 tap */
-  fstart_Idx = 0, fend_Idx = 0, half_Idx = 0;
-  middleIdx = (MAX_FILTER_SIZE / 2);    //center location for 12 tap
-  half_Idx = (outFilterSize / 2);
-  if ((outFilterSize - (half_Idx << 1)) == 0) { //evenOdd
-    fstart_Idx = middleIdx - half_Idx;
-    fend_Idx = middleIdx + half_Idx;
-  } else {
-    fstart_Idx = middleIdx - (half_Idx);
-    fend_Idx = middleIdx + half_Idx + 1;
-  }
-
-  for (i = 0; i < num_phases; i++) {
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-
-      CCS_filtCoeff[i * MAX_FILTER_SIZE + j] = 0;
-      if ((j >= fstart_Idx) && (j < fend_Idx))
-        CCS_filtCoeff[i * MAX_FILTER_SIZE + j] =
-            outFilter[i * (outFilterSize) + (j - fstart_Idx)];
-    }
-  }
-
-  /*Make sure filterCoeffs within a phase sum to 4096 */
-  for (i = 0; i < num_phases; i++) {
-    sumVal = 0;
-    maxVal = 0;
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-      sumVal += CCS_filtCoeff[i * MAX_FILTER_SIZE + j];
-      if (CCS_filtCoeff[i * MAX_FILTER_SIZE + j] > maxVal) {
-        maxVal = CCS_filtCoeff[i * MAX_FILTER_SIZE + j];
-        maxIdx = j;
-      }
-    }
-    diffVal = ph_max_sum - sumVal;
-    if (diffVal > 0)
-      CCS_filtCoeff[i * MAX_FILTER_SIZE + maxIdx] =
-          CCS_filtCoeff[i * MAX_FILTER_SIZE + maxIdx] + diffVal;
-  }
-
-
-#ifdef COEFF_DUMP
-  fprintf (fp, "taps/phases, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\n");
-  for (i = 0; i < num_phases; i++) {
-    fprintf (fp, "%d, ", i + 1);
-    for (j = 0; j < MAX_FILTER_SIZE; j++) {
-      fprintf (fp, "%d,  ", CCS_filtCoeff[i * MAX_FILTER_SIZE + j]);
-    }
-    fprintf (fp, "\n");
-  }
-#endif
-
-  free (coeffFilter);
-  free (coeffFilter_reduced);
-  free (outFilter);
-  free (coeffFilter_normalized);
-#ifdef COEFF_DUMP
-  fclose (fp);
-#endif
-}
-
-static void
-vvas_xabrscaler_prepare_coefficients_with_12tap (GstVvasXAbrScaler * self,
-    guint chan_id)
-{
-  GstVvasXAbrScalerPrivate *priv = self->priv;
-  GstVvasXAbrScalerPad *srcpad = NULL;
-  gint filter_size;
-  guint in_width, in_height, out_width, out_height;
-  int64_t B = 0 * (1 << 24);
-  int64_t C = 0.6 * (1 << 24);
-  float scale_ratio[2] = { 0, 0 };
-  int upscale_enable[2] = { 0, 0 };
-  int filterSet[2] = { 0, 0 };
-  guint d;
-  gboolean bret;
-
-  srcpad = gst_vvas_xabrscaler_srcpad_at_index (self, chan_id);
-
-  if ((0 == chan_id) && self->crop_width && self->crop_height) {
-    in_width = self->crop_width;
-    in_height = self->crop_height;
-  } else {
-    in_width = GST_VIDEO_INFO_WIDTH (srcpad->in_vinfo);
-    in_height = GST_VIDEO_INFO_HEIGHT (srcpad->in_vinfo);
-  }
-
-  out_width = GST_VIDEO_INFO_WIDTH (srcpad->out_vinfo);
-  out_height = GST_VIDEO_INFO_HEIGHT (srcpad->out_vinfo);
-
-  GST_DEBUG_OBJECT (self, "input: width[%u] height[%u], output: width[%u]"
-      " height[%u]", in_width, in_height, out_width, out_height);
-
-  /* store width scaling ratio  */
-  if (in_width >= out_width) {
-    scale_ratio[0] = (float) in_width / (float) out_width;      //downscale
-  } else {
-    scale_ratio[0] = (float) out_width / (float) in_width;      //upscale
-    upscale_enable[0] = 1;
-  }
-
-  /* store height scaling ratio */
-  if (in_height >= out_height) {
-    scale_ratio[1] = (float) in_height / (float) out_height;    //downscale
-  } else {
-    scale_ratio[1] = (float) out_height / (float) in_height;    //upscale
-    upscale_enable[1] = 1;
-  }
-
-  for (d = 0; d < 2; d++) {
-    if (upscale_enable[d] == 1) {
-      /* upscaling default use 6 taps */
-      filterSet[d] = XLXN_FIXED_COEFF_TAPS_6;
-    } else {
-      /* Get index of downscale fixed filter */
-      if (scale_ratio[d] < 1.5)
-        filterSet[d] = XLXN_FIXED_COEFF_SR13;
-      else if ((scale_ratio[d] >= 1.5) && (scale_ratio[d] < 2))
-        filterSet[d] = XLXN_FIXED_COEFF_SR15;
-      else if ((scale_ratio[d] >= 2) && (scale_ratio[d] < 2.5))
-        filterSet[d] = XLXN_FIXED_COEFF_SR2;
-      else if ((scale_ratio[d] >= 2.5) && (scale_ratio[d] < 3))
-        filterSet[d] = XLXN_FIXED_COEFF_SR25;
-      else if ((scale_ratio[d] >= 3) && (scale_ratio[d] < 3.5))
-        filterSet[d] = XLXN_FIXED_COEFF_TAPS_10;
-      else
-        filterSet[d] = XLXN_FIXED_COEFF_TAPS_12;
-    }
-    GST_INFO_OBJECT (self, "%s scaling ratio = %f and chosen filter type = %d",
-        d == 0 ? "width" : "height", scale_ratio[d], filterSet[d]);
-  }
-
-  if (self->coef_load_type == COEF_AUTO_GENERATE) {
-    /* prepare horizontal coefficients */
-    bret = feasibilityCheck (in_width, out_width, &filter_size);
-    if (bret && !upscale_enable[0]) {
-      GST_INFO_OBJECT (self, "Generate cardinal cubic horizontal coefficients "
-          "with filter size %d", filter_size);
-      Generate_cardinal_cubic_spline (in_width, out_width, filter_size, B, C,
-          (int16_t *) priv->Hcoff[chan_id].user_ptr);
-    } else {
-      /* get fixed horizontal filters */
-      GST_INFO_OBJECT (self,
-          "Consider predefined horizontal filter coefficients");
-      copy_filt_set (priv->Hcoff[chan_id].user_ptr, filterSet[0]);
-    }
-
-    /* prepare vertical coefficients */
-    bret = feasibilityCheck (in_height, out_height, &filter_size);
-    if (bret && !upscale_enable[1]) {
-      GST_INFO_OBJECT (self, "Generate cardinal cubic vertical coefficients "
-          "with filter size %d", filter_size);
-      Generate_cardinal_cubic_spline (in_height, out_height, filter_size, B, C,
-          (int16_t *) priv->Vcoff[chan_id].user_ptr);
-    } else {
-      /* get fixed vertical filters */
-      GST_INFO_OBJECT (self,
-          "Consider predefined vertical filter coefficients");
-      copy_filt_set (priv->Vcoff[chan_id].user_ptr, filterSet[1]);
-    }
-  } else if (self->coef_load_type == COEF_FIXED) {
-    /* get fixed horizontal filters */
-    GST_INFO_OBJECT (self,
-        "Consider predefined horizontal filter coefficients");
-    copy_filt_set (priv->Hcoff[chan_id].user_ptr, filterSet[0]);
-
-    /* get fixed vertical filters */
-    GST_INFO_OBJECT (self, "Consider predefined vertical filter coefficients");
-    copy_filt_set (priv->Vcoff[chan_id].user_ptr, filterSet[1]);
-  }
-}
-
+/**
+ *  @fn static gboolean vvas_xabrscaler_register_prep_write_with_caps (GstVvasXAbrScaler * self,
+ *                        guint chan_id, GstCaps * in_caps, GstCaps * out_caps)
+ *  @param [in] self              - Handle to GstVvasXAbrScaler instance.
+ *  @param [in] chan_id           - Source pad index for which the co-efficients are prepared.
+ *  @param [in] in_caps           - Input caps.
+ *  @param [in] out_caps          - Output caps.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief This function updates video info for input and output.
+ *
+ */
 static gboolean
 vvas_xabrscaler_register_prep_write_with_caps (GstVvasXAbrScaler * self,
     guint chan_id, GstCaps * in_caps, GstCaps * out_caps)
@@ -936,16 +778,19 @@ vvas_xabrscaler_register_prep_write_with_caps (GstVvasXAbrScaler * self,
 
   srcpad = gst_vvas_xabrscaler_srcpad_at_index (self, chan_id);
 
+  /* Update video info for input */
   if (!gst_video_info_from_caps (srcpad->in_vinfo, in_caps)) {
     GST_ERROR_OBJECT (self, "failed to get video info from input caps");
     return FALSE;
   }
 
+  /* Update video info for output */
   if (!gst_video_info_from_caps (srcpad->out_vinfo, out_caps)) {
     GST_ERROR_OBJECT (self, "failed to get video info from output caps");
     return FALSE;
   }
 
+  /* Verify if the output width is aligned to PPC */
   width = GST_VIDEO_INFO_WIDTH (srcpad->out_vinfo);
   if (width % self->ppc) {
     GST_ERROR_OBJECT (self, "Unsupported output resolution,"
@@ -957,6 +802,13 @@ vvas_xabrscaler_register_prep_write_with_caps (GstVvasXAbrScaler * self,
 }
 
 #ifdef ENABLE_XRM_SUPPORT
+/**
+ *  @fn static gchar *vvas_xabrscaler_prepare_request_json_string (GstVvasXAbrScaler * scaler)
+ *  @param [in] scaler           - Handle to GstVvasXAbrScaler instance.
+ *  @return On Success returns the composed string for requesting processing load.\n On Failure returns NULL
+ *  @brief  This function will compose the request string required to be sent for XRM plguins
+ *          for getting required load based on input and output caps.
+ */
 static gchar *
 vvas_xabrscaler_prepare_request_json_string (GstVvasXAbrScaler * scaler)
 {
@@ -968,6 +820,7 @@ vvas_xabrscaler_prepare_request_json_string (GstVvasXAbrScaler * scaler)
 
   jarray = json_array ();
 
+  /* Runs for all output source pads */
   for (idx = 0; idx < scaler->num_request_pads; idx++) {
     GstVvasXAbrScalerPad *srcpad;
     GstCaps *out_caps = NULL;
@@ -976,42 +829,46 @@ vvas_xabrscaler_prepare_request_json_string (GstVvasXAbrScaler * scaler)
     guint out_width, out_height;
     gboolean bret;
     json_t *out_jobj = NULL;
-
+    /* Get the source pad at index "idx" */
     srcpad = gst_vvas_xabrscaler_srcpad_at_index (scaler, idx);
     if (!srcpad) {
       GST_ERROR_OBJECT (scaler, "failed to get srcpad at index %d", idx);
       goto out_error;
     }
-
+    /* Get current set caps on this source pad */
     out_caps = gst_pad_get_current_caps ((GstPad *) srcpad);
     if (!out_caps) {
       GST_ERROR_OBJECT (scaler, "failed to get output caps at srcpad index %d",
           idx);
       goto out_error;
     }
-
+    /* Get the video info output of caps, which has information regarding the
+     * width, height etc */
     bret = gst_video_info_from_caps (&out_vinfo, out_caps);
     if (!bret) {
       GST_ERROR_OBJECT (scaler, "failed to get video info from caps");
       goto out_error;
     }
 
+    /* Fetch output height, width and fps details from Gstreamer video info */
     out_width = GST_VIDEO_INFO_WIDTH (&out_vinfo);
     out_height = GST_VIDEO_INFO_HEIGHT (&out_vinfo);
     out_fps_n = GST_VIDEO_INFO_FPS_N (&out_vinfo);
     out_fps_d = GST_VIDEO_INFO_FPS_D (&out_vinfo);
 
+    /* Taking the worst case fps for the load calculation, when fps info is not
+     * available in the output caps */
     if (!out_fps_n) {
       GST_WARNING_OBJECT (scaler,
           "out fps is not available, taking default 60/1");
       out_fps_n = 60;
       out_fps_d = 1;
     }
-
+    /* Start building the JSON stype string */
     out_jobj = json_object ();
     if (!out_jobj)
       goto out_error;
-
+    /* Update output height and width */
     json_object_set_new (out_jobj, "width", json_integer (out_width));
     json_object_set_new (out_jobj, "height", json_integer (out_height));
 
@@ -1039,7 +896,8 @@ vvas_xabrscaler_prepare_request_json_string (GstVvasXAbrScaler * scaler)
       json_decref (fps_jobj);
     goto error;
   }
-
+  /* After adding all the output caps of all output source pads, now add details regarding the
+   * input video info */
   in_jobj = json_object ();
   if (!in_jobj)
     goto error;
@@ -1115,6 +973,15 @@ error:
   return NULL;
 }
 
+/**
+ *  @fn static gboolean vvas_xabrscaler_calculate_load (GstVvasXAbrScaler * self, gint * load)
+ *  @param [in] self             - Handle to GstVvasXAbrScaler instance.
+ *  @param [out] load            - FPGA load needed for the given scaling operation.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will calculate the processing load required from FPGA
+ *          for performing the scaling operation, which will be calculated based on
+ *          input and output caps.
+ */
 static gboolean
 vvas_xabrscaler_calculate_load (GstVvasXAbrScaler * self, gint * load)
 {
@@ -1123,7 +990,6 @@ vvas_xabrscaler_calculate_load (GstVvasXAbrScaler * self, gint * load)
   gchar *req_str;
   char plugin_name[XRM_MAX_NAME_LEN];
   xrmPluginFuncParam param;
-
   if (!priv->xrm_ctx) {
     GST_ERROR_OBJECT (self, "xrm context not created");
     return FALSE;
@@ -1146,7 +1012,7 @@ vvas_xabrscaler_calculate_load (GstVvasXAbrScaler * self, gint * load)
     free (req_str);
     return FALSE;
   }
-
+  /* Copy the prepared JSON load request string to XRM plugin parameter */
   strncpy (param.input, req_str, XRM_MAX_PLUGIN_FUNC_PARAM_LEN);
   free (req_str);
 
@@ -1161,7 +1027,7 @@ vvas_xabrscaler_calculate_load (GstVvasXAbrScaler * self, gint * load)
   }
 
   *load = atoi ((char *) (strtok (param.output, " ")));
-
+  /* Check if the load calculated is valid */
   if (*load <= 0 || *load > XRM_MAX_CU_LOAD_GRANULARITY_1000000) {
     GST_ERROR_OBJECT (self, "not an allowed multiscaler load %d", *load);
     GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
@@ -1174,19 +1040,32 @@ vvas_xabrscaler_calculate_load (GstVvasXAbrScaler * self, gint * load)
   return TRUE;
 }
 
+/**
+ *  @fn static gboolean vvas_xabrscaler_allocate_xrm_resource (GstVvasXAbrScaler * self, gint scaler_load)
+ *  @param [in] self             - Handle to GstVvasXAbrScaler instance.
+ *  @param [in] scaler_load      - Requested load in the granularity of 1000000
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will allocate the requested processing load from FPGA using XRM (Xilinx FPGA Resource Manager).
+ */
 static gboolean
-vvas_xabrscaler_allocate_resource (GstVvasXAbrScaler * self, gint scaler_load)
+vvas_xabrscaler_allocate_xrm_resource (GstVvasXAbrScaler * self,
+    gint scaler_load)
 {
   GstVvasXAbrScalerPrivate *priv = self->priv;
   int iret = -1;
-
   GST_INFO_OBJECT (self, "going to request %d%% load using xrm",
       (scaler_load * 100) / XRM_MAX_CU_LOAD_GRANULARITY_1000000);
 
-  if (getenv ("XRM_RESERVE_ID") || priv->reservation_id) {      /* use reservation_id to allocate scaler */
+  /* Reservation id can be read from the environment variable or from the
+   * plugin property
+   * Reservation id is to allocate cu from specified resource pool.
+   */
+  if (getenv ("XRM_RESERVE_ID") || priv->reservation_id) {
+    /* use reservation_id to allocate scaler */
     int xrm_reserve_id = 0;
     xrmCuPropertyV2 scaler_prop;
     xrmCuResourceV2 *cu_resource;
+    guint k_name_len;
 
     memset (&scaler_prop, 0, sizeof (xrmCuPropertyV2));
 
@@ -1209,11 +1088,27 @@ vvas_xabrscaler_allocate_resource (GstVvasXAbrScaler * self, gint scaler_load)
 
     scaler_prop.poolId = xrm_reserve_id;
 
-    strcpy (scaler_prop.kernelName, strtok (self->kern_name, ":"));
+    /* the kernel name requested. */
+    k_name_len = strchr (self->kern_name, ':') - self->kern_name;
+
+    if (!k_name_len || (k_name_len >= XRM_MAX_NAME_LEN)) {
+      return FALSE;
+    }
+    strncpy (scaler_prop.kernelName, self->kern_name, k_name_len);
     strcpy (scaler_prop.kernelAlias, "SCALER_MPSOC");
+    /* request exclusive device usage for this client. */
     scaler_prop.devExcl = false;
+
+    /* requestLoad: request load, only one type granularity at one time.
+     *        bit[31 - 28] reserved
+     *        bit[27 -  8] granularity of 1000000 (0 - 1000000)
+     *        bit[ 7 -  0] granularity of 100 (0 - 100)
+     *
+     *   Hence the bit mask macro XRM_PRECISION_1000000_BIT_MASK
+     */
     scaler_prop.requestLoad = XRM_PRECISION_1000000_BIT_MASK (scaler_load);
 
+    /* This condition is when the user asks for resource from a specific device */
     if (self->dev_index != -1) {
       uint64_t deviceInfoContraintType =
           XRM_DEVICE_INFO_CONSTRAINT_TYPE_HARDWARE_DEVICE_INDEX;
@@ -1223,6 +1118,7 @@ vvas_xabrscaler_allocate_resource (GstVvasXAbrScaler * self, gint scaler_load)
           (deviceInfoDeviceIndex << XRM_DEVICE_INFO_DEVICE_INDEX_SHIFT) |
           (deviceInfoContraintType << XRM_DEVICE_INFO_CONSTRAINT_TYPE_SHIFT);
     }
+    /* Allocates compute unit with a device */
     iret = xrmCuAllocV2 (priv->xrm_ctx, &scaler_prop, cu_resource);
 
     if (iret != XRM_SUCCESS) {
@@ -1236,13 +1132,14 @@ vvas_xabrscaler_allocate_resource (GstVvasXAbrScaler * self, gint scaler_load)
     }
 
     self->dev_index = cu_resource->deviceId;
-    priv->cu_index = cu_resource->cuId;
     uuid_copy (priv->xclbinId, cu_resource->uuid);
     priv->cu_resource_v2 = cu_resource;
 
-  } else {                      /* use user specified device to allocate scaler */
+  } else {
+    /* use user specified device to allocate scaler */
     xrmCuProperty scaler_prop;
     xrmCuResource *cu_resource;
+    guint k_name_len;
 
     memset (&scaler_prop, 0, sizeof (xrmCuProperty));
 
@@ -1257,7 +1154,12 @@ vvas_xabrscaler_allocate_resource (GstVvasXAbrScaler * self, gint scaler_load)
       cu_resource = priv->cu_resource;
     }
 
-    strcpy (scaler_prop.kernelName, strtok (self->kern_name, ":"));
+    k_name_len = strchr (self->kern_name, ':') - self->kern_name;
+
+    if (!k_name_len || (k_name_len >= XRM_MAX_NAME_LEN)) {
+      return FALSE;
+    }
+    strncpy (scaler_prop.kernelName, self->kern_name, k_name_len);
     strcpy (scaler_prop.kernelAlias, "SCALER_MPSOC");
     scaler_prop.devExcl = false;
     scaler_prop.requestLoad = XRM_PRECISION_1000000_BIT_MASK (scaler_load);
@@ -1278,180 +1180,36 @@ vvas_xabrscaler_allocate_resource (GstVvasXAbrScaler * self, gint scaler_load)
     }
 
     self->dev_index = cu_resource->deviceId;
-    priv->cu_index = cu_resource->cuId;
     uuid_copy (priv->xclbinId, cu_resource->uuid);
     priv->cu_resource = cu_resource;
   }
-
-
-  return TRUE;
-}
-#endif
-
-static gboolean
-vvas_xabrscaler_create_context (GstVvasXAbrScaler * self)
-{
-  GstVvasXAbrScalerPrivate *priv = self->priv;
-#ifdef ENABLE_XRM_SUPPORT
-  gboolean bret;
-#endif
-
-  if (!self->kern_name) {
-    GST_ERROR_OBJECT (self, "kernel name is not set");
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("kernel name is not set"));
-    return FALSE;
-  }
-#ifdef ENABLE_XRM_SUPPORT
-  /* gets cu index & device id (using reservation id) */
-  bret = vvas_xabrscaler_allocate_resource (self, priv->cur_load);
-  if (!bret)
-    return FALSE;
-#endif
-
-#ifdef XLNX_PCIe_PLATFORM
-  if (self->dev_index < 0) {
-    GST_ERROR_OBJECT (self, "device index %d is not valid", self->dev_index);
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("device index %d is not valid", self->dev_index));
-    return FALSE;
-  }
-#endif
-
-  if (!vvas_xrt_open_device (self->dev_index, &priv->dev_handle)) {
-    GST_ERROR_OBJECT (self, "failed to open device index %u", self->dev_index);
-    return FALSE;
-  }
-
-  /* TODO: Need to uncomment after CR-1122125 is resolved */
-//#ifndef ENABLE_XRM_SUPPORT
-  if (!self->xclbin_path) {
-    GST_ERROR_OBJECT (self, "invalid xclbin path %s", self->xclbin_path);
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, (NULL),
-        ("xclbin path not set"));
-    return FALSE;
-  }
-
-  /* We have to download the xclbin irrespective of XRM or not as there
-   * mismatch of UUID between XRM and XRT Native. CR-1122125 raised */
-  if (vvas_xrt_download_xclbin (self->xclbin_path,
-          priv->dev_handle, &(priv->xclbinId))) {
-    GST_ERROR_OBJECT (self, "failed to initialize XRT");
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("xclbin download failed"));
-    return FALSE;
-  }
-//#endif
-
-  if (vvas_xrt_open_context (priv->dev_handle, priv->xclbinId,
-          &priv->kern_handle, self->kern_name, true)) {
-    GST_ERROR_OBJECT (self, "failed to open XRT context ...");
-    return FALSE;
-  }
-
-
   return TRUE;
 }
 
+/**
+ *  @fn static gboolean vvas_xabrscaler_destroy_xrm_resource (GstVvasXAbrScaler * self)
+ *  @param [in] self  - Handle to GstVvasXAbrScaler instance.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  Cleans up XRM and XRT context.
+ *  @details Cleans up XRM and XRT context.
+ */
 static gboolean
-vvas_xabrscaler_allocate_internal_buffers (GstVvasXAbrScaler * self)
-{
-  GstVvasXAbrScalerPrivate *priv = self->priv;
-  gint chan_id, iret;
-
-  GST_INFO_OBJECT (self, "allocating internal buffers at mem bank %d",
-      self->in_mem_bank);
-
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-    iret =
-        vvas_xrt_alloc_xrt_buffer (priv->dev_handle,
-        COEFF_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->Hcoff[chan_id]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate horizontal coefficients command buffer..");
-      goto error;
-    }
-
-    iret =
-        vvas_xrt_alloc_xrt_buffer (priv->dev_handle,
-        COEFF_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->Vcoff[chan_id]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate vertical coefficients command buffer..");
-      goto error;
-    }
-
-    iret =
-        vvas_xrt_alloc_xrt_buffer (priv->dev_handle,
-        DESC_SIZE,
-        VVAS_BO_FLAGS_NONE, self->in_mem_bank, &priv->msPtr[chan_id]);
-    if (iret < 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to allocate vertical coefficients command buffer..");
-      goto error;
-    }
-  }
-#ifdef DEBUG
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-    printf ("DESC phy %lx  virt  %p \n", priv->msPtr[chan_id].phy_addr,
-        priv->msPtr[chan_id].user_ptr);
-    printf ("HCoef phy %lx  virt  %p \n", priv->Hcoff[chan_id].phy_addr,
-        priv->Hcoff[i].user_ptr);
-    printf ("VCoef phy %lx  virt  %p \n", priv->Vcoff[chan_id].phy_addr,
-        priv->Vcoff[chan_id].user_ptr);
-  }
-#endif
-  return TRUE;
-
-error:
-  GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT, NULL,
-      ("failed to allocate memory"));
-  return FALSE;
-}
-
-static void
-vvas_xabrscaler_free_internal_buffers (GstVvasXAbrScaler * self)
-{
-  GstVvasXAbrScalerPrivate *priv = self->priv;
-  guint chan_id;
-
-  GST_DEBUG_OBJECT (self, "freeing internal buffers");
-
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-    if (priv->Hcoff[chan_id].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->Hcoff[chan_id]);
-      memset (&(self->priv->Hcoff[chan_id]), 0x0, sizeof (xrt_buffer));
-    }
-    if (priv->Vcoff[chan_id].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->Vcoff[chan_id]);
-      memset (&(self->priv->Vcoff[chan_id]), 0x0, sizeof (xrt_buffer));
-    }
-    if (priv->msPtr[chan_id].user_ptr) {
-      vvas_xrt_free_xrt_buffer (&priv->msPtr[chan_id]);
-      memset (&(self->priv->msPtr[chan_id]), 0x0, sizeof (xrt_buffer));
-    }
-  }
-}
-
-static gboolean
-vvas_xabrscaler_destroy_context (GstVvasXAbrScaler * self)
+vvas_xabrscaler_destroy_xrm_resource (GstVvasXAbrScaler * self)
 {
   GstVvasXAbrScalerPrivate *priv = self->priv;
   gboolean has_error = FALSE;
   gint iret;
 
-#ifdef ENABLE_XRM_SUPPORT
+
   if (priv->cu_resource_v2) {
     gboolean bret;
-
+    /* Release XRM Compute Unit resource back to pool */
     bret = xrmCuReleaseV2 (priv->xrm_ctx, priv->cu_resource_v2);
     if (!bret) {
       GST_ERROR_OBJECT (self, "failed to release CU");
       has_error = TRUE;
     }
-
+    /* Clean up XRM context */
     iret = xrmDestroyContext (priv->xrm_ctx);
     if (iret != XRM_SUCCESS) {
       GST_ERROR_OBJECT (self, "failed to destroy xrm context");
@@ -1464,13 +1222,13 @@ vvas_xabrscaler_destroy_context (GstVvasXAbrScaler * self)
 
   if (priv->cu_resource) {
     gboolean bret;
-
+    /* Release XRM Compute Unit resource back to pool */
     bret = xrmCuRelease (priv->xrm_ctx, priv->cu_resource);
     if (!bret) {
       GST_ERROR_OBJECT (self, "failed to release CU");
       has_error = TRUE;
     }
-
+    /* Clean up XRM context */
     iret = xrmDestroyContext (priv->xrm_ctx);
     if (iret != XRM_SUCCESS) {
       GST_ERROR_OBJECT (self, "failed to destroy xrm context");
@@ -1480,22 +1238,20 @@ vvas_xabrscaler_destroy_context (GstVvasXAbrScaler * self)
     priv->cu_resource = NULL;
     GST_INFO_OBJECT (self, "released CU and destroyed xrm context");
   }
-#endif
-
-  if (priv->dev_handle) {
-    iret = vvas_xrt_close_context (priv->kern_handle);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self, "failed to close xrt context");
-      has_error = TRUE;
-    }
-    vvas_xrt_close_device (priv->dev_handle);
-    priv->dev_handle = NULL;
-    GST_INFO_OBJECT (self, "closed xrt context");
-  }
 
   return has_error ? FALSE : TRUE;
 }
+#endif
 
+/**
+ *  @fn static gboolean vvas_xabrscaler_allocate_internal_pool (GstVvasXAbrScaler * self)
+ *
+ *  @param [in] self  - Handle to GstVvasXAbrScaler instance.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  Allocates internal buffer pool.
+ *  @details This function will be invoked to create internal buffer pool when
+ *           the received buffer is non VVAS buffer or non DMA buffer.
+ */
 static gboolean
 vvas_xabrscaler_allocate_internal_pool (GstVvasXAbrScaler * self)
 {
@@ -1507,25 +1263,34 @@ vvas_xabrscaler_allocate_internal_pool (GstVvasXAbrScaler * self)
   GstCaps *caps = NULL;
   GstVideoAlignment align;
 
+  /* Get current set caps on the sink pad */
   caps = gst_pad_get_current_caps (self->sinkpad);
 
+  if (caps == NULL) {
+    GST_WARNING_OBJECT (self, "Failed to get caps on sinkpad");
+    return FALSE;
+  }
+
+  /* Get video info from caps */
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_WARNING_OBJECT (self, "Failed to parse caps %" GST_PTR_FORMAT, caps);
     gst_caps_unref (caps);
     return FALSE;
   }
-
+  /* Create VVAS buffer pool with aligned width and height */
   pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
   GST_LOG_OBJECT (self, "allocated internal sink pool %p", pool);
 
+  /* Get config of the pool and populate with padding and alignment information */
   config = gst_buffer_pool_get_config (pool);
   gst_video_alignment_reset (&align);
-  align.padding_top = 0;
-  align.padding_left = 0;
-  align.padding_right = vvas_xabrscaler_get_padding_right (self, &info);
   align.padding_bottom =
       ALIGN (GST_VIDEO_INFO_HEIGHT (&info),
       HEIGHT_ALIGN) - GST_VIDEO_INFO_HEIGHT (&info);
+  for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&info); idx++) {
+    align.stride_align[idx] = WIDTH_ALIGN - 1;
+  }
+
   gst_video_info_align (&info, &align);
 
   gst_buffer_pool_config_add_option (config,
@@ -1533,7 +1298,7 @@ vvas_xabrscaler_allocate_internal_pool (GstVvasXAbrScaler * self)
   gst_buffer_pool_config_set_video_alignment (config, &align);
 
   allocator = gst_vvas_allocator_new (self->dev_index,
-      NEED_DMABUF, self->in_mem_bank, self->priv->kern_handle);
+      NEED_DMABUF, self->in_mem_bank);
   gst_allocation_params_init (&alloc_params);
   alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
   alloc_params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
@@ -1571,87 +1336,132 @@ error:
   return FALSE;
 }
 
+/** @fn gboolean vvas_xabrscaler_validate_buffer_import (GstVvasXAbrScaler * scaler,
+ *                                                       GstBuffer * inbuf,
+ *                                                       gboolean * use_inpool)
+ *
+ *  @param [in] scaler - scaler context
+ *  @param [in] inbuf - Input buffer
+ *  @param [out] use_inpool - Set to true to use internal pool, false to use upstream pool
+ *
+ *  @return On Success returns true
+ *          On Failure returns false
+ *
+ *  @brief Validates input buffer so as to decide internal pool or upstream pool.
+*/
+static gboolean
+vvas_xabrscaler_validate_buffer_import (GstVvasXAbrScaler * self,
+    GstBuffer * inbuf, gboolean * use_inpool)
+{
+  GstStructure *in_config = NULL;
+  gboolean bret = TRUE;
+  GstMemory *in_mem = NULL;
+  GstVideoMeta *vmeta;
+
+  in_mem = gst_buffer_get_memory (inbuf, 0);
+
+  if (in_mem == NULL) {
+    GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
+    bret = FALSE;
+    goto exit;
+  }
+
+  /* First check the type of memory */
+  if (gst_is_vvas_memory (in_mem)) {
+    if (!gst_vvas_memory_can_avoid_copy (in_mem, self->dev_index,
+            self->in_mem_bank)) {
+      /* VVAS memory, but can't avoid copy, so use internal pool */
+      *use_inpool = TRUE;
+      goto exit;
+    }
+  } else if (gst_is_dmabuf_memory (in_mem)) {
 #ifdef XLNX_PCIe_PLATFORM
-static gboolean
-xlnx_abr_coeff_syncBO (GstVvasXAbrScaler * self)
-{
-  GstVvasXAbrScalerPrivate *priv = self->priv;
-  int chan_id;
-  int iret;
+    /* In case of PCIe, there are issues in DMA buffer import BO
+     * Hence copy the data into vvas buffer */
+    *use_inpool = TRUE;
+    goto exit;
+#else
+    /* Embedded Platform */
+    vvasBOHandle bo = NULL;
+    gint dma_fd = -1;
 
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
+    /* Get the dma descriptor assiciated with in_mem */
+    dma_fd = gst_dmabuf_memory_get_fd (in_mem);
 
-    iret = vvas_xrt_write_bo (priv->Hcoff[chan_id].bo,
-        priv->Hcoff[chan_id].user_ptr, priv->Hcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to write horizontal coefficients. reason : %s",
-          strerror (errno));
-      return FALSE;
+    if (dma_fd < 0) {
+      GST_ERROR_OBJECT (self, "failed to get DMABUF FD");
+      *use_inpool = FALSE;
+      bret = FALSE;
+      goto exit;
     }
 
-    iret = vvas_xrt_sync_bo (priv->Hcoff[chan_id].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->Hcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync horizontal coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync horizontal coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
+    /* Get XRT BO handle for dma memory */
+    bo = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd);
+
+    if (bo == NULL) {
+      GST_WARNING_OBJECT (self,
+          "failed to get XRT BO...fall back to copy input");
+      *use_inpool = TRUE;
+      goto exit;
     }
 
-    iret = vvas_xrt_write_bo (priv->Vcoff[chan_id].bo,
-        priv->Vcoff[chan_id].user_ptr, priv->Vcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to write vertical coefficients. reason : %s",
-          strerror (errno));
-      return FALSE;
-    }
-
-    iret = vvas_xrt_sync_bo (priv->Vcoff[chan_id].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->Vcoff[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync vertical coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync vertical coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
-static gboolean
-xlnx_abr_desc_syncBO (GstVvasXAbrScaler * self)
-{
-  GstVvasXAbrScalerPrivate *priv = self->priv;
-  int chan_id;
-  int iret;
-
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-
-    iret = vvas_xrt_sync_bo (priv->msPtr[chan_id].bo,
-        VVAS_BO_SYNC_BO_TO_DEVICE, priv->msPtr[chan_id].size, 0);
-    if (iret != 0) {
-      GST_ERROR_OBJECT (self,
-          "failed to sync horizontal coefficients. reason : %s",
-          strerror (errno));
-      GST_ELEMENT_ERROR (self, RESOURCE, SYNC, NULL,
-          ("failed to sync  horizontal coefficients to device. reason : %s",
-              strerror (errno)));
-      return FALSE;
-    }
-
-  }
-  return TRUE;
-}
+    /* Free bo */
+    vvas_xrt_free_bo (bo);
 #endif
+  } else {
+    /* Software buffer, so need to copy */
+    *use_inpool = TRUE;
+    goto exit;
+  }
 
+  /* So far, same input buffer seems to be usable. Now check if it
+   * meets alignment requirements */
+
+  vmeta = gst_buffer_get_video_meta (inbuf);
+
+  if (vmeta) {
+    gint align_elevation;
+
+    GST_LOG_OBJECT (self, "input buffer offset[0] = %lu, offset[1] = %lu, "
+        "stride[0] = %d, stride[1] = %d, size = %lu", vmeta->offset[0],
+        vmeta->offset[1], vmeta->stride[0], vmeta->stride[1],
+        gst_buffer_get_size (inbuf));
+
+    align_elevation = (vmeta->offset[1] - vmeta->offset[0]) / vmeta->stride[0];
+
+    if (vmeta->stride[0] % WIDTH_ALIGN || align_elevation % HEIGHT_ALIGN) {
+      *use_inpool = TRUE;
+      GST_DEBUG_OBJECT (self,
+          "strides & offsets are not matching, use our internal pool");
+      goto exit;
+    }
+  } else {
+    /* vmeta not present, so use internal pool */
+    *use_inpool = TRUE;
+  }
+
+exit:
+  GST_INFO_OBJECT (self, "going to use %s pool as input pool",
+      *use_inpool ? "internal" : "upstream");
+
+  if (in_mem)
+    gst_memory_unref (in_mem);
+  if (in_config)
+    gst_structure_free (in_config);
+  return bret;
+}
+
+/**
+ *  @fn gboolean vvas_xabrscaler_prepare_input_buffer (GstVvasXAbrScaler * self,
+ *  						       GstBuffer ** inbuf)
+ *
+ *  @param [in] self  - Handle to GstVvasXAbrScaler instance.
+ *  @param [in] inbuf  - input buffer coming from upstream.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief   Decides and prepares internal buffer pool if necessary.
+ *  @details Checks if the incoing buffer is VVAS memory or DMA buffer, if
+ *           neighther of them, then it creates an internal buffer pool.
+ */
 static gboolean
 vvas_xabrscaler_prepare_input_buffer (GstVvasXAbrScaler * self,
     GstBuffer ** inbuf)
@@ -1659,8 +1469,6 @@ vvas_xabrscaler_prepare_input_buffer (GstVvasXAbrScaler * self,
   GstVvasXAbrScalerPrivate *priv = self->priv;
   GstMemory *in_mem = NULL;
   GstVideoFrame in_vframe, own_vframe;
-  guint64 phy_addr = -1;
-  GstVideoMeta *vmeta = NULL;
   gboolean bret;
   GstBuffer *own_inbuf;
   GstFlowReturn fret;
@@ -1669,60 +1477,38 @@ vvas_xabrscaler_prepare_input_buffer (GstVvasXAbrScaler * self,
   memset (&in_vframe, 0x0, sizeof (GstVideoFrame));
   memset (&own_vframe, 0x0, sizeof (GstVideoFrame));
 
+  /* Get memory object from GstBuffer */
   in_mem = gst_buffer_get_memory (*inbuf, 0);
   if (!in_mem) {
     GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
     goto error;
   }
 
-  if (gst_is_vvas_memory (in_mem)
-      && gst_vvas_memory_can_avoid_copy (in_mem, self->dev_index,
-          self->in_mem_bank)) {
-    phy_addr = gst_vvas_allocator_get_paddr (in_mem);
-  } else if (gst_is_dmabuf_memory (in_mem)) {
-    vvasBOHandle bo = NULL;
-    gint dma_fd = -1;
-
-    dma_fd = gst_dmabuf_memory_get_fd (in_mem);
-    if (dma_fd < 0) {
-      GST_ERROR_OBJECT (self, "failed to get DMABUF FD");
-      goto error;
-    }
-
-    /* dmabuf but not from xrt */
-    bo = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd);
-    if (bo == NULL) {
-      GST_WARNING_OBJECT (self,
-          "failed to get XRT BO...fall back to copy input");
-    }
-
-    GST_DEBUG_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
-        bo);
-
-    phy_addr = vvas_xrt_get_bo_phy_addres (bo);
-
-    if (bo != NULL)
-      vvas_xrt_free_bo (bo);
-
-  } else {
-    use_inpool = TRUE;
-  }
-
   gst_memory_unref (in_mem);
   in_mem = NULL;
 
+  /* Check if input buffer is meeting hardware requirements or not */
+  bret = vvas_xabrscaler_validate_buffer_import (self, *inbuf, &use_inpool);
+
+  if (!bret)
+    goto error;
+
+  /* Check if we have to create an internal buffer pool */
   if (use_inpool) {
     if (self->priv->validate_import) {
       if (!self->priv->input_pool) {
+        /* Create an internal buffer pool */
         bret = vvas_xabrscaler_allocate_internal_pool (self);
         if (!bret)
           goto error;
       }
+
       if (!gst_buffer_pool_is_active (self->priv->input_pool))
         gst_buffer_pool_set_active (self->priv->input_pool, TRUE);
+
       self->priv->validate_import = FALSE;
     }
-
+    /* If the pipelining is enabled, pop the buffer from output queue */
     if (self->enabled_pipeline) {
       own_inbuf = g_async_queue_try_pop (priv->copy_outqueue);
       if (!own_inbuf && !priv->is_first_frame) {
@@ -1730,6 +1516,7 @@ vvas_xabrscaler_prepare_input_buffer (GstVvasXAbrScaler * self,
       }
 
       priv->is_first_frame = FALSE;
+      /* Push the incoming buffer to input queue */
       g_async_queue_push (priv->copy_inqueue, *inbuf);
 
       if (!own_inbuf) {
@@ -1769,47 +1556,27 @@ vvas_xabrscaler_prepare_input_buffer (GstVvasXAbrScaler * self,
       gst_video_frame_unmap (&in_vframe);
       gst_video_frame_unmap (&own_vframe);
       gst_buffer_copy_into (own_inbuf, *inbuf,
-          (GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS |
-              GST_BUFFER_COPY_TIMESTAMPS), 0, -1);
+          (GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_METADATA
+              | GST_BUFFER_COPY_TIMESTAMPS), 0, -1);
       gst_buffer_unref (*inbuf);
       *inbuf = own_inbuf;
     }
   }
+  /* syncs data when XLNX_SYNC_TO_DEVICE flag is enabled */
 
-  vmeta = gst_buffer_get_video_meta (*inbuf);
-  if (vmeta == NULL) {
-    GST_ERROR_OBJECT (self, "video meta not present in buffer");
-    goto error;
-  }
-
+  /* Get memory object from GstBuffer */
   in_mem = gst_buffer_get_memory (*inbuf, 0);
+
   if (!in_mem) {
     GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
     goto error;
   }
 
-  if (phy_addr == (uint64_t) - 1) {
-    phy_addr = gst_vvas_allocator_get_paddr (in_mem);
-  }
-#ifdef XLNX_PCIe_PLATFORM
-  /* syncs data when XLNX_SYNC_TO_DEVICE flag is enabled */
   bret = gst_vvas_memory_sync_bo (in_mem);
   if (!bret)
     goto error;
-#endif
 
   gst_memory_unref (in_mem);
-
-  GST_LOG_OBJECT (self, "input paddr %p", (void *) phy_addr);
-  self->priv->phy_in_2 = 0;
-  self->priv->phy_in_1 = 0;
-  self->priv->phy_in_0 = phy_addr;
-  if (vmeta->n_planes > 1)
-    self->priv->phy_in_1 = phy_addr + vmeta->offset[1];
-  if (vmeta->n_planes > 2)
-    self->priv->phy_in_2 = phy_addr + vmeta->offset[2];
-
-  self->priv->meta_in_stride = *(vmeta->stride);
 
   return TRUE;
 
@@ -1824,21 +1591,32 @@ error:
   return FALSE;
 }
 
+/**
+ *  @fn static gboolean vvas_xabrscaler_prepare_output_buffer (GstVvasXAbrScaler * self)
+ *
+ *  @param [in] self  - Handle to GstVvasXAbrScaler instance.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief   Prepare the output buffer as per its type.
+ *  @details Acquire the output buffer from pool and get its physical address
+ *           based on whether it's a VVAS allocator memory or DMA memory.
+ */
 static gboolean
 vvas_xabrscaler_prepare_output_buffer (GstVvasXAbrScaler * self)
 {
   guint chan_id;
   GstMemory *mem = NULL;
   GstVvasXAbrScalerPad *srcpad = NULL;
-
+  /* Run for all source pads/output pads */
   for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
     GstBuffer *outbuf = NULL;
     GstFlowReturn fret;
     GstVideoMeta *vmeta;
     guint64 phy_addr = -1;
 
+    /* Get the source pad of the of chan_id */
     srcpad = gst_vvas_xabrscaler_srcpad_at_index (self, chan_id);
 
+    /* Take out a buffer from pool */
     fret = gst_buffer_pool_acquire_buffer (srcpad->pool, &outbuf, NULL);
     if (fret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (srcpad, "failed to allocate buffer from pool %p",
@@ -1847,6 +1625,7 @@ vvas_xabrscaler_prepare_output_buffer (GstVvasXAbrScaler * self)
     }
     GST_LOG_OBJECT (srcpad, "acquired buffer %p from pool", outbuf);
 
+    /* Store the output buffer in array with respect to its output channel id */
     self->priv->outbufs[chan_id] = outbuf;
     mem = gst_buffer_get_memory (outbuf, 0);
     if (mem == NULL) {
@@ -1862,14 +1641,14 @@ vvas_xabrscaler_prepare_output_buffer (GstVvasXAbrScaler * self)
     } else if (gst_is_dmabuf_memory (mem)) {
       vvasBOHandle bo = NULL;
       gint dma_fd = -1;
-
+      /* Get DMA fd for the memory */
       dma_fd = gst_dmabuf_memory_get_fd (mem);
       if (dma_fd < 0) {
         GST_ERROR_OBJECT (self, "failed to get DMABUF FD");
         goto error;
       }
 
-      /* dmabuf but not from xrt */
+      /* Get the XRT bo corresponding to the DMA fd */
       bo = vvas_xrt_import_bo (self->priv->dev_handle, dma_fd);
       if (bo == NULL) {
         GST_WARNING_OBJECT (self,
@@ -1878,27 +1657,20 @@ vvas_xabrscaler_prepare_output_buffer (GstVvasXAbrScaler * self)
 
       GST_INFO_OBJECT (self, "received dma fd %d and its xrt BO = %p", dma_fd,
           bo);
-
+      /* Get the physical address of the XRT bo */
       phy_addr = vvas_xrt_get_bo_phy_addres (bo);
 
       if (bo != NULL)
         vvas_xrt_free_bo (bo);
     }
 
+    GST_DEBUG_OBJECT (self, "Output physical address: %lu", phy_addr);
+    /* Get video metadata from the buffer */
     vmeta = gst_buffer_get_video_meta (outbuf);
     if (vmeta == NULL) {
       GST_ERROR_OBJECT (srcpad, "video meta not present in buffer");
       goto error;
     }
-
-    self->priv->phy_out_0[chan_id] = phy_addr;
-    self->priv->phy_out_1[chan_id] = 0;
-    self->priv->phy_out_2[chan_id] = 0;
-    if (vmeta->n_planes > 1)
-      self->priv->phy_out_1[chan_id] = phy_addr + vmeta->offset[1];
-    if (vmeta->n_planes > 2)
-      self->priv->phy_out_2[chan_id] = phy_addr + vmeta->offset[2];
-
     gst_memory_unref (mem);
   }
 
@@ -1911,176 +1683,17 @@ error:
   return FALSE;
 }
 
-static void
-xlnx_multiscaler_coff_fill (void *Hcoeff_BufAddr, void *Vcoeff_BufAddr,
-    float scale)
-{
-  uint16_t *hpoly_coeffs, *vpoly_coeffs;        /* int need to check */
-  int uy = 0;
-  int temp_p;
-  int temp_t;
-
-  hpoly_coeffs = (uint16_t *) Hcoeff_BufAddr;
-  vpoly_coeffs = (uint16_t *) Vcoeff_BufAddr;
-
-  if ((scale >= 2) && (scale < 2.5)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-  }
-
-  if ((scale >= 2.5) && (scale < 3)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS >= 10) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      } else {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-    }
-  }
-
-  if ((scale >= 3) && (scale < 3.5)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 12) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    } else {
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 8) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-      if (XPAR_V_MULTI_SCALER_0_TAPS == 10) {
-        for (temp_p = 0; temp_p < 64; temp_p++)
-          for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-            *(hpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-            *(vpoly_coeffs + uy) =
-                XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-            uy = uy + 1;
-          }
-      }
-    }
-  }
-
-  if ((scale >= 3.5) || (scale < 2 && scale >= 1)) {
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 6) {
-      for (temp_p = 0; temp_p < 64; temp_p++) {
-        if (temp_p > 60) {
-        }
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-      }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 8) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps8_8C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 10) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps10_10C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-    if (XPAR_V_MULTI_SCALER_0_TAPS == 12) {
-      for (temp_p = 0; temp_p < 64; temp_p++)
-        for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-          *(hpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          *(vpoly_coeffs + uy) =
-              XV_multiscaler_fixedcoeff_taps12_12C[temp_p][temp_t];
-          uy = uy + 1;
-        }
-    }
-  }
-
-  if (scale < 1) {
-    for (temp_p = 0; temp_p < 64; temp_p++)
-      for (temp_t = 0; temp_t < XPAR_V_MULTI_SCALER_0_TAPS; temp_t++) {
-        *(hpoly_coeffs + uy) =
-            XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-        *(vpoly_coeffs + uy) =
-            XV_multiscaler_fixedcoeff_taps6_6C[temp_p][temp_t];
-        uy = uy + 1;
-      }
-  }
-
-}
-
+/**
+ *  @fn static gpointer vvas_xabrscaler_input_copy_thread (gpointer data)
+ *
+ *  @param [In] data  - Handle to GstVvasXAbrScaler instance, passed as callback argument.
+ *  @return Returns NULL on error else continue untill STOP_COMMAND is received.
+ *
+ *  @brief   Thread to optimize input buffer copy into input buffer pool.
+ *  @details This thread is started while transiting from READY to PAUSE state
+ *           if ENABLE_PIPELINE property is set.
+ *
+ */
 static gpointer
 vvas_xabrscaler_input_copy_thread (gpointer data)
 {
@@ -2093,7 +1706,9 @@ vvas_xabrscaler_input_copy_thread (gpointer data)
     GstVideoFrame in_vframe, own_vframe;
     GstFlowReturn fret = GST_FLOW_OK;
 
+    /* Pop out the input buffer coming from upstream */
     inbuf = (GstBuffer *) g_async_queue_pop (priv->copy_inqueue);
+    /* We run until STOP_COMMAND is received */
     if (inbuf == STOP_COMMAND) {
       GST_DEBUG_OBJECT (self, "received stop command. exit copy thread");
       break;
@@ -2120,15 +1735,18 @@ vvas_xabrscaler_input_copy_thread (gpointer data)
       GST_ERROR_OBJECT (self, "failed to map input buffer");
       goto error;
     }
+    /* copy the content into our internal buffer */
     gst_video_frame_copy (&own_vframe, &in_vframe);
 
     gst_video_frame_unmap (&in_vframe);
     gst_video_frame_unmap (&own_vframe);
+    /* Copy if input buffer is carrying some meta data with it */
     gst_buffer_copy_into (own_inbuf, inbuf,
         (GstBufferCopyFlags) (GST_BUFFER_COPY_METADATA), 0, -1);
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, self,
         "slow copy to internal input pool buffer");
     gst_buffer_unref (inbuf);
+    /* Pushed the prepared buffer into queue */
     g_async_queue_push (priv->copy_outqueue, own_inbuf);
   }
 
@@ -2136,235 +1754,23 @@ error:
   return NULL;
 }
 
-static bool
-xlnx_multiscaler_descriptor_create (GstVvasXAbrScaler * self)
-{
-  GstVideoMeta *meta_out;
-  MULTI_SCALER_DESC_STRUCT *msPtr;
-  guint chan_id;
-  GstVvasXAbrScalerPrivate *priv = self->priv;
-  guint plane0_offset = 0, plane1_offset = 0, plane2_offset = 0;
-
-  /* First descriptor from input caps */
-  uint64_t phy_in_0 = priv->phy_in_0;
-  uint64_t phy_in_1 = priv->phy_in_1;
-  uint64_t phy_in_2 = priv->phy_in_2;
-  uint32_t width = priv->in_vinfo->width;
-  uint32_t height = priv->in_vinfo->height;
-#ifdef ENABLE_PPE_SUPPORT
-  uint32_t val;
-#endif
-  uint32_t msc_inPixelFmt =
-      xlnx_multiscaler_colorformat (priv->in_vinfo->finfo->format);
-  uint32_t stride = self->priv->meta_in_stride;
-
-  if (stride != xlnx_multiscaler_stride_align (stride, WIDTH_ALIGN)) {
-    GST_WARNING_OBJECT (self, "input stide alignment mismatch");
-    GST_WARNING_OBJECT (self, "required  stride = %d in_stride = %d",
-        xlnx_multiscaler_stride_align (stride, WIDTH_ALIGN), stride);
-  }
-
-  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
-    /* crop only first channel in ladder, 2nd ladder will have cropped image */
-    if ((0 == chan_id) && (self->crop_width && self->crop_height)) {
-      guint x_cord, y_cord;
-
-      x_cord = self->crop_x;
-      y_cord = self->crop_y;
-      width = self->crop_width;
-      height = self->crop_height;
-
-      GST_DEBUG_OBJECT (self, "doing crop for x:%u, y:%u, width:%u, height:%u",
-          self->crop_x, self->crop_y, self->crop_width, self->crop_height);
-
-      switch (priv->in_vinfo->finfo->format) {
-        case GST_VIDEO_FORMAT_RGB:
-        case GST_VIDEO_FORMAT_BGR:
-          x_cord *= 3;
-          plane0_offset = ((stride * y_cord) + x_cord);
-          break;
-
-        case GST_VIDEO_FORMAT_NV12:
-          plane0_offset = ((stride * y_cord) + x_cord);
-          plane1_offset =
-              xlnx_multiscaler_stride_align (((stride * y_cord / 2) + x_cord),
-              (8 * self->ppc));
-          break;
-
-        case GST_VIDEO_FORMAT_GBR:
-          plane0_offset = ((stride * y_cord) + x_cord);
-          plane1_offset = ((stride * y_cord) + x_cord);
-          plane2_offset = ((stride * y_cord) + x_cord);
-          break;
-
-        default:{
-          GST_WARNING_OBJECT (self, "crop not supported for %d format",
-              priv->in_vinfo->finfo->format);
-          width = priv->in_vinfo->width;
-          height = priv->in_vinfo->height;
-        }
-          break;
-      }
-    } else {
-      plane0_offset = 0;
-      plane1_offset = 0;
-      plane2_offset = 0;
-    }
-
-    msPtr = (MULTI_SCALER_DESC_STRUCT *) (priv->msPtr[chan_id].user_ptr);
-    if ((0 == chan_id)
-        && (GST_VIDEO_FORMAT_GBR == priv->in_vinfo->finfo->format)) {
-      //Multi-Scaler supports R_G_B8 only
-      msPtr->msc_srcImgBuf0 = (uint64_t) phy_in_2 + plane2_offset;      /* plane 2 */
-      msPtr->msc_srcImgBuf1 = (uint64_t) phy_in_0 + plane0_offset;      /* plane 0 */
-      msPtr->msc_srcImgBuf2 = (uint64_t) phy_in_1 + plane1_offset;      /* plane 1 */
-    } else {
-      msPtr->msc_srcImgBuf0 = (uint64_t) phy_in_0 + plane0_offset;      /* plane 0 */
-      msPtr->msc_srcImgBuf1 = (uint64_t) phy_in_1 + plane1_offset;      /* plane 1 */
-      msPtr->msc_srcImgBuf2 = (uint64_t) phy_in_2 + plane2_offset;      /* plane 2 */
-    }
-
-    meta_out = gst_buffer_get_video_meta (priv->outbufs[chan_id]);
-    if (GST_VIDEO_FORMAT_GBR == meta_out->format) {
-      msPtr->msc_dstImgBuf0 = (uint64_t) priv->phy_out_2[chan_id];      /* plane 2 */
-      msPtr->msc_dstImgBuf1 = (uint64_t) priv->phy_out_0[chan_id];      /* plane 0 */
-      msPtr->msc_dstImgBuf2 = (uint64_t) priv->phy_out_1[chan_id];      /* plane 1 */
-    } else {
-      msPtr->msc_dstImgBuf0 = (uint64_t) priv->phy_out_0[chan_id];      /* plane 0 */
-      msPtr->msc_dstImgBuf1 = (uint64_t) priv->phy_out_1[chan_id];      /* plane 1 */
-      msPtr->msc_dstImgBuf2 = (uint64_t) priv->phy_out_2[chan_id];      /* plane 2 */
-    }
-
-    msPtr->msc_widthIn = width; /* 4 settings from pads */
-    msPtr->msc_heightIn = height;
-    msPtr->msc_inPixelFmt = msc_inPixelFmt;
-    msPtr->msc_strideIn = stride;
-    msPtr->msc_widthOut = meta_out->width;
-    msPtr->msc_heightOut = meta_out->height;
-#ifdef ENABLE_PPE_SUPPORT
-    msPtr->msc_alpha_0 = self->alpha_r;
-    msPtr->msc_alpha_1 = self->alpha_g;
-    msPtr->msc_alpha_2 = self->alpha_b;
-    val = (self->beta_r * (1 << 16));
-    msPtr->msc_beta_0 = val;
-    val = (self->beta_g * (1 << 16));
-    msPtr->msc_beta_1 = val;
-    val = (self->beta_b * (1 << 16));
-    msPtr->msc_beta_2 = val;
-#endif
-    msPtr->msc_lineRate =
-        (uint32_t) ((float) ((msPtr->msc_heightIn * STEP_PRECISION) +
-            ((msPtr->msc_heightOut) / 2)) / (float) msPtr->msc_heightOut);
-    msPtr->msc_pixelRate =
-        (uint32_t) ((float) (((msPtr->msc_widthIn) * STEP_PRECISION) +
-            ((msPtr->msc_widthOut) / 2)) / (float) msPtr->msc_widthOut);
-    msPtr->msc_outPixelFmt = xlnx_multiscaler_colorformat (meta_out->format);
-
-    msPtr->msc_strideOut = (*(meta_out->stride));
-
-    if (msPtr->msc_strideOut !=
-        xlnx_multiscaler_stride_align (*(meta_out->stride), WIDTH_ALIGN)) {
-      GST_WARNING_OBJECT (self, "output stide alignment mismatch");
-      GST_WARNING_OBJECT (self, "required  stride = %d out_stride = %d",
-          xlnx_multiscaler_stride_align (*(meta_out->stride), WIDTH_ALIGN),
-          msPtr->msc_strideOut);
-    }
-
-    msPtr->msc_blkmm_hfltCoeff = 0;
-    msPtr->msc_blkmm_vfltCoeff = 0;
-    if (chan_id == (self->num_request_pads - 1))
-      msPtr->msc_nxtaddr = 0;
-    else
-      msPtr->msc_nxtaddr = priv->msPtr[chan_id + 1].phy_addr;
-    msPtr->msc_blkmm_hfltCoeff = priv->Hcoff[chan_id].phy_addr;
-    msPtr->msc_blkmm_vfltCoeff = priv->Vcoff[chan_id].phy_addr;
-
-    /* set the output as input for next descripto if any */
-    phy_in_0 = msPtr->msc_dstImgBuf0;
-    phy_in_1 = msPtr->msc_dstImgBuf1;
-    phy_in_2 = msPtr->msc_dstImgBuf2;
-    width = msPtr->msc_widthOut;
-    height = msPtr->msc_heightOut;
-    msc_inPixelFmt = msPtr->msc_outPixelFmt;
-    stride = msPtr->msc_strideOut;
-  }
-  priv->is_coeff = false;
-  return TRUE;
-}
-
-static int32_t
-vvas_xabrscaler_exec_buf (vvasDeviceHandle dev_handle,
-    vvasKernelHandle kern_handle, vvasRunHandle * run_handle,
-    const char *format, ...)
-{
-  va_list args;
-  int32_t iret;
-
-  va_start (args, format);
-
-  iret = vvas_xrt_exec_buf (dev_handle, kern_handle, run_handle, format, args);
-
-  va_end (args);
-
-  return iret;
-}
-
+/**
+ *  @fn static gboolean vvas_xabrscaler_sync_buffer (GstVvasXAbrScaler * self)
+ *  @param [In] self   - Handle to GstVvasXAbrScaler instance.
+ *
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *
+ *  @brief   This function sets the SYNC_FROM_DEVICE on all the output buffers.
+ *  @details SYNC_FROM_DEVICE flag is needed for syncing data to the host side memory.
+ *           This flag may be used when this buffer is mapped in reading mode.
+ *
+ */
 static gboolean
-vvas_xabrscaler_process (GstVvasXAbrScaler * self)
+vvas_xabrscaler_sync_buffer (GstVvasXAbrScaler * self)
 {
   GstVvasXAbrScalerPrivate *priv = self->priv;
-  int iret;
   uint32_t chan_id = 0;
-  uint64_t desc_addr = 0;
-  bool ret;
   GstMemory *mem = NULL;
-  unsigned int ms_status = 0;
-  int retry_count = MAX_EXEC_WAIT_RETRY_CNT;
-
-  /* set descriptor */
-  ret = xlnx_multiscaler_descriptor_create (self);
-  if (!ret)
-    return FALSE;
-
-#ifdef XLNX_PCIe_PLATFORM
-  ret = xlnx_abr_desc_syncBO (self);
-  if (!ret)
-    return FALSE;
-#endif
-
-  desc_addr = priv->msPtr[0].phy_addr;
-
-  iret = vvas_xabrscaler_exec_buf (priv->dev_handle, priv->kern_handle,
-      &priv->run_handle,
-      "ulppu", self->num_request_pads, desc_addr, NULL, NULL, ms_status);
-  if (iret) {
-    GST_ERROR_OBJECT (self, "failed to execute command %d", iret);
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, NULL,
-        ("failed to issue execute command. reason : %s", strerror (errno)));
-    return FALSE;
-  }
-
-  do {
-    iret = vvas_xrt_exec_wait (priv->dev_handle, priv->run_handle,
-        MULTI_SCALER_TIMEOUT);
-    /* Lets try for MAX count unless there is a error or completion */
-    if (iret == ERT_CMD_STATE_TIMEOUT) {
-      GST_WARNING_OBJECT (self, "Timeout...retry execwait");
-      if (retry_count-- <= 0) {
-        GST_ERROR_OBJECT (self,
-            "Max retry count %d reached..returning error",
-            MAX_EXEC_WAIT_RETRY_CNT);
-        vvas_xrt_free_run_handle (priv->run_handle);
-        return FALSE;
-      }
-    } else if (iret == ERT_CMD_STATE_ERROR) {
-      GST_ERROR_OBJECT (self, "ExecWait ret = %d", iret);
-      vvas_xrt_free_run_handle (priv->run_handle);
-      return FALSE;
-    }
-  } while (iret != ERT_CMD_STATE_COMPLETED);
-
-  vvas_xrt_free_run_handle (priv->run_handle);
 
   for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
     mem = gst_buffer_get_memory (priv->outbufs[chan_id], 0);
@@ -2373,14 +1779,24 @@ vvas_xabrscaler_process (GstVvasXAbrScaler * self)
           "chan-%d : failed to get memory from output buffer", chan_id);
       return FALSE;
     }
-#ifdef XLNX_PCIe_PLATFORM
     gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_FROM_DEVICE);
-#endif
     gst_memory_unref (mem);
   }
   return TRUE;
 }
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_finalize (GObject * object)
+ *  @param [In] object   - Handle to GstVvasXAbrScaler instance typecasted as GstObject
+ *
+ *  @return None
+ *
+ *  @brief  This API will be called during GstVvasXAbrScaler object's destruction phase.
+ *          Close references to devices and free memories if any
+ *  @note After this API GstVvasXAbrScaler object \p obj will be destroyed completely.
+ *        So free all internal memories held by current object
+ *
+ */
 static void
 gst_vvas_xabrscaler_finalize (GObject * object)
 {
@@ -2391,14 +1807,27 @@ gst_vvas_xabrscaler_finalize (GObject * object)
 
   g_free (self->kern_name);
   g_free (self->xclbin_path);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_class_init (GstVvasXAbrScalerClass * klass)
+ *  @param [in]klass  - Handle to GstVvasXAbrScalerClass
+ *  @return None
+ *  @brief  Add properties and signals of GstVvasXAbrScaler to parent GObjectClass and
+ *          ovverrides function pointers present in itself and/or its parent class structures
+ *  @details This function publishes properties those can be set/get from application on GstVvasXAbrScaler object.
+ *                  And, while publishing a property it also declares type, range of acceptable values, default value,
+ *                  readability/writability and in which GStreamer state a property can be changed.
+ */
 static void
 gst_vvas_xabrscaler_class_init (GstVvasXAbrScalerClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstCaps *caps;
+  GstPadTemplate *pad_templ;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -2407,28 +1836,48 @@ gst_vvas_xabrscaler_class_init (GstVvasXAbrScalerClass * klass)
       0, "Xilinx's Multiscaler 2.0 plugin");
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
+  /* Set callback functions to be called when a plugin property is set or get */
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_set_property);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_get_property);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_finalize);
 
+  /* Update details like description, long name, author */
   gst_element_class_set_details_simple (gstelement_class,
       "Xilinx XlnxAbrScaler Scaler plugin",
       "Multi scaler 2.0 xrt plugin for vitis kernels",
       "Multi Scaler 2.0 plugin using XRT", "Xilinx Inc <www.xilinx.com>");
 
-  gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &src_request_template);
+  caps = vvas_xabrscaler_generate_caps ();
+  if (caps) {
+    pad_templ = gst_pad_template_new ("sink",
+        GST_PAD_SINK, GST_PAD_ALWAYS, caps);
+    /* Add sink and source templates to element based scaler core supported formats */
+    gst_element_class_add_pad_template (gstelement_class, pad_templ);
+    pad_templ = gst_pad_template_new ("src_%u",
+        GST_PAD_SRC, GST_PAD_REQUEST, caps);
+    gst_element_class_add_pad_template (gstelement_class, pad_templ);
+    gst_caps_unref (caps);
+  } else {
+    /* Add sink and source templates to element based on static templates */
+    gst_element_class_add_static_pad_template (gstelement_class,
+        &sink_template);
+    gst_element_class_add_static_pad_template (gstelement_class,
+        &src_request_template);
+  }
 
+  /* Assign callback to notify state changes in the pipeline */
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_change_state);
+  /* Assign callback to notify whenever a new request source pad is requested */
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_request_new_pad);
+  /* Assign callback to notify whenever a request source pad is released */
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_release_pad);
 
+  /* Install all properties listed in VvasXAbrscalerProperties */
   g_object_class_install_property (gobject_class, PROP_XCLBIN_LOCATION,
       g_param_spec_string ("xclbin-location", "xclbin file location",
           "Location of the xclbin to program devices", NULL,
@@ -2543,6 +1992,14 @@ gst_vvas_xabrscaler_class_init (GstVvasXAbrScalerClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  g_object_class_install_property (gobject_class, PROP_SOFTWARE_SCALING,
+      g_param_spec_boolean ("software-scaling",
+          "Flag to to enable software scaling flow.",
+          "Set this flag to true in case of software scaling.",
+          VVAS_XABRSCALER_ENABLE_SOFTWARE_SCALING_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
 #ifdef ENABLE_PPE_SUPPORT
   g_object_class_install_property (gobject_class, PROP_ALPHA_R,
       g_param_spec_float ("alpha-r",
@@ -2582,38 +2039,60 @@ gst_vvas_xabrscaler_class_init (GstVvasXAbrScalerClass * klass)
 #endif
 }
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_init (GstVvasXAbrScaler * self)
+ *  @param [in] self  - Handle to GstVvasXAbrScaler instance
+ *  @return None
+ *  @brief  Initilizes GstVvasXAbrScaler member variables to default and does one
+ *          time object/memory allocations in object's lifecycle
+ *  @details Overrides GstVvasXAbrScaler object's base class function pointers so that
+ *           GstVvasXAbrScaler APIs will be invoked.
+ *           Ex: Chain function, Event function, Query function etc.
+ */
 static void
 gst_vvas_xabrscaler_init (GstVvasXAbrScaler * self)
 {
   gint idx;
+  GstVvasXAbrScalerClass *klass;
+  GstPadTemplate *pad_template;
 
   self->priv = GST_VVAS_XABRSCALER_PRIVATE (self);
+  klass = GST_VVAS_XABRSCALER_GET_CLASS (self);
 
-  self->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink");
+  /* Create GstPad instance from the sink template */
+  self->sinkpad = gst_pad_new_from_template (pad_template, "sink");
+
+  /* Assign callback to be called whenever an event is pushed over sink pad */
   gst_pad_set_event_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_sink_event));
+  /* Assign callback to be called whenever a GstBuffer is pushed over sink pad */
   gst_pad_set_chain_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_chain));
+  /* Assign callback to be called whenever a query is pushed over sink pad */
   gst_pad_set_query_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vvas_xabrscaler_sink_query));
+  /* Add the created pad to element */
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
+  /* Initialize all internal structure members */
   self->xclbin_path = NULL;
   self->num_request_pads = 0;
   self->pad_indexes = g_hash_table_new (NULL, NULL);
   self->srcpads = NULL;
-  self->out_stride_align = 1;
-  self->out_elevation_align = 1;
   self->num_taps = VVAS_XABRSCALER_DEFAULT_NUM_TAPS;
   self->coef_load_type = VVAS_XABRSCALER_DEFAULT_COEF_LOAD_TYPE;
   self->avoid_output_copy = VVAS_XABRSCALER_AVOID_OUTPUT_COPY_DEFAULT;
+  self->software_scaling = VVAS_XABRSCALER_ENABLE_SOFTWARE_SCALING_DEFAULT;
 #ifdef ENABLE_PPE_SUPPORT
-  self->alpha_r = 0;
-  self->alpha_g = 0;
-  self->alpha_b = 0;
-  self->beta_r = 1;
-  self->beta_g = 1;
-  self->beta_b = 1;
+  self->alpha_r = PP_ALPHA_DEFAULT_VALUE;
+  self->alpha_g = PP_ALPHA_DEFAULT_VALUE;
+  self->alpha_b = PP_ALPHA_DEFAULT_VALUE;
+  self->beta_r = PP_BETA_DEFAULT_VALUE;
+  self->beta_g = PP_BETA_DEFAULT_VALUE;
+  self->beta_b = PP_BETA_DEFAULT_VALUE;
+  self->get_pp_config = TRUE;
 #endif
   self->dev_index = DEFAULT_DEVICE_INDEX;
   self->ppc = VVAS_XABRSCALER_DEFAULT_PPC;
@@ -2635,15 +2114,35 @@ gst_vvas_xabrscaler_init (GstVvasXAbrScaler * self)
   self->priv->in_vinfo = gst_video_info_new ();
   self->priv->validate_import = TRUE;
   self->priv->input_pool = NULL;
-  self->priv->is_internal_buf_allocated = FALSE;
+  self->priv->vvas_ctx = NULL;
+  self->priv->vvas_scaler = NULL;
   self->kern_name = g_strdup (DEFAULT_KERNEL_NAME);
   gst_video_info_init (self->priv->in_vinfo);
 
+  /* To begin with, lets just say, buffer needs to be copied
+   * to host side before pushing out the output buffer */
   for (idx = 0; idx < MAX_CHANNELS; idx++) {
     self->priv->need_copy[idx] = TRUE;
+    /* Let's just consider there is no alignment requirements to begin with */
+    self->out_stride_align[idx] = 1;
+    self->out_elevation_align[idx] = 1;
   }
 }
 
+/**
+ *  @fn static GstPad *gst_vvas_xabrscaler_request_new_pad (GstElement * element,
+ *    GstPadTemplate * templ, const gchar * name_templ, const GstCaps * caps)
+ *
+ *  @param [in] element      - Handle to GstVvasXAbrScaler instance
+ *  @param [in] templ        - Pad template
+ *  @param [in] name_templ   - Pad name.
+ *  @param [in] caps         - Pad capabilities.
+ *
+ *  @return Returns the newly created pad.
+ *  @brief   This function will get invoked whenever user requests for a new source pad.
+ *  @details Create the pad as per input values and add to the element.
+ *
+ */
 static GstPad *
 gst_vvas_xabrscaler_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name_templ, const GstCaps * caps)
@@ -2663,12 +2162,14 @@ gst_vvas_xabrscaler_request_new_pad (GstElement * element,
     return NULL;
   }
 
+  /* Check if we have reached the limit of maximum outputs from scaler */
   if (self->num_request_pads == MAX_CHANNELS) {
     GST_ERROR_OBJECT (self, "reached maximum supported channels");
     GST_OBJECT_UNLOCK (self);
     return NULL;
   }
 
+  /* Create the pad name, it must be unique, src_0, src_1, src_2 .... */
   if (name_templ && sscanf (name_templ, "src_%u", &index) == 1) {
     GST_LOG_OBJECT (element, "name: %s (index %d)", name_templ, index);
     if (g_hash_table_contains (self->pad_indexes, GUINT_TO_POINTER (index))) {
@@ -2683,7 +2184,7 @@ gst_vvas_xabrscaler_request_new_pad (GstElement * element,
       return NULL;
     }
   }
-
+  /* Add the index of the created pad to the has table */
   g_hash_table_insert (self->pad_indexes, GUINT_TO_POINTER (index), NULL);
 
   name = g_strdup_printf ("src_%u", index);
@@ -2700,17 +2201,30 @@ gst_vvas_xabrscaler_request_new_pad (GstElement * element,
   GST_VVAS_XABRSCALER_PAD_CAST (srcpad)->out_vinfo = gst_video_info_new ();
   gst_video_info_init (GST_VVAS_XABRSCALER_PAD_CAST (srcpad)->out_vinfo);
 
+  /* Add the newly created source pad to the list */
   self->srcpads = g_list_append (self->srcpads,
       GST_VVAS_XABRSCALER_PAD_CAST (srcpad));
   self->num_request_pads++;
 
   GST_OBJECT_UNLOCK (self);
-
+  /* Add newly created pad to the element */
   gst_element_add_pad (GST_ELEMENT_CAST (self), srcpad);
 
   return srcpad;
 }
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_release_pad (GstElement * element, GstPad * pad)
+ *
+ *  @param [in] element      - Handle to GstVvasXAbrScaler instance
+ *  @param [in] pad          - GsPad object to be released.
+ *
+ *  @return None
+ *
+ *  @brief   This function will get invoked whenever a request pad is to be released.
+ *  @details Detaches the pad from the element and will be freed up.
+ *
+ */
 static void
 gst_vvas_xabrscaler_release_pad (GstElement * element, GstPad * pad)
 {
@@ -2725,11 +2239,13 @@ gst_vvas_xabrscaler_release_pad (GstElement * element, GstPad * pad)
   GST_OBJECT_LOCK (self);
 
   if (GST_STATE (self) > GST_STATE_NULL) {
-    GST_ERROR_OBJECT (self, "adding pads is supported only when state is NULL");
+    GST_ERROR_OBJECT (self,
+        "releasing pads is supported only when state is NULL");
     GST_OBJECT_UNLOCK (self);
     return;
   }
 
+  /* Check if the pad to be released is in our list */
   lsrc = g_list_find (self->srcpads, srcpad);
   if (!lsrc) {
     GST_ERROR_OBJECT (self, "could not find pad to release");
@@ -2740,6 +2256,7 @@ gst_vvas_xabrscaler_release_pad (GstElement * element, GstPad * pad)
   gst_video_info_free (srcpad->in_vinfo);
   gst_video_info_free (srcpad->out_vinfo);
 
+  /* Remove the pad from the list */
   self->srcpads = g_list_remove (self->srcpads, srcpad);
   index = srcpad->index;
   GST_DEBUG_OBJECT (self, "releasing pad with index = %d", index);
@@ -2747,19 +2264,37 @@ gst_vvas_xabrscaler_release_pad (GstElement * element, GstPad * pad)
   GST_OBJECT_UNLOCK (self);
 
   gst_object_ref (pad);
+  /* Detach the pad from the element */
   gst_element_remove_pad (GST_ELEMENT_CAST (self), pad);
 
   gst_pad_set_active (pad, FALSE);
 
   gst_object_unref (pad);
 
+  /* Update the number of output sourc pads */
   self->num_request_pads--;
 
   GST_OBJECT_LOCK (self);
+  /* Remove the index from the hash table */
   g_hash_table_remove (self->pad_indexes, GUINT_TO_POINTER (index));
   GST_OBJECT_UNLOCK (self);
 }
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_set_property (GObject * object,
+ *                                                    guint prop_id,
+ *                                                    const GValue * value,
+ *                                                    GParamSpec * pspec)
+ *  @param [in] object     - Handle to GstVvasXAbrScaler typecasted to GObject
+ *  @param [in] prop_id    - Property ID as defined in VvasXAbrscalerProperties enum
+ *  @param [in] value      - GValue which holds property value set by user
+ *  @param [in] pspec      - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief   This API stores values sent from the user in GstVvasXAbrScaler object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_property function pointer and
+ *           this will be invoked when developer sets properties on GstVvasXAbrScaler object. Based on property
+ *           value type, corresponding g_value_get_xxx API will be called to get property value from GValue handle.
+ */
 static void
 gst_vvas_xabrscaler_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -2816,6 +2351,9 @@ gst_vvas_xabrscaler_set_property (GObject * object, guint prop_id,
     case PROP_ENABLE_PIPELINE:
       self->enabled_pipeline = g_value_get_boolean (value);
       break;
+    case PROP_SOFTWARE_SCALING:
+      self->software_scaling = g_value_get_boolean (value);
+      break;
 #ifdef ENABLE_PPE_SUPPORT
     case PROP_ALPHA_R:
       self->alpha_r = g_value_get_float (value);
@@ -2859,6 +2397,21 @@ gst_vvas_xabrscaler_set_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ *  @fn static void gst_vvas_xabrscaler_get_property (GObject * object,
+ *                                                    guint prop_id,
+ *                                                    const GValue * value,
+ *                                                    GParamSpec * pspec)
+ *  @param [in] object     - Handle to GstVvasXAbrScaler typecasted to GObject
+ *  @param [in] prop_id    - Property ID as defined in VvasXAbrscalerProperties enum
+ *  @param [out] value      - GValue which holds property value set by user
+ *  @param [in] pspec      - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief   This API gives out values asked from the user in GstVvasXAbrScaler object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::get_property function pointer
+ *           and this will be invoked when developer gets properties on GstVvasXAbrScaler object. Based on property
+ *           value type, corresponding g_value_get_xxx API will be called to get property value from GValue handle.
+ */
 static void
 gst_vvas_xabrscaler_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -2900,6 +2453,9 @@ gst_vvas_xabrscaler_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ENABLE_PIPELINE:
       g_value_set_boolean (value, self->enabled_pipeline);
+      break;
+    case PROP_SOFTWARE_SCALING:
+      g_value_set_boolean (value, self->software_scaling);
       break;
 #ifdef ENABLE_PPE_SUPPORT
     case PROP_ALPHA_R:
@@ -2944,6 +2500,17 @@ gst_vvas_xabrscaler_get_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ *  @fn static GstStateChangeReturn gst_vvas_xabrscaler_change_state (GstElement * element, GstStateChange transition)
+ *  @param [in] element       - Handle to GstVvasXAbrScaler typecasted to GObject.
+ *  @param [in] transition    - The requested state transition.
+ *  @return Status of the state transition.
+ *  @brief   This API will be invoked whenever the pipeline is going into a state transition and in this function the
+ *          element can can initialize any sort of specific data needed by the element.
+ *  @details This API is registered with GstElementClass by overriding GstElementClass::change_state function pointer and
+ *           this will be invoked whenever the pipeline is going into a state transition.
+ *
+ */
 static GstStateChangeReturn
 gst_vvas_xabrscaler_change_state (GstElement * element,
     GstStateChange transition)
@@ -2952,8 +2519,28 @@ gst_vvas_xabrscaler_change_state (GstElement * element,
   GstVvasXAbrScalerPrivate *priv = self->priv;
   GstStateChangeReturn ret;
   guint idx = 0;
+  VvasReturnType vret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:{
+      /*
+       * Create VVAS Context, Create Scaler context and
+       * Set Scaler Properties
+       */
+      VvasLogLevel core_log_level =
+          vvas_get_core_log_level (gst_debug_category_get_threshold
+          (gst_vvas_xabrscaler_debug));
+      GST_DEBUG_OBJECT (self, "Creating VVAS context, XCLBIN: %s",
+          self->xclbin_path);
+      priv->vvas_ctx =
+          vvas_context_create (self->dev_index, self->xclbin_path,
+          core_log_level, &vret);
+      if (!priv->vvas_ctx) {
+        GST_ERROR_OBJECT (self, "Couldn't create VVAS context");
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      break;
+    }
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
 #ifdef ENABLE_XRM_SUPPORT
       self->priv->xrm_ctx = (xrmContext *) xrmCreateContext (XRM_API_VERSION_1);
@@ -2971,6 +2558,7 @@ gst_vvas_xabrscaler_change_state (GstElement * element,
         priv->copy_outqueue =
             g_async_queue_new_full ((void (*)(void *)) gst_buffer_unref);
 
+        /* Creat the thread to optimize input buffer copy into input buffer pool. */
         priv->input_copy_thread = g_thread_new ("abr-input-copy-thread",
             vvas_xabrscaler_input_copy_thread, self);
       }
@@ -2988,6 +2576,7 @@ gst_vvas_xabrscaler_change_state (GstElement * element,
       priv->is_first_frame = FALSE;
 
       if (self->enabled_pipeline) {
+        /* Terminate the copy thread */
         if (priv->input_copy_thread) {
           g_async_queue_push (priv->copy_inqueue, STOP_COMMAND);
           GST_LOG_OBJECT (self, "waiting for copy input thread join");
@@ -3026,11 +2615,19 @@ gst_vvas_xabrscaler_change_state (GstElement * element,
         gst_clear_object (&self->priv->input_pool);
         self->priv->input_pool = NULL;
       }
+#ifdef ENABLE_XRM_SUPPORT
+      vvas_xabrscaler_destroy_xrm_resource (self);
+#endif
 
-      vvas_xabrscaler_free_internal_buffers (self);
-      self->priv->is_internal_buf_allocated = FALSE;
-
-      vvas_xabrscaler_destroy_context (self);
+      /*  Destroy Scaler and Vvas Context */
+      if (self->priv->vvas_scaler) {
+        vvas_scaler_destroy (self->priv->vvas_scaler);
+      }
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (self->priv->vvas_ctx) {
+        vvas_context_destroy (self->priv->vvas_ctx);
+      }
       break;
     default:
       break;
@@ -3039,6 +2636,19 @@ gst_vvas_xabrscaler_change_state (GstElement * element,
   return ret;
 }
 
+/**
+ *  @fn static GstCaps *gst_vvas_xabrscaler_fixate_caps (GstVvasXAbrScaler * self,
+ *                                      GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+ *  @param [in] self                 - Handle to GstVvasXAbrScaler typecasted to GObject.
+ *  @param [in] direction            - Direction of the pad (src or sink)
+ *  @param [in] caps                 - Given caps
+ *  @param [in] othercaps            - Caps to fixate
+ *  @return Fixated version of "othercaps"
+ *  @brief  Given the pad in this direction and the given caps, fixate the caps on the other pad.
+ *  @details The function takes ownership of othercaps and returns a fixated version of othercaps.
+ *           othercaps is not guaranteed to be writable.
+ *
+ */
 static GstCaps *
 gst_vvas_xabrscaler_fixate_caps (GstVvasXAbrScaler * self,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
@@ -3497,6 +3107,21 @@ done:
   return othercaps;
 }
 
+/**
+ *  @fn static GstCaps *gst_vvas_xabrscaler_transform_caps (GstVvasXAbrScaler * self,
+ *                                                          GstPadDirection direction,
+ *                                                          GstCaps * caps, GstCaps * peercaps,
+ *                                                          GstCaps * filter)
+ *  @param [in] self                 - Handle to GstVvasXAbrScaler typecasted to GObject.
+ *  @param [in] direction            - Direction of the pad (src or sink)
+ *  @param [in] caps                 - Given caps
+ *  @param [in] peercaps             - Caps from the peer pad.
+ *  @param [in] filter               - Caps to filter out, when given
+ *  @return transformed caps of peercaps
+ *  @brief  Given the pad in this direction and the given caps, this function will find what caps are
+ *          allowed on the other pad in this element.
+ *
+ */
 static GstCaps *
 gst_vvas_xabrscaler_transform_caps (GstVvasXAbrScaler * self,
     GstPadDirection direction, GstCaps * caps, GstCaps * peercaps,
@@ -3517,6 +3142,7 @@ gst_vvas_xabrscaler_transform_caps (GstVvasXAbrScaler * self,
   ret = gst_caps_new_empty ();
   n = gst_caps_get_size (caps);
   pn = gst_caps_get_size (peercaps);
+  /* Run for all structures in the input caps */
   for (i = 0; i < n; i++) {
     structure = gst_caps_get_structure (caps, i);
     features = gst_caps_get_features (caps, i);
@@ -3529,12 +3155,13 @@ gst_vvas_xabrscaler_transform_caps (GstVvasXAbrScaler * self,
     /* make copy */
     structure = gst_structure_copy (structure);
 
-    /* Find the color domain on source pad to find 
+    /* Find the color domain on source pad to find
      * if colorimetry information can be preserved in the caps */
     in_format = gst_structure_get_string (structure, "format");
     in_color_domain = vvas_xabrscaler_get_color_domain (in_format);
 
     if (in_color_domain != COLOR_DOMAIN_UNKNOWN) {
+      /* Run for all structures in the peer caps */
       for (j = 0; j < pn; j++) {
         const GValue *targets;
         peer_structure = gst_caps_get_structure (peercaps, j);
@@ -3565,10 +3192,10 @@ gst_vvas_xabrscaler_transform_caps (GstVvasXAbrScaler * self,
               color_domain_match = TRUE;
               break;
             }
-          }                     //for
-        }                       // G_TYPE_CHECK_VALUE_TYPE (targets, GST_TYPE_LIST
-      }                         //for
-    }                           //in_color_domain != COLOR_DOMAIN_UNKNOWN
+          }
+        }
+      }
+    }
 
     /* If the features are non-sysmem we can only do passthrough */
     if (!gst_caps_features_is_any (features)
@@ -3591,10 +3218,13 @@ gst_vvas_xabrscaler_transform_caps (GstVvasXAbrScaler * self,
             GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
       }
     }
+    /* Append the finalized structure to caps that needs to be returned. */
     gst_caps_append_structure_full (ret, structure,
         gst_caps_features_copy (features));
   }
 
+  /* If we have a caps of interest then intersect between "filter" caps and "ret"
+   * caps that we have composed. */
   if (filter) {
     GstCaps *intersection;
 
@@ -3609,6 +3239,19 @@ gst_vvas_xabrscaler_transform_caps (GstVvasXAbrScaler * self,
   return ret;
 }
 
+/**
+ *  @fn static GstCaps *gst_vvas_xabrscaler_find_transform (GstVvasXAbrScaler * self,
+ *                                                          GstPad * pad,
+ *                                                          GstPad * otherpad,
+ *                                                          GstCaps * caps)
+ *  @param [in] self                 - Handle to GstVvasXAbrScaler typecasted to GObject.
+ *  @param [in] pad                  - Pad with known caps.
+ *  @param [in] otherpad             - Pad for which transform caps needed.
+ *  @param [in] caps                 - Caps for known pad.
+ *  @return Found transform caps.
+ *  @brief  This function finds out the fixated transform caps for the otherpad.
+ *
+ */
 static GstCaps *
 gst_vvas_xabrscaler_find_transform (GstVvasXAbrScaler * self, GstPad * pad,
     GstPad * otherpad, GstCaps * caps)
@@ -3618,7 +3261,7 @@ gst_vvas_xabrscaler_find_transform (GstVvasXAbrScaler * self, GstPad * pad,
   gboolean is_fixed;
   GstCaps *peercaps;
 
-  /* caps must be fixed here, this is a programming error if it's not */
+  /* Received caps on the sink pad must be fixed, error our otherwise */
   g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
 
   otherpeer = gst_pad_get_peer (otherpad);
@@ -3774,6 +3417,21 @@ error_cleanup:
   }
 }
 
+/**
+ *  @fn static gboolean vvas_xabrscaler_decide_allocation (GstVvasXAbrScaler * self,
+ *                                                         GstVvasXAbrScalerPad * srcpad,
+ *                                                         GstQuery * query,
+ *                                                         GstCaps * outcaps)
+ *  @param [in] self        - Handle to GstVvasXAbrScaler typecasted to GObject.
+ *  @param [in] srcpad      - Src pad GstVvasXAbrScalerPad object for which allocation has to be decided
+ *  @param [in] query       - Response for the allocation query.
+ *  @param [in] outcaps     - Currently set caps on the srcpad
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will decide allocation strategy based on the preference from downstream element.
+ *  @details The proposed allocation from downstream query response will be parsed through,
+ *           verified if the proposed pool is VVAS and alignments are quoated. Otherwise it will be
+ *           discarded and new pool and allocator will be created.
+ */
 static gboolean
 vvas_xabrscaler_decide_allocation (GstVvasXAbrScaler * self,
     GstVvasXAbrScalerPad * srcpad, GstQuery * query, GstCaps * outcaps)
@@ -3787,6 +3445,17 @@ vvas_xabrscaler_decide_allocation (GstVvasXAbrScaler * self,
   GstVideoInfo out_vinfo;
   gint srcpadIdx = gst_vvas_xabrscaler_srcpad_get_index (self, srcpad);
 
+  if (!outcaps) {
+    GST_ERROR_OBJECT (srcpad, "out caps null...");
+    goto error;
+  }
+
+  /* Get video info (GstVideoInfo) corresponding to the caps  */
+  if (!gst_video_info_from_caps (&out_vinfo, outcaps)) {
+    GST_ERROR_OBJECT (srcpad, "failed to get video info from outcaps");
+    goto error;
+  }
+
   /* we got configuration from our peer or the decide_allocation method,
    * parse them */
   if (gst_query_get_n_allocation_params (query) > 0) {
@@ -3795,23 +3464,22 @@ vvas_xabrscaler_decide_allocation (GstVvasXAbrScaler * self,
     GST_DEBUG_OBJECT (srcpad, "has allocator %p", allocator);
     update_allocator = TRUE;
   } else {
+    /* This is when downstream has not proposed any allocators */
     allocator = NULL;
     update_allocator = FALSE;
     gst_allocation_params_init (&params);
   }
 
-  if (outcaps && !gst_video_info_from_caps (&out_vinfo, outcaps)) {
-    GST_ERROR_OBJECT (srcpad, "failed to get video info from outcaps");
-    goto error;
-  }
-
+  /* Check if we have any pool proposed from downstream peer */
   if (gst_query_get_n_allocation_pools (query) > 0) {
+    /* Get pool parameters at the index 0 */
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     size = MAX (size, out_vinfo.size);
     update_pool = TRUE;
     if (min == 0)
       min = 3;
   } else {
+    /* Condition when the downstream element has not suggested any pool */
     pool = NULL;
     min = 3;
     max = 0;
@@ -3819,173 +3487,283 @@ vvas_xabrscaler_decide_allocation (GstVvasXAbrScaler * self,
     update_pool = FALSE;
   }
 
-  /* Check if the proposed pool is VVAS Buffer Pool and stride is aligned with (8 * ppc)
-   * If otherwise, discard the pool. Will create a new one */
-  if (pool) {
-    GstVideoAlignment video_align = { 0, };
-    guint padded_width = 0;
-    guint stride = 0, multiscaler_req_stride;
-
-    config = gst_buffer_pool_get_config (pool);
-    if (config && gst_buffer_pool_config_has_option (config,
-            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
-      gst_buffer_pool_config_get_video_alignment (config, &video_align);
-
-      /* We have adding padding_right and padding_left in pixels.
-       * We need to convert them to bytes for finding out the complete stride with alignment */
-      padded_width =
-          out_vinfo.width + video_align.padding_right +
-          video_align.padding_left;
-      stride = vvas_xabrscaler_get_stride (&out_vinfo, padded_width);
-
-      GST_INFO_OBJECT (srcpad, "output stride = %u", stride);
-
-      if (!stride)
-        return FALSE;
-      gst_structure_free (config);
-      config = NULL;
-      multiscaler_req_stride = 8 * self->ppc;
-
-      if (stride % multiscaler_req_stride) {
-        GST_WARNING_OBJECT (self, "Discarding the propsed pool, "
-            "Alignment not matching with 8 * self->ppc");
-        gst_object_unref (pool);
-        pool = NULL;
-        update_pool = FALSE;
-
-        self->out_stride_align = multiscaler_req_stride;
-        self->out_elevation_align = 1;
-        GST_DEBUG_OBJECT (self, "Going to allocate pool with stride_align %d and \
-            elevation_align %d", self->out_stride_align,
-            self->out_elevation_align);
-      }
-    } else {
-      /* VVAS Buffer Pool but no alignment information.
-       * Discard to create pool with scaler alignment requirements*/
-      if (config) {
-        gst_structure_free (config);
-        config = NULL;
-      }
+  if (!self->software_scaling) {
+    /* Check if the proposed pool is VVAS Buffer Pool and stride is aligned with (8 * ppc)
+     * If otherwise, discard the pool. Will create a new one */
+    if (pool && !GST_IS_VVAS_BUFFER_POOL (pool)) {
+      /* create own pool */
       gst_object_unref (pool);
       pool = NULL;
       update_pool = FALSE;
     }
-  }
-#ifdef XLNX_EMBEDDED_PLATFORM
-/* TODO: Currently Kms buffer are not supported in PCIe platform */
-  if (pool) {
-    GstStructure *config = gst_buffer_pool_get_config (pool);
+    /* Now given the pool is VVAS buffer pool, check for the alignment info */
+    if (pool) {
+      GstVideoAlignment video_align = { 0, };
+      guint padded_width = 0;
+      guint padded_height = 0;
+      guint stride = 0, multiscaler_req_stride;
 
-    if (gst_buffer_pool_config_has_option (config,
-            "GstBufferPoolOptionKMSPrimeExport")) {
+      /* Check if the proposed VVAS buffer pool has alignment information */
+      config = gst_buffer_pool_get_config (pool);
+      if (config && gst_buffer_pool_config_has_option (config,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_get_video_alignment (config, &video_align);
+
+        /* We have adding padding_right and padding_left in pixels.
+         * We need to convert them to bytes for finding out the complete stride with alignment */
+        padded_width =
+            out_vinfo.width + video_align.padding_right +
+            video_align.padding_left;
+        padded_height =
+            out_vinfo.height + video_align.padding_top +
+            video_align.padding_bottom;
+
+        stride = vvas_xabrscaler_get_stride (&out_vinfo, padded_width);
+
+        GST_INFO_OBJECT (srcpad, "output stride = %u", stride);
+        /* Stride can't be zero here */
+        if (!stride)
+          return FALSE;
+        gst_structure_free (config);
+        config = NULL;
+        multiscaler_req_stride = WIDTH_ALIGN;
+
+        /* Check if the stride is aligned to 8 ppc, as required by scaler, discard otherwise */
+        if (stride % multiscaler_req_stride) {
+          GST_WARNING_OBJECT (self, "Discarding the proposed pool, "
+              "Alignment not matching with 8 * self->ppc");
+          gst_object_unref (pool);
+          pool = NULL;
+          update_pool = FALSE;
+          /* Store scaler alignment and elevation required for further reference */
+          self->out_stride_align[srcpadIdx] = multiscaler_req_stride;
+          self->out_elevation_align[srcpadIdx] = 1;
+          GST_DEBUG_OBJECT (self, "Going to allocate pool with stride_align %d and \
+              elevation_align %d", self->out_stride_align[srcpadIdx],
+              self->out_elevation_align[srcpadIdx]);
+        } else {
+          /* We don't have the stride alignment from downstream pool, but the
+           * stride derived is aligned to our requirement, lets take the stride
+           * it self as the alignment.
+           */
+          self->out_stride_align[srcpadIdx] = stride;
+          self->out_elevation_align[srcpadIdx] = padded_height;
+        }
+      } else {
+        /* VVAS Buffer Pool but no alignment information.
+         * Discard to create pool with scaler alignment requirements*/
+        if (config) {
+          gst_structure_free (config);
+          config = NULL;
+        }
+        gst_object_unref (pool);
+        pool = NULL;
+        update_pool = FALSE;
+      }
+    }
+#ifdef XLNX_EMBEDDED_PLATFORM
+    /* TODO: Currently Kms buffer are not supported in PCIe platform */
+    if (pool) {
+      GstStructure *config = gst_buffer_pool_get_config (pool);
+
+      if (gst_buffer_pool_config_has_option (config,
+              "GstBufferPoolOptionKMSPrimeExport")) {
+        gst_structure_free (config);
+        goto next;
+      }
+
       gst_structure_free (config);
-      goto next;
+      gst_object_unref (pool);
+      pool = NULL;
+      GST_DEBUG_OBJECT (srcpad, "pool deos not have the KMSPrimeExport option, \
+          unref the pool and create sdx allocator");
+    }
+#endif
+    /* Check if the allocator is a VVAS allocator and should be on the same device  */
+    if (allocator && (!GST_IS_VVAS_ALLOCATOR (allocator)
+            || gst_vvas_allocator_get_device_idx (allocator) !=
+            self->dev_index)) {
+      GST_DEBUG_OBJECT (srcpad, "replace %" GST_PTR_FORMAT " to xrt allocator",
+          allocator);
+      gst_object_unref (allocator);
+      gst_allocation_params_init (&params);
+      allocator = NULL;
     }
 
-    gst_structure_free (config);
-    gst_object_unref (pool);
-    pool = NULL;
-    GST_DEBUG_OBJECT (srcpad, "pool deos not have the KMSPrimeExport option, \
-        unref the pool and create sdx allocator");
-  }
-#endif
-
-  if (pool && !GST_IS_VVAS_BUFFER_POOL (pool)) {
-    /* create own pool */
-    gst_object_unref (pool);
-    pool = NULL;
-    update_pool = FALSE;
-  }
-
-  if (allocator && (!GST_IS_VVAS_ALLOCATOR (allocator) ||
-          gst_vvas_allocator_get_device_idx (allocator) != self->dev_index)) {
-    GST_DEBUG_OBJECT (srcpad, "replace %" GST_PTR_FORMAT " to xrt allocator",
-        allocator);
-    gst_object_unref (allocator);
-    gst_allocation_params_init (&params);
-    allocator = NULL;
-  }
-
-  if (!allocator) {
-    /* making sdx allocator for the HW mode without dmabuf */
-    allocator = gst_vvas_allocator_new (self->dev_index,
-        NEED_DMABUF, self->out_mem_bank, self->priv->kern_handle);
-    params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
-    params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
-    GST_INFO_OBJECT (srcpad, "creating new xrt allocator %" GST_PTR_FORMAT
-        "at mem bank %d", allocator, self->out_mem_bank);
-    have_new_allocator = TRUE;
-  }
+    if (!allocator) {
+      /* making sdx allocator for the HW mode without dmabuf */
+      allocator = gst_vvas_allocator_new (self->dev_index,
+          NEED_DMABUF, self->out_mem_bank);
+      params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
+      params.flags |= GST_VVAS_ALLOCATOR_FLAG_MEM_INIT;
+      GST_INFO_OBJECT (srcpad, "creating new xrt allocator %" GST_PTR_FORMAT
+          "at mem bank %d", allocator, self->out_mem_bank);
+      have_new_allocator = TRUE;
+    }
 #ifdef XLNX_EMBEDDED_PLATFORM
-next:
+  next:
 #endif
-  if (update_allocator)
-    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
-  else
-    gst_query_add_allocation_param (query, allocator, &params);
+    if (update_allocator)
+      gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+    else
+      gst_query_add_allocation_param (query, allocator, &params);
 
-  /* If there is no pool allignment requirement from downstream or if scaling dimention
-   * is not aligned to (8 * ppc), then we will create a new pool*/
-  if (!pool && (self->out_stride_align == 1)
-      && ((out_vinfo.stride[0] % WIDTH_ALIGN)
-          || (out_vinfo.height % HEIGHT_ALIGN))) {
-    self->out_stride_align = WIDTH_ALIGN;
-    self->out_elevation_align = HEIGHT_ALIGN;
-  }
-
-  if (!pool) {
-    GstVideoAlignment align;
-
-    pool =
-        gst_vvas_buffer_pool_new (self->out_stride_align,
-        self->out_elevation_align);
-    GST_INFO_OBJECT (srcpad, "created new pool %p %" GST_PTR_FORMAT, pool,
-        pool);
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_video_alignment_reset (&align);
-    align.padding_top = 0;
-    align.padding_left = 0;
-    align.padding_right = vvas_xabrscaler_get_padding_right (self, &out_vinfo);
-    align.padding_bottom =
-        ALIGN (GST_VIDEO_INFO_HEIGHT (&out_vinfo),
-        self->out_elevation_align) - GST_VIDEO_INFO_HEIGHT (&out_vinfo);
-    if (align.padding_right == -1)
-      goto error;
-    gst_video_info_align (&out_vinfo, &align);
-    /* size updated in vinfo based on alignment */
-    size = out_vinfo.size;
-
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-    gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    gst_buffer_pool_config_set_video_alignment (config, &align);
-    bret = gst_buffer_pool_set_config (pool, config);
-    if (!bret) {
-      GST_ERROR_OBJECT (srcpad, "failed configure pool");
-      goto error;
+    /* If there is no pool allignment requirement from downstream or if scaling dimention
+     * is not aligned to (8 * ppc), then we will create a new pool*/
+    if (!pool && (self->out_stride_align[srcpadIdx] == 1)
+        && ((out_vinfo.stride[0] % WIDTH_ALIGN)
+            || (out_vinfo.height % HEIGHT_ALIGN))) {
+      self->out_stride_align[srcpadIdx] = WIDTH_ALIGN;
+      self->out_elevation_align[srcpadIdx] = HEIGHT_ALIGN;
     }
-  } else if (have_new_allocator) {
-    /* update newly allocator on downstream pool */
-    config = gst_buffer_pool_get_config (pool);
 
-    GST_INFO_OBJECT (srcpad, "updating allocator %" GST_PTR_FORMAT
-        " on pool %" GST_PTR_FORMAT, allocator, pool);
+    if (!pool) {
+      GstVideoAlignment align;
 
-    gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    bret = gst_buffer_pool_set_config (pool, config);
-    if (!bret) {
-      GST_ERROR_OBJECT (srcpad, "failed configure pool");
-      goto error;
+      pool =
+          gst_vvas_buffer_pool_new (self->out_stride_align[srcpadIdx],
+          self->out_elevation_align[srcpadIdx]);
+      GST_INFO_OBJECT (srcpad, "created new pool %p %" GST_PTR_FORMAT, pool,
+          pool);
+      /* Update the padding info based on scaler IP alignment requirement */
+      config = gst_buffer_pool_get_config (pool);
+      gst_video_alignment_reset (&align);
+      align.padding_bottom =
+          ALIGN (GST_VIDEO_INFO_HEIGHT (&out_vinfo),
+          self->out_elevation_align[srcpadIdx]) -
+          GST_VIDEO_INFO_HEIGHT (&out_vinfo);
+      for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&out_vinfo); idx++) {
+        align.stride_align[idx] = (self->out_stride_align[srcpadIdx] - 1);
+      }
+      /* Adjust output video info with respect to new alignment. Stride, offset etc will be
+       * ajusted accordingly */
+      gst_video_info_align (&out_vinfo, &align);
+      /* size updated in vinfo based on alignment */
+      size = out_vinfo.size;
+
+      /* A bufferpool option to enable extra padding */
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      /* Set "max" maxinum number of buffers and "min" minimum number of buffers */
+      gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+      gst_buffer_pool_config_set_allocator (config, allocator, &params);
+      /* An option that can be activated on bufferpool to request video metadata on buffers from the pool. */
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      /* Set the new alignment on pool config */
+      gst_buffer_pool_config_set_video_alignment (config, &align);
+      /* Update the pool config on the pool */
+      bret = gst_buffer_pool_set_config (pool, config);
+      if (!bret) {
+        GST_ERROR_OBJECT (srcpad, "failed configure pool");
+        goto error;
+      }
+    } else if (have_new_allocator) {
+      /* update newly allocator on downstream pool */
+      config = gst_buffer_pool_get_config (pool);
+
+      GST_INFO_OBJECT (srcpad, "updating allocator %" GST_PTR_FORMAT
+          " on pool %" GST_PTR_FORMAT, allocator, pool);
+
+      gst_buffer_pool_config_set_allocator (config, allocator, &params);
+      bret = gst_buffer_pool_set_config (pool, config);
+      if (!bret) {
+        GST_ERROR_OBJECT (srcpad, "failed configure pool");
+        goto error;
+      }
+    }
+  } else {
+    /* If we have a pool, lets just configure it */
+    if (pool) {
+      GstVideoAlignment video_align = { 0, };
+      guint padded_width = 0;
+      guint padded_height = 0;
+      guint stride = 0;
+
+      config = gst_buffer_pool_get_config (pool);
+
+      /* Check if the proposed buffer pool has alignment information */
+      if (config && gst_buffer_pool_config_has_option (config,
+              GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+        gst_buffer_pool_config_get_video_alignment (config, &video_align);
+
+        /* We have padding_right and padding_left in pixels.
+         * We need to convert them to bytes for finding out the complete stride with alignment */
+        padded_width =
+            out_vinfo.width + video_align.padding_right +
+            video_align.padding_left;
+        padded_height =
+            out_vinfo.height + video_align.padding_top +
+            video_align.padding_bottom;
+        gst_video_info_align (&out_vinfo, &video_align);
+        stride = vvas_xabrscaler_get_stride (&out_vinfo, padded_width);
+
+        GST_INFO_OBJECT (srcpad, "output stride = %u", stride);
+        /* Stride can't be zero here */
+        if (!stride) {
+          gst_structure_free (config);
+          config = NULL;
+          gst_object_unref (pool);
+          pool = NULL;
+          return FALSE;
+        }
+        /* We don't have stride alignment here, but the stride calculated here
+         * itself can be passed.
+         */
+        self->out_stride_align[srcpadIdx] = stride;
+        self->out_elevation_align[srcpadIdx] = padded_height;
+      } else {
+        /* Looks like we don't have any alignment requirement from downstream */
+        self->out_stride_align[srcpadIdx] = 1;
+        self->out_elevation_align[srcpadIdx] = 1;
+        self->avoid_output_copy = TRUE;
+      }
+      min = 3;
+      max = 0;
+      size = out_vinfo.size;
+      gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+      gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+      /* buffer pool may have to do some changes */
+      if (!gst_buffer_pool_set_config (pool, config)) {
+        config = gst_buffer_pool_get_config (pool);
+
+        /* If change are not acceptable, fallback to video buffer pool */
+        if (!gst_buffer_pool_config_validate_params (config, outcaps, size, min,
+                max)) {
+          GST_DEBUG_OBJECT (srcpad, "unsupported pool, making new pool");
+
+          gst_object_unref (pool);
+          pool = NULL;
+        }
+      }
+    }
+
+    /* Looks like we have to create our own pool */
+    if (!pool) {
+      pool = gst_video_buffer_pool_new ();
+      size = out_vinfo.size;
+      min = 3;
+      max = 0;
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+      bret = gst_buffer_pool_set_config (pool, config);
+      if (!bret) {
+        GST_ERROR_OBJECT (srcpad, "failed configure pool");
+        goto error;
+      }
+      /* We are using a video buffer pool, no need of copy even if
+       * downstream element is non video intelligent.
+       */
+      self->avoid_output_copy = TRUE;
+      update_pool = FALSE;
+      /* We have created a pool without any stride/elevation alignment */
+      self->out_stride_align[srcpadIdx] = 1;
+      self->out_elevation_align[srcpadIdx] = 1;
     }
   }
-  /*  Since self->out_stride_align is common for all channels
-   *  reset the output stride to 1 (its default), so that other channels are not affected */
-  self->out_stride_align = 1;
-  self->out_elevation_align = 1;
 
   /* avoid output frames copy when downstream supports video meta */
   if (!self->avoid_output_copy) {
@@ -4005,11 +3783,13 @@ next:
   if (allocator)
     gst_object_unref (allocator);
 
+  /* Update pool parameters in the query */
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  /* Store the finalized pool into pad structure */
   srcpad->pool = pool;
 
   GST_DEBUG_OBJECT (srcpad,
@@ -4024,6 +3804,19 @@ error:
   return FALSE;
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self,
+ *                                                        GstPad * sinkpad,
+ *                                                        GstCaps * in_caps)
+ *  @param [in] self        - Handle to GstVvasXAbrScaler typecasted to GObject.
+ *  @param [in] sinkpad      - Src pad GstVvasXAbrScalerPad object for which allocation has to be decided
+ *  @param [in] in_caps       - Response for the allocation query.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief   Everytime a new caps are set on the sink pad, this function will be called.
+ *  @details This function will find the find out the caps for every source pad as well and update
+ *           corresponding video info.
+ *
+ */
 static gboolean
 gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
     GstCaps * in_caps)
@@ -4038,6 +3831,11 @@ gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
   GstVvasXAbrScalerPad *srcpad = NULL;
   GstCaps *incaps = gst_caps_copy (in_caps);
   GstQuery *query = NULL;
+  VvasReturnType vret;
+  VvasScalerProp scaler_prop = { 0 };
+  VvasLogLevel core_log_level =
+      vvas_get_core_log_level (gst_debug_category_get_threshold
+      (gst_vvas_xabrscaler_debug));
 
 #ifdef ENABLE_XRM_SUPPORT
   if (priv->has_error)
@@ -4076,11 +3874,11 @@ gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
       return FALSE;
     }
 
-    if (self->crop_x && !self->crop_width) {
+    if (!self->crop_width) {
       self->crop_width = input_width - self->crop_x;
     }
 
-    if (self->crop_y && !self->crop_height) {
+    if (!self->crop_height) {
       self->crop_height = input_height - self->crop_y;
     }
 
@@ -4112,7 +3910,7 @@ gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
     if ((self->crop_width < MIN_SCALAR_WIDTH) ||
         (self->crop_height < MIN_SCALAR_HEIGHT)) {
       GST_ERROR_OBJECT (self, "crop width/height must be at least %u",
-                        MIN_SCALAR_WIDTH);
+          MIN_SCALAR_WIDTH);
       return FALSE;
     }
   }
@@ -4163,34 +3961,55 @@ gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
   }
   gst_caps_unref (outcaps);
   outcaps = NULL;
+
 #ifdef ENABLE_XRM_SUPPORT
   bret = vvas_xabrscaler_calculate_load (self, &load);
   if (!bret)
     goto failed_configure;
 
   priv->cur_load = load;
-
-  /* create XRT context */
-  bret = vvas_xabrscaler_create_context (self);
+  /* Allocate XRM resources */
+  bret = vvas_xabrscaler_allocate_xrm_resource (self, priv->cur_load);
   if (!bret)
     goto failed_configure;
-#else
-  if (!priv->dev_handle) {
-    /* create XRT context */
-    bret = vvas_xabrscaler_create_context (self);
-    if (!bret)
-      goto failed_configure;
-  }
 #endif
+  GST_DEBUG_OBJECT (self, "Creating VVAS Scaler, kernel_name: %s",
+      self->kern_name);
 
-  if (!priv->is_internal_buf_allocated) {
-    /* allocate internal buffers */
-    bret = vvas_xabrscaler_allocate_internal_buffers (self);
-    if (!bret)
-      goto failed_configure;
 
-    priv->is_internal_buf_allocated = TRUE;
+  priv->vvas_scaler =
+      vvas_scaler_create (priv->vvas_ctx, self->kern_name, core_log_level);
+  if (!priv->vvas_scaler) {
+    GST_ERROR_OBJECT (self, "Couldn't create Scaler");
+    return FALSE;
   }
+
+  vret = vvas_scaler_prop_get (priv->vvas_scaler, &scaler_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Couldn't get scaler props");
+  }
+
+  scaler_prop.coef_load_type = (VvasScalerCoefLoadType) self->coef_load_type;
+  scaler_prop.smode = (VvasScalerMode) self->scale_mode;
+  scaler_prop.ftaps = (VvasScalerFilterTaps) self->num_taps;
+  scaler_prop.ppc = self->ppc;
+  scaler_prop.mem_bank = self->in_mem_bank;
+
+  vret = vvas_scaler_prop_set (priv->vvas_scaler, &scaler_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Couldn't set scaler props");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "Scaler: coef_load_type: %d",
+      scaler_prop.coef_load_type);
+  GST_DEBUG_OBJECT (self, "Scaler: scaling mode: %d", scaler_prop.smode);
+  GST_DEBUG_OBJECT (self, "Scaler: filter taps: %d", scaler_prop.ftaps);
+  GST_DEBUG_OBJECT (self, "Scaler: ppc: %d", scaler_prop.ppc);
+  GST_DEBUG_OBJECT (self, "Scaler: mem_bank: %d", scaler_prop.mem_bank);
+
+  /* Get the Device handle from VVAS context for local use */
+  priv->dev_handle = priv->vvas_ctx->dev_handle;
 
   for (idx = 0; idx < g_list_length (self->srcpads); idx++) {
 
@@ -4199,6 +4018,9 @@ gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
     if (!srcpad->pool) {
 
       outcaps = gst_pad_get_current_caps ((GstPad *) srcpad);
+
+      if (!outcaps)
+        goto failed_configure;
 
       GST_DEBUG_OBJECT (self, "doing allocation query");
       query = gst_query_new_allocation (outcaps, TRUE);
@@ -4218,27 +4040,6 @@ gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
       }
     }
 
-    if (self->num_taps == 12) {
-      vvas_xabrscaler_prepare_coefficients_with_12tap (self, idx);
-    } else {
-      if (self->scale_mode == POLYPHASE) {
-        guint input_height;
-        float scale;
-        if ((0 == idx) && self->crop_width && self->crop_height) {
-          input_height = self->crop_height;
-        } else {
-          input_height = GST_VIDEO_INFO_HEIGHT (srcpad->in_vinfo);
-        }
-        scale = (float) input_height
-            / (float) GST_VIDEO_INFO_HEIGHT (srcpad->out_vinfo);
-        GST_INFO_OBJECT (self,
-            "preparing coefficients with scaling ration %f and taps %d", scale,
-            self->num_taps);
-        xlnx_multiscaler_coff_fill (priv->Hcoff[idx].user_ptr,
-            priv->Vcoff[idx].user_ptr, scale);
-      }
-    }
-
     if (query) {
       gst_query_unref (query);
       query = NULL;
@@ -4248,11 +4049,6 @@ gst_vvas_xabrscaler_sink_setcaps (GstVvasXAbrScaler * self, GstPad * sinkpad,
       outcaps = NULL;
     }
   }
-
-#ifdef XLNX_PCIe_PLATFORM
-  if (!xlnx_abr_coeff_syncBO (self))
-    return FALSE;
-#endif
 
 done:
   if (query)
@@ -4290,6 +4086,17 @@ failed_configure:
   }
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xabrscaler_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+ *  @param [in] pad       - The GstPad to handle the event.
+ *  @param [in] parent    - The parent of the pad, which is the GstVvasXAbrScaler handle, typecasted to GstObject
+ *  @param [in] event     - The GstEvent to handle.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  Handles GstEvent coming over the sink pad. Ex : EOS, New caps etc.
+ *  @details This function will be set as the callback function for any new event coming on the sink pad using
+ *           gst_pad_set_event_function.
+ *
+ */
 static gboolean
 gst_vvas_xabrscaler_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
@@ -4301,14 +4108,18 @@ gst_vvas_xabrscaler_sink_event (GstPad * pad, GstObject * parent,
       gst_event_type_get_name (GST_EVENT_TYPE (event)), event, event);
 
   switch (GST_EVENT_TYPE (event)) {
+      /* Notify the pad of a new media type. */
     case GST_EVENT_CAPS:{
       GstCaps *caps;
-
+      /* Parse the incoming media caps */
       gst_event_parse_caps (event, &caps);
+      /* Upstream element has set the caps, now lets find out if these caps are fixed,
+       * and also find transform caps for all the source pads */
       ret = gst_vvas_xabrscaler_sink_setcaps (self, self->sinkpad, caps);
       gst_event_unref (event);
       break;
     }
+      /* End of Stream Event */
     case GST_EVENT_EOS:{
       if (self->enabled_pipeline) {
         GstFlowReturn fret = GST_FLOW_OK;
@@ -4316,7 +4127,7 @@ gst_vvas_xabrscaler_sink_event (GstPad * pad, GstObject * parent,
 
         GST_INFO_OBJECT (self, "input copy queue has %d pending buffers",
             g_async_queue_length (self->priv->copy_outqueue));
-
+        /* Process remaining buffers in the queue before returning OK for EOS event */
         while (g_async_queue_length (self->priv->copy_outqueue) > 0) {
           inbuf = g_async_queue_pop (self->priv->copy_outqueue);
 
@@ -4334,6 +4145,14 @@ gst_vvas_xabrscaler_sink_event (GstPad * pad, GstObject * parent,
   return ret;
 }
 
+/**
+ *  @fn static gboolean vvas_xabrscaler_propose_allocation (GstVvasXAbrScaler * self, GstQuery * query)
+ *  @param [in] self        - Handle to GstVvasXAbrScaler typecasted to GObject.
+ *  @param [out] query      - Allocation Query to be answered.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will propose allocation strategy to upstream element based on the scaler IP requirements.
+ *
+ */
 static gboolean
 vvas_xabrscaler_propose_allocation (GstVvasXAbrScaler * self, GstQuery * query)
 {
@@ -4343,11 +4162,12 @@ vvas_xabrscaler_propose_allocation (GstVvasXAbrScaler * self, GstQuery * query)
   guint size;
   GstVideoAlignment align;
 
+  /* Parse the incoming query and read the negotiated caps */
   gst_query_parse_allocation (query, &caps, NULL);
 
   if (caps == NULL)
     return FALSE;
-
+  /* Get video info from caps */
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
@@ -4366,38 +4186,43 @@ vvas_xabrscaler_propose_allocation (GstVvasXAbrScaler * self, GstQuery * query)
         return FALSE;
       }
 #endif
-
+      /* Create a new VVAS allocator with with memory bank info to which Scaler IP
+       * input lines are connected */
       allocator = gst_vvas_allocator_new (self->dev_index,
-          NEED_DMABUF, self->in_mem_bank, self->priv->kern_handle);
+          NEED_DMABUF, self->in_mem_bank);
       GST_INFO_OBJECT (self, "creating new xrt allocator %" GST_PTR_FORMAT
           "at mem bank %d", allocator, self->in_mem_bank);
-
+      /* Add allocator object to query */
       gst_query_add_allocation_param (query, allocator, &params);
     }
-
+    /* Create pool with aligned width and height */
     pool = gst_vvas_buffer_pool_new (WIDTH_ALIGN, HEIGHT_ALIGN);
     GST_LOG_OBJECT (self, "allocated internal sink pool %p", pool);
 
     structure = gst_buffer_pool_get_config (pool);
-
+    /* Get padding information based on the scaler IP alignment requirements
+     * and fill in the details */
     gst_video_alignment_reset (&align);
-    align.padding_top = 0;
-    align.padding_left = 0;
-    align.padding_right = vvas_xabrscaler_get_padding_right (self, &info);
     align.padding_bottom =
         ALIGN (GST_VIDEO_INFO_HEIGHT (&info),
         HEIGHT_ALIGN) - GST_VIDEO_INFO_HEIGHT (&info);
+    for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&info); idx++) {
+      align.stride_align[idx] = (WIDTH_ALIGN - 1);
+    }
+
     gst_video_info_align (&info, &align);
 
+    /* Add the prepared alignment details to pool config */
     gst_buffer_pool_config_add_option (structure,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
     gst_buffer_pool_config_set_video_alignment (structure, &align);
 
     size = GST_VIDEO_INFO_SIZE (&info);
+    /* Setting minimum of 2 buffers and maximux as 0 (unlimited) */
     gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
 
     gst_buffer_pool_config_set_allocator (structure, allocator, &params);
-
+    /* Setting below option will allow requesting video metadata on buffers from the pool. */
     gst_buffer_pool_config_add_option (structure,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
 
@@ -4409,9 +4234,10 @@ vvas_xabrscaler_propose_allocation (GstVvasXAbrScaler * self, GstQuery * query)
 
     GST_OBJECT_LOCK (self);
     gst_query_add_allocation_pool (query, pool, size, 2, 0);
-
     GST_OBJECT_UNLOCK (self);
-
+    /* Update the query with pool information,
+     * setting minimum of 2 buffer and maximux set to 0, which means unlimited
+     * each of size "size" */
     gst_query_add_allocation_pool (query, pool, size, 2, 0);
     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
     gst_object_unref (pool);
@@ -4428,6 +4254,17 @@ config_failed:
   }
 }
 
+/**
+ *  @fn static gboolean gst_vvas_xabrscaler_sink_query (GstPad * pad, GstObject * parent,
+ *                                               GstQuery * query)
+ *  @param [in] pad          - Handle to sink GstPad.
+ *  @param [in] parent       - Handle to GstVvasXAbrScaler object typecasted as GstObject
+ *  @param [out] query       - Allocation Query to be answered/executed.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will be invoked whenever an upstream element sends query on the sink pad.
+ *  @details This function will be registered using function gst_pad_set_query_function as a query handler.
+ *
+ */
 static gboolean
 gst_vvas_xabrscaler_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
@@ -4438,12 +4275,17 @@ gst_vvas_xabrscaler_sink_query (GstPad * pad, GstObject * parent,
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:{
-      ret = vvas_xabrscaler_propose_allocation (self, query);
+      /* Let's propose an allocation strategy to upstream element */
+      if (!self->software_scaling) {
+        ret = vvas_xabrscaler_propose_allocation (self, query);
+      }
       break;
     }
     case GST_QUERY_CAPS:{
       GstCaps *filter, *caps = NULL, *result = NULL;
-
+      /* Get the "filter" caps set from the upstream peer while
+       * creating the query, caps that we anser to the query must be matching with this caps
+       * for succesfull negotiation */
       gst_query_parse_caps (query, &filter);
 
       // TODO: Query caps only going to src pad 0 and check for others
@@ -4457,9 +4299,10 @@ gst_vvas_xabrscaler_sink_query (GstPad * pad, GstObject * parent,
         GST_ERROR_OBJECT (pad, "source pads not available..");
         return FALSE;
       }
-
+      /* Get the template caps of the sink pad (sink_template) of this scaler element */
       caps = gst_pad_get_pad_template_caps (pad);
 
+      /* Get the intersection of "filter" caps and sink pad template caps */
       if (filter) {
         GstCaps *tmp = caps;
         caps = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
@@ -4467,13 +4310,15 @@ gst_vvas_xabrscaler_sink_query (GstPad * pad, GstObject * parent,
       }
 
       if (srcpad) {
+        /* Query caps from the downstream element's sink pad */
         result = gst_pad_peer_query_caps (GST_PAD_CAST (srcpad), caps);
         result = gst_caps_make_writable (result);
+        /* Append result with intersected caps */
         gst_caps_append (result, caps);
 
         GST_DEBUG_OBJECT (self, "Returning %s caps %" GST_PTR_FORMAT,
             GST_PAD_NAME (pad), result);
-
+        /* Set the final caps to query response */
         gst_query_set_caps_result (query, result);
         gst_caps_unref (result);
       }
@@ -4486,6 +4331,7 @@ gst_vvas_xabrscaler_sink_query (GstPad * pad, GstObject * parent,
       gst_query_parse_accept_caps (query, &caps);
 
       ret = gst_caps_can_intersect (caps, gst_pad_get_pad_template_caps (pad));
+      /* Set the intersection result on the qeury */
       gst_query_set_accept_caps_result (query, ret);
       /* return TRUE, we answered the query */
       ret = TRUE;
@@ -4499,6 +4345,317 @@ gst_vvas_xabrscaler_sink_query (GstPad * pad, GstObject * parent,
   return ret;
 }
 
+#ifdef ENABLE_PPE_SUPPORT
+/**
+ *  @fn static gboolean vvas_xabrscaler_is_pp_param_default (GstVvasXAbrScaler * self) 
+ *  @param [in] self           - Handle to GstVvasXAbrScaler instance.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will check if user has set any alpha and beta values for pre-processing.
+ *
+ */
+static inline gboolean
+vvas_xabrscaler_is_pp_param_default (GstVvasXAbrScaler * self)
+{
+  gboolean ret;
+  ret = (PP_ALPHA_DEFAULT_VALUE == self->alpha_r) &&
+      (PP_ALPHA_DEFAULT_VALUE == self->alpha_g) &&
+      (PP_ALPHA_DEFAULT_VALUE == self->alpha_b) &&
+      (PP_BETA_DEFAULT_VALUE == self->beta_r) &&
+      (PP_BETA_DEFAULT_VALUE == self->beta_g) &&
+      (PP_BETA_DEFAULT_VALUE == self->beta_b);
+  return ret;
+}
+
+/**
+ *  @fn static gboolean vvas_xabrscaler_get_dpu_kernel_config (GstVvasXAbrScaler * self) 
+ *  @param [in] self           - Handle to GstVvasXAbrScaler instance.
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will query downstream for getting vvas kernel cofiguration for
+ *          pre-processing (alpha and beta values) 
+ */
+static gboolean
+vvas_xabrscaler_get_dpu_kernel_config (GstVvasXAbrScaler * self)
+{
+  /* Send a custom query downstream, if there is any downstream ML plug-in,
+   * it will respond with pre-processing values
+   */
+  const GstStructure *st;
+  GstStructure *strct;
+  GstQuery *query;
+  VvasStructure *kernel_config = NULL;
+  gboolean ret = FALSE;
+
+  GST_DEBUG_OBJECT (self, "Doing vvas-kernel-config query");
+
+  strct = gst_structure_new_empty ("vvas-kernel-config");
+  if (!strct) {
+    return FALSE;
+  }
+
+  /* Create a custom query for getting kernel config from down stream */
+  query = gst_query_new_custom (GST_QUERY_CUSTOM, strct);
+  if (!query) {
+    GST_ERROR_OBJECT (self, "couldn't create custom query");
+    gst_structure_free (strct);
+    return FALSE;
+  }
+
+  if (!gst_pad_query (GST_PAD_CAST (self->sinkpad), query)) {
+    GST_WARNING_OBJECT (self, "gst_pad_query failed");
+    goto error;
+  }
+
+  st = gst_query_get_structure (query);
+  if (!st) {
+    goto error;
+  }
+  /* Parse the response */
+  if (!gst_structure_get (st,
+          "pp_config", G_TYPE_POINTER, &kernel_config, NULL)) {
+    GST_DEBUG_OBJECT (self, "couldn't get kernel config");
+    ret = TRUE;
+    goto error;
+  }
+
+  if (kernel_config) {
+    gfloat alpha_r, alpha_g, alpha_b;
+    gfloat beta_r, beta_g, beta_b;
+    gboolean res;
+    /* Get all alpha and beta values from the response structure */
+    res = vvas_structure_get (kernel_config,
+        "alpha_r", G_TYPE_FLOAT, &alpha_r,
+        "alpha_g", G_TYPE_FLOAT, &alpha_g,
+        "alpha_b", G_TYPE_FLOAT, &alpha_b,
+        "beta_r", G_TYPE_FLOAT, &beta_r,
+        "beta_g", G_TYPE_FLOAT, &beta_g, "beta_b", G_TYPE_FLOAT, &beta_b, NULL);
+
+    if (res) {
+      GST_DEBUG_OBJECT (self,
+          "Got PP config: alpha[%f, %f, %f], beta[%f, %f, %f]", alpha_r,
+          alpha_g, alpha_b, beta_r, beta_g, beta_b);
+      /* Check if User has set any values for alpha and beta pre-processing */
+      if (vvas_xabrscaler_is_pp_param_default (self)) {
+        /* User has not set the PP configuration, using DPU suggested values */
+        self->alpha_r = alpha_r;
+        self->alpha_g = alpha_g;
+        self->alpha_b = alpha_b;
+        self->beta_r = beta_r;
+        self->beta_g = beta_g;
+        self->beta_b = beta_b;
+        if (!vvas_xabrscaler_is_pp_param_default (self)) {
+          GST_DEBUG_OBJECT (self, "User hasn't set PP configuration, but "
+              "DPU has suggested them, using DPU suggested values for PP");
+        }
+      } else {
+        /* Check if the user set alpha and beta values are in line with what 
+         * downstream kernel configuration suggest */
+        if (self->alpha_r != alpha_r) {
+          GST_WARNING_OBJECT (self, "alpha_r: %f is not as per "
+              "DPU suggestion: %f", self->alpha_r, alpha_r);
+        }
+        if (self->alpha_g != alpha_g) {
+          GST_WARNING_OBJECT (self, "alpha_g: %f is not as per "
+              "DPU suggestion: %f", self->alpha_g, alpha_g);
+        }
+        if (self->alpha_b != alpha_b) {
+          GST_WARNING_OBJECT (self, "alpha_b: %f is not as per "
+              "DPU suggestion: %f", self->alpha_b, alpha_b);
+        }
+        if (self->beta_r != beta_r) {
+          GST_WARNING_OBJECT (self, "beta_r: %f is not as per "
+              "DPU suggestion: %f", self->beta_r, beta_r);
+        }
+        if (self->beta_g != beta_g) {
+          GST_WARNING_OBJECT (self, "beta_g: %f is not as per "
+              "DPU suggestion: %f", self->beta_g, beta_g);
+        }
+        if (self->beta_b != beta_b) {
+          GST_WARNING_OBJECT (self, "beta_b: %f is not as per "
+              "DPU suggestion: %f", self->beta_b, beta_b);
+        }
+      }
+    }
+  } else {
+    GST_DEBUG_OBJECT (self, "No kernel configuration from downstream");
+  }
+
+  ret = TRUE;
+error:
+  gst_query_unref (query);
+  return ret;
+}
+#endif
+
+/**
+ *  @fn static gboolean vvas_xabrscaler_add_scaler_processing_chnnels (GstVvasXAbrScaler * self, GstBuffer * inbuf)
+ *  @param [in] self    - Handle to GstVvasXAbrScaler instance.
+ *  @param [in] inbuf   - Input buffer
+ *  @return On Success returns TRUE\n On Failure returns FALSE
+ *  @brief  This function will add the channels into the VVAS CORE Scaler library for processing.
+ */
+static gboolean
+vvas_xabrscaler_add_scaler_processing_chnnels (GstVvasXAbrScaler * self,
+    GstBuffer * inbuf)
+{
+  GstVvasXAbrScalerPrivate *priv = self->priv;
+  guint idx;
+  VvasVideoFrame *input_frame, *output_frame;
+  GstBuffer *input_buffer, *output_buffer;
+  guint input_memory_bank = self->in_mem_bank;
+
+#ifdef ENABLE_PPE_SUPPORT
+  VvasScalerPpe ppe = { 0 };
+  ppe.mean_r = self->alpha_r;
+  ppe.mean_g = self->alpha_g;
+  ppe.mean_b = self->alpha_b;
+  ppe.scale_r = self->beta_r;
+  ppe.scale_g = self->beta_g;
+  ppe.scale_b = self->beta_b;
+#endif
+  input_buffer = inbuf;
+
+  /* Add channels for all the request pads */
+  for (idx = 0; idx < self->num_request_pads; idx++) {
+    VvasScalerRect src_rect = { 0 };
+    VvasScalerRect dst_rect = { 0 };
+    VvasReturnType vret;
+
+    GstVvasXAbrScalerPad *srcpad =
+        gst_vvas_xabrscaler_srcpad_at_index (self, idx);
+    if (!srcpad) {
+      return FALSE;
+    }
+
+    output_buffer = priv->outbufs[idx];
+
+    /* Convert GstBuffer to VvasVideoFrame required from Vvas Core Scaler */
+    input_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+        input_memory_bank, input_buffer, srcpad->in_vinfo, GST_MAP_READ);
+    if (!input_frame) {
+      GST_ERROR_OBJECT (self,
+          "Could convert input GstBuffer to VvasVideoFrame");
+      return FALSE;
+    }
+
+    priv->input_frame[idx] = input_frame;
+
+    /* Convert GstBuffer to VvasVideoFrame required from Vvas Core Scaler */
+    if (!self->software_scaling) {
+      output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+          self->out_mem_bank, output_buffer, srcpad->out_vinfo, GST_MAP_READ);
+    } else {
+      output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+          self->out_mem_bank, output_buffer, srcpad->out_vinfo,
+          (GST_MAP_READ | GST_MAP_WRITE));
+    }
+    if (!output_frame) {
+      GST_ERROR_OBJECT (self,
+          "Could convert output GstBuffer to VvasVideoFrame");
+      return FALSE;
+    }
+
+    priv->output_frame[idx] = output_frame;
+
+    /* Fill rect parameters */
+    if ((0 == idx) && (self->crop_width && self->crop_height)) {
+      src_rect.x = self->crop_x;
+      src_rect.y = self->crop_y;
+      src_rect.width = self->crop_width;
+      src_rect.height = self->crop_height;
+    } else {
+      src_rect.x = 0;
+      src_rect.y = 0;
+      src_rect.width = GST_VIDEO_INFO_WIDTH (srcpad->in_vinfo);
+      src_rect.height = GST_VIDEO_INFO_HEIGHT (srcpad->in_vinfo);
+    }
+    src_rect.frame = input_frame;
+
+    dst_rect.x = 0;
+    dst_rect.y = 0;
+    dst_rect.width = GST_VIDEO_INFO_WIDTH (srcpad->out_vinfo);
+    dst_rect.height = GST_VIDEO_INFO_HEIGHT (srcpad->out_vinfo);
+    dst_rect.frame = output_frame;
+
+    /* Add processing channel into Core Scaler */
+#ifdef ENABLE_PPE_SUPPORT
+    vret =
+        vvas_scaler_channel_add (priv->vvas_scaler, &src_rect, &dst_rect, &ppe,
+        NULL);
+#else
+    vret =
+        vvas_scaler_channel_add (priv->vvas_scaler, &src_rect, &dst_rect, NULL,
+        NULL);
+#endif
+    if (VVAS_IS_ERROR (vret)) {
+      GST_ERROR_OBJECT (self, "failed to add processing channel in scaler");
+      return FALSE;
+    }
+
+    GST_DEBUG_OBJECT (self, "Added processing channel for idx: %u", idx);
+
+    /* Chain this output buffer as input buffer for next ladder */
+    input_buffer = output_buffer;
+    input_memory_bank = self->out_mem_bank;
+  }
+  return TRUE;
+}
+
+/**
+ *  @fn static void gst_vvas_xabrscaler_free_vvas_video_frame (GstVvasXAbrScaler * self)
+ *  @param [in] self           - Handle to GstVvasXAbrScaler instance.
+ *  @return None
+ *  @brief  This function will free all the VvasVideoFrames.
+ */
+static inline void
+gst_vvas_xabrscaler_free_vvas_video_frame (GstVvasXAbrScaler * self)
+{
+  guint chan_id = 0;
+
+  for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
+    if (self->priv->input_frame[chan_id]) {
+      vvas_video_frame_free (self->priv->input_frame[chan_id]);
+      self->priv->input_frame[chan_id] = NULL;
+    }
+
+    if (self->priv->output_frame[chan_id]) {
+      vvas_video_frame_free (self->priv->output_frame[chan_id]);
+      self->priv->output_frame[chan_id] = NULL;
+    }
+  }
+}
+
+
+
+/**
+ *  @fn static gboolean remove_infer_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data) 
+ *  @param [in] buffer       - Buffer handle to which meta has to be removed
+ *  @param [in] meta         - meta to be removed
+ *  @param [in] user_data    - user data to be passed
+ *  @return On Success returns TRUE, indicates meta data has been removed.
+ *  @brief  This is a callback function registered for removing meta data.
+ *  @details This function will be triggered via gst_buffer_foreach_meta.
+ *
+ */
+static gboolean
+remove_infer_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  if (meta && *meta && (*meta)->info->api == GST_INFERENCE_META_API_TYPE) {
+    *meta = NULL;
+  }
+
+  return TRUE;
+}
+
+/**
+ *  @fn static GstFlowReturn gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
+ *  @param [in] pad          - Handle to sink GstPad.
+ *  @param [in] parent       - Handle to GstVvasXAbrScaler object typecasted as GstObject
+ *  @param [in] inbuf        - Incoming buffer to be processed.
+ *  @return On Success returns GST_FLOW_OK\n On Failure returns Corresponding error code.
+ *  @brief  This function will be invoked whenever an upstream element pushes buffers on the sinkpad.
+ *  @details This function will be registered using function gst_pad_set_chain_function.
+ *
+ */
 static GstFlowReturn
 gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
@@ -4506,21 +4663,60 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   GstFlowReturn fret = GST_FLOW_OK;
   guint chan_id = 0;
   gboolean bret = FALSE;
+  VvasReturnType vret;
 
-  bret = vvas_xabrscaler_prepare_input_buffer (self, &inbuf);
-  if (!bret)
-    goto error;
+#ifdef ENABLE_PPE_SUPPORT
+  if (G_UNLIKELY (self->get_pp_config)) {
+    vvas_xabrscaler_get_dpu_kernel_config (self);
+    self->get_pp_config = FALSE;
+  }
+#endif
 
+  /* Lets go with incoming buffer itself, as we don't have any stride alignment
+   * requirement for software scaling.
+   */
+  if (!self->software_scaling) {
+    /* Prepare the internal buffer pool if the inbuf is neither
+     * VVAS allocator buffer nor DMA buffer and copy into it */
+    bret = vvas_xabrscaler_prepare_input_buffer (self, &inbuf);
+    if (!bret)
+      goto error;
+  }
+  /* Nothing to process */
   if (!inbuf)
     return GST_FLOW_OK;
-
+  /* Prepare an output buffer from output pool to be used for operation */
   bret = vvas_xabrscaler_prepare_output_buffer (self);
   if (!bret)
     goto error;
 
-  bret = vvas_xabrscaler_process (self);
-  if (!bret)
+  /*
+   * Convert GstBuffer to VvasVideoFrame, fill VvasRect info and fed it to
+   * vvas_scaler_channel_add().
+   * Once all channels are fed call vvas_scaler_process_frame() for
+   * processing.
+   */
+  if (!vvas_xabrscaler_add_scaler_processing_chnnels (self, inbuf)) {
+    GST_ERROR_OBJECT (self, "Failed to add processing channels on scaler");
+    fret = GST_FLOW_ERROR;
     goto error;
+  }
+
+  vret = vvas_scaler_process_frame (self->priv->vvas_scaler);
+  if (VVAS_IS_ERROR (vret)) {
+    GST_ERROR_OBJECT (self, "Failed to process frame in scaler");
+    fret = GST_FLOW_ERROR;
+    goto error;
+  }
+
+  /* Release input and output VVAS Video frames */
+  gst_vvas_xabrscaler_free_vvas_video_frame (self);
+
+  if (self->priv->vvas_ctx->dev_handle) {
+    bret = vvas_xabrscaler_sync_buffer (self);
+    if (!bret)
+      goto error;
+  }
 
   /* pad push of each output buffer to respective srcpad */
   for (chan_id = 0; chan_id < self->num_request_pads; chan_id++) {
@@ -4532,6 +4728,12 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     gst_buffer_copy_into (outbuf, inbuf,
         (GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META |
             GST_BUFFER_COPY_TIMESTAMPS), 0, -1);
+
+    /* we are removing infer meta data from outbuf because while performing
+     * transform operation, both inbuf & outbuf meta data are same
+     * and due to that "need_scale" flag is not set and scaling is not happening
+     */
+    gst_buffer_foreach_meta (outbuf, remove_infer_meta, NULL);
 
     /* Scaling of input vvas metadata based on output resolution */
     in_meta = gst_buffer_get_meta (inbuf, gst_inference_meta_api_get_type ());
@@ -4565,6 +4767,9 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           inbuf, _gst_meta_transform_copy, &copy_data);
     }
 
+    /* If the "need_copy" flag is enabled for the channel, create new host
+     * buffer and copy the content and meta data into it from device buffer
+     * and push out the host buffer */
     if (self->priv->need_copy[chan_id]) {
       GstBuffer *new_outbuf;
       GstVideoFrame new_frame, out_frame;
@@ -4576,6 +4781,8 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         goto error2;
       }
 
+      /* Map the new buffers in write mode and output buffer (out_frame) in read mode
+       * for enabling copy */
       gst_video_frame_map (&out_frame, srcpad->out_vinfo, outbuf, GST_MAP_READ);
       gst_video_frame_map (&new_frame, srcpad->out_vinfo, new_outbuf,
           GST_MAP_WRITE);
@@ -4585,6 +4792,7 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       gst_video_frame_unmap (&out_frame);
       gst_video_frame_unmap (&new_frame);
 
+      /* Copy all the meta data as well */
       gst_buffer_copy_into (new_outbuf, outbuf, GST_BUFFER_COPY_METADATA, 0,
           -1);
       gst_buffer_unref (outbuf);
@@ -4595,6 +4803,7 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           GST_TIME_ARGS (GST_BUFFER_DTS (new_outbuf)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (new_outbuf)));
 
+      /* Push out the newly created and copied buffer to source pad */
       fret = gst_pad_push (GST_PAD_CAST (srcpad), new_outbuf);
       if (G_UNLIKELY (fret != GST_FLOW_OK)) {
         if (fret == GST_FLOW_EOS)
@@ -4614,6 +4823,7 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
+      /* Push out the output buffer onto source pad */
       fret = gst_pad_push (GST_PAD_CAST (srcpad), outbuf);
       if (G_UNLIKELY (fret != GST_FLOW_OK)) {
         if (fret == GST_FLOW_EOS)
@@ -4633,6 +4843,7 @@ gst_vvas_xabrscaler_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 error:
 error2:
   gst_buffer_unref (inbuf);
+  gst_vvas_xabrscaler_free_vvas_video_frame (self);
   return fret;
 }
 
@@ -4643,8 +4854,9 @@ error2:
 static gboolean
 vvas_xabrscaler_init (GstPlugin * vvas_xabrscaler)
 {
+  /* Register the scaler element with name "vvas_xabrscaler" */
   return gst_element_register (vvas_xabrscaler, "vvas_xabrscaler",
-      GST_RANK_NONE, GST_TYPE_VVAS_XABRSCALER);
+      GST_RANK_PRIMARY, GST_TYPE_VVAS_XABRSCALER);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, vvas_xabrscaler,

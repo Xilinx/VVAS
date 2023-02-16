@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -17,16 +18,17 @@
 # Feature options for plugins without external deps
 option('enable_xrm', type : 'integer', min : -1, max : 1, value : -1)
 option('enable_ppe', type : 'integer', min : -1, max : 1, value : -1)
+option('tracker_use_simd', type : 'boolean', value : false)
+option('pci_platform', type : 'string', value : 'V70')
+option('vvas_core_utils', type : 'string', value : 'GLIB')
 
 option('metaaffixer', type : 'feature', value : 'auto')
 option('roigen', type : 'feature', value : 'auto')
 option('filter', type : 'feature', value : 'auto')
 option('multisrc', type : 'feature', value : 'auto')
-option('vcudec', type : 'feature', value : 'auto')
-option('vcuenc', type : 'feature', value : 'auto')
+option('videodec', type : 'feature', value : 'auto')
 option('abrscaler', type : 'feature', value : 'auto')
 option('metaconvert', type : 'feature', value : 'auto')
-option('lookahead', type : 'feature', value : 'auto')
 option('infer', type : 'feature', value : 'auto')
 option('funnel', type : 'feature', value : 'auto')
 option('defunnel', type : 'feature', value : 'auto')
@@ -35,6 +37,9 @@ option('optflow', type : 'feature', value : 'auto')
 option('multicrop', type : 'feature', value : 'auto')
 option('compositor', type : 'feature', value : 'auto')
 option('tracker', type : 'feature', value : 'auto')
+option('skipframe', type : 'feature', value : 'auto')
+option('reorderframe', type : 'feature', value : 'auto')
+
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)

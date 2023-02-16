@@ -1,5 +1,6 @@
 /*
  * Copyright 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,18 +41,16 @@ gst_vvas_overlay_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
 {
   GstVvasOverlayMeta *vvasmeta = (GstVvasOverlayMeta *) meta;
 
-  vvasmeta->num_rects = 0;
-  vvasmeta->num_text = 0;
-  vvasmeta->num_lines = 0;
-  vvasmeta->num_arrows = 0;
-  vvasmeta->num_circles = 0;
-  vvasmeta->num_polys = 0;
+  vvas_overlay_shape_info_init (&vvasmeta->shape_info);
   return TRUE;
 }
 
 static gboolean
 gst_vvas_overlay_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
+  GstVvasOverlayMeta *vvasmeta = (GstVvasOverlayMeta *) meta;
+
+  vvas_overlay_shape_info_free (&vvasmeta->shape_info);
   return TRUE;
 }
 
@@ -60,8 +59,8 @@ transform_overlay_meta (GstVvasOverlayMeta * dmeta, gpointer data)
 {
   GstVideoMetaTransform *trans;
   gdouble hfactor = 1, vfactor = 1;
-  gint idx;
   gint fw, fh, tw, th;
+  VvasList *head, *pt_head = NULL;
 
   trans = (GstVideoMetaTransform *) data;
   fw = GST_VIDEO_INFO_WIDTH (trans->in_info);
@@ -79,56 +78,91 @@ transform_overlay_meta (GstVvasOverlayMeta * dmeta, gpointer data)
   GST_LOG ("Xform from %dx%d -> %dx%d, hfactor: %lf, vfactor: %lf",
       fw, fh, tw, th, hfactor, vfactor);
 
-  for (idx = 0; idx < dmeta->num_rects; idx++) {
-    dmeta->rects[idx].offset.x *= hfactor;
-    dmeta->rects[idx].offset.y *= vfactor;
-    dmeta->rects[idx].width *= hfactor;
-    dmeta->rects[idx].height *= vfactor;
-  }
-  for (idx = 0; idx < dmeta->num_text; idx++) {
-    dmeta->text[idx].offset.x *= hfactor;
-    dmeta->text[idx].offset.y *= vfactor;
-  }
-  for (idx = 0; idx < dmeta->num_lines; idx++) {
-    dmeta->lines[idx].start_pt.x *= hfactor;
-    dmeta->lines[idx].start_pt.y *= vfactor;
-    dmeta->lines[idx].end_pt.x *= hfactor;
-    dmeta->lines[idx].end_pt.y *= vfactor;
-  }
-  for (idx = 0; idx < dmeta->num_arrows; idx++) {
-    dmeta->arrows[idx].start_pt.x *= hfactor;
-    dmeta->arrows[idx].start_pt.y *= vfactor;
-    dmeta->arrows[idx].end_pt.x *= hfactor;
-    dmeta->arrows[idx].end_pt.y *= vfactor;
+  if (dmeta->shape_info.num_rects) {
+    head = dmeta->shape_info.rect_params;
+    while (head) {
+      VvasOverlayRectParams *rect_params = (VvasOverlayRectParams *) head->data;
+      rect_params->points.x *= hfactor;
+      rect_params->points.y *= vfactor;
+      rect_params->width *= hfactor;
+      rect_params->height *= vfactor;
+      head = head->next;
+    }
   }
 
-  if (dmeta->num_circles) {
+  if (dmeta->shape_info.num_text) {
+    head = dmeta->shape_info.text_params;
+    while (head) {
+      VvasOverlayTextParams *text_params = (VvasOverlayTextParams *) head->data;
+      text_params->points.x *= hfactor;
+      text_params->points.y *= vfactor;
+      head = head->next;
+    }
+  }
+
+
+  if (dmeta->shape_info.num_lines) {
+    head = dmeta->shape_info.line_params;
+    while (head) {
+      VvasOverlayLineParams *line_params = (VvasOverlayLineParams *) head->data;
+      line_params->start_pt.x *= hfactor;
+      line_params->start_pt.y *= vfactor;
+      line_params->end_pt.x *= hfactor;
+      line_params->end_pt.y *= vfactor;
+      head = head->next;
+    }
+  }
+
+  if (dmeta->shape_info.num_arrows) {
+    head = dmeta->shape_info.arrow_params;
+    while (head) {
+      VvasOverlayArrowParams *arrow_params =
+          (VvasOverlayArrowParams *) head->data;
+      arrow_params->start_pt.x *= hfactor;
+      arrow_params->start_pt.y *= vfactor;
+      arrow_params->end_pt.x *= hfactor;
+      arrow_params->end_pt.y *= vfactor;
+      head = head->next;
+    }
+  }
+
+  if (dmeta->shape_info.num_circles) {
     double from_area, to_area;
 
     from_area = fw * fh;
     to_area = tw * th;
-    for (idx = 0; idx < dmeta->num_circles; idx++) {
+    head = dmeta->shape_info.circle_params;
+    while (head) {
+      VvasOverlayCircleParams *circle_params =
+          (VvasOverlayCircleParams *) head->data;
       double from_circle_area, to_circle_area, to_radius;
 
-      from_circle_area = M_PI * (dmeta->circles[idx].radius
-          * dmeta->circles[idx].radius);
+      from_circle_area = M_PI * (circle_params->radius * circle_params->radius);
       to_circle_area = (to_area * from_circle_area) / from_area;
       to_radius = to_circle_area / M_PI;
       to_radius = sqrt (to_radius);
-      GST_LOG ("radius %d -> %lf", dmeta->circles[idx].radius, to_radius);
+      GST_LOG ("radius %d -> %lf", circle_params->radius, to_radius);
 
-      dmeta->circles[idx].center_pt.x *= hfactor;
-      dmeta->circles[idx].center_pt.y *= vfactor;
-      dmeta->circles[idx].radius = to_radius;
+      circle_params->center_pt.x *= hfactor;
+      circle_params->center_pt.y *= vfactor;
+      circle_params->radius = to_radius;
+      head = head->next;
     }
   }
 
-  for (idx = 0; idx < dmeta->num_polys; idx++) {
-    gint i;
-    for (i = 0; i < dmeta->polygons[idx].num_pts; i++) {
-      dmeta->polygons[idx].poly_pts[i].x *= hfactor;
-      dmeta->polygons[idx].poly_pts[i].y *= vfactor;
+  head = dmeta->shape_info.polygn_params;
+  while (head) {
+    VvasOverlayPolygonParams *polygn_params =
+        (VvasOverlayPolygonParams *) head->data;
+    pt_head = polygn_params->poly_pts;
+    while (pt_head) {
+      VvasOverlayCoordinates *poly_pts =
+          (VvasOverlayCoordinates *) pt_head->data;
+      poly_pts->x *= hfactor;
+      poly_pts->y *= vfactor;
+      pt_head = pt_head->next;
     }
+    head = head->next;
   }
   return TRUE;
 }
@@ -136,7 +170,6 @@ transform_overlay_meta (GstVvasOverlayMeta * dmeta, gpointer data)
 static gboolean
 add_and_copy_overlay_meta (GstBuffer * dest, GstVvasOverlayMeta * smeta)
 {
-
   GstVvasOverlayMeta *dmeta;
   dmeta = gst_buffer_add_vvas_overlay_meta (dest);
   if (!dmeta) {
@@ -144,25 +177,7 @@ add_and_copy_overlay_meta (GstBuffer * dest, GstVvasOverlayMeta * smeta)
     return FALSE;
   }
 
-  dmeta->num_rects = smeta->num_rects;
-  dmeta->num_text = smeta->num_text;
-  dmeta->num_lines = smeta->num_lines;
-  dmeta->num_arrows = smeta->num_arrows;
-  dmeta->num_circles = smeta->num_circles;
-  dmeta->num_polys = smeta->num_polys;
-
-  memcpy (dmeta->rects, smeta->rects,
-      (VVAS_MAX_OVERLAY_DATA * sizeof (vvas_rect_params)));
-  memcpy (dmeta->text, smeta->text,
-      (VVAS_MAX_OVERLAY_DATA * sizeof (vvas_text_params)));
-  memcpy (dmeta->lines, smeta->lines,
-      (VVAS_MAX_OVERLAY_DATA * sizeof (vvas_line_params)));
-  memcpy (dmeta->arrows, smeta->arrows,
-      (VVAS_MAX_OVERLAY_DATA * sizeof (vvas_arrow_params)));
-  memcpy (dmeta->circles, smeta->circles,
-      (VVAS_MAX_OVERLAY_DATA * sizeof (vvas_circle_params)));
-  memcpy (dmeta->polygons, smeta->polygons,
-      (VVAS_MAX_OVERLAY_DATA * sizeof (vvas_polygon_params)));
+  vvas_overlay_shape_info_copy (&dmeta->shape_info, &smeta->shape_info);
   return TRUE;
 }
 

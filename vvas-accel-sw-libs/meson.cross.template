@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -27,8 +28,8 @@ cpu = 'x86_64'
 endian = 'little'
 
 [built-in options]
-c_args = ['--sysroot=<SYSROOT>']
-cpp_args = ['--sysroot=<SYSROOT>']
+c_args = ['--sysroot=<SYSROOT>', '-I<SYSROOT>/usr/include', '-I<SYSROOT>/usr/include/xrt']
+cpp_args = ['--sysroot=<SYSROOT>', '-I<SYSROOT>/usr/include', '-I<SYSROOT>/usr/include/xrt']
 c_link_args = ['--sysroot=<SYSROOT>','-L<SYSROOT>/lib', '-L<SYSROOT>/usr/lib']
 cpp_link_args = ['--sysroot=<SYSROOT>','-L<SYSROOT>/lib', '-L<SYSROOT>/usr/lib']
 

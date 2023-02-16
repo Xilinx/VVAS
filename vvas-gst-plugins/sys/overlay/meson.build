@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -14,17 +15,10 @@
  # limitations under the License.
 #########################################################################
 
-#opencv dependency
-opencv_dep = dependency('opencv4', version : '>=4.2.0', required: false)
-
-if not opencv_dep.found()
-  opencv_dep = dependency('opencv', version : '>=3.2.0', required: true)
-endif
-
 gstvvas_xoverlay = library('gstvvas_xoverlay', 'gstvvas_xoverlay.cpp',
   cpp_args : gst_plugins_vvas_args,
   include_directories : [configinc, libsinc],
-  dependencies : [gstvideo_dep, gst_dep, gstvvasalloc_dep, gstvvaspool_dep, dl_dep, gstallocators_dep, uuid_dep, opencv_dep, gstvvasoverlaymeta_dep, vvasutils_dep],
+  dependencies : [gstvideo_dep, gst_dep, gstvvasalloc_dep, gstvvaspool_dep, dl_dep, gstallocators_dep, uuid_dep, gstvvasoverlaymeta_dep, vvasutils_dep,gstvvascoreutils_dep],
   install : true,
   install_dir : plugins_install_dir,
 )

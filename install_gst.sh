@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -99,8 +100,16 @@ fi
 if [[ $OS_TYPE == "UBUNTU" ]]; then
 	sudo apt-get update
 	sudo apt-get install -y build-essential git autoconf autopoint libtool bison flex yasm \
-		 libssl-dev libjansson-dev python3 python3-pip python3-setuptools python3-wheel \
-		 ninja-build cmake libxext-dev libpango1.0-dev libgdk-pixbuf2.0-dev
+		 libssl-dev python3 python3-pip python3-setuptools python3-wheel \
+		 ninja-build cmake libxext-dev libpango1.0-dev libgdk-pixbuf2.0-dev libavfilter-dev
+	sudo apt-get purge -y libjansson-dev
+	cd /tmp/ && git clone https://github.com/akheron/jansson.git && cd jansson
+	git checkout tags/v2.14 -b 2.14
+	mkdir build && cd build
+	cmake -DJANSSON_BUILD_SHARED_LIBS=1 -DCMAKE_INSTALL_PREFIX:PATH=/opt/xilinx/vvas ..
+	make && sudo make install
+	cd $BASEDIR
+	rm -rf /tmp/jansson*
 	if [[ $os_version =~ .*18.04.* ]]; then
                 OS_VERSION="18_04"
                 sudo apt-get install -y libpangocairo-1.0-0
@@ -203,12 +212,24 @@ elif [[ $OS_TYPE == "AMAZON" ]]; then
 	export PATH=/usr/local/bin:$PATH
 fi
 
+# Get the current meson version and update the command
+# "meson <builddir>" command should be used as "meson setup <builddir>" since 0.64.0
+MesonCurrV=`meson --version`
+MesonExpecV="0.64.0"
+
+if [ $(echo -e "${MesonCurrV}\n${MesonExpecV}"|sort -rV |head -1) == "${MesonCurrV}" ];
+then
+MESON="meson setup"
+else
+MESON="meson"
+fi
+
 cd $BASEDIR
 
 # GStreamer core package installation
 cd /tmp/ && git clone https://github.com/Xilinx/gstreamer.git -b xlnx-rebase-v1.18.5
 cd gstreamer
-meson --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
+$MESON --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
 ninja && sudo ninja install
 retval=$?
 if [ $retval -ne 0 ]; then
@@ -223,7 +244,7 @@ rm -rf /tmp/gstreamer*
 # GStreamer base package installation with patch
 cd /tmp && git clone https://github.com/Xilinx/gst-plugins-base.git -b xlnx-rebase-v1.18.5
 cd gst-plugins-base
-CFLAGS='-std=gnu99' meson --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
+CFLAGS='-std=gnu99' $MESON --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
 ninja && sudo ninja install
 retval=$?
 if [ $retval -ne 0 ]; then
@@ -237,7 +258,7 @@ rm -rf /tmp/gst-plugins-base*
 # GStreamer good package installation
 cd /tmp && git clone https://github.com/Xilinx/gst-plugins-good.git -b xlnx-rebase-v1.18.5
 cd gst-plugins-good
-CFLAGS='-std=gnu99' meson --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
+CFLAGS='-std=gnu99' $MESON --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
 ninja && sudo ninja install
 retval=$?
 if [ $retval -ne 0 ]; then
@@ -251,7 +272,7 @@ rm -rf /tmp/gst-plugins-good*
 # GStreamer bad package installation
 cd /tmp && git clone https://github.com/Xilinx/gst-plugins-bad.git -b xlnx-rebase-v1.18.5
 cd gst-plugins-bad
-CFLAGS='-std=gnu99' meson --prefix=/opt/xilinx/vvas --libdir=lib -Dmediasrcbin=disabled -Dmpegpsmux=disabled build && cd build
+CFLAGS='-std=gnu99' $MESON --prefix=/opt/xilinx/vvas --libdir=lib -Dmediasrcbin=disabled -Dmpegpsmux=disabled build && cd build
 ninja && sudo ninja install
 retval=$?
 if [ $retval -ne 0 ]; then
@@ -261,6 +282,22 @@ if [ $retval -ne 0 ]; then
 fi
 cd $BASEDIR
 rm -rf /tmp/gst-plugins-bad*
+
+# GStreamer libav package installation
+cd /tmp && git clone https://github.com/GStreamer/gst-libav.git
+cd gst-libav
+git checkout  tags/1.18.5 -b 1.18.5
+CFLAGS='-std=gnu99' $MESON --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
+ninja && sudo ninja install
+retval=$?
+if [ $retval -ne 0 ]; then
+	echo "Unable to install base gstreamer libav ($retval)"
+	cd $BASEDIR
+	return 1
+fi
+cd $BASEDIR
+rm -rf /tmp/gst-libav
+
 
 #Remove GStreamer plugin cache
 rm -rf ~/.cache/gstreamer-1.0/

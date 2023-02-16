@@ -1,5 +1,6 @@
 /*
- * Copyright 2020 Xilinx, Inc.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,6 +78,7 @@ typedef enum
 typedef struct _vvas_kernel VVASKernel;
 typedef struct _vvas_frame VVASFrame;
 typedef struct _vvas_frame_props VVASFrameProps;
+typedef struct _vvas_video_alignment VVASVideoAlignment;
 
 typedef int32_t (*VVASBufAllocCBFunc) (VVASKernel * handle,
     VVASFrame * vvas_frame, void *user_data);
@@ -90,16 +92,30 @@ typedef int32_t (*VVASKernelStartFunc) (VVASKernel * handle, int32_t start,
     VVASFrame * input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT]);
 typedef int32_t (*VVASKernelDoneFunc) (VVASKernel * handle);
 
+typedef void *  (*VVASKernelGetConfigFunc) (VVASKernel * handle);
+typedef int32_t (*VVASKernelSetConfigFunc) (VVASKernel * handle,
+                 const void * config);
+
+struct _vvas_video_alignment
+{
+  uint32_t padding_right;
+  uint32_t padding_left;
+  uint32_t padding_top;
+  uint32_t padding_bottom;
+};
+
 struct _vvas_frame_props
 {
   uint32_t width;
   uint32_t height;
   uint32_t stride;
+  VVASVideoAlignment alignment;
   VVASVideoFormat fmt;
 };
 
 struct _vvas_frame
 {
+  void* pbo;
   void* bo[VIDEO_MAX_PLANES];
   void *vaddr[VIDEO_MAX_PLANES];
   uint64_t paddr[VIDEO_MAX_PLANES];
@@ -157,14 +173,6 @@ typedef struct vvaspads
   kernelpads **srcpads;
 } vvaspads;
 
-typedef struct buffer
-{
-  void* bo;
-  void *user_ptr;
-  uint64_t phy_addr;
-  unsigned int size;
-} xrt_buffer;
-
 struct _vvas_kernel
 {
   void* dev_handle;
@@ -188,6 +196,9 @@ struct _vvas_kernel
   uint8_t  *name;
   uint16_t in_mem_bank;
   uint16_t out_mem_bank;
+  int8_t  *kernel_name;
+  void *vvas_ctx;
+  bool software_kernel;
 };
 
 

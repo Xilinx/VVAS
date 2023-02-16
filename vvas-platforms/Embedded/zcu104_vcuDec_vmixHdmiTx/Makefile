@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-PLATFORM ?= xilinx_zcu104_vcuDec_vmixHdmiTx_202210_1
+PLATFORM ?= xilinx_zcu104_vcuDec_vmixHdmiTx_202220_1
 CWD=$(shell pwd)
 XSA_DIR ?= $(CWD)/vivado
 OUTPUT_PATH ?= $(CWD)/platform_repo

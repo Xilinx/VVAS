@@ -1,5 +1,6 @@
 ##########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -47,6 +48,23 @@ models=( \
   "yolov2_voc_pruned_0_77"  \
   "densebox_320_320"  \
   "densebox_640_360"  \
+  # Following models added as requested in CR-1148755
+  "bcc_pt"  \
+  "efficientdet_d2_tf"  \
+  "efficientnet-b0_tf2"  \
+  "face_landmark"  \
+  "face_mask_detection_pt"  \
+  "facerec_resnet20"  \
+  "plate_num"  \
+  "sp_net"  \
+  "ultrafast_pt"  \
+  "vpgnet_pruned_0_99"  \
+  # Following model needed for raw-tensor test
+  "resnet_v1_50_tf" \
+  # Following modles added as requested in CR-1150531
+  "chen_color_resnet18_pt" \
+  "vehicle_make_resnet18_pt" \
+  "vehicle_type_resnet18_pt"
 )
 
 # Check if MODEL_DIR is set correctly
@@ -65,6 +83,7 @@ fi
 
 # Install kernel json files
 cp src/jsons/kernel*.json ${FOLDERNAME}/app/jsons/
+cp src/jsons/metaconvert_config.json ${FOLDERNAME}/app/jsons/
 
 # Install setup.sh
 cp src/setup.sh ${FOLDERNAME}/app/
@@ -77,6 +96,10 @@ cp -r src/templates ${FOLDERNAME}/app/
 
 # Install models
 for model in ${models[@]}; do
+  if [ ! -d ${MODEL_DIR}/${model} ]; then
+    echo "ERROR: ${model} not found";
+  fi
+
   cp -r ${MODEL_DIR}/${model} ${FOLDERNAME}/models
   if [ -f src/jsons/label_${model}.json ]; then
     cp src/jsons/label_${model}.json ${FOLDERNAME}/models/${model}/label.json
@@ -88,8 +111,13 @@ for ((i=0; i<4; i++)) do
   sed -i 's!top_k : 5!top_k : 1!' ${FOLDERNAME}/models/${models[$i]}/*.prototxt
 done
 
+# Fix the top_k in models added as requested in CR-1150531
+for ((i=27; i<30; i++)) do
+  sed -i 's!top_k : 5!top_k : 1!' ${FOLDERNAME}/models/${models[$i]}/*.prototxt
+done
+
 # Install arch.json
-cp $(find -name arch.json -print -quit) ${FOLDERNAME}/
+cp binary_container_1/sd_card/arch.json ${FOLDERNAME}/
 
 # Install sdk.sh
 cp `pwd`/../../../vvas-platforms/Embedded/zcu104_vcuDec_DP/platform_repo/tmp/sw_components/sdk.sh ${FOLDERNAME}/

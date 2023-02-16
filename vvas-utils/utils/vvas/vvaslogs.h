@@ -1,5 +1,6 @@
 /*
- * Copyright 2020 Xilinx, Inc.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,19 +51,5 @@ enum
     }\
   } while (0); \
 }
-
-#if 0
-static void
-LOG_DUMP (int level, char *ptr, int num)
-{
-  if (!(level <= log_level))
-    return;
-
-  for (int i = 0; i < num; i++) {
-    printf (" %x", *ptr++);
-  }
-  printf ("\n");
-}
-#endif
 
 #endif

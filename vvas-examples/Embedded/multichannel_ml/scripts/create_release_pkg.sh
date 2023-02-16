@@ -1,5 +1,6 @@
 ##########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -38,6 +39,33 @@ models=( \
   "resnet50"  \
   "yolov3_adas_pruned_0_9" \
   "yolov3_voc" \
+  # Following models added as requested in CR-1148755
+  "bcc_pt" \
+  "efficientdet_d2_tf" \
+  "efficientnet-b0_tf2" \
+  "face_landmark" \
+  "face_mask_detection_pt" \
+  "facerec_resnet20" \
+  "sp_net" \
+  "ultrafast_pt" \
+  "vpgnet_pruned_0_99" \
+  "densebox_640_360" \
+  "yolov2_voc" \
+  "yolov2_voc_pruned_0_77" \
+  "mobilenet_v2" \
+  "inception_v1" \
+  "resnet18" \
+  "yolov3_voc_tf" \
+  "ssd_adas_pruned_0_95" \
+  "ssd_mobilenet_v2" \
+  "ssd_traffic_pruned_0_9" \
+  "ssd_pedestrian_pruned_0_97" \
+  # Following model needed for raw-tensor test
+  "resnet_v1_50_tf" \
+  # Following modles add as requested in CR-1150531
+  "chen_color_resnet18_pt" \
+  "vehicle_make_resnet18_pt" \
+  "vehicle_type_resnet18_pt"
 )
 
 # Check if MODEL_DIR is set correctly
@@ -59,6 +87,10 @@ cp -r src/scripts_n_utils ${FOLDERNAME}/
 
 # Install models
 for model in ${models[@]}; do
+  if [ ! -d ${MODEL_DIR}/${model} ]; then
+    echo "ERROR: ${model} not found";
+  fi
+
   cp -r ${MODEL_DIR}/${model} ${FOLDERNAME}/models
   if [ -f src/labels/label_${model}.json ]; then
     cp src/labels/label_${model}.json ${FOLDERNAME}/models/${model}/label.json
@@ -68,19 +100,27 @@ done
 # Workarrounds 
 #1 Modify the top_k
 sed -i 's!top_k : 5!top_k : 1!' ${FOLDERNAME}/models/resnet50/resnet50.prototxt
+
+# CR-1150440 : Modify top_k to 1 for mobilenet_v2, inception_v1 and resnet18
+for ((i=19; i<22; i++)) do
+  sed -i 's!top_k : 5!top_k : 1!' ${FOLDERNAME}/models/${models[$i]}/*.prototxt
+done
+
+# Fix the top_k in models added as requested in CR-1150531
+for ((i=28; i<31; i++)) do
+  sed -i 's!top_k : 5!top_k : 1!' ${FOLDERNAME}/models/${models[$i]}/*.prototxt
+done
 # End - Workarrounds
 
 # Install arch.json
-cp $(find -name arch.json -print -quit) ${FOLDERNAME}/
+cp binary_container_1/sd_card/arch.json ${FOLDERNAME}/
 
 # Install sdk.sh
 cp `pwd`/../../../vvas-platforms/Embedded/zcu104_vcuDec_vmixHdmiTx/platform_repo/tmp/sw_components/sdk.sh ${FOLDERNAME}/
-# Install arch.json
-cp $(find -name arch.json -print -quit) ${FOLDERNAME}/
 
 # Install sd_card.img
 cp binary_container_1/sd_card.img ${FOLDERNAME}/
 
 
 # Create a Zip archive of the release package
-#zip -r ${FOLDERNAME}.zip ${FOLDERNAME}
+zip -r ${FOLDERNAME}.zip ${FOLDERNAME}

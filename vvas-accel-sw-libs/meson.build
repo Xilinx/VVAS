@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -15,7 +16,7 @@
 #########################################################################
 
 project('vvas-accel-sw-libs', 'c', 'cpp',
-  version : '2.0.0',
+  version : '3.0.0',
   meson_version : '>= 0.54.1',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -42,6 +43,7 @@ glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libg
 vvas_accel_sw_libs_args = ['-DHAVE_CONFIG_H']
 
 configinc = include_directories('.')
+vvas_accel_util_header = include_directories('utils')
 
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
@@ -121,8 +123,14 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
 # XRT dependency
 xrt_dep = dependency('xrt', version : xrt_req, required : true)
 
+#VVAS Core dependency
+vvascore_dep = dependency('vvas-core', version : '>= 1.0', required: true)
+
 #vvasutils dependency
 vvasutils_dep = dependency('vvas-utils', version : '>= 1.0', required: true)
+
+#vvasstructure dependency
+vvasstructure_dep = dependency('vvas-structure', version : '>= 1.0', required: true)
 
 #gstvvas dependency
 gstvvas_dep = dependency('vvas-gst-plugins', version : '>= 1.0', required : true)
@@ -137,10 +145,11 @@ if host_machine.cpu_family() == 'aarch64'
   opencv_dep = dependency('opencv4', version : '>=4.4.0', required: true)
 endif
 if host_machine.cpu_family() == 'x86_64'
-  opencv_dep = dependency('opencv', version : '>=3.4.0', required: true)
+  opencv_dep = dependency('opencv4', version : '>=4.2.0', required: false)
+  if not opencv_dep.found()
+    opencv_dep = dependency('opencv', version : '>=3.2.0', required: true)
+  endif
 endif
-
-glog_dep = cc.find_library('glog', dirs : ['/usr/lib/x86_64-linux-gnu/'])
 
 vvas_videolib_install_path = ['/usr/lib/vvas/']
 
@@ -155,14 +164,14 @@ pkgconfig = import('pkgconfig')
 
 if host_machine.cpu_family() == 'x86_64'
   # common kernel libraries for PCIe platforms
-  foreach kernel : ['vvas_xdpuinfer', 'vvas_xboundingbox', 'vvas_xpreprocessor']
+  foreach kernel : ['utils']
     if not get_option(kernel).disabled()
       subdir(kernel)
     endif
   endforeach
 elif host_machine.cpu_family() == 'aarch64'
   # common kernel libraries for embedded platforms
-  foreach kernel : ['vvas_xdpuinfer', 'vvas_xboundingbox', 'vvas_xpreprocessor']
+  foreach kernel : ['utils']
     if not get_option(kernel).disabled()
       subdir(kernel)
     endif

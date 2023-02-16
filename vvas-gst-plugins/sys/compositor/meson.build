@@ -17,7 +17,7 @@
 gstvvas_xcompositor = library('gstvvas_xcompositor', 'gstvvas_xcompositor.c',
   c_args : gst_plugins_vvas_args,
   include_directories : [configinc, libsinc],
-  dependencies : [gstvideo_dep, gst_dep, gstvvasalloc_dep, gstvvaspool_dep, dl_dep, gstallocators_dep, vvasutils_dep ,xrm_dep, math_dep],
+  dependencies : [gstvideo_dep, gst_dep, gstvvasalloc_dep, gstvvaspool_dep, dl_dep, gstallocators_dep, vvasutils_dep, xrm_dep, math_dep, gstvvascoreutils_dep, vvascore_dep],
   install : true,
   install_dir : plugins_install_dir,
 )

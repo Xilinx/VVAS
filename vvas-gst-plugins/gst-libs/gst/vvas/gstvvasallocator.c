@@ -1,5 +1,6 @@
 /*
- * Copyright 2020 Xilinx, Inc.
+ * Copyright 2020 - 2022 Xilinx, Inc.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,76 +19,155 @@
 #include "config.h"
 #endif
 
-#include <vvas/xrt_utils.h>
+#include <vvas_core/vvas_device.h>
 #include "gstvvasallocator.h"
 #include <sys/mman.h>
 #include <string.h>
 #include <gst/allocators/gstdmabuf.h>
 #include <gst/gstpoll.h>
 
+/** @def GST_CAT_DEFAULT
+ *  @brief Setting vvasallocator_debug as default debug category for logging
+ */
 #define GST_CAT_DEFAULT vvasallocator_debug
+
+/**
+ *  @brief Defines a static GstDebugCategory global variable "vvasallocator_debug"
+ */
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+/** @def GST_VVAS_MEMORY_TYPE
+ *  @brief Assiging a name to VVASMemory to validate memory received is of specific type
+ */
 #define GST_VVAS_MEMORY_TYPE "VVASMemory"
+
+/** @def DEFAULT_DEVICE_INDEX
+ *  @brief Taking default device index as zero.
+ */
 #define DEFAULT_DEVICE_INDEX 0
+
+/** @def DEFAULT_NEED_DMA
+ *  @brief By default vvasallocator does not allocate DMA fd corresponding to XRT BO
+ */
 #define DEFAULT_NEED_DMA FALSE
 
+/** @def DEFAULT_INIT_VALUE
+ *  @brief By default vvasallocator initialize buffers with zero.
+ */
+#define DEFAULT_INIT_VALUE 0
+
+/**  @brief  Contains properties related to VVAS allocator
+ */
 enum
 {
   PROP_0,
+  /** Device index prorperty ID */
   PROP_DEVICE_INDEX,
+  /** Need DMA fd property ID */
   PROP_NEED_DMA,
+  /** Memory bank index property ID */
   PROP_MEM_BANK,
-  PROP_KERNEL_HANDLE
+  /** Initial buffer value property ID*/
+  PROP_INIT_VALUE
 };
 
+/** @brief  Contains signals those will be emitted by VVAS allocator
+ */
 enum
 {
   VVAS_MEM_RELEASED,
   LAST_SIGNAL
 };
 
+/** @struct _GstVvasAllocatorPrivate
+ *  @brief  Holds private members related VVAS allocator instance
+ */
 struct _GstVvasAllocatorPrivate
 {
+  /** Index of the device on which memory is going to allocated */
   gint dev_idx;
+  /** TRUE if one needs DMA fd corresponding to XRT BO */
   gboolean need_dma;
+  /** Memory bank index (on a device with \p dev_idx) which is used to
+   * allocate memory */
   guint mem_bank;
+  /** Handle to FPGA device with index \p dev_idx */
   vvasDeviceHandle handle;
-  vvasKernelHandle kern_handle;
+  /** Handle to DMA allocator to allocate GstFdMemory */
   GstAllocator *dmabuf_alloc;
+  /** Holds the state of the VVAS allocator */
   gboolean active;
+  /** Queue to hold free GstVvasMemory objects */
   GstAtomicQueue *free_queue;
   GstPoll *poll;
+  /** Number of GstVvasMemory objects currently active in current instance */
   guint cur_mem;
+  /** Minimum number of GstVvasMemory objects to allocated on _start () */
   guint min_mem;
+  /** Allowed maximum number of GstVvasMemory objects to allocated using this
+   * GstVvasAllocator instance */
   guint max_mem;
+  /** Initial Buffer value */
+  gint init_value;
 };
 
+/** @struct GstVvasMemory
+ *  @brief  Holds members related VVAS Memory object
+ */
 typedef struct _GstVvasMemory
 {
   GstMemory parent;
-  gpointer data;                /* used in non-dma mode */
+  /** Holds virtual address corresponding XRT BO in non-dma mode */
+  gpointer data;
+  /** Handle to XRT BO */
   vvasBOHandle bo;
+  /** Allocated memory size */
   gsize size;
+  /** Pointer to allocator instance by which memory is allocated */
   GstVvasAllocator *alloc;
+  /** Flags used in mapping XRT BO to user space */
   GstMapFlags mmapping_flags;
+  /** Count of current mapping requests */
   gint mmap_count;
   GMutex lock;
+  /** If TRUE memory will freed. Else, memory object (GstVvasMemory) will be queued
+   * _GstVvasAllocatorPrivate::free_queue to avoid memory fragmentation */
   gboolean do_free;
-#ifdef XLNX_PCIe_PLATFORM
+  /** Sync flags to device whether data need to synced (DMA transfer) between FPGA device and Host */
   VvasSyncFlags sync_flags;
-#endif
 } GstVvasMemory;
 
 static guint gst_vvas_allocator_signals[LAST_SIGNAL] = { 0 };
 
 #define parent_class gst_vvas_allocator_parent_class
+
+/** @brief  Glib's convenience macro for GstVvasAllocator type implementation.
+ *  @details This macro does below tasks:\n
+ *             - Declares a class initialization function with prefix gst_vvas_allocator \n
+ *             - Declares an instance initialization function\n
+ *             - A static variable named gst_vvas_allocator_parent_class pointing to the parent class\n
+ *             - Defines a gst_vvas_allocator_get_type() function with below tasks\n
+ *                 - Initializes GTypeInfo function pointers\n
+ *                 - Registers GstVvasAllocatorPrivate as private structure to GstVvasAllocator type\n
+ *                 - Initialize new debug category vvasallocator for logging\n
+ */
 G_DEFINE_TYPE_WITH_CODE (GstVvasAllocator, gst_vvas_allocator,
     GST_TYPE_ALLOCATOR, G_ADD_PRIVATE (GstVvasAllocator);
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vvasallocator", 0,
         "VVAS allocator"));
+
+/**
+ *  @brief Defines a static GstDebugCategory global variable with name GST_CAT_PERFORMANCE for
+ *  performance logging purpose
+ */
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
+/**
+ *  @fn static GstVvasMemory *get_vvas_mem (GstMemory * mem)
+ *  @param [in] mem - Handle to GstMemory
+ *  @return GstVvasMemory pointer on success\n  NULL on failure
+ *  @brief  Gets GstVvasMemory object from GstMemory object
+ */
 static GstVvasMemory *
 get_vvas_mem (GstMemory * mem)
 {
@@ -103,6 +183,16 @@ get_vvas_mem (GstMemory * mem)
   }
 }
 
+/**
+ *  @fn static gboolean vvas_allocator_memory_dispose (GstMiniObject * obj)
+ *  @param [in] obj - Handle to GstMiniObject which will be typecasted to GstVvasMemory.
+ *                    Here, GstMiniObject is grand-parent of GstVvasMemory
+ *  @return TRUE if GstVvasMemory object need to be freed\n
+ *          FALSE if GstVvasMemory to be queued in GstVvasAllocator's queue.
+ *  @brief  This API decides whether GstVvasMemory object need to be freed or
+ *          queued in GstVvasAllocator to reuse the GstVvasMemory object. If this API returns TRUE,
+ *          GStreamer framework will call gst_vvas_allocator_free() to free up current memory object
+ */
 static gboolean
 vvas_allocator_memory_dispose (GstMiniObject * obj)
 {
@@ -113,15 +203,31 @@ vvas_allocator_memory_dispose (GstMiniObject * obj)
 
   if (priv->free_queue && !vvasmem->do_free) {
     GST_DEBUG_OBJECT (vvas_alloc, "pushing back memory %p to free queue", mem);
+    /* push current memory object to free queue and wakes up polling to pop
+     * from queue */
     gst_atomic_queue_push (priv->free_queue, gst_memory_ref (mem));
     gst_poll_write_control (priv->poll);
-    g_signal_emit (vvas_alloc, gst_vvas_allocator_signals[VVAS_MEM_RELEASED], 0, mem);
+    g_signal_emit (vvas_alloc, gst_vvas_allocator_signals[VVAS_MEM_RELEASED], 0,
+        mem);
     return FALSE;
   }
 
+  /* returning TRUE to free current memory object */
   return TRUE;
 }
 
+/**
+ *  @fn static GstMemory *gst_vvas_allocator_alloc (GstAllocator * allocator,
+ *                                                  gsize size,
+ *                                                  GstAllocationParams * params)
+ *  @param [in] allocator - Pointer allocator object
+ *  @param [in] size - Size of the memory to be allocated
+ *  @param [in] params - Holds parameters related to memory allocation
+ *  @return GstMemory pointer on success\n NULL on failure
+ *  @brief  Allocates memory of request size or pop from free memory queue
+ *  @details If gst_vvas_allocator_start is called by user, then this API gets memory objects from free queue or else,
+ *           memory will be allocated based on \p size and allocation parameters \p params
+ */
 static GstMemory *
 gst_vvas_allocator_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
@@ -132,18 +238,19 @@ gst_vvas_allocator_alloc (GstAllocator * allocator, gsize size,
   GstMemory *mem;
   gint prime_fd = 0;
   int iret = 0;
-  void* data = NULL;
+  void *data = NULL;
 
+  /* take buffers from free_queue as we have preallocated memory objects */
   if (priv->free_queue && g_atomic_int_get (&priv->active)) {
     // TODO: peek memory and check size of popped mem is sufficient or not
 
-pop_now:
+  pop_now:
     mem = gst_atomic_queue_pop (priv->free_queue);
     if (G_LIKELY (mem)) {
       while (!gst_poll_read_control (priv->poll)) {
         if (errno == EWOULDBLOCK) {
-          /* We put the buffer into the queue but did not finish writing control
-           * yet, let's wait a bit and retry */
+          /* We put the buffer into the queue but did not finish writing
+           * control yet, let's wait a bit and retry */
           g_thread_yield ();
           continue;
         } else {
@@ -156,6 +263,10 @@ pop_now:
     } else {
       /* check we reached maximum buffers */
       if (priv->max_mem && priv->cur_mem >= priv->max_mem) {
+        if (params->flags & GST_VVAS_ALLOCATOR_FLAG_DONTWAIT) {
+          GST_DEBUG_OBJECT (vvas_alloc, "don't wait for memory, return NULL");
+          return NULL;
+        }
         if (!gst_poll_read_control (priv->poll)) {
           if (errno == EWOULDBLOCK) {
             GST_LOG_OBJECT (vvas_alloc, "waiting for free memory");
@@ -169,7 +280,7 @@ pop_now:
           gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE);
           gst_poll_write_control (priv->poll);
         }
-        goto pop_now; // now try popping memory as wait is completed
+        goto pop_now;           // now try popping memory as wait is completed
       }
     }
   }
@@ -179,12 +290,15 @@ pop_now:
     return NULL;
   }
 
+  /* Start creating memory object of requested size */
   vvasmem = g_slice_new0 (GstVvasMemory);
   gst_memory_init (GST_MEMORY_CAST (vvasmem), params->flags,
       GST_ALLOCATOR_CAST (vvas_alloc), NULL, size, params->align,
       params->prefix, size);
 
   if (priv->free_queue) {
+    /* override dispose function so that allocator will get a callback when
+     * memory is about to freed */
     vvasmem->parent.mini_object.dispose = (GstMiniObjectDisposeFunction)
         vvas_allocator_memory_dispose;
   }
@@ -196,12 +310,11 @@ pop_now:
   vvasmem->alloc = vvas_alloc;
   g_mutex_init (&vvasmem->lock);
 
-#ifdef XLNX_PCIe_PLATFORM
   vvasmem->sync_flags = VVAS_SYNC_NONE;
-#endif
 
+  /* allocate XRT buffer on device and host */
   vvasmem->bo = vvas_xrt_alloc_bo (priv->handle, size, VVAS_BO_FLAGS_NONE,
-                                   priv->mem_bank);
+      priv->mem_bank);
   if (vvasmem->bo == NULL) {
     GST_ERROR_OBJECT (vvas_alloc, "failed to allocate Device BO. reason %s(%d)",
         strerror (errno), errno);
@@ -210,17 +323,21 @@ pop_now:
   vvasmem->size = size;
   vvasmem->do_free = FALSE;
 
+  /* Based on caller request, we need to reset data to 0 to
+   * avoid garbage data in padded video frames.*/
   if (params->flags & GST_VVAS_ALLOCATOR_FLAG_MEM_INIT) {
     GST_LOG_OBJECT (vvas_alloc, "Doing memset for created buffer");
+    /* Get user space address corresponding host buffer */
     data = vvas_xrt_map_bo (vvasmem->bo, true);
     if (data) {
-      memset(data, 0, size);
-      iret = vvas_xrt_sync_bo (vvasmem->bo,
-                               VVAS_BO_SYNC_BO_TO_DEVICE, size, 0);
+      memset (data, priv->init_value, size);
+      /* Once data is set to zero, sync the data from host to device via
+       * DMA transfer */
+      iret = vvas_xrt_sync_bo (vvasmem->bo, VVAS_BO_SYNC_BO_TO_DEVICE, size, 0);
       if (iret != 0) {
         GST_ERROR_OBJECT (vvas_alloc,
-                          "failed to sync output buffer. reason : %d, %s",
-                          iret, strerror (errno));
+            "failed to sync output buffer. reason : %d, %s",
+            iret, strerror (errno));
         //vvas_xrt_unmap_bo(priv->handle, vvasmem->bo, data);
         return NULL;
       }
@@ -228,6 +345,8 @@ pop_now:
     }
   }
 
+  /* Creates DMA fd corresponding to XRT BO.
+   * Currently DMA fd is supported only in Embedded platforms only */
   if (priv->need_dma) {
     prime_fd = vvas_xrt_export_bo (vvasmem->bo);
     if (prime_fd < 0) {
@@ -255,6 +374,16 @@ pop_now:
   return mem;
 }
 
+/**
+ *  @fn static gpointer gst_vvas_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
+ *  @param [in] mem - Pointer to memory object
+ *  @param [in] maxsize - Size of the memory to be mapped [unused as XRT maps entire memory]
+ *  @param [in] flags - Flags needed while mapping memory
+ *  @return User space address on success\n  NULL on failure
+ *  @brief Maps memory to user space address for reading and/or writing
+ *  @details Based on \p flags and GstVvasMemory::sync_flags, this API does DMA transfer between host and device
+ *           before mapping memory to host side
+ */
 static gpointer
 gst_vvas_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
@@ -273,15 +402,15 @@ gst_vvas_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
     }
     goto out;
   }
-#ifdef XLNX_PCIe_PLATFORM
+  /* Before mapping, synchronize the data between host and
+   * device if required */
   if (!gst_vvas_memory_sync_with_flags (mem, flags)) {
     g_mutex_unlock (&vvasmem->lock);
     return NULL;
   }
-#endif
 
-  vvasmem->data =
-      vvas_xrt_map_bo (vvasmem->bo, flags & GST_MAP_WRITE);
+  /* Mapping memory to user space on host */
+  vvasmem->data = vvas_xrt_map_bo (vvasmem->bo, flags & GST_MAP_WRITE);
   GST_DEBUG_OBJECT (alloc, "mapped pointer %p with size %lu do_write %d",
       vvasmem->data, maxsize, flags & GST_MAP_WRITE);
 
@@ -296,6 +425,14 @@ out:
   return ret;
 }
 
+/**
+ *  @fn static GstMemory *gst_vvas_mem_share (GstMemory * mem, gssize offset, gssize size)
+ *  @param [in] mem - Pointer to memory object
+ *  @param [in] offset - Offset in \p mem object.[unused as entire memory is shared]
+ *  @param [in] size - Size of the memory to be shared.[unused as entire memory is shared]
+ *  @return GstMemory pointer
+ *  @brief Creates memory object in readonly mode by sharing \p mem object
+ */
 static GstMemory *
 gst_vvas_mem_share (GstMemory * mem, gssize offset, gssize size)
 {
@@ -315,7 +452,8 @@ gst_vvas_mem_share (GstMemory * mem, gssize offset, gssize size)
 
   sub = g_slice_new0 (GstVvasMemory);
 
-  /* shared memory is always readonly */
+  /* shared memory is always readonly and make vvasmem object as parent
+   * sub object */
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, vvasmem->parent.allocator, parent,
       vvasmem->parent.maxsize, vvasmem->parent.align,
@@ -326,15 +464,19 @@ gst_vvas_mem_share (GstMemory * mem, gssize offset, gssize size)
   sub->alloc = vvasmem->alloc;
   sub->size = vvasmem->size;
 
-#ifdef XLNX_PCIe_PLATFORM
   sub->sync_flags = vvasmem->sync_flags;
-#endif
 
   GST_DEBUG ("%p: share mem created", sub);
 
   return GST_MEMORY_CAST (sub);
 }
 
+/**
+ *  @fn static void gst_vvas_mem_unmap (GstMemory * mem)
+ *  @param [in] mem - Pointer to memory object
+ *  @return None
+ *  @brief Unmaps the memory from user space
+ */
 static void
 gst_vvas_mem_unmap (GstMemory * mem)
 {
@@ -342,11 +484,14 @@ gst_vvas_mem_unmap (GstMemory * mem)
   GstVvasAllocator *alloc = vvasmem->alloc;
   int ret = 0;
 
+  /* unmaps parent if its sub memory object created in _share API */
   if (mem->parent)
     return gst_vvas_mem_unmap (mem->parent);
 
   g_mutex_lock (&vvasmem->lock);
+  /* unmap memory only if there is no references to it */
   if (vvasmem->data && !(--vvasmem->mmap_count)) {
+    /* unmap memory using XRT API */
     ret = vvas_xrt_unmap_bo (vvasmem->bo, vvasmem->data);
     if (ret) {
       GST_ERROR ("failed to unmap %p", vvasmem->data);
@@ -358,12 +503,20 @@ gst_vvas_mem_unmap (GstMemory * mem)
   g_mutex_unlock (&vvasmem->lock);
 }
 
+/**
+ *  @fn static void gst_vvas_allocator_free (GstAllocator * allocator, GstMemory * mem)
+ *  @param [in] allocator - Pointer to allocator instance
+ *  @param [in] mem - Memory pointer to be freed
+ *  @return None
+ *  @brief Frees the memory associated with object \p mem
+ */
 static void
 gst_vvas_allocator_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstVvasMemory *vvasmem = (GstVvasMemory *) mem;
   GstVvasAllocator *alloc = GST_VVAS_ALLOCATOR (allocator);
 
+  /* free memory using XRT API if its not a sub buffer */
   if (vvasmem->bo != NULL && mem->parent == NULL)
     vvas_xrt_free_bo (vvasmem->bo);
 
@@ -377,6 +530,15 @@ gst_vvas_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_DEBUG ("%p: freed", mem);
 }
 
+/**
+ *  @fn static void gst_vvas_allocator_finalize (GObject * obj)
+ *  @param [in] obj - Handle to GstVvasAllocator typecasted to GObject
+ *  @return None
+ *  @brief This API will be called during GstVvasAllocator object's destruction phase.
+ *              Close references to devices and free memories if any
+ *  @note After this API GstVvasAllocator object \p obj will be destroyed completely.
+ *              So free all internal memories held by current object
+ */
 static void
 gst_vvas_allocator_finalize (GObject * obj)
 {
@@ -385,10 +547,29 @@ gst_vvas_allocator_finalize (GObject * obj)
   if (alloc->priv->dmabuf_alloc)
     gst_object_unref (alloc->priv->dmabuf_alloc);
 
+  /* release handle to device */
   vvas_xrt_close_device (alloc->priv->handle);
+
+  /* call GstVvasAllocator's parent object finalize API, so that parent can also do its cleanup */
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
+/**
+ *  @fn static void gst_vvas_allocator_set_property (GObject * object,
+ *                                                   guint prop_id,
+ *                                                   const GValue * value,
+ *                                                   GParamSpec * pspec)
+ *  @param [in] object - Handle to GstVvasAllocator typecasted to GObject
+ *  @param [in] prop_id - Property ID value
+ *  @param [in] value - GValue which holds property value set by user
+ *  @param [in] pspec - Handle to metadata of a property with property ID \p prop_id
+ *  @return None
+ *  @brief This API stores values sent from the user in GstVvasAllocator object members.
+ *  @details This API is registered with GObjectClass by overriding GObjectClass::set_property function
+ *           pointer and this will be invoked when developer sets properties on GstVvasAllocator object.
+ *           Based on property value type, corresponding g_value_get_xxx API will be called to get
+ *           property value from GValue handle.
+ */
 static void
 gst_vvas_allocator_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -406,15 +587,26 @@ gst_vvas_allocator_set_property (GObject * object, guint prop_id,
     case PROP_MEM_BANK:
       alloc->priv->mem_bank = g_value_get_int (value);
       break;
-    case PROP_KERNEL_HANDLE:
-      alloc->priv->kern_handle = g_value_get_pointer (value);
-      break; 
+    case PROP_INIT_VALUE:
+      alloc->priv->init_value = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
+/**
+ *  @fn static void gst_vvas_allocator_class_init (GstVvasAllocatorClass * klass)
+ *  @param [in]klass  - Handle to GstVvasAllocatorClass
+ *  @return None
+ *  @brief Add properties and signals of GstVvasAllocator to parent GObjectClass and ovverrides
+ *         function pointers present in itself and/or its parent class structures
+ *  @details This function publishes properties those can be set/get from application on
+ *                  GstVvasAllocator object. And, while publishing a property it also declares type, range of
+ *                  acceptable values, default value, readability/writability and in which GStreamer state a
+ *                  property can be changed.
+ */
 static void
 gst_vvas_allocator_class_init (GstVvasAllocatorClass * klass)
 {
@@ -445,27 +637,41 @@ gst_vvas_allocator_class_init (GstVvasAllocatorClass * klass)
           "DDR Memory bank to allocate memory", 0, G_MAXINT,
           DEFAULT_MEM_BANK, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_KERNEL_HANDLE,
-     g_param_spec_pointer ("kernel-handle", "VVAS Kernel handle",
-           "VVAS Kernel handle",
-           (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_INIT_VALUE,
+      g_param_spec_int ("init-value", "Initial Buffer value",
+          "Allocator will set as a initial value for buffer memory", 0,
+          G_MAXINT, DEFAULT_INIT_VALUE,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_vvas_allocator_signals[VVAS_MEM_RELEASED] = g_signal_new ("vvas-mem-released",
-      G_TYPE_FROM_CLASS (gobject_class), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
-      G_TYPE_NONE, 1, GST_TYPE_MEMORY);
+  gst_vvas_allocator_signals[VVAS_MEM_RELEASED] =
+      g_signal_new ("vvas-mem-released", G_TYPE_FROM_CLASS (gobject_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_MEMORY);
 
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
+/**
+ *  @fn static void gst_vvas_allocator_init (GstVvasAllocator * allocator)
+ *  @param [in] allocator - Handle to GstVvasAllocator instance
+ *  @return None
+ *  @brief  Initilizes GstVvasAllocator member variables to default and does one time object/memory allocations
+ *          in object's lifecycle
+ *  @details Overrides GstAllocator object's function pointers so that operations performance on GstMemory will invoke
+ *           GstVvasAllocator APIs. For example, gst_memory_map invokes gst_vvas_mem_map() to map an XRT buffer to
+ *           user space
+ */
 static void
 gst_vvas_allocator_init (GstVvasAllocator * allocator)
 {
   GstAllocator *alloc;
 
   alloc = GST_ALLOCATOR_CAST (allocator);
+  /* get instance's private structure and store for quick referencing */
   allocator->priv = (GstVvasAllocatorPrivate *)
       gst_vvas_allocator_get_instance_private (allocator);
 
+  /* overrides function pointers with APIs those need to be triggered
+   * when GstMemory's member functions are called */
   alloc->mem_type = GST_VVAS_MEMORY_TYPE;
   alloc->mem_map = gst_vvas_mem_map;
   alloc->mem_unmap = gst_vvas_mem_unmap;
@@ -474,23 +680,76 @@ gst_vvas_allocator_init (GstVvasAllocator * allocator)
   allocator->priv->dmabuf_alloc = gst_dmabuf_allocator_new ();
   allocator->priv->active = FALSE;
   allocator->priv->free_queue = NULL;
+  allocator->priv->init_value = DEFAULT_INIT_VALUE;
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
+/**
+ *  @fn GstAllocator* gst_vvas_allocator_new (guint dev_idx,
+ *                                            gboolean need_dma,
+ *                                            guint mem_bank)
+ *  @param [in] dev_idx - Index of the FPGA device on which memory need to allocated. Developer can get device indexes
+ *                        by calling XRT utility applications
+ *  @param [in] need_dma - To decide whether allocator needs to allocate DMA fd corresponding to XRT BO or not
+ *  @param [in] mem_bank - Memory bank index on a device with an index \p dev_idx
+ *  @return GstAllocator pointer on success\n NULL on failure
+ *  @brief  Allocates GstVvasAllocator object using parameters passed to this API.
+ */
 GstAllocator *
-gst_vvas_allocator_new (guint dev_idx, gboolean need_dma, guint mem_bank,
-                        vvasKernelHandle kern_handle)
+gst_vvas_allocator_new (guint dev_idx, gboolean need_dma, guint mem_bank)
 {
   GstAllocator *alloc = NULL;
 
   alloc = (GstAllocator *) g_object_new (GST_TYPE_VVAS_ALLOCATOR,
       "device-index", dev_idx, "need-dma", need_dma,
-      "mem-bank", mem_bank, "kernel-handle", kern_handle, NULL); 
+      "mem-bank", mem_bank, NULL);
   gst_object_ref_sink (alloc);
   return alloc;
 }
 
+/**
+ *  @fn GstAllocator* gst_vvas_allocator_new_and_set (guint dev_idx,
+ *                                                    gboolean need_dma,
+ *                                                    guint mem_bank,
+ *                                                    gint init_value)
+ *  @param [in] dev_idx - Index of the FPGA device on which memory need to allocated. Developer can get device indexes
+ *                        by calling XRT utility applications
+ *  @param [in] need_dma - To decide whether allocator needs to allocate DMA fd corresponding to XRT BO or not
+ *  @param [in] mem_bank - Memory bank index on a device with an index \p dev_idx
+ *  @param [in] init_value - Initial value for allocated buffers
+ *  @return GstAllocator pointer on success\n NULL on failure
+ *  @brief  Allocates GstVvasAllocator object using parameters passed to this API.
+ */
+GstAllocator *
+gst_vvas_allocator_new_and_set (guint dev_idx, gboolean need_dma,
+    guint mem_bank, gint init_value)
+{
+  GstAllocator *alloc = NULL;
+
+  alloc = (GstAllocator *) g_object_new (GST_TYPE_VVAS_ALLOCATOR,
+      "device-index", dev_idx, "need-dma", need_dma,
+      "mem-bank", mem_bank, "init-value", init_value, NULL);
+  gst_object_ref_sink (alloc);
+  return alloc;
+}
+
+/**
+ *  @fn gboolean gst_vvas_allocator_start (GstVvasAllocator * vvas_alloc,
+ *                                         guint min_mem,
+ *                                         guint max_mem,
+ *                                         gsize size,
+ *                                         GstAllocationParams * params)
+ *  @param [in] vvas_alloc - Pointer to GstVvasAllocator object
+ *  @param [in] min_mem - Minimum number of memories to be preallocated
+ *  @param [in] max_mem - Maximum number of memories allowed to be allocated using \p vvas_alloc. If max_mem is zero,
+ *                        memories can be allocated until device memory exhausts
+ *  @param [in] size - Size of the memory which will be held GstMemory object
+ *  @param [in] params - Pointer to GstAllocationParams used to allocate memory
+ *  @return TRUE on success.\n FALSE on failure.
+ *  @brief Allocates \p min_mem memories and holds them in a queue. Developers can call this API to avoid memory
+ *         fragmentation.
+ */
 gboolean
 gst_vvas_allocator_start (GstVvasAllocator * vvas_alloc, guint min_mem,
     guint max_mem, gsize size, GstAllocationParams * params)
@@ -509,6 +768,8 @@ gst_vvas_allocator_start (GstVvasAllocator * vvas_alloc, guint min_mem,
   priv->min_mem = min_mem;
   priv->max_mem = max_mem;
 
+  /* allocating queue of initialize 16, but queue will be expanded when we add
+   *  objects */
   priv->free_queue = gst_atomic_queue_new (16);
   priv->poll = gst_poll_new_timer ();
 
@@ -516,6 +777,7 @@ gst_vvas_allocator_start (GstVvasAllocator * vvas_alloc, guint min_mem,
       "going to store %u memories with size %lu in queue %p", min_mem, size,
       priv->free_queue);
 
+  /* preallocate minimum number of memories and queue them */
   for (i = 0; i < min_mem; i++) {
     mem = gst_vvas_allocator_alloc (GST_ALLOCATOR (vvas_alloc), size, params);
     if (!mem) {
@@ -530,11 +792,18 @@ gst_vvas_allocator_start (GstVvasAllocator * vvas_alloc, guint min_mem,
 
   gst_poll_write_control (priv->poll);
 
+  /* activate memory free queue */
   g_atomic_int_set (&priv->active, TRUE);
 
   return TRUE;
 }
 
+/**
+ *  @fn gboolean gst_vvas_allocator_stop (GstVvasAllocator * vvas_alloc)
+ *  @param [in] vvas_alloc - Pointer to GstVvasAllocator object
+ *  @return TRUE on success\n FALSE on failure
+ *  @brief Frees all memories holded in queue and destorys the queue
+ */
 gboolean
 gst_vvas_allocator_stop (GstVvasAllocator * vvas_alloc)
 {
@@ -549,6 +818,7 @@ gst_vvas_allocator_stop (GstVvasAllocator * vvas_alloc)
     goto error;
   }
 
+  /* check all allocated memories came back to queue */
   if (gst_atomic_queue_length (priv->free_queue) != priv->cur_mem) {
     GST_WARNING_OBJECT (vvas_alloc, "some buffers are still outstanding");
     goto error;
@@ -577,6 +847,7 @@ gst_vvas_allocator_stop (GstVvasAllocator * vvas_alloc)
 
   priv->cur_mem = 0;
   gst_atomic_queue_unref (priv->free_queue);
+  /* deactivate memory free queue */
   g_atomic_int_set (&priv->active, FALSE);
   gst_poll_free (priv->poll);
 
@@ -586,6 +857,12 @@ error:
   return FALSE;
 }
 
+/**
+ *  @fn gboolean gst_is_vvas_memory (GstMemory * mem)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @return TRUE if memory object is a GstVvasMemory type, else return FALSE
+ *  @brief Validates whether a GstMemory object is GstVvasMemory type or not
+ */
 gboolean
 gst_is_vvas_memory (GstMemory * mem)
 {
@@ -596,6 +873,12 @@ gst_is_vvas_memory (GstMemory * mem)
   return FALSE;
 }
 
+/**
+ *  @fn guint64 gst_vvas_allocator_get_paddr (GstMemory * mem)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @return Physical address corresponding to data on success.\n 0 on failure.
+ *  @brief Gets physical address corresponding to GstVvasMemory \p mem
+ */
 guint64
 gst_vvas_allocator_get_paddr (GstMemory * mem)
 {
@@ -612,7 +895,13 @@ gst_vvas_allocator_get_paddr (GstMemory * mem)
   return vvas_xrt_get_bo_phy_addres (vvasmem->bo);
 }
 
-void*
+/**
+ *  @fn void* gst_vvas_allocator_get_bo (GstMemory * mem)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @return Pointer to XRT BO handle on success.\n NULL on failure
+ *  @brief Gets XRT BO corresponding to GstVvasMemory \p mem
+ */
+void *
 gst_vvas_allocator_get_bo (GstMemory * mem)
 {
   GstVvasMemory *vvasmem;
@@ -625,13 +914,25 @@ gst_vvas_allocator_get_bo (GstMemory * mem)
   return vvasmem->bo;
 }
 
+/**
+ *  @fn gboolean gst_vvas_memory_can_avoid_copy (GstMemory * mem,
+ *                                               guint cur_devid,
+ *                                               guint req_mem_bank)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @param [in] cur_devid - Index device which is going to be compared with device index on which memory allocated
+ *  @param [in] req_mem_bank - Memory bank index which will be compared against memory's bank index
+ *  @return TRUE if zero copy possible\n FALSE if copy is needed
+ *  @brief This API returns TRUE if requested device index and memory bank index are same as \p mem device index &
+ *         memory bank index, else returns false
+ */
 gboolean
 gst_vvas_memory_can_avoid_copy (GstMemory * mem, guint cur_devid,
-				guint req_mem_bank)
+    guint req_mem_bank)
 {
   GstVvasAllocator *alloc;
   GstVvasMemory *vvasmem;
 
+  /* Check whether memory is of GstVvasMemory type */
   vvasmem = get_vvas_mem (mem);
   if (vvasmem == NULL) {
     GST_ERROR ("failed to get vvas memory");
@@ -640,9 +941,16 @@ gst_vvas_memory_can_avoid_copy (GstMemory * mem, guint cur_devid,
 
   alloc = vvasmem->alloc;
   return (alloc->priv->dev_idx == cur_devid &&
-	  alloc->priv->mem_bank == req_mem_bank);
+      alloc->priv->mem_bank == req_mem_bank);
 }
 
+/**
+ *  @fn guint gst_vvas_allocator_get_device_idx (GstAllocator * allocator)
+ *  @param [in] allocator - Pointer to GstVvasAllocator object
+ *  @return Device index of the \p allocator object on success. (guint)-1 on failure
+ *  @brief This API returns device index which is set while creating GstVvasAllocator object using
+ *         gst_vvas_allocator_new
+ */
 guint
 gst_vvas_allocator_get_device_idx (GstAllocator * allocator)
 {
@@ -652,7 +960,13 @@ gst_vvas_allocator_get_device_idx (GstAllocator * allocator)
   return alloc->priv->dev_idx;
 }
 
-#ifdef XLNX_PCIe_PLATFORM
+/**
+ *  @fn void gst_vvas_memory_set_sync_flag (GstMemory * mem, VvasSyncFlags flag)
+ *  @param [in]  mem - Pointer to GstMemory object
+ *  @param [in] flag - Flags to be set on \p mem object
+ *  @return None
+ *  @brief API to set data synchronization flags on GstVvasMemory object
+ */
 void
 gst_vvas_memory_set_sync_flag (GstMemory * mem, VvasSyncFlags flag)
 {
@@ -665,6 +979,32 @@ gst_vvas_memory_set_sync_flag (GstMemory * mem, VvasSyncFlags flag)
   vvasmem->sync_flags |= flag;
 }
 
+/**
+ *  @fn void gst_vvas_memory_get_sync_flag (GstMemory *mem)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @return VvasSyncFlags
+ *  @brief API to get VvasSyncFlags on a GstVvasMemory object
+ */
+VvasSyncFlags
+gst_vvas_memory_get_sync_flag (GstMemory * mem)
+{
+  GstVvasMemory *vvasmem;
+  vvasmem = get_vvas_mem (mem);
+  if (vvasmem == NULL) {
+    GST_ERROR ("failed to get vvas memory");
+    return VVAS_SYNC_NONE;
+  }
+  return vvasmem->sync_flags;
+}
+
+/**
+ *  @fn gboolean gst_vvas_memory_sync_with_flags (GstMemory * mem, GstMapFlags flags)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @param [in] flags - GStreamer mapping flags which decides whether data need to synchronized between host and device
+ *  @return TRUE on success.\n FALSE on failure
+ *  @brief Synchronize the data vai DMA transfer between host memory and device memory corresponding to a XRT BO based
+ *         on GstMapFlags
+ */
 gboolean
 gst_vvas_memory_sync_with_flags (GstMemory * mem, GstMapFlags flags)
 {
@@ -673,12 +1013,20 @@ gst_vvas_memory_sync_with_flags (GstMemory * mem, GstMapFlags flags)
 
   vvasmem = get_vvas_mem (mem);
   if (vvasmem == NULL) {
-    GST_ERROR ("failed to get vvas memory");
-    return FALSE;
+    /* Check whether it is a dma memory */
+    if (gst_is_dmabuf_memory (mem)) {
+      GST_DEBUG ("%p is dma non-vvas memory, don't sync", mem);
+      return TRUE;
+    } else {
+      GST_ERROR ("failed to get vvas memory");
+      return FALSE;
+    }
   }
 
   alloc = vvasmem->alloc;
 
+  /* synchronize data from device to host when application would like to read
+   *  from host virtual address */
   if ((flags & GST_MAP_READ) && (vvasmem->sync_flags & VVAS_SYNC_FROM_DEVICE)) {
     int iret = 0;
 
@@ -689,25 +1037,37 @@ gst_vvas_memory_sync_with_flags (GstMemory * mem, GstMapFlags flags)
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, alloc,
         "slow copy data from device");
 
+    /* DMA transfer data from device to host */
     iret = vvas_xrt_sync_bo (vvasmem->bo,
-                             VVAS_BO_SYNC_BO_FROM_DEVICE,
-                             vvasmem->size, 0);
+        VVAS_BO_SYNC_BO_FROM_DEVICE, vvasmem->size, 0);
     if (iret != 0) {
       GST_ERROR_OBJECT (alloc, "failed to sync output buffer. reason : %d, %s",
           iret, strerror (errno));
       return FALSE;
     }
+    /* disable the sync flag after sync operation is completed */
     vvasmem->sync_flags &= ~VVAS_SYNC_FROM_DEVICE;
   }
 
+  /* When user is mapping memory in WRITE mode, it is assumed that data need
+   * to synced to device */
   if (flags & GST_MAP_WRITE) {
     vvasmem->sync_flags |= VVAS_SYNC_TO_DEVICE;
-    /* vvas plugins does VVAS_BO_SYNC_BO_TO_DEVICE to update data, for others dont care */
+    /* vvas plugins does VVAS_BO_SYNC_BO_TO_DEVICE to update data, for others
+     * dont care */
     GST_LOG_OBJECT (alloc, "enabling sync to device flag for %p", vvasmem);
   }
   return TRUE;
 }
 
+/**
+ *  @fn gboolean gst_vvas_memory_sync_bo (GstMemory * mem)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @return TRUE on success.\n FALSE on failure
+ *  @brief Synchronize data from host to device based on GstVvasMemory::sync_flags. Data from device to host
+ *         automatically happens when memory is mapped in READ mode. However, when data need to be synchronized from
+ *         host to device this API need to called.
+ */
 gboolean
 gst_vvas_memory_sync_bo (GstMemory * mem)
 {
@@ -717,8 +1077,14 @@ gst_vvas_memory_sync_bo (GstMemory * mem)
 
   vvasmem = get_vvas_mem (mem);
   if (vvasmem == NULL) {
-    GST_ERROR ("failed to get vvas memory");
-    return 0;
+    /* Check whether memory is of GstVvasMemory type */
+    if (gst_is_dmabuf_memory (mem)) {
+      GST_DEBUG ("%p is dma non-vvas memory, don't sync", mem);
+      return TRUE;
+    } else {
+      GST_ERROR ("failed to get vvas memory");
+      return FALSE;
+    }
   }
 
   alloc = vvasmem->alloc;
@@ -735,22 +1101,31 @@ gst_vvas_memory_sync_bo (GstMemory * mem)
   if (vvasmem->sync_flags & VVAS_SYNC_TO_DEVICE) {
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, alloc, "slow copy data to device");
 
+    /* sync data using DMA transfer */
     iret = vvas_xrt_sync_bo (vvasmem->bo,
-                             VVAS_BO_SYNC_BO_TO_DEVICE,
-                             vvasmem->size, 0);
+        VVAS_BO_SYNC_BO_TO_DEVICE, vvasmem->size, 0);
     if (iret != 0) {
       GST_ERROR_OBJECT (alloc,
           "failed to sync output buffer to device. reason : %d, %s", iret,
           strerror (errno));
       return FALSE;
     }
+    /* unset flag after successful transfer */
     vvasmem->sync_flags &= ~VVAS_SYNC_TO_DEVICE;
   }
 
   return TRUE;
 }
 
-void gst_vvas_memory_set_flag (GstMemory *mem, VvasSyncFlags flag)
+/**
+ *  @fn void gst_vvas_memory_set_flag (GstMemory *mem, VvasSyncFlags flag)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @param [in] flag - Flag to be enabled on \p mem
+ *  @return None
+ *  @brief API to enable VvasSyncFlags on a GstVvasMemory object
+ */
+void
+gst_vvas_memory_set_flag (GstMemory * mem, VvasSyncFlags flag)
 {
   GstVvasMemory *vvasmem;
 
@@ -760,10 +1135,18 @@ void gst_vvas_memory_set_flag (GstMemory *mem, VvasSyncFlags flag)
     return;
   }
 
-  vvasmem->sync_flags = vvasmem->sync_flags & flag;
+  vvasmem->sync_flags = vvasmem->sync_flags | flag;
 }
 
-void gst_vvas_memory_unset_flag (GstMemory *mem, VvasSyncFlags flag)
+/**
+ *  @fn void gst_vvas_memory_unset_flag (GstMemory *mem, VvasSyncFlags flag)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @param [in] flag - Flag to be disabled on \p mem
+ *  @return None
+ *  @brief API to disable VvasSyncFlags on a GstVvasMemory object
+ */
+void
+gst_vvas_memory_unset_flag (GstMemory * mem, VvasSyncFlags flag)
 {
   GstVvasMemory *vvasmem;
 
@@ -775,4 +1158,23 @@ void gst_vvas_memory_unset_flag (GstMemory *mem, VvasSyncFlags flag)
 
   vvasmem->sync_flags = vvasmem->sync_flags & ~flag;
 }
-#endif
+
+/**
+ *  @fn void gst_vvas_memory_reset_sync_flag (GstMemory * mem)
+ *  @param [in] mem - Pointer to GstMemory object
+ *  @return None
+ *  @brief API to reset all VvasSyncFlags on a GstVvasMemory object
+ */
+void
+gst_vvas_memory_reset_sync_flag (GstMemory * mem)
+{
+  GstVvasMemory *vvasmem;
+
+  vvasmem = get_vvas_mem (mem);
+  if (vvasmem == NULL) {
+    GST_ERROR ("failed to get vvas memory");
+    return;
+  }
+
+  vvasmem->sync_flags = VVAS_SYNC_NONE;
+}

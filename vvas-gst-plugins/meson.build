@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -15,7 +16,7 @@
 #########################################################################
 
 project('vvas-gst-plugins', 'c', 'cpp',
-  version : '2.0.0',
+  version : '3.0.0',
   meson_version : '>= 0.54.1',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -86,6 +87,12 @@ else
   error('not supporting host machine families other than x86_64 & aarch64')
 endif
 
+#Enabling Macro definition for Glib based vvas-core/utils
+if get_option('vvas_core_utils') == 'GLIB'
+  add_project_arguments('-DVVAS_GLIB_UTILS', language : 'c')
+  add_project_arguments('-DVVAS_GLIB_UTILS', language : 'cpp')
+endif
+
 warning_flags = [
   '-Wmissing-declarations',
   '-Wredundant-decls',
@@ -141,10 +148,16 @@ gstallocators_dep = dependency('gstreamer-allocators-1.0', version : gst_req,
 # XRT dependency
 xrt_dep = dependency('xrt', version : xrt_req, required : true)
 
+#VvasStructure dependency
+vvasstructure_dep = dependency('vvas-structure', version : '>= 1.0', required: true)
+
 # External dependency
 dl_dep = cc.find_library('dl', required : true)
 uuid_dep = cc.find_library('uuid', required : true)
 jansson_dep = dependency('jansson', version : '>= 2.7', required: true)
+
+#VVAS Core dependency
+vvascore_dep = dependency('vvas-core', version : '>= 1.0', required: true)
 
 #VVAS utility dependency
 vvasutils_dep = dependency('vvas-utils', version : '>= 1.0', required: true)

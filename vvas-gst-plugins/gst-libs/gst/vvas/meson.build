@@ -1,5 +1,6 @@
 ########################################################################
  # Copyright 2020 - 2022 Xilinx, Inc.
+ # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -38,7 +39,7 @@ gstvvasinfermeta = library('gstvvasinfermeta-' + vvas_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, vvasutils_dep, math_dep],
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, vvasutils_dep, math_dep, vvascore_dep],
 )
 gstvvasinfermeta_dep = declare_dependency(link_with : [gstvvasinfermeta], dependencies : [gst_dep, gstbase_dep, vvasutils_dep, math_dep])
 
@@ -52,9 +53,9 @@ gstvvasalloc = library('gstvvasallocator-' + vvas_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, xrt_dep, gstallocators_dep, vvasutils_dep],
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, xrt_dep, gstallocators_dep, vvascore_dep],
 )
-gstvvasalloc_dep = declare_dependency(link_with : [gstvvasalloc], dependencies : [gst_dep, gstbase_dep, gstvideo_dep, xrt_dep, gstallocators_dep])
+gstvvasalloc_dep = declare_dependency(link_with : [gstvvasalloc], dependencies : [gst_dep, gstbase_dep, gstvideo_dep, xrt_dep, gstallocators_dep, vvascore_dep])
 
 #VVAS bufferpool with stride and elevation
 vvaspool_sources = ['gstvvasbufferpool.c']
@@ -80,9 +81,9 @@ gstvvasinpinfermeta = library('gstvvasinpinfermeta-' + vvas_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_dep, gstbase_dep, gstvideo_dep],
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, vvascore_dep],
 )
-gstvvasinpinfermeta_dep = declare_dependency(link_with : [gstvvasinpinfermeta], dependencies : [gst_dep, gstbase_dep])
+gstvvasinpinfermeta_dep = declare_dependency(link_with : [gstvvasinpinfermeta], dependencies : [gst_dep, gstbase_dep, vvascore_dep])
 
 # VVAS Usr metadata
 usrmeta_sources = ['gstvvasusrmeta.c']
@@ -122,9 +123,9 @@ gstvvasoverlaymeta = library('gstvvasoverlaymeta-' + vvas_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstvvasinfermeta_dep],
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstvvasinfermeta_dep, vvascore_dep],
 )
-gstvvasoverlaymeta_dep = declare_dependency(link_with : [gstvvasoverlaymeta], dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstvvasinfermeta_dep])
+gstvvasoverlaymeta_dep = declare_dependency(link_with : [gstvvasoverlaymeta], dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstvvasinfermeta_dep, vvascore_dep])
 
 # VVAS opticalflow metadata
 ofmeta_sources = ['gstvvasofmeta.c']
@@ -164,6 +165,17 @@ gstvvasutils = library('gstvvasutils', 'gstvvasutils.c',
 )
 gstvvasutils_dep = declare_dependency(link_with : [gstvvasutils], dependencies : [gst_dep, gstbase_dep, gstvideo_dep])
 
+gstvvascoreutils = library('gstvvascoreutils', 'gstvvascoreutils.c',
+  c_args : gst_plugins_vvas_args,
+  include_directories : [configinc, libsinc],
+  version : libversion,
+  soversion : soversion,
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, vvascore_dep, vvasutils_dep, gstvvasalloc_dep, xrt_dep, gstvvasinfermeta_dep],
+  install : true,
+)
+gstvvascoreutils_dep = declare_dependency(link_with : [gstvvascoreutils], dependencies : [gst_dep, gstbase_dep, gstvideo_dep, vvascore_dep, vvasutils_dep, gstvvasalloc_dep, xrt_dep, gstvvasinfermeta_dep])
+
+
 #VVAS GST Headers to install
 vvas_gst_headers = ['gstvvaslameta.h',
                     'gstvvasallocator.h',
@@ -178,7 +190,8 @@ vvas_gst_headers = ['gstvvaslameta.h',
                     'gstvvasofmeta.h',
                     'gstvvassrcidmeta.h',
                     'gstvvasutils.h',
-                    'gstvvascommon.h']
+                    'gstvvascommon.h',
+                    'gstvvascoreutils.h']
 
 install_headers(vvas_gst_headers, subdir : 'gstreamer-1.0/gst/vvas/')
 
