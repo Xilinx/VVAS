@@ -1,0 +1,29 @@
+From 01c14b7d782184ce52400bf6f7df4c85b544172d Mon Sep 17 00:00:00 2001
+From: Ray Clenaghan <ray.clenaghan@allegrodvt.com>
+Date: Wed, 15 Feb 2023 11:44:25 +0000
+Subject: [PATCH] fix(4444): Round up display parameters before calling
+ AL_Decoder_Create
+
+---
+ module/module_dec.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/module/module_dec.cpp b/module/module_dec.cpp
+index 39b2aa5..51fa1d9 100644
+--- a/module/module_dec.cpp
++++ b/module/module_dec.cpp
+@@ -352,6 +352,12 @@ ModuleInterface::ErrorType DecModule::CreateDecoder(bool shouldPrealloc)
+   if(inputParsed)
+     decCallbacks.parsedSeiCB = { nullptr, nullptr };
+ 
++  if(shouldPrealloc)
++  {
++    media->settings.tStream.tDim.iHeight = RoundUp(media->settings.tStream.tDim.iHeight, 16);
++    media->settings.tStream.tDim.iWidth = RoundUp(media->settings.tStream.tDim.iWidth, 16);
++  }
++
+   auto errorCode = AL_Decoder_Create(&decoder, channel, allocator.get(), &media->settings, &decCallbacks);
+ 
+   if(AL_IS_ERROR_CODE(errorCode))
+-- 
+2.30.2
