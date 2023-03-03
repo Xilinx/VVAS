@@ -14,7 +14,7 @@ Types of Kernels
 
 There are three types of acceleration kernels based on the implementation.
 
-.. figure:: ../images/image15.png
+.. figure:: ../images/vvas_infrastructure_arch.png
    :align: center
 
 
@@ -151,7 +151,7 @@ The acceleration software libraries are developed using the following utility AP
 
 The utility API sources are hosted in the vvas-utils folder of the VVAS sources tree.
 
-.. figure:: ../images/image24.png 
+.. figure:: ../images/vvas-utils-hierarchy.png 
    :width: 400
 
 

@@ -19,24 +19,11 @@ Features
 
 Smart Model Select application supports below mentioned features
 
-* Supports 16 ML Models
+.. note::
+        We will update the information regarding which models we have validated using this application as soon as possible. For more information please contact vvas_discuss@amd.com.
 
-  - resnet50
-  - resnet18
-  - mobilenet_v2
-  - inception_v1
-  - ssd_adas_pruned_0_95
-  - ssd_traffic_pruned_0_9
-  - ssd_mobilenet_v2
-  - ssd_pedestrian_pruned_0_97
-  - plate_detect
-  - yolov3_voc_tf
-  - yolov3_adas_pruned_0_9
-  - refinedet_pruned_0_96
-  - yolov2_voc
-  - yolov2_voc_pruned_0_77
-  - densebox_320_320
-  - densebox_640_360
+* Supports ML Models
+  - coming soon 
 * Display Port for display
 * H264/H265 Decode
 * Input can be from file or rtsp source
@@ -91,16 +78,15 @@ If for some reason, one wants to build the design from scratch, then refer to th
 Pre-built binaries
 ===================
 
+.. Note:: 
+
+    Pre-built binaries for this example design will be available soon. You may also build the complete example design following the steps mentioned in **Build Design** section. For more information, you may contact vvas_discuss@amd.com.
+
 Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.
 
 Create a folder, say `PREBUILT_BINARIES`, where pre-built binaries are to be downloaded.
 
 Click on `Smart Model Select Prebuilt Binaries COMING SOON`
-
-.. Note:: 
-
-    Pre-built binaries for this example designs will be available soon. You may also build the complete example design following the steps mentioned in **Build Design** section. For more information, you may contact vvas_discuss@amd.com.
-
 
 Unzip the downloaded package `vvas_smart_model_select_2022.2_zcu104.zip`.
 
@@ -465,7 +451,7 @@ Get the VVAS Sources if not done already. Follow the steps mentioned below.
 
   VVAS Source tree structure is described below:
 
-  .. figure:: ../images/image10.png
+  .. figure:: ../images/vvas_source_tree_structure.png
      :width: 300
 
   * **vvas-utils:** This folder contains the source code for the VVAS kernel interface to be exposed by the acceleration software libraries, abstraction APIs on top of the Xilinx Runtime (XRT) tool, and common headers (for example, metadata).

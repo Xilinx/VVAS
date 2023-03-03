@@ -68,8 +68,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../common/meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../common/for_developers.html">VVAS For Advanced Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
@@ -247,7 +247,7 @@ width represents width of the video image, and height represents height of the v
 </div>
 <div class="section" id="machine-learning-ml-block">
 <h4>Machine Learning (ML) block<a class="headerlink" href="#machine-learning-ml-block" title="Permalink to this heading">¶</a></h4>
-<p>Machine Learning inference is performed by DPU hardware accelerator and <a class="reference internal" href="../../common/common_plugins.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> plug-in.
+<p>Machine Learning inference is performed by DPU hardware accelerator and <a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> plug-in.
 VVAS supports the DPU libraries released with <a class="reference external" href="https://github.com/Xilinx/Vitis-AI">Vitis-AI</a> 3.0.
 The beauty of this VVAS solution is that user need not figure out the resolution required for various DPU supported models.
 vvas_xinfer plug-in gets this information from the requested model and perform resize, color space conversion operation on the input image as per the requirement of the model using preprocessor block (vvas_xpreprocessor). The output of the vvas_xinfer is the original input image along with the scaled metadata for that resolution.</p>
@@ -387,8 +387,8 @@ but we should see the input image getting displayed in monitor by this pipeline.
 <div class="section" id="bounding-box">
 <h4>Bounding Box<a class="headerlink" href="#bounding-box" title="Permalink to this heading">¶</a></h4>
 <p>To view the result of ML Inference displayed on the monitor, you should draw the results on an image.
-The <a class="reference internal" href="../../common/common_plugins.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> along with <a class="reference internal" href="../../common/common_plugins.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> software acceleration library comes in handy in this case.
-This library along with VVAS infrastructure plug-in <a class="reference internal" href="../../common/common_plugins.html#vvas-xfilter"><span class="std std-ref">vvas_xfilter</span></a> can provide the bounding box functionality.</p>
+The <a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xmetaconvert.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> along with <a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xoverlay.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> software acceleration library comes in handy in this case.
+This library along with VVAS infrastructure plug-in <a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xfilter.html#vvas-xfilter"><span class="std std-ref">vvas_xfilter</span></a> can provide the bounding box functionality.</p>
 <p>Sample video pipeline for adding bounding box is shown as below</p>
 <div class="figure align-center" id="id6">
 <a class="reference internal image-reference" href="../../../_images/single_channel_pipeline.png"><img alt="../../../_images/single_channel_pipeline.png" src="../../../_images/single_channel_pipeline.png" style="width: 837.9px; height: 280.7px;" /></a>
@@ -569,7 +569,7 @@ The scenario mentioned above required multiple levels of ML inference operation 
 </pre></div>
 </div>
 <p>Here we need to understand the complexity which is taken care of by the VVAS framework in a very easy user interface. The output of VCU Decoder is 1920X1080 <code class="docutils literal notranslate"><span class="pre">NV12</span></code> and the requirement for <code class="docutils literal notranslate"><span class="pre">yolov3_voc</span></code> is 360X360 <code class="docutils literal notranslate"><span class="pre">RGB</span></code>. This conversion is taken care of by the preprocessor block which is part of <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plugin. Not only the color and format conversion, the preprocessor block also does Mean Subtraction and Scale Normalization. Although all these operations can be achieved in software, the performance impact is substantial.</p>
-<p>For simplicity, a common json file is used for meta convert. Please refer <a class="reference internal" href="../../common/common_plugins.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> for more detailed parameters of meta convert.</p>
+<p>For simplicity, a common json file is used for meta convert. Please refer <a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xmetaconvert.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> for more detailed parameters of meta convert.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
   <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="s2">&quot;display-level&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
@@ -739,9 +739,9 @@ and is not part of the official Xilinx released 2022.2 Petalinux.</p>
 <li><p>kmmsink GStreamer plugin</p></li>
 <li><p>VVAS GStreamer plugins and libraries</p>
 <ul>
-<li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> GStreamer plugin</p></li>
-<li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> software accelerator library</p></li>
-<li><p><a class="reference internal" href="../../common/common_plugins.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> software accelerator library</p></li>
+<li><p><a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> GStreamer plugin</p></li>
+<li><p><a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xmetaconvert.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> software accelerator library</p></li>
+<li><p><a class="reference internal" href="../../common/gstreamer_plugins/plugin_vvas_xoverlay.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> software accelerator library</p></li>
 </ul>
 </li>
 </ul>
@@ -883,7 +883,7 @@ Refer to <a class="reference external" href="https://github.com/Xilinx/Vitis-AI/
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading">¶</a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/Xilinx/Vitis-AI">https://github.com/Xilinx/Vitis-AI</a></p></li>
-<li><p><a class="reference external" href="https://www.xilinx.com/html_docs/vitis_ai/2_0/index.html">https://www.xilinx.com/html_docs/vitis_ai/2_0/index.html</a></p></li>
+<li><p><a class="reference external" href="https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&amp;url=ug1431-vitis-ai-documentation">https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&amp;url=ug1431-vitis-ai-documentation</a></p></li>
 <li><p><a class="reference external" href="https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-designtools.html">https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-designtools.html</a></p></li>
 <li><p><a class="reference external" href="https://www.xilinx.com/products/boards-and-kits/zcu104.html">https://www.xilinx.com/products/boards-and-kits/zcu104.html</a></p></li>
 <li><p><a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf</a></p></li>

@@ -68,8 +68,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">VVAS For Advanced Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
@@ -146,27 +146,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this heading">¶</a></h2>
 <p>Smart Model Select application supports below mentioned features</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We will update the information regarding which models we have validated using this application as soon as possible. For more information please contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
+</div>
 <ul class="simple">
-<li><p>Supports 16 ML Models</p>
-<ul>
-<li><p>resnet50</p></li>
-<li><p>resnet18</p></li>
-<li><p>mobilenet_v2</p></li>
-<li><p>inception_v1</p></li>
-<li><p>ssd_adas_pruned_0_95</p></li>
-<li><p>ssd_traffic_pruned_0_9</p></li>
-<li><p>ssd_mobilenet_v2</p></li>
-<li><p>ssd_pedestrian_pruned_0_97</p></li>
-<li><p>plate_detect</p></li>
-<li><p>yolov3_voc_tf</p></li>
-<li><p>yolov3_adas_pruned_0_9</p></li>
-<li><p>refinedet_pruned_0_96</p></li>
-<li><p>yolov2_voc</p></li>
-<li><p>yolov2_voc_pruned_0_77</p></li>
-<li><p>densebox_320_320</p></li>
-<li><p>densebox_640_360</p></li>
-</ul>
-</li>
+<li><p>Supports ML Models
+- coming soon</p></li>
 <li><p>Display Port for display</p></li>
 <li><p>H264/H265 Decode</p></li>
 <li><p>Input can be from file or rtsp source</p></li>
@@ -213,13 +199,13 @@ directly jump to <a class="reference internal" href="#preparing-setup"><span cla
 </div>
 <div class="section" id="pre-built-binaries">
 <span id="prebuilt-binaries"></span><h3>Pre-built binaries<a class="headerlink" href="#pre-built-binaries" title="Permalink to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pre-built binaries for this example design will be available soon. You may also build the complete example design following the steps mentioned in <strong>Build Design</strong> section. For more information, you may contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
+</div>
 <p>Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.</p>
 <p>Create a folder, say <cite>PREBUILT_BINARIES</cite>, where pre-built binaries are to be downloaded.</p>
 <p>Click on <cite>Smart Model Select Prebuilt Binaries COMING SOON</cite></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Pre-built binaries for this example designs will be available soon. You may also build the complete example design following the steps mentioned in <strong>Build Design</strong> section. For more information, you may contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
-</div>
 <p>Unzip the downloaded package <cite>vvas_smart_model_select_2022.2_zcu104.zip</cite>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unzip</span> <span class="n">vvas_smart_model_select_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">.</span><span class="n">zip</span>
 </pre></div>
@@ -513,7 +499,7 @@ Follow the steps mentioned below to compile the platform.</p>
 </div>
 <p>VVAS Source tree structure is described below:</p>
 <div class="figure align-default">
-<a class="reference internal image-reference" href="../../_images/image10.png"><img alt="../../_images/image10.png" src="../../_images/image10.png" style="width: 300px;" /></a>
+<a class="reference internal image-reference" href="../../_images/vvas_source_tree_structure.png"><img alt="../../_images/vvas_source_tree_structure.png" src="../../_images/vvas_source_tree_structure.png" style="width: 300px;" /></a>
 </div>
 <ul class="simple">
 <li><p><strong>vvas-utils:</strong> This folder contains the source code for the VVAS kernel interface to be exposed by the acceleration software libraries, abstraction APIs on top of the Xilinx Runtime (XRT) tool, and common headers (for example, metadata).</p></li>

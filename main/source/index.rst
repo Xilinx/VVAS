@@ -44,8 +44,8 @@ VVAS is an optimized graph architecture built using the open source GStreamer fr
    :caption: Base Infrastructure
    :hidden:
 
-   VVAS GStreamer Plugins <docs/common/common_plugins>
-   VVAS Meta Data <docs/common/vvas_meta_data_structures>
+   VVAS GStreamer Plugins <docs/common/gstreamer_plugins/common_plugins>
+   VVAS Meta Data <docs/common/meta_data/vvas_meta_data_structures>
    VVAS For Advanced Developers <docs/common/for_developers>
    VVAS Debug Support <docs/common/debug_support>
 

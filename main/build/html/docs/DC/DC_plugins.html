@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5RHQV7');</script>
 <!-- End Google Tag Manager -->
-  <title>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+  <title>vvas_xvideodec &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
@@ -66,8 +66,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../common/common_plugins.html">VVAS GStreamer Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common/meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common/for_developers.html">VVAS For Advanced Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
@@ -100,7 +100,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms</li>
+      <li>vvas_xvideodec</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/docs/DC/DC_plugins.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,29 +110,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="vvas-gstreamer-plug-ins-for-pcie-data-center-platforms">
-<h1>VVAS GStreamer Plug-ins for PCIe/Data Center Platforms<a class="headerlink" href="#vvas-gstreamer-plug-ins-for-pcie-data-center-platforms" title="Permalink to this heading">¶</a></h1>
-<p>VVAS 3.0 Release supports below mentioned plug-ins that are needed for PCIe/Data Center platforms for supporting Machine Learning solutions:</p>
-<ol class="arabic simple">
-<li><p>Video Decoder (<a class="reference internal" href="#vvas-xvideodec"><span class="std std-ref">vvas_xvideodec</span></a>)</p></li>
-<li><p>ABR Scaler (<a class="reference internal" href="../common/common_plugins.html#vvas-xabrscaler"><span class="std std-ref">vvas_xabrscaler</span></a>)</p></li>
-</ol>
-<p>Following sections details about each plugin.</p>
-<div class="section" id="vvas-xvideodec">
-<span id="id1"></span><h2>vvas_xvideodec<a class="headerlink" href="#vvas-xvideodec" title="Permalink to this heading">¶</a></h2>
-<p>In Versal devices, there is an IP, VDU, for video decoder. This IP supports decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a> for more information on the Xilinx VDU block. This guide provides details about this IP and how to configure it.</p>
-<p>vvas_xvideodec plugin is provided to control the VDU hardened IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in
+  <div class="section" id="vvas-xvideodec">
+<span id="id1"></span><h1>vvas_xvideodec<a class="headerlink" href="#vvas-xvideodec" title="Permalink to this heading">¶</a></h1>
+<p>In Versal family of devices, there is an IP, <code class="docutils literal notranslate"><span class="pre">VDU</span></code>, for hardware accelerated video decodeo decoding. This IP supports decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a> for more information on the AMD/Xilinx VDU block.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vvas_xvideodec</span></code> plugin controls the <code class="docutils literal notranslate"><span class="pre">VDU</span></code> IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform. For Embedded platforms, there is a separate plug-in that is covered in
 <a class="reference internal" href="../Embedded/embedded-plugins.html#omx-encoder-decoder"><span class="std std-ref">OMX Encoder/Decoder Plug-in</span></a>. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vdudec">vvas_xvideodec source code</a></p>
 <div class="figure align-default">
 <img alt="../../_images/video_decoder.png" src="../../_images/video_decoder.png" />
 </div>
 <div class="section" id="input-and-output">
-<h3>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h3>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
 <p>This plugin supports H264 and HEVC encoded streams of various profile, level values as input. For complete list of supported profiles and levels, please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a>
 The native output of this plugin is NV12 format. For any other desired output format, it should be software-converted and will affect performance.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h3>
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xvideodec plug-in.</p>
 <p>Table 1: vvas_xvideodec Plug-in Properties</p>
 <table class="docutils align-default">
@@ -263,10 +255,8 @@ xclbin.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
 <div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h3>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h3>
 <p>The following pipeline takes MP4 file with H264 codec as an input and provides raw decoded output in NV12 format. Please refer above table for other parameters and values.</p>
 <p><cite>dev-idx</cite> represents the zero based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N-1 where N can be obtained with below command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_v70 <span class="p">|</span> wc -l
@@ -284,12 +274,6 @@ xclbin.</p></td>
 </div>
 <p>Currently, 2 instances of video decoder IP (VDU) is supported and can be selected with the plugin parameter ‘instance-id’. Above example uses instance id = 0.</p>
 </div>
-<div class="section" id="vvas-xabrscaler">
-<h2>vvas_xabrscaler<a class="headerlink" href="#vvas-xabrscaler" title="Permalink to this heading">¶</a></h2>
-<p>In several usecases, an input frame needs to be resized/scaled to different resolutions, to be encoded at different bitrates. VVAS has provided hardware accelerated IP, multiscaler, that can resize the input frame into several different resolutions and formats. <cite>vvas_xabrscaler</cite> plugin controls this IP. This takes one raw input stream as input and produces one or more scaled/resized raw streams.
-This is a common plugin for both DC and Embedded platforms. So,the details are captured in common plugins section.
-For more details on using this plugin, please refer to <a class="reference internal" href="../common/common_plugins.html#vvas-xabrscaler"><span class="std std-ref">vvas_xabrscaler</span></a></p>
-<p>For more information, contact <cite>vvas_discuss&#64;amd.com</cite>.</p>
 </div>
 </div>
 

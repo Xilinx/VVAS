@@ -68,8 +68,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="common_plugins.html">VVAS GStreamer Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">VVAS For Advanced Developers</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Acceleration-Software-Library-Development.html">Acceleration s/w Library Developement Guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Acceleration-Hardware.html">Acceleration H/W Kernels</a></li>
@@ -124,16 +124,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>If the model corresponds to one of the classes already supported by <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in then there is no change needed anywhere except specifying correct class name in the infer json file used by <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code>.</p>
 <p>If the class corresponding to the new model is not supported by <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> but that is supported by <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">AI</span></code> library then follow the below mentioned steps to add a new model class in <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code>.</p>
 <ul class="simple">
-<li><p>Add the model class type in file TBD Update to github link <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas-core-dev/blob/master/common/vvas_core/vvas_dpucommon.h#L52">vvas_dpucommon.h</a></p></li>
-<li><p>Update TBD Update gitHub link <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas-core-dev/blob/master/dpuinfer/vvas_dpuinfer.cpp">vvas_dpuinfer.cpp</a> with the header file for your model class. You may refer to the implementation for other class to know thw changes needed.</p></li>
-<li><p>Update the TBD <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas-core-dev/blob/master/dpuinfer/meson.build">meson.build</a> for the new class and corresponding <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">AI</span></code> library name.</p></li>
+<li><p>Add the model class type in file <a class="reference external" href="https://github.com/Xilinx/vvas-core/blob/master/common/vvas_core/vvas_dpucommon.h#L52">vvas_dpucommon.h</a></p></li>
+<li><p>Update <a class="reference external" href="https://github.com/Xilinx/vvas-core/blob/master/dpuinfer/vvas_dpuinfer.cpp">vvas_dpuinfer.cpp</a> with the header file for your model class. You may refer to the implementation for other class to know thw changes needed.</p></li>
+<li><p>Update the <a class="reference external" href="https://github.com/Xilinx/vvas-core/blob/master/dpuinfer/meson.build">meson.build</a> for the new class and corresponding <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">AI</span></code> library name.</p></li>
 <li><p>Add new files corresponding to the new class implementation.
 -  You may refer to the other class implementation.</p></li>
-<li><p>Update TBD Update git hub link <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas-core-dev/blob/master/meson.build">meson.build</a></p></li>
-<li><p>In case the new model results are not supported by the existing fields in the <a class="reference internal" href="vvas_meta_data_structures.html#vvas-inference-metadata"><span class="std std-ref">VVAS Inference Metadata</span></a> structure, then this may also needs to be modified to support the new meta data. Modifications are needed in TBD Update github link <a class="reference external" href="https://gitenterprise.xilinx.com/IPS-SSW/vvas-core-dev/blob/master/common/vvas_core/vvas_infer_prediction.h">vvas_infer_prediction.h</a></p></li>
+<li><p>Update <a class="reference external" href="https://github.com/Xilinx/vvas-core/blob/master/meson.build#L139">meson.build</a></p></li>
+<li><p>In case the new model results are not supported by the existing fields in the <a class="reference internal" href="meta_data/vvas_inference_metadata.html#vvas-inference-metadata"><span class="std std-ref">VVAS Inference Metadata</span></a> structure, then this may also needs to be modified to support the new meta data. Modifications are needed in <a class="reference external" href="https://github.com/Xilinx/vvas-core/blob/master/common/vvas_core/vvas_infer_prediction.h">vvas_infer_prediction.h</a></p></li>
 </ul>
 <p>If the model is not supported by any of the classes supported by <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">AI</span></code> library or if the model is not in DPU (Deep Learning Processing Unit) deployable format, then it first needs to be converted into DPU deployable state. For this refer to <a class="reference external" href="https://xilinx.github.io/Vitis-AI/docs/workflow-model-development.html#">Deploying a NN Model with Vitis AI</a>. For user guide, refer to <a class="reference external" href="https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&amp;url=ug1431-vitis-ai-documentation">Vitis AI 3.0 documentation</a></p>
-<p>Once <code class="docutils literal notranslate"><span class="pre">xmodel</span></code> is availablel for the user model, refer to <a class="reference internal" href="plugin_vvas_xinfer.html#raw-tensor-example-label"><span class="std std-ref">Rawtensor example</span></a> to know more about how to use this model with VVAS.</p>
+<p>Once <code class="docutils literal notranslate"><span class="pre">xmodel</span></code> is availablel for the user model, refer to <a class="reference internal" href="gstreamer_plugins/plugin_vvas_xinfer.html#raw-tensor-example-label"><span class="std std-ref">Rawtensor example</span></a> to know more about how to use this model with VVAS.</p>
 </div>
 
 

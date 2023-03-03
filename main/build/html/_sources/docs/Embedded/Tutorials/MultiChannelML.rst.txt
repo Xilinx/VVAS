@@ -884,7 +884,7 @@ References
 ********************
 
 1.	https://github.com/Xilinx/Vitis-AI
-2.	https://www.xilinx.com/html_docs/vitis_ai/2_0/index.html
+2.	https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&url=ug1431-vitis-ai-documentation
 3.	https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-designtools.html
 4.	https://www.xilinx.com/products/boards-and-kits/zcu104.html
 5.	https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf

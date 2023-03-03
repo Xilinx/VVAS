@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>vvas_xmetaconvert &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="vvas_xfunnel" href="plugin_vvas_xfunnel.html" />
+    <link rel="prev" title="vvas_xreorderframe" href="plugin_vvas_xreorderframe.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="common_plugins.html">VVAS GStreamer Plugins</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="custom_plugins.html">Custom Plugins</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xmetaaffixer.html">vvas_xmetaaffixer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xabrscaler.html">vvas_xabrscaler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xinfer.html">vvas_xinfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xoptflow.html">vvas_xoptflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xoverlay.html">vvas_xoverlay</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xtracker.html">vvas_xtracker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xskipframe.html">vvas_xskipframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xreorderframe.html">vvas_xreorderframe</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">vvas_xmetaconvert</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#input-and-output">Input and Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#control-parameters-and-plug-in-properties">Control Parameters and Plug-in Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#json-file-format-to-be-provided-config-location-property">JSON File format to be provided <strong>config-location</strong> property</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-pipelines">Example Pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xfunnel.html">vvas_xfunnel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xdefunnel.html">vvas_xdefunnel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xmulticrop.html">vvas_xmulticrop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xcompositor.html">vvas_xcompositor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vvas_bufferpool_and_allocator.html">VVAS Bufferpool &amp; Allocator</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="infra_plugins.html">Infrastructure Plugins</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="common_plugins.html">GStreamer Plug-ins</a> &raquo;</li>
+          <li><a href="custom_plugins.html">Custom Plug-ins</a> &raquo;</li>
+      <li>vvas_xmetaconvert</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/docs/common/gstreamer_plugins/plugin_vvas_xmetaconvert.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="vvas-xmetaconvert">
+<span id="id1"></span><h1>vvas_xmetaconvert<a class="headerlink" href="#vvas-xmetaconvert" title="Permalink to this heading">¶</a></h1>
+<p>GStreamer vvas_xmetaconvert plug-in produces overlay metadata(GstVvasOverlayMeta) structure needed by <a class="reference internal" href="plugin_vvas_xoverlay.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> plug-in from VVAS ML inference metadata (i.e.GstInferenceMeta) which is attached input buffer. Static configuration parameters like font type, font size and etc need to be provided in JSON format via <strong>config-location</strong> property of this plugin.
+For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaconvert">vvas_xmetaconvert source code</a></p>
+<div class="section" id="input-and-output">
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<p>This plug-in is format agnostic and can accept any input format as it operates only on metadata attached to input buffer and same will be pushed out of source pad after attaching overlay metadata.</p>
+</div>
+<div class="section" id="control-parameters-and-plug-in-properties">
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<p>The following table lists the GStreamer plug-in properties supported by the vvas_xmetaconvert plug-in.</p>
+<p>Table 3: vvas_xmetaconvert Plug-in Properties</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 10%" />
+<col style="width: 11%" />
+<col style="width: 18%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>config-location</p></td>
+<td><p>String</p></td>
+<td><p>NA</p></td>
+<td><p>NULL</p></td>
+<td><p>Location of the metaconvert configuration in JSON format which
+will be used to convert inference metadata to overlay metadata</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="json-file-format-to-be-provided-config-location-property">
+<h2>JSON File format to be provided <strong>config-location</strong> property<a class="headerlink" href="#json-file-format-to-be-provided-config-location-property" title="Permalink to this heading">¶</a></h2>
+<p>This section describes the JSON file format and configuration parameters for the vvas_xmetaconvert plug-in.</p>
+<p>The following example is of a JSON file to pass to the vvas_xmetaconvert using <strong>config-location</strong> property.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;display-level&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;font-size&quot;</span> <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s2">&quot;font&quot;</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;thickness&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;mask-level&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;y-offset&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;label-filter&quot;</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;probability&quot;</span> <span class="p">],</span>
+    <span class="s2">&quot;classes&quot;</span> <span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;blue&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;green&quot;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;red&quot;</span>  <span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="s2">&quot;masking&quot;</span>  <span class="p">:</span> <span class="mi">0</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Various configuration parameters passed to vvas_xmetaconvert via json file are described in the following table.</p>
+<p>Table 9: vvas_xmetaconvert Parameters</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Parameter</strong></p></th>
+<th class="head"><p><strong>Expected Values</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>font</p></td>
+<td><p>0 to 7</p></td>
+<td><dl class="simple">
+<dt>Below is the list of text font values and its description.</dt><dd><ul class="simple">
+<li><p>0: Hershey Simplex (default)</p></li>
+<li><p>1: Hershey Plain</p></li>
+<li><p>2: Hershey Duplex</p></li>
+<li><p>3: Hershey Complex</p></li>
+<li><p>4: Hershey Triplex</p></li>
+<li><p>5: Hershey Complex Small</p></li>
+<li><p>6: Hershey Script Simplex</p></li>
+<li><p>7: Hershey Script Complex</p></li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><p>font-size</p></td>
+<td><p>0.5 to 1</p></td>
+<td><p>Font fraction scale factor that is multiplied by the
+font-specific base size. Default value is 0.5</p></td>
+</tr>
+<tr class="row-even"><td><p>thickness</p></td>
+<td><p>Integer 1 to 3</p></td>
+<td><p>The thickness of the line that makes up the rectangle. Negative
+values like -1, signify that the function draws a filled
+rectangle. The recommended value is between 1 and 3.
+Default line thickness value is 1.</p></td>
+</tr>
+<tr class="row-odd"><td><p>mask-level</p></td>
+<td><p>Integer</p></td>
+<td><p>In case of cascaded ML pipeline, user can use this field to mask
+out the results of a particular level in inference results tree.
+All bounding boxes in thatlevel will be masked with black color.</p>
+<p>When set to 0(default), none of the levels are masked.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>label-color</p></td>
+<td><p>{“blue”:0,
+“green”:0,
+“red”:0}</p></td>
+<td><p>The color of the text to be used to display.</p></td>
+</tr>
+<tr class="row-odd"><td><p>label-filter</p></td>
+<td><p>[“class”,
+“probability”,
+“tracker-id”]</p></td>
+<td><p>This field indicates that all information printed is the label
+string. Using “class” alone adds the ML classification name.
+For example, car, person, etc.</p>
+<p>The addition of “probability” in the array adds the probability
+of a positive object identification.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>y-offset</p></td>
+<td><p>Integer 0 to height</p></td>
+<td><p>‘y’ offset to be  added along height for label in case of
+classification model</p></td>
+</tr>
+<tr class="row-odd"><td><p>classes</p></td>
+<td><p>{“name”:”car”,
+“blue”:255,
+“green”:0,
+“red” : 0,
+“masking” : 0}</p></td>
+<td><p>This is a filtering option when using the vvas_xoverlay. The
+bounding box is only drawn for the classes that are listed in
+this configuration and other classes are ignored. For instance,
+if “car”, “person”, “bicycle” is entered under “classes”, then
+the bounding box is only drawn for these three classes, and other
+classes like horse, motorbike, etc. are ignored.</p>
+<p>The expected value columns show an example of how each class
+should be described. All objects in this example, by class, are
+using the color combination listed.</p>
+<p>The class names in this list matches the class names assigned
+by the vvas_xdpuinfer. Otherwise, the bounding box is not drawn.</p>
+<p>“masking” flag can be used to mask all objects of a class Set
+it to 1 for enabling masking. This flag will override
+“mask_level” field.</p>
+<p>For instance, if “mask_level” is set 1 and “masking” for “car”
+is set 1 and if level 1 has cars and busses, then only cars are
+masked not the entire level.
+For face detect, keep the “classes” array empty.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>display-level</p></td>
+<td><p>Integer 0 to N
+0 =&gt; all levels
+N =&gt; specific level</p></td>
+<td><p>Display bounding box of one particular level or all levels</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="example-pipelines">
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<p>The following example demonstrates use of vvas_xmetaconvert with <a class="reference internal" href="plugin_vvas_xoverlay.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> plug-in for drawing bounding boxes.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&quot;&lt;PATH&gt;/001.bgr&quot; blocksize=150528 numbuffers=1
+! videoparse width=224 height=224 framerate=30/1 format=16
+! vvas_xinfer infer-config=&quot;&lt;PATH&gt;/kernel_resnet50.json&quot;
+! vvas_xmetaconvert config-location=&quot;&lt;PATH&gt;/metaconvert.json&quot;
+! vvas_xoverlay ! filesink location=output.bgr
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plugin_vvas_xreorderframe.html" class="btn btn-neutral float-left" title="vvas_xreorderframe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plugin_vvas_xfunnel.html" class="btn btn-neutral float-right" title="vvas_xfunnel" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

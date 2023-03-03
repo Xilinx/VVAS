@@ -13,26 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-#######################################################
-VVAS GStreamer Plug-ins for PCIe/Data Center Platforms
-#######################################################
-
-VVAS 3.0 Release supports below mentioned plug-ins that are needed for PCIe/Data Center platforms for supporting Machine Learning solutions:
-
-1.  Video Decoder (:ref:`vvas_xvideodec`)
-
-2.  ABR Scaler (:ref:`vvas_xabrscaler`)
-
-Following sections details about each plugin.
 
 .. _vvas_xvideodec:
 
+***************
 vvas_xvideodec
--------------------
+***************
 
-In Versal devices, there is an IP, VDU, for video decoder. This IP supports decoding of H264/HEVC formats. Please refer to `VDU PG414 <https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf>`_ for more information on the Xilinx VDU block. This guide provides details about this IP and how to configure it.
+In Versal family of devices, there is an IP, ``VDU``, for hardware accelerated video decodeo decoding. This IP supports decoding of H264/HEVC formats. Please refer to `VDU PG414 <https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf>`_ for more information on the AMD/Xilinx VDU block. 
 
-vvas_xvideodec plugin is provided to control the VDU hardened IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform only. For Embedded platforms, there is a separate plug-in that is covered in
+``vvas_xvideodec`` plugin controls the ``VDU`` IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform. For Embedded platforms, there is a separate plug-in that is covered in
 :ref:`omx_encoder_decoder`. For implementation details, refer to `vvas_xvideodec source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/vdudec>`_
 
 
@@ -142,12 +132,3 @@ kernel name is mandatory and the name represents both the name of the decoder ke
        xbutil examine -d <PCI bdf>
 
 Currently, 2 instances of video decoder IP (VDU) is supported and can be selected with the plugin parameter 'instance-id'. Above example uses instance id = 0.
-
-vvas_xabrscaler 
-----------------
-
-In several usecases, an input frame needs to be resized/scaled to different resolutions, to be encoded at different bitrates. VVAS has provided hardware accelerated IP, multiscaler, that can resize the input frame into several different resolutions and formats. `vvas_xabrscaler` plugin controls this IP. This takes one raw input stream as input and produces one or more scaled/resized raw streams.
-This is a common plugin for both DC and Embedded platforms. So,the details are captured in common plugins section.
-For more details on using this plugin, please refer to :ref:`vvas_xabrscaler`
-
-For more information, contact `vvas_discuss@amd.com`.

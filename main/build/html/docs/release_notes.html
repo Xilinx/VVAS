@@ -35,7 +35,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="GStreamer Plug-ins" href="common/common_plugins.html" />
+    <link rel="next" title="GStreamer Plug-ins" href="common/gstreamer_plugins/common_plugins.html" />
     <link rel="prev" title="Vitis Video Analytics SDK Overview" href="../index.html" /> 
 </head>
 
@@ -79,8 +79,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="common/common_plugins.html">VVAS GStreamer Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common/for_developers.html">VVAS For Advanced Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
@@ -160,7 +160,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </dl>
 </li>
 <li><p>Added software resize and colorspace conversion support in <code class="docutils literal notranslate"><span class="pre">vvas_xabrscaler</span></code> plug-in</p></li>
-<li><p>Added support for xmodel where user can use any model supported by Vitis AI and <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in will perform the ML operation and returns the output tensor. User can perform his/her post-processing on the output tensor data. For more details, refer to  <a class="reference internal" href="common/common_plugins.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a></p></li>
+<li><p>Added support for xmodel where user can use any model supported by Vitis AI and <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in will perform the ML operation and returns the output tensor. User can perform his/her post-processing on the output tensor data. For more details, refer to  <a class="reference internal" href="common/gstreamer_plugins/plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a></p></li>
 <li><p>In Embedded platform example designs Autologin has been disabled and user need to enter login and password for each boot. “root” is the default user name and users are required to set the new password at the time of fist login.</p></li>
 <li><p>VVAS Tracker implementation uses <cite>Simd &lt;https://github.com/ermig1979/Simd&gt;</cite> library for high performance image processing operations. User has option to build VVAS with Simd library or not.</p></li>
 </ul>
@@ -187,36 +187,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <li><p>Supports different input sources like Camera, RTP/RTSP streaming, file source etc.</p></li>
 <li><p>Hardware accelerated H264/H265 Video Encoding/Decoding.</p></li>
 <li><p>Vitis AI based inferencing for detection and classification</p></li>
-<li><p>Supported ML Models</p>
-<ul>
-<li><p>resnet50</p></li>
-<li><p>resnet18</p></li>
-<li><p>mobilenet_v2</p></li>
-<li><p>inception_v1</p></li>
-<li><p>ssd_adas_pruned_0_95</p></li>
-<li><p>ssd_traffic_pruned_0_9</p></li>
-<li><p>ssd_mobilenet_v2</p></li>
-<li><p>ssd_pedestrian_pruned_0_97</p></li>
-<li><p>plate_detect</p></li>
-<li><p>plat_num</p></li>
-<li><p>yolov3_voc_tf</p></li>
-<li><p>yolov3_adas_pruned_0_9</p></li>
-<li><p>refinedet_pruned_0_96</p></li>
-<li><p>yolov2_voc</p></li>
-<li><p>yolov2_voc_pruned_0_77</p></li>
-<li><p>densebox_320_320</p></li>
-<li><p>densebox_640_360</p></li>
-<li><p>bcc_pt</p></li>
-<li><p>efficientdet_d2_tf</p></li>
-<li><p>efficientnet-b0_tf2</p></li>
-<li><p>face_mask_detection_pt</p></li>
-<li><p>facerec_resnet20</p></li>
-<li><p>refinedet_pruned_0_96</p></li>
-<li><p>sp_net</p></li>
-<li><p>ultrafast_pt</p></li>
-<li><p>vpgnet_pruned_0_99</p></li>
-</ul>
-</li>
+<li><p>VVAS offers extensive support for popular AI model classes like Object Detection, Object Classification, Segmentation, Pose Detection etc. For complete list of supported classes of models, refer to <strong>model-class</strong> in infer-config section of <a class="reference internal" href="common/gstreamer_plugins/plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a></p></li>
 <li><p>Hardware accelerated Resize and color space conversion</p></li>
 <li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygon etc.</p></li>
 <li><p>HDMI Tx and Display Port interface for displaying the contents</p></li>
@@ -258,7 +229,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 				  
 				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../index.html" class="btn btn-neutral float-left" title="Vitis Video Analytics SDK Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="common/common_plugins.html" class="btn btn-neutral float-right" title="GStreamer Plug-ins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="common/gstreamer_plugins/common_plugins.html" class="btn btn-neutral float-right" title="GStreamer Plug-ins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

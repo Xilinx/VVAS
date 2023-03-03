@@ -67,8 +67,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="common/common_plugins.html">VVAS GStreamer Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="common/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common/for_developers.html">VVAS For Advanced Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common/debug_support.html">VVAS Debug Support</a></li>
 </ul>
@@ -171,7 +171,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <summary>Is VVAS compatible with lower versions of Vitis AI tools, such as VAI 1.3?</summary><p>No, it has dependencies on Vitis AI 3.0.</p>
 </details>
 </br><details>
-<summary>How can I change the model in the pipeline?</summary><p>The model name to be used for inference has to be provided in the JSON file for <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in. For more details, see <a class="reference internal" href="common/common_plugins.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a>.</p>
+<summary>How can I change the model in the pipeline?</summary><p>The model name to be used for inference has to be provided in the JSON file for <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in. For more details, see <a class="reference internal" href="common/gstreamer_plugins/plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a>.</p>
 </details>
 </br><details>
 <summary>Can the model be changed dynamically?</summary><p>while a pipeline is running, the model parameters cannot be modified. To change the model’s parameters, stop the running pipeline, and then update the JSON file and then re-start the pipeline.</p>

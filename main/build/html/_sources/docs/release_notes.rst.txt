@@ -51,35 +51,7 @@ Features
 * Supports different input sources like Camera, RTP/RTSP streaming, file source etc.
 * Hardware accelerated H264/H265 Video Encoding/Decoding.
 * Vitis AI based inferencing for detection and classification
-* Supported ML Models
-
-  - resnet50
-  - resnet18
-  - mobilenet_v2
-  - inception_v1
-  - ssd_adas_pruned_0_95
-  - ssd_traffic_pruned_0_9
-  - ssd_mobilenet_v2
-  - ssd_pedestrian_pruned_0_97
-  - plate_detect
-  - plat_num
-  - yolov3_voc_tf
-  - yolov3_adas_pruned_0_9
-  - refinedet_pruned_0_96
-  - yolov2_voc
-  - yolov2_voc_pruned_0_77
-  - densebox_320_320
-  - densebox_640_360
-  - bcc_pt
-  - efficientdet_d2_tf
-  - efficientnet-b0_tf2
-  - face_mask_detection_pt
-  - facerec_resnet20
-  - refinedet_pruned_0_96
-  - sp_net
-  - ultrafast_pt
-  - vpgnet_pruned_0_99
-
+* VVAS offers extensive support for popular AI model classes like Object Detection, Object Classification, Segmentation, Pose Detection etc. For complete list of supported classes of models, refer to **model-class** in infer-config section of :ref:`vvas_xinfer`  
 * Hardware accelerated Resize and color space conversion
 * On-screen displaying bounding box around objects, text, circle. arrows, polygon etc.
 * HDMI Tx and Display Port interface for displaying the contents
