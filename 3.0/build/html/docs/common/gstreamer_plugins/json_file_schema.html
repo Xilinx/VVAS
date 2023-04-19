@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>JSON File Schema &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="VVAS Meta Data Structures" href="../meta_data/vvas_meta_data_structures.html" />
+    <link rel="prev" title="vvas_xmultisrc" href="plugin_vvas_xmultisrc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="common_plugins.html">VVAS GStreamer Plugins</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="custom_plugins.html">Custom Plugins</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="infra_plugins.html">Infrastructure Plugins</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xfilter.html">vvas_xfilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xmultisrc.html">vvas_xmultisrc</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">JSON Schema</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="common_plugins.html">GStreamer Plug-ins</a> &raquo;</li>
+          <li><a href="infra_plugins.html">Infrastructure Plug-ins and Acceleration Software Libraries</a> &raquo;</li>
+      <li>JSON File Schema</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/docs/common/gstreamer_plugins/json_file_schema.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="json-file-schema">
+<h1>JSON File Schema<a class="headerlink" href="#json-file-schema" title="Permalink to this heading">¶</a></h1>
+<p>Configuration file used in :ref: <cite>VVAS Infrastructure plug-ins &lt;infra_plugins_label&gt;</cite> has to be defined in json format. This section defines the schema for the configuration files.</p>
+<p>Table 15: Root JSON Object Members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 15%" />
+<col style="width: 27%" />
+<col style="width: 21%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>JSONKey</strong></p></th>
+<th class="head"><p><strong>ValueType</strong></p></th>
+<th class="head"><p><strong>Mandatory or Optional</strong></p></th>
+<th class="head"><p><strong>Default Value</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>xclbin-
+location</p></td>
+<td><p>String</p></td>
+<td><p>Optional</p></td>
+<td><p>NULL</p></td>
+<td><p>Location of
+the xclbin
+to program
+the FPGA.
+In PCIe
+platforms,
+the XRM
+chooses the
+device to
+download
+the xclbin
+based on
+processing
+load.</p></td>
+</tr>
+<tr class="row-odd"><td><p>vvas-
+library-
+repo</p></td>
+<td><p>String</p></td>
+<td><p>Optional</p></td>
+<td><p>/usr/lib</p></td>
+<td><p>The VVAS
+library
+repository
+path that
+looks for
+acceleration
+software
+libraries
+using the
+VVAS
+GStreamer
+plug-in.</p></td>
+</tr>
+<tr class="row-even"><td><p>element-
+mode</p></td>
+<td><p>String</p></td>
+<td><p>Mandatory</p></td>
+<td></td>
+<td><p>The
+GStreamer
+uses the
+element
+mode to
+operate.
+Based on
+requirements
+you must
+choose one
+of the
+following
+modes:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Passthrough:</dt><dd><p>In this
+mode, the
+element
+does not
+alter the
+input
+buffer.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Inplace:</dt><dd><p>In this
+mode, the
+element
+alters
+the input
+buffer
+instead
+of producing
+new output
+buffers.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Transform:</dt><dd><p>In this
+mode, the
+element
+produces
+an ouput
+buffer fo
+each input
+buffer.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>kernel</p></td>
+<td><p>Kernel
+JSON
+Object</p></td>
+<td><p>Mandatory</p></td>
+<td><p>None</p></td>
+<td><p>A Kernel JSON
+object
+provides
+information
+about an
+VVAS video
+library
+configuration.</p>
+<p>For
+information
+on object
+members,
+see <a class="reference internal" href="plugin_vvas_xfilter.html#kernel-json-object"><span class="std std-ref">Kernel
+JSON Object
+Members</span></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p id="kernel-json-object">Table 16: Kernel JSON Object Members</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 16%" />
+<col style="width: 30%" />
+<col style="width: 21%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>JSON Key</strong></p></th>
+<th class="head"><p><strong>Value Type</strong></p></th>
+<th class="head"><p><strong>Mandatory or Optional</strong></p></th>
+<th class="head"><p><strong>Default Value</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>library-
+name</p></td>
+<td><p>String</p></td>
+<td><p>Mandatory</p></td>
+<td><p>None</p></td>
+<td><p>The name of
+the VVAS
+video
+library
+loaded by
+the VVAS
+GStreamer
+plug-ins.
+The
+absolute
+path of the
+video
+library is
+formed by
+pre-pending
+the vvas-
+l
+ibrary-repo
+path.</p></td>
+</tr>
+<tr class="row-odd"><td><p>kernel-name</p></td>
+<td><p>String</p></td>
+<td><p>Optional</p></td>
+<td><p>None</p></td>
+<td><p>The name of
+the IP or
+kernel in
+the form of</p>
+<p>&lt;kernel
+name
+&gt;:&lt;instance
+name&gt;</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>kernel-
+access-
+mode</p></td>
+<td><p>String</p></td>
+<td><p>Optional</p></td>
+<td><p>shared</p></td>
+<td><p>Mode in which
+IP/Kernel is
+to be accessed.
+“shared” or
+“exclusive”</p></td>
+</tr>
+<tr class="row-odd"><td><p>config</p></td>
+<td><p>Object</p></td>
+<td><p>Optional</p></td>
+<td><p>None</p></td>
+<td><p>Holds the
+configuration
+specific
+to the VVAS
+video
+library.</p>
+<p>The VVAS
+GStreamer
+plug-ins
+do not
+parse
+this
+JSON
+object,
+instead
+it is
+sent to
+the
+video
+library.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>soft-kernel</p></td>
+<td><p>Object</p></td>
+<td><p>Mandatory
+( if the kernel
+library is
+written for
+the soft kernel. )</p></td>
+<td><p>None</p></td>
+<td><p>Contains
+soft-
+kernel
+specific
+information.</p>
+<p>This
+JSON
+object
+is only
+valid
+for PCIe
+based
+platforms.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plugin_vvas_xmultisrc.html" class="btn btn-neutral float-left" title="vvas_xmultisrc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../meta_data/vvas_meta_data_structures.html" class="btn btn-neutral float-right" title="VVAS Meta Data Structures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

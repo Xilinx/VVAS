@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>Acceleration Software Library Development Guide &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Acceleration Kernels" href="Acceleration-Hardware.html" />
+    <link rel="prev" title="Development Guide" href="for_developers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="for_developers.html">VVAS For Advanced Developers</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Acceleration s/w Library Developement Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#types-of-kernels">Types of Kernels</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hard-kernel">Hard Kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#softkernel">Softkernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#software-kernel">Software Kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kernel-management-modes">Kernel Management Modes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#interfaces-for-acceleration-software-libraries">Interfaces for Acceleration Software Libraries</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#core-api">Core API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#utility-apis">Utility APIs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vvas-data-structures">VVAS Data structures</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#vvaskernel">VVASKernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vvasvideoformat">VVASVideoFormat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vvasframe">VVASFrame</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#other-vvas-declarations">Other VVAS Declarations</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#acceleration-software-library-for-hard-kernels">Acceleration Software Library for Hard Kernels</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#memory-allocation">Memory Allocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#starting-kernel">Starting Kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#checking-kernel-task-status">Checking Kernel Task Status</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#acceleration-software-library-for-the-software-kernel">Acceleration Software Library for the Software Kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#capability-negotiation-support-in-the-acceleration-software-library">Capability Negotiation Support in the Acceleration Software Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-development-of-acceleration-sw-library">Example (Development of acceleration sw library)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Acceleration-Hardware.html">Acceleration H/W Kernels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adding_new_model.html">Add support for new models in VVAS</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="for_developers.html">Development Guide</a> &raquo;</li>
+      <li>Acceleration Software Library Development Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/docs/common/Acceleration-Software-Library-Development.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="acceleration-software-library-development-guide">
+<h1>Acceleration Software Library Development Guide<a class="headerlink" href="#acceleration-software-library-development-guide" title="Permalink to this heading">¶</a></h1>
+<p>One of the objectives of VVAS is to provide a framework for the advanced developers that enables them to develop their own kernel and integrate it into GStreamer-based applications. Kernel developers may not be experts in software development and there is always a learning curve to understand the frameworks like Xilinx Run Time (XRT), GStreamer etc. This framework abstracts the complexities of the XRT and GStreamer framework and provides simple and easy to understand APIs to hook their kernels developed on Xilinx FPGA into complex applications. Developers need to implement these interfaces and make them available in the form of a library, called as acceleration software library.</p>
+<p>This section covers the details about developing an acceleration software library to control the kernel from the GStreamer application. The acceleration software library manages the kernel state machine as well as provide hooks to control the kernel from the GStreamer plug-ins or an application.</p>
+<p>There are different types of acceleration kernels supported by VVAS and details about these are covered below.</p>
+<div class="section" id="types-of-kernels">
+<h2>Types of Kernels<a class="headerlink" href="#types-of-kernels" title="Permalink to this heading">¶</a></h2>
+<p>There are three types of acceleration kernels based on the implementation.</p>
+<div class="figure align-center">
+<img alt="../../_images/vvas_infrastructure_arch.png" src="../../_images/vvas_infrastructure_arch.png" />
+</div>
+<div class="section" id="hard-kernel">
+<h3>Hard Kernel<a class="headerlink" href="#hard-kernel" title="Permalink to this heading">¶</a></h3>
+<p>A hard kernel is made up of HLS and RTL kernels.</p>
+</div>
+<div class="section" id="softkernel">
+<h3>Softkernel<a class="headerlink" href="#softkernel" title="Permalink to this heading">¶</a></h3>
+<p>These are special kernels where actual hardware is controlled by a software running on the application processor of the device connected to the server over PCIe interface. The software that is controlling the actual hardware on the device is called as softkernel. This softkernel is receiving the commands/control information from the application running on the server. These softkernel are used only in PCIe based platforms, like Data Center.  These kernels are not for Embedded platforms.</p>
+<div class="figure align-center">
+<img alt="../../_images/softkernel.png" src="../../_images/softkernel.png" />
+</div>
+</div>
+<div class="section" id="software-kernel">
+<h3>Software Kernel<a class="headerlink" href="#software-kernel" title="Permalink to this heading">¶</a></h3>
+<p>Software kernels are software processing modules that execute fully on the host CPU. Exposing software kernel through the acceleration software library interface allows them to integrate into the GStreamer framework without an in-depth knowledge of the GStreamer framework.</p>
+</div>
+<div class="section" id="kernel-management-modes">
+<h3>Kernel Management Modes<a class="headerlink" href="#kernel-management-modes" title="Permalink to this heading">¶</a></h3>
+<p>Kernels can be managed in two different modes. In XRT managed mode, kernel execution (starting/stopping/configuration) is     managed by the underlying Xilinx Run Time (XRT). In this mode, the synchronization between different kernel instances executing simultaneously in different thread/process contexts is managed by XRT. This mode of operation is multi thread/multiprocess safe. XRT ensures that at any point, only one kernel context is given access to the actual kernel hardware resources.</p>
+<p>Second mode of operation is user managed mode. In this mode, user is responsible to start, stop and configure kernel using     register read/write APIs. This mode is allowed only if kernel object is created in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode. If kernel is opened in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode, then only one instance of kernel object can be created/opened.</p>
+<p>It is strongly recommended to use kernel in XRT managed mode by opening kernel in <code class="docutils literal notranslate"><span class="pre">shared</span></code> mode as this is multi thread/multi-process safe and easy to configure.</p>
+</div>
+</div>
+<div class="section" id="interfaces-for-acceleration-software-libraries">
+<h2>Interfaces for Acceleration Software Libraries<a class="headerlink" href="#interfaces-for-acceleration-software-libraries" title="Permalink to this heading">¶</a></h2>
+<p>VVAS has defined a simplified, easy to use interface so that developer can easily hook their Kernels into GStreamer based applications. The interface has been divided into two parts, core APIs and utility APIs. Core APIs are mandatory APIs, to be implemented by the acceleration software libraries so that these can be controlled from the GStreamer Infrastructure plug-ins as well as applications. Utility APIs are provided to abstract the Xilinx Run Time (XRT) interface from the developer and provide easy to use interface to interact with the kernel.</p>
+<div class="section" id="core-api">
+<h3>Core API<a class="headerlink" href="#core-api" title="Permalink to this heading">¶</a></h3>
+<p>Each acceleration software library must implement these Core APIs. The GStreamer VVAS infrastructure plug-ins (vvas_xfilter and vvas_xmultisrc) call these core APIs to perform operations on the kernel. The following is a list of core APIs.</p>
+<div class="figure align-default">
+<img alt="../../_images/core-API-functions.png" src="../../_images/core-API-functions.png" />
+</div>
+<div class="section" id="xlnx-kernel-init">
+<h4>xlnx_kernel_init<a class="headerlink" href="#xlnx-kernel-init" title="Permalink to this heading">¶</a></h4>
+<p>This API is called by the VVAS infrastructure plug-in only once at the time of plug-in initialization. Acceleration software library can perform all the one-time initialization in this function.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_init</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="xlnx-kernel-start">
+<h4>xlnx_kernel_start<a class="headerlink" href="#xlnx-kernel-start" title="Permalink to this heading">¶</a></h4>
+<p>This API is called by infrastructure plug-in for each input frame/buffer it has received for further processing by the kernel.
+The acceleration software library can perform per frame operations like updating the state machine, reading/writing the registers of the IP and then instructing the kernel to process the input. Steps to start the kernel depends on the type of the kernel and are covered in detail later in this section.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>int32_t xlnx_kernel_start (VVASKernel * handle, int start, VVASFrame *
+input[MAX_NUM_OBJECT], VVASFrame * output[MAX_NUM_OBJECT])
+
+Parameters:
+   handle - VVAS kernel handle which has kernel context
+    start – flag to indicate start of the kernel. Mainly useful in
+streaming kernel mode
+    input[MAX_NUM_OBJECT] – Array of input frames populated in VVASFrame
+handle
+    output[MAX_NUM_OBJECT] – Array of output frames populated in VVASFrame
+handle
+Return:
+    0 on success or -1 on failure
+
+Note:
+    1. MAX_NUM_OBJECT is 512 and same is assigned in vvas_kernel.h
+    2. Input and output of array is NULL terminated to know number of input
+&amp; output frames received to start function
+</pre></div>
+</div>
+</div>
+<div class="section" id="xlnx-kernel-done">
+<h4>xlnx_kernel_done<a class="headerlink" href="#xlnx-kernel-done" title="Permalink to this heading">¶</a></h4>
+<p>To know whether the kernel has finished processing the current frame/buffer, infrastructure plug-in or an application will call this API. The acceleration software library can implement the logic to know the status of kernel in this API.</p>
+<p>In case Kernel is being used in XRT managed mode, then developer must call <code class="docutils literal notranslate"><span class="pre">vvas_kernel_done</span></code> utility API to know if kernel has finished processing the current job. This API takes <strong>time-out</strong> svalue for the maximum amount of time this API will wait before returning from this function.</p>
+<p>In case Kernel is being used in user managed mode then developer may implement the logic where it can monitor the status of AP_DONE bit of the kernel in polling mode to know the status of the current kernel task.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+<span class="n">kernel</span><span class="o">.</span>
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="xlnx-kernel-deinit">
+<h4>xlnx_kernel_deinit<a class="headerlink" href="#xlnx-kernel-deinit" title="Permalink to this heading">¶</a></h4>
+<p>This API is called by the infrastructure plug-in when plug-in is de-initializing. Acceleration software library must perform any clean-up, de-initialization tasks such as freeing private handles and internal memory allocation as part of the library initialization process.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_deinit</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="utility-apis">
+<h3>Utility APIs<a class="headerlink" href="#utility-apis" title="Permalink to this heading">¶</a></h3>
+<p>This section covers details about the utility infrastructure required to develop the kernel libraries for a new kernel and to integrate these acceleration software libraries into the GStreamer framework.</p>
+<p>The acceleration software libraries are developed using the following utility APIs.</p>
+<p>The utility API sources are hosted in the vvas-utils folder of the VVAS sources tree.</p>
+<div class="figure align-default">
+<a class="reference internal image-reference" href="../../_images/vvas-utils-hierarchy.png"><img alt="../../_images/vvas-utils-hierarchy.png" src="../../_images/vvas-utils-hierarchy.png" style="width: 400px;" /></a>
+</div>
+<div class="section" id="memory-management-apis">
+<h4>Memory Management APIs<a class="headerlink" href="#memory-management-apis" title="Permalink to this heading">¶</a></h4>
+<p>Hardware Kernel work on physically contiguous memory. In case acceleration software library need physically contiguous memory then the utility APIs mentioned below can be used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>VVASFrame* vvas_alloc_buffer (VVASKernel *handle, uint32_t size,
+VVASMemoryType mem_type, VVASFrameProps *props)
+
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    size - memory size to be allocated
+    mem_type - memory can be VVAS_FRAME_MEMORY or VVAS_INTERNAL_MEMORY
+    props – required when requesting VVAS_FRAME_MEMORY
+
+Return:
+    VVASFrame handle on success or NULL on failure
+</pre></div>
+</div>
+<p>In case there is frequent memory allocation/de-allocation is required, then recommendation is to allocate from the memory pool. Developer can allocate the memory from the memory pool managed by GStreamer infrastructure plug-in. To allocate memory from memory pool managed by the GStreamer Infrastructure plug-in, developer must pass “props” parameter value as VVAS_FRAME_MEMORY. If “props” parameter value is set to VVAS_INTERNAL_MEMORY, then the memory is not allocated from a memory pool.</p>
+<p>The following API is to free the memory that is allocated using the vvas_alloc_buffer() API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_free_buffer (VVASKernel * handle, VVASFrame *vvas_frame)
+
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    vvas_frame – VVASFrame handle allocated using vvas_alloc_buffer() API
+
+Return:
+    None
+</pre></div>
+</div>
+</div>
+<div class="section" id="read-write-register-apis">
+<h4>Read/Write Register APIs<a class="headerlink" href="#read-write-register-apis" title="Permalink to this heading">¶</a></h4>
+<p>These APIs can be used only if kernel object is created in <code class="docutils literal notranslate"><span class="pre">exclusive</span></code> mode. Moreover, developer must ensure that “is_multiprocess” parameter is set to “false” in VVASKernel object in acceleration software library.</p>
+<p>In case developer has decided to go for the option of programing the kernel using register programming, then the only option to start a kernel is to set the “ap_start” bit by writing into the control register.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_write (VVASKernel *handle, void *src, size_t size,
+size_t offset)
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    src – pointer to data to be written at offset in ERT command buffer or
+register at offset from base address of IP
+    size – size of the data pointer src
+    offset – offset at which data to be written
+
+Return:
+    None
+</pre></div>
+</div>
+<p>The following API used to read from the registers of an IP/kernel. One can use this API to read the interrupt status register to know the status of task in polling mode.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void vvas_register_read (VVASKernel *handle, void *src, size_t size, size_t
+offset)
+
+Parameters:
+    handle - VVAS kernel handle which has kernel context
+    src – pointer to data which will be updated after read
+    size – size of the data pointer src
+    offset – offset from base address of an IP
+
+Return:
+    None
+</pre></div>
+</div>
+</div>
+<div class="section" id="execution-apis">
+<h4>Execution APIs<a class="headerlink" href="#execution-apis" title="Permalink to this heading">¶</a></h4>
+<p>These APIs must be used in case kernel is being used in XRT managed mode.
+Execution APIs are used to start kernel execution and then wait for the completion of the kernel current task. These APIs are multi-process/multi-thread safe. These APIs are only used when <cite>is_multiprocess</cite> is set to true during kernel initialization. Use the following API to start IP/kernel execution.</p>
+<div class="section" id="vvas-kernel-start">
+<h5>vvas_kernel_start<a class="headerlink" href="#vvas-kernel-start" title="Permalink to this heading">¶</a></h5>
+<p>Use this API to start the kernel. This API internally uses Xilinx Run Time (XRT) APIs to start the kernel.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_start</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="nb">format</span><span class="p">,</span> <span class="o">...</span><span class="p">);</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span> <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+    <span class="nb">format</span> <span class="o">-</span> <span class="n">Variable</span> <span class="n">arguments</span> <span class="k">for</span> <span class="n">the</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">arguments</span> <span class="n">that</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">takes</span><span class="o">.</span>
+
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+<p>Follow below format specifiers for kernel arguments for “format” argument</p>
+<div class="line-block">
+<div class="line">“i” : Signed int argument.</div>
+<div class="line">“u” : Unsigned int argument.</div>
+<div class="line">“f” : Float argument.</div>
+<div class="line">“F” : Double argument.</div>
+<div class="line">“c” : Char argument.</div>
+<div class="line">“C” : Unsigned char argument.</div>
+<div class="line">“S” : Short argument.</div>
+<div class="line">“U” : Unsigned short argument.</div>
+<div class="line">“l” : Unsigned long long argument.</div>
+<div class="line">“d” : Long long argument.</div>
+<div class="line">“p” : Any pointer argument.</div>
+<div class="line">“b” : Buffer Object argument.</div>
+<div class="line">“s” : If you want to skip the argument.</div>
+</div>
+<dl>
+<dt>Ex<span class="classifier">For passing 3 arguments of types int, unsigned int and a pointer,</span></dt><dd><p>then the format specifier string would be “iup”</p>
+<p>If you want to skip the middler argument in the above case, then
+the format specifier string would be “isp”</p>
+</dd>
+</dl>
+<p>Use the following API to check whether the IP or kernel has finished execution. This function internally loops for MAX_EXEC_WAIT_RETRY_CNT times until a timeout before returning an error.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">vvas_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">int32_t</span> <span class="n">timeout</span><span class="p">);</span>
+
+<span class="n">Parameters</span><span class="p">:</span>
+    <span class="n">handle</span>  <span class="o">-</span> <span class="n">VVAS</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">has</span> <span class="n">kernel</span> <span class="n">context</span>
+    <span class="n">timeout</span> <span class="o">-</span> <span class="n">Timeout</span> <span class="ow">in</span> <span class="n">milliseconds</span>
+
+<span class="n">Return</span><span class="p">:</span>
+    <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">failure</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="vvas-data-structures">
+<h2>VVAS Data structures<a class="headerlink" href="#vvas-data-structures" title="Permalink to this heading">¶</a></h2>
+<p>;
+The following sections list the core structures and enumerations used in VVAS framework.</p>
+<div class="section" id="vvaskernel">
+<h3>VVASKernel<a class="headerlink" href="#vvaskernel" title="Permalink to this heading">¶</a></h3>
+<p>The VVASKernel is a structure to hold the kernel context and is created and passed to the core APIs by the GStreamer infrastructure plug-ins (for example: the vvas_xfilter).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> \<span class="n">_vvas_kernel</span> <span class="n">VVASKernel</span><span class="p">;</span>
+
+<span class="n">struct</span> \<span class="n">_vvas_kernel</span> <span class="p">{</span>
+
+<span class="n">void</span> \<span class="o">*</span><span class="n">xcl_handle</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">XRT</span> <span class="n">handle</span> <span class="n">provided</span> <span class="n">by</span> <span class="n">GStreamer</span>
+
+<span class="n">infrastructure</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span> \<span class="o">*/</span>
+
+<span class="n">uint32_t</span> <span class="n">cu_idx</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">compute</span> <span class="n">unit</span> <span class="n">index</span> <span class="n">of</span> <span class="n">IP</span><span class="o">/</span><span class="n">soft</span><span class="o">-</span> <span class="n">kernel</span> \<span class="o">*/</span>
+
+<span class="n">json_t</span> \<span class="o">*</span><span class="n">kernel_config</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">kernel</span> <span class="n">specific</span> <span class="n">config</span> <span class="kn">from</span> <span class="nn">app</span> \<span class="o">*/</span> <span class="n">void</span>
+\<span class="o">*</span><span class="n">kernel_priv</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">to</span> <span class="n">store</span> <span class="n">kernel</span> <span class="n">specific</span>
+
+<span class="n">structures</span> \<span class="o">*/</span>
+<span class="n">json_t</span> \<span class="o">*</span><span class="n">kernel_dyn_config</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">Dynamically</span> <span class="n">changed</span> <span class="n">kernel</span> <span class="n">configuration</span> \<span class="o">*/</span>
+<span class="n">xrt_buffer</span> \<span class="o">*</span><span class="n">ert_cmd_buf</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">ERT</span> <span class="n">command</span> <span class="n">buffer</span> <span class="n">used</span> <span class="n">to</span> <span class="n">submit</span>
+
+<span class="n">execution</span> <span class="n">commands</span> <span class="n">to</span> <span class="n">XRT</span> \<span class="o">*/</span>
+
+<span class="n">size_t</span> <span class="n">min_offset</span><span class="p">;</span> <span class="n">size_t</span> <span class="n">max_offset</span><span class="p">;</span>
+
+<span class="n">VVASBufAllocCBFunc</span> <span class="n">alloc_func</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">callback</span> <span class="n">function</span> <span class="n">to</span> <span class="n">allocate</span>
+
+<span class="n">memory</span> <span class="kn">from</span> <span class="nn">GstBufferPool</span> <span class="n">by</span> <span class="n">GStreamer</span> <span class="n">infrastructure</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span> \<span class="o">*/</span>
+
+<span class="n">VVASBufFreeCBFunc</span> <span class="n">free_func</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">callback</span> <span class="n">function</span> <span class="n">to</span> <span class="n">free</span> <span class="n">memory</span>
+
+<span class="n">allocated</span> <span class="n">by</span> <span class="n">alloc_func</span> \<span class="o">*/</span> <span class="n">void</span> \<span class="o">*</span><span class="n">cb_user_data</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">handle</span> <span class="n">to</span> <span class="n">be</span>
+<span class="n">passed</span> <span class="n">along</span> <span class="k">with</span>
+
+<span class="n">alloc_func</span> <span class="o">&amp;</span> <span class="n">free_func</span> <span class="n">callback</span> \<span class="o">*/</span>
+
+<span class="n">vvaspads</span> \<span class="o">*</span><span class="n">padinfo</span><span class="p">;</span> <span class="c1">#ifdef XLNX_PCIe_PLATFORM</span>
+
+<span class="n">uint32_t</span> <span class="n">is_softkernel</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">true</span> <span class="n">when</span> <span class="n">acceleration</span> <span class="n">s</span><span class="o">/</span><span class="n">w</span> <span class="n">library</span> <span class="ow">is</span> <span class="k">for</span>
+
+<span class="c1">#endif</span>
+
+<span class="n">soft</span><span class="o">-</span><span class="n">kernel</span> <span class="ow">in</span> <span class="n">PCIe</span> <span class="n">platforms</span> <span class="n">only</span>
+
+\<span class="o">*/</span>
+
+<span class="n">uint8_t</span> <span class="n">is_multiprocess</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="k">if</span> <span class="n">true</span><span class="p">,</span> <span class="n">ERT</span> <span class="n">command</span> <span class="n">buffer</span> <span class="n">will</span>
+
+<span class="n">be</span> <span class="n">used</span> <span class="n">to</span> <span class="n">start</span> <span class="n">kernel</span><span class="o">.</span> <span class="k">else</span><span class="p">,</span> <span class="n">direct</span> <span class="n">register</span> <span class="n">programming</span> <span class="n">will</span> <span class="n">be</span>
+<span class="n">used</span> \<span class="o">*/</span>
+
+<span class="n">uint8_t</span>  \<span class="o">*</span><span class="n">name</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">TBD</span> \<span class="o">*/</span>
+
+<span class="n">uint16_t</span> <span class="n">in_mem_bank</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">Memory</span> <span class="n">bank</span> <span class="n">to</span> <span class="n">which</span> <span class="nb">input</span> <span class="n">port</span> <span class="n">of</span> <span class="n">kernel</span> <span class="ow">is</span> <span class="n">attached</span> <span class="n">to</span> \<span class="o">*/</span>
+<span class="n">uint16_t</span> <span class="n">out_mem_bank</span><span class="p">;</span> <span class="o">/</span>\<span class="o">*</span> <span class="n">Memory</span> <span class="n">bank</span> <span class="n">to</span> <span class="n">which</span> <span class="n">output</span> <span class="n">port</span> <span class="n">of</span> <span class="n">kernel</span> <span class="ow">is</span> <span class="n">attached</span> <span class="n">to</span>
+
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vvasvideoformat">
+<h3>VVASVideoFormat<a class="headerlink" href="#vvasvideoformat" title="Permalink to this heading">¶</a></h3>
+<p>The VVASVideoFormat represents the video color formats supported by the VVAS framework. The GStreamer infrastructure plug-ins supports the mapping of the following formats and corresponding GStreamer color formats.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">enum</span> <span class="p">{</span>
+<span class="n">VVAS_VMFT_UNKNOWN</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_RGBX8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_YUVX8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_YUYV8</span><span class="p">,</span> <span class="o">//</span> <span class="n">YUYV</span>
+<span class="n">VVAS_VFMT_ABGR8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_RGBX10</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_YUVX10</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_Y_UV8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_Y_UV8_420</span><span class="p">,</span> <span class="o">//</span> <span class="n">NV12</span>
+<span class="n">VVAS_VFMT_RGB8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_YUVA8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_YUV8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_Y_UV10</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_Y_UV10_420</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_Y8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_Y10</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_ARGB8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_BGRX8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_UYVY8</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_BGR8</span><span class="p">,</span> <span class="o">//</span> <span class="n">BGR</span>
+<span class="n">VVAS_VFMT_RGBX12</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_RGB16</span><span class="p">,</span>
+<span class="n">VVAS_VFMT_I420</span>
+<span class="p">}</span>  <span class="n">VVASVideoFormat</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vvasframe">
+<h3>VVASFrame<a class="headerlink" href="#vvasframe" title="Permalink to this heading">¶</a></h3>
+<p>The VVASFrame stores information related to a video frame. The GStreamer infrastructure plug-ins allocate the VVASFrame handle for input and output video frames and sends them to the VVAS kernel processing APIs. Also, the VVASFrame can be allocated by kernel libraries for internal memory requirements (i.e., memory for filter coefficients).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">_vvas_frame_props</span> <span class="n">VVASFrameProps</span><span class="p">;</span>
+<span class="n">typedef</span> <span class="n">struct</span> <span class="n">_vvas_frame</span> <span class="n">VVASFrame</span><span class="p">;</span>
+
+<span class="o">//</span> <span class="n">frame</span> <span class="n">properties</span> <span class="n">hold</span> <span class="n">information</span> <span class="n">about</span> <span class="n">video</span> <span class="n">frame</span>
+<span class="n">struct</span> <span class="n">_vvas_frame_props</span> <span class="p">{</span>
+<span class="n">uint32_t</span> <span class="n">width</span><span class="p">;</span>
+<span class="n">uint32_t</span> <span class="n">height</span><span class="p">;</span>
+<span class="n">uint32_t</span> <span class="n">stride</span><span class="p">;</span>
+<span class="n">VVASVideoFormat</span> <span class="n">fmt</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="n">struct</span> <span class="n">_vvas_frame</span> <span class="p">{</span>
+<span class="n">uint32_t</span> <span class="n">bo</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span> <span class="o">//</span> <span class="n">ignore</span><span class="p">:</span> <span class="n">currently</span> <span class="ow">not</span> <span class="n">used</span>
+<span class="n">void</span> \<span class="o">*</span><span class="n">vaddr</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span> <span class="o">//</span> <span class="n">virtual</span><span class="o">/</span><span class="n">user</span> <span class="n">space</span> <span class="n">address</span> <span class="n">of</span>
+                               <span class="o">//</span><span class="n">video</span> <span class="n">frame</span> <span class="n">memory</span>
+<span class="n">uint64_t</span> <span class="n">paddr</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span> <span class="o">//</span> <span class="n">physical</span> <span class="n">address</span> <span class="n">of</span> <span class="n">video</span> <span class="n">frame</span>
+<span class="n">uint32_t</span> <span class="n">size</span><span class="p">[</span><span class="n">VIDEO_MAX_PLANES</span><span class="p">];</span>
+<span class="n">void</span> \<span class="o">*</span><span class="n">meta_data</span><span class="p">;</span>
+<span class="n">VVASFrameProps</span> <span class="n">props</span><span class="p">;</span> <span class="o">/*</span> <span class="n">properties</span> <span class="n">of</span> <span class="n">video</span> <span class="n">frame</span> \<span class="o">*/</span>
+<span class="o">/</span>\<span class="o">*</span> <span class="n">application</span><span class="s1">&#39;s private data \*/</span>
+<span class="n">void</span> \<span class="o">*</span><span class="n">app_priv</span><span class="p">;</span> <span class="o">/*</span> <span class="n">assigned</span> <span class="n">to</span> <span class="n">GstBuffer</span> <span class="n">by</span> <span class="n">GStreamer</span> <span class="n">infrastructure</span> <span class="n">plugin</span> \<span class="o">*/</span>
+<span class="n">VVASMemoryType</span> <span class="n">mem_type</span><span class="p">;</span>
+<span class="o">/</span>\<span class="o">*</span><span class="n">number</span> <span class="n">of</span> <span class="n">planes</span> <span class="ow">in</span> <span class="n">props</span><span class="o">.</span><span class="n">fmt</span> \<span class="o">*/</span>
+<span class="n">uint32_t</span> <span class="n">n_planes</span><span class="p">;</span> <span class="o">//</span> <span class="n">number</span> <span class="n">of</span> <span class="n">planes</span> <span class="n">based</span> <span class="n">on</span> <span class="n">color</span> <span class="nb">format</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="other-vvas-declarations">
+<h3>Other VVAS Declarations<a class="headerlink" href="#other-vvas-declarations" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define MAX_NUM_OBJECT 512 /* max number of video frames/objects</span>
+<span class="n">handled</span> <span class="n">by</span> <span class="n">VVAS</span> \<span class="o">*/</span>
+<span class="c1">#define MAX_EXEC_WAIT_RETRY_CNT 10 /* retry count on xclExecWait failure \*/</span>
+<span class="c1">#define VIDEO_MAX_PLANES 4</span>
+<span class="c1">#define DEFAULT_MEM_BANK 0</span>
+
+<span class="n">typedef</span> <span class="n">enum</span> <span class="p">{</span>
+<span class="n">VVAS_UNKNOWN_MEMORY</span><span class="p">,</span>
+<span class="n">VVAS_FRAME_MEMORY</span><span class="p">,</span> <span class="o">/*</span> <span class="n">use</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">and</span> <span class="n">output</span> <span class="n">buffers</span> \<span class="o">*/</span>
+<span class="n">VVAS_INTERNAL_MEMORY</span><span class="p">,</span> <span class="o">/*</span> <span class="n">use</span> <span class="k">for</span> <span class="n">internal</span> <span class="n">memory</span> <span class="n">of</span> <span class="n">IP</span> \<span class="o">*/</span>
+<span class="p">}</span> <span class="n">VVASMemoryType</span><span class="p">;</span>
+
+<span class="n">typedef</span> <span class="n">struct</span> <span class="n">buffer</span> <span class="p">{</span>
+<span class="n">unsigned</span> <span class="nb">int</span> <span class="n">bo</span><span class="p">;</span> <span class="o">/*</span> <span class="n">XRT</span> <span class="n">Buffer</span> <span class="nb">object</span> \<span class="o">*/</span>
+<span class="n">void</span><span class="o">*</span> <span class="n">user_ptr</span><span class="p">;</span> <span class="o">/*</span> <span class="n">userspace</span><span class="o">/</span><span class="n">virtual</span> <span class="n">pointer</span> \<span class="o">*/</span>
+<span class="n">uint64_t</span> <span class="n">phy_addr</span><span class="p">;</span> <span class="o">/*</span> <span class="n">physical</span> <span class="n">address</span> \<span class="o">*/</span>
+<span class="n">unsigned</span> <span class="nb">int</span> <span class="n">size</span><span class="p">;</span> <span class="o">/*</span> <span class="n">size</span> <span class="n">of</span> <span class="n">XRT</span> <span class="n">memory</span> \<span class="o">*/</span>
+<span class="p">}</span> <span class="n">xrt_buffer</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>VVAS acceleration software libraries APIs are broadly categorized into two API types, <a class="reference external" href="#_bookmark17">Core API</a> and <a class="reference external" href="#utility-api">Utility API</a>.</p>
+</div>
+</div>
+<div class="section" id="acceleration-software-library-for-hard-kernels">
+<h2>Acceleration Software Library for Hard Kernels<a class="headerlink" href="#acceleration-software-library-for-hard-kernels" title="Permalink to this heading">¶</a></h2>
+<p>This section covers the steps to develop an acceleration software library for hard kernels.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is assumed that hard kernel work only on physical address. Hence Infrastructure plugins will only provide physical address for the input/output buffers. If for any reason one wants to access the input/output buffers in s/w accel lib, then need to map the buffer and get the virtual address.</p>
+</div>
+<p>Virtual address is populated by infrastructure plugins only in case of s/w accel lib for “software only” kernels.</p>
+<div class="section" id="memory-allocation">
+<h3>Memory Allocation<a class="headerlink" href="#memory-allocation" title="Permalink to this heading">¶</a></h3>
+<p>A hard kernel works on the physically contiguous memory. Use the <code class="docutils literal notranslate"><span class="pre">vvas_alloc_buffer</span></code> API to allocate physically contiguous memory on the device (FPGA).</p>
+</div>
+<div class="section" id="starting-kernel">
+<h3>Starting Kernel<a class="headerlink" href="#starting-kernel" title="Permalink to this heading">¶</a></h3>
+<p>APIs to start a kernel depends on the mode in which kernel object is created.</p>
+<div class="section" id="xrt-managed-kernel">
+<h4>XRT Managed Kernel<a class="headerlink" href="#xrt-managed-kernel" title="Permalink to this heading">¶</a></h4>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">vvas_kernel_start</span></code> must be used to start the kernel execution. It takes all kernel parameters required to be programmed as function arguments.</p>
+</div></blockquote>
+</div>
+<div class="section" id="user-managed-mode">
+<h4>User Managed Mode<a class="headerlink" href="#user-managed-mode" title="Permalink to this heading">¶</a></h4>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">vvas_register_write</span></code> API to set the AP_START bit in kernel control register.</p>
+</div>
+</div>
+<div class="section" id="checking-kernel-task-status">
+<h3>Checking Kernel Task Status<a class="headerlink" href="#checking-kernel-task-status" title="Permalink to this heading">¶</a></h3>
+<p>Once kernel is started, next step is to check if the task is completed or not. Depending on the mode in which kernel object is created, different mechanism to be used.</p>
+<div class="section" id="id1">
+<h4>XRT Managed Kernel<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h4>
+<p>In this mode, developer needs to call <code class="docutils literal notranslate"><span class="pre">vvas_kernel_done</span></code> API. This API will return when kernel finished processing current task. Developer can provide the “time-out” interval value indicating how long this API has to wait before it can return in case kernel has not finished processing.</p>
+</div>
+<div class="section" id="id2">
+<h4>User Managed Mode<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h4>
+<p>In this mode, there is no callback or interrupt notification mechanism available that can be used to notify the task completion. The acceleration software library must continuously poll the kernel status register using <code class="docutils literal notranslate"><span class="pre">vvas_register_read</span></code>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="acceleration-software-library-for-the-software-kernel">
+<h2>Acceleration Software Library for the Software Kernel<a class="headerlink" href="#acceleration-software-library-for-the-software-kernel" title="Permalink to this heading">¶</a></h2>
+<p>Software kernels are software modules that run on the application processor. The acceleration software library for these processing modules do not interact with the XRT interface. The interface APIs that abstract the XRT interface are not needed. You must implement the core API in the acceleration software library for use in the GStreamer application through VVAS infrastructure plug-ins.</p>
+</div>
+<div class="section" id="capability-negotiation-support-in-the-acceleration-software-library">
+<h2>Capability Negotiation Support in the Acceleration Software Library<a class="headerlink" href="#capability-negotiation-support-in-the-acceleration-software-library" title="Permalink to this heading">¶</a></h2>
+<p>Kernel capability negotiation is an important functionality that should be accepted between the upstream element and infrastructure plug-ins to achieve an optimal solution. Because the infrastructure plug-ins are generic, the acceleration software library is responsible to populate the required kernel capability during xlnx_kernel_init(), which is negotiated between the infrastructure plug-ins and the upstream element. The infrastructure plug-in suggests a format on its sink pad and arranges the recommendation in priority order as per the kernel capability in the result from the CAPS query that is performed on the sink pad. Only the vvas_xfilter plug-in is currently supporting the kernel specific capability negotiation.</p>
+<p>The following section explains the data structures exchange between acceleration software libraries and the infrastructure plug-ins for capability negotiation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">caps</span>
+<span class="p">{</span>
+<span class="n">uint8_t</span> <span class="n">range_height</span><span class="p">;</span> <span class="o">/*</span> <span class="n">true</span><span class="o">/</span><span class="n">false</span> <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="n">specified</span> <span class="ow">in</span> <span class="nb">range</span> <span class="o">*/</span>
+<span class="n">uint32_t</span> <span class="n">lower_height</span><span class="p">;</span> <span class="o">/*</span> <span class="n">lower</span> <span class="nb">range</span> <span class="n">of</span> <span class="n">height</span> <span class="n">supported</span><span class="p">,</span>
+<span class="n">range_height</span><span class="o">=</span><span class="n">false</span> <span class="n">then</span> <span class="n">this</span> <span class="n">value</span> <span class="n">specified</span> <span class="n">the</span> <span class="n">fixed</span> <span class="n">height</span> <span class="n">supported</span>
+<span class="o">*/</span>
+<span class="n">uint32_t</span> <span class="n">upper_height</span><span class="p">;</span> <span class="o">/*</span> <span class="n">upper</span> <span class="nb">range</span> <span class="n">of</span> <span class="n">height</span> <span class="n">supported</span> <span class="o">*/</span>
+<span class="n">uint8_t</span> <span class="n">range_width</span><span class="p">;</span> <span class="o">/*</span> <span class="n">true</span><span class="o">/</span><span class="n">false</span> <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="n">specified</span> <span class="ow">in</span> <span class="nb">range</span> <span class="o">*/</span>
+<span class="n">uint32_t</span> <span class="n">lower_width</span><span class="p">;</span> <span class="o">/*</span> <span class="n">lower</span> <span class="nb">range</span> <span class="n">of</span> <span class="n">width</span> <span class="n">supported</span><span class="p">,</span>
+<span class="n">range_width</span><span class="o">=</span><span class="n">false</span> <span class="n">then</span> <span class="n">this</span> <span class="n">value</span> <span class="n">specified</span> <span class="n">the</span> <span class="n">fixed</span> <span class="n">width</span> <span class="n">supported</span> <span class="o">*/</span>
+<span class="n">uint32_t</span> <span class="n">upper_width</span><span class="p">;</span> <span class="o">/*</span> <span class="n">upper</span> <span class="nb">range</span> <span class="n">of</span> <span class="n">width</span> <span class="n">supported</span> <span class="o">*/</span>
+<span class="n">uint8_t</span> <span class="n">num_fmt</span><span class="p">;</span> <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="nb">format</span> <span class="n">support</span> <span class="n">by</span> <span class="n">kernel</span> <span class="o">*/</span>
+<span class="n">VVASVideoFormat</span> <span class="o">*</span><span class="n">fmt</span><span class="p">;</span> <span class="o">/*</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">formats</span> <span class="o">*/</span>
+<span class="p">}</span> <span class="n">kernelcaps</span><span class="p">;</span>
+
+<span class="n">typedef</span> <span class="n">struct</span> <span class="n">kernelpad</span>
+<span class="p">{</span>
+<span class="n">uint8_t</span> <span class="n">nu_caps</span><span class="p">;</span> <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">different</span> <span class="n">caps</span> <span class="n">supported</span> <span class="o">*/</span>
+<span class="n">kernelcaps</span> <span class="o">**</span><span class="n">kcaps</span><span class="p">;</span> <span class="o">/*</span> <span class="n">lsit</span> <span class="n">of</span> <span class="n">caps</span> <span class="o">*/</span>
+<span class="p">}</span> <span class="n">kernelpads</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Below mentioned user friendly APIs are provided for kernel to set the above mentioned capabilities.</p>
+<p>API to create new caps with input parameters</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vvas_caps_new</span><span class="p">()</span> <span class="o">-</span> <span class="n">Create</span> <span class="n">new</span> <span class="n">caps</span> <span class="k">with</span> <span class="nb">input</span> <span class="n">parameters</span>
+<span class="n">range_height</span>
+     <span class="o">-</span> <span class="n">true</span>  <span class="p">:</span> <span class="k">if</span> <span class="n">kernel</span> <span class="n">support</span> <span class="nb">range</span> <span class="n">of</span> <span class="n">height</span>
+     <span class="o">-</span> <span class="n">false</span> <span class="p">:</span> <span class="k">if</span> <span class="n">kernel</span> <span class="n">support</span> <span class="n">fixed</span> <span class="n">height</span>
+<span class="n">lower_height</span> <span class="p">:</span> <span class="n">lower</span> <span class="n">value</span> <span class="n">of</span> <span class="n">height</span> <span class="n">supported</span> <span class="n">by</span> <span class="n">kernel</span>
+               <span class="k">if</span> <span class="n">range_height</span> <span class="ow">is</span> <span class="n">false</span><span class="p">,</span> <span class="n">this</span> <span class="n">holds</span> <span class="n">the</span> <span class="n">fixed</span> <span class="n">value</span>
+<span class="n">upper_height</span> <span class="p">:</span> <span class="n">higher</span> <span class="n">value</span> <span class="n">of</span> <span class="n">hight</span> <span class="n">supported</span> <span class="n">by</span> <span class="n">kernel</span>
+               <span class="k">if</span> <span class="n">range_height</span> <span class="ow">is</span> <span class="n">false</span><span class="p">,</span> <span class="n">this</span> <span class="n">should</span> <span class="n">be</span> <span class="mi">0</span>
+<span class="n">range_width</span> <span class="p">:</span> <span class="n">same</span> <span class="k">as</span> <span class="n">above</span>
+<span class="n">lower_width</span> <span class="p">:</span>
+<span class="n">upper_width</span> <span class="p">:</span>
+
+            <span class="p">:</span> <span class="n">variable</span> <span class="nb">range</span> <span class="n">of</span> <span class="nb">format</span> <span class="n">supported</span> <span class="n">terminated</span> <span class="n">by</span> <span class="mi">0</span>
+              <span class="n">make</span> <span class="n">sure</span> <span class="n">to</span> <span class="n">add</span> <span class="mi">0</span> <span class="n">at</span> <span class="n">end</span> <span class="n">otherwise</span> <span class="n">it</span>
+              <span class="n">code</span> <span class="n">will</span> <span class="n">take</span> <span class="nb">format</span> <span class="n">till</span> <span class="n">it</span> <span class="n">get</span> <span class="mi">0</span>
+
+<span class="n">kernelcaps</span> <span class="o">*</span> <span class="n">vvas_caps_new</span> <span class="p">(</span><span class="n">uint8_t</span> <span class="n">range_height</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">lower_height</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">upper_height</span><span class="p">,</span>
+                            <span class="n">uint8_t</span> <span class="n">range_width</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">lower_width</span><span class="p">,</span>
+                            <span class="n">uint32_t</span> <span class="n">upper_width</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>API to  add new caps to sink pad. Only one pad is supported in this release.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">bool</span> <span class="n">vvas_caps_add_to_sink</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">kernelcaps</span> <span class="o">*</span> <span class="n">kcaps</span><span class="p">,</span> <span class="nb">int</span> <span class="n">sinkpad_num</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>API to add new caps to src pad. Only one pad is supported as on today.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">bool</span> <span class="n">vvas_caps_add_to_src</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="n">kernelcaps</span> <span class="o">*</span> <span class="n">kcaps</span><span class="p">,</span> <span class="nb">int</span> <span class="n">sinkpad_num</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-development-of-acceleration-sw-library">
+<h2>Example (Development of acceleration sw library)<a class="headerlink" href="#example-development-of-acceleration-sw-library" title="Permalink to this heading">¶</a></h2>
+<p>This section shows how to develop an acceleration sw library using VVAS APIs which controls <code class="docutils literal notranslate"><span class="pre">vvas_xsample</span></code> kernel.</p>
+<p>Following is a sample structure used in the example to validate <code class="docutils literal notranslate"><span class="pre">vvas_xsample</span></code> kernel.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span>  <span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span> <span class="n">vvas_sample_struct</span>
+<span class="p">{</span>
+ <span class="n">char</span> <span class="n">c_value</span><span class="p">;</span>
+ <span class="n">unsigned</span> <span class="n">char</span> <span class="n">uc_value</span><span class="p">;</span>
+ <span class="n">short</span> <span class="n">s_value</span><span class="p">;</span>
+ <span class="n">unsigned</span> <span class="n">short</span> <span class="n">us_value</span><span class="p">;</span>
+ <span class="nb">int</span> <span class="n">i_value</span><span class="p">;</span>
+ <span class="n">unsigned</span> <span class="nb">int</span> <span class="n">ui_value</span><span class="p">;</span>
+ <span class="nb">float</span> <span class="n">f_value</span><span class="p">;</span>
+ <span class="n">double</span> <span class="n">d_value</span><span class="p">;</span>
+ <span class="n">long</span> <span class="n">long</span> <span class="n">ll_value</span><span class="p">;</span>
+ <span class="n">unsigned</span> <span class="n">long</span> <span class="n">long</span> <span class="n">ul_value</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="n">typedef</span> <span class="n">struct</span> <span class="n">vvas_sample_struct</span> <span class="n">VvasSampleStruct</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>At the first step we have to expose the CORE APIs, so that these can be controlled from the GStreamer Infrastructure plug-ins as well as applications. Following APIs are mandatory APIs.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*********</span>  <span class="n">CORE</span> <span class="n">APIs</span> <span class="o">************/</span>
+
+<span class="n">int32_t</span> <span class="n">xlnx_kernel_init</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+
+<span class="n">uint32_t</span> <span class="n">xlnx_kernel_start</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="nb">int</span> <span class="n">start</span><span class="p">,</span>
+    <span class="n">VVASFrame</span> <span class="o">*</span> <span class="nb">input</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">],</span> <span class="n">VVASFrame</span> <span class="o">*</span> <span class="n">output</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">]);</span>
+
+<span class="n">int32_t</span> <span class="n">xlnx_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+
+<span class="n">uint32_t</span> <span class="n">xlnx_kernel_deinit</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>We have to perform all the one-time initialization in <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_init</span></code> API.
+Following is the private structure to maintain/store all the initializations. It is upto the user to implement their own storage classes to maintain one-time initializations.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span>
+ <span class="o">*</span> <span class="n">Structure</span> <span class="n">to</span> <span class="n">store</span> <span class="nb">all</span> <span class="n">initializations</span>
+ <span class="o">*/</span>
+
+<span class="n">typedef</span> <span class="n">struct</span> <span class="n">_kern_priv</span>
+<span class="p">{</span>
+  <span class="nb">int</span> <span class="n">log_level</span><span class="p">;</span>                <span class="o">/*</span> <span class="n">Debug</span> <span class="n">Level</span> <span class="n">of</span> <span class="n">logs</span> <span class="o">*/</span>
+  <span class="n">char</span> <span class="n">c_value</span><span class="p">;</span>                 <span class="o">/*</span> <span class="n">variable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">char</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="n">char</span> <span class="n">uc_value</span><span class="p">;</span>       <span class="o">/*</span> <span class="n">varaiable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">unsigned</span> <span class="n">char</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">short</span> <span class="n">s_value</span><span class="p">;</span>                <span class="o">/*</span> <span class="n">varable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">short</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="n">short</span> <span class="n">us_value</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">varable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">unsigned</span> <span class="n">short</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="nb">int</span> <span class="n">i_value</span><span class="p">;</span>                  <span class="o">/*</span> <span class="n">varable</span> <span class="n">to</span> <span class="n">store</span> <span class="nb">int</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="nb">int</span> <span class="n">ui_value</span><span class="p">;</span>        <span class="o">/*</span> <span class="n">varable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">unsigned</span> <span class="nb">int</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="nb">float</span> <span class="n">f_value</span><span class="p">;</span>                <span class="o">/*</span> <span class="n">varable</span> <span class="n">to</span> <span class="n">store</span> <span class="nb">float</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">double</span> <span class="n">d_value</span><span class="p">;</span>               <span class="o">/*</span> <span class="n">variable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">double</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">long</span> <span class="n">long</span> <span class="n">ll_value</span><span class="p">;</span>           <span class="o">/*</span> <span class="n">variable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">long</span> <span class="n">long</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="n">long</span> <span class="n">long</span> <span class="n">ul_value</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">variable</span> <span class="n">to</span> <span class="n">store</span> <span class="n">unsigned</span> <span class="n">long</span> <span class="n">long</span> <span class="n">value</span> <span class="o">*/</span>
+  <span class="n">char</span> <span class="n">overlay_image_path</span><span class="p">[</span><span class="n">MAX_LENGTH</span><span class="p">];</span>  <span class="o">/*</span> <span class="n">Path</span> <span class="n">of</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">overlay</span> <span class="n">image</span> <span class="o">*/</span>
+  <span class="n">char</span> <span class="n">input_overlay_image</span><span class="p">[</span><span class="n">MAX_OVERLAY_SIZE</span><span class="p">];</span>   <span class="o">/*</span> <span class="n">Buffer</span> <span class="n">to</span> <span class="n">store</span> <span class="nb">input</span> <span class="n">overlay</span> <span class="n">image</span> <span class="o">*/</span>
+  <span class="nb">int</span> <span class="n">overlay_image_height</span><span class="p">;</span>     <span class="o">/*</span> <span class="n">Height</span> <span class="n">of</span> <span class="n">the</span> <span class="n">overlay</span> <span class="n">image</span> <span class="o">*/</span>
+  <span class="nb">int</span> <span class="n">overlay_image_width</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">Width</span> <span class="n">of</span> <span class="n">the</span> <span class="n">overlay</span> <span class="n">image</span> <span class="o">*/</span>
+  <span class="nb">int</span> <span class="n">overlay_image_xpos</span><span class="p">;</span>       <span class="o">/*</span> <span class="n">x</span><span class="o">-</span><span class="n">position</span><span class="p">,</span> <span class="n">where</span> <span class="n">to</span> <span class="n">overlay</span> <span class="n">image</span> <span class="n">on</span> <span class="nb">input</span> <span class="n">buffer</span> <span class="o">*/</span>
+  <span class="nb">int</span> <span class="n">overlay_image_ypos</span><span class="p">;</span>       <span class="o">/*</span> <span class="n">y</span><span class="o">-</span><span class="n">position</span><span class="p">,</span> <span class="n">where</span> <span class="n">to</span> <span class="n">overlay</span> <span class="n">image</span> <span class="n">on</span> <span class="nb">input</span> <span class="n">buffer</span> <span class="o">*/</span>
+  <span class="n">char</span> <span class="n">input_string</span><span class="p">[</span><span class="n">MAX_LENGTH</span><span class="p">];</span>        <span class="o">/*</span> <span class="n">Input</span> <span class="n">string</span> <span class="n">to</span> <span class="n">test</span> <span class="n">sample</span> <span class="n">kernel</span> <span class="o">*/</span>
+  <span class="n">void</span> <span class="o">*</span><span class="n">xrt_input_string</span><span class="p">;</span>       <span class="o">/*</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">hold</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="nb">input</span> <span class="n">string</span><span class="s1">&#39;s xrt::bo */</span>
+  <span class="n">void</span> <span class="o">*</span><span class="n">xrt_input_overlay_buffer</span><span class="p">;</span>       <span class="o">/*</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">hold</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">overlay</span> <span class="n">buffer</span><span class="s1">&#39;s xrt::bo */</span>
+  <span class="n">void</span> <span class="o">*</span><span class="n">xrt_output_string</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">hold</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">output</span> <span class="n">string</span><span class="s1">&#39;s xrt::bo */</span>
+  <span class="n">void</span> <span class="o">*</span><span class="n">xrt_output_structure</span><span class="p">;</span>   <span class="o">/*</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">hold</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="n">output</span> <span class="n">structure</span><span class="s1">&#39;s xrt::bo */</span>
+<span class="p">}</span> <span class="n">vvasSampleKernelPriv</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Initialize all the required variables of the vvasSampleKernelPriv structure in <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_init</span></code> API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>int32_t xlnx_kernel_init (VVASKernel * handle)
+{
+  /*
+   *  kernel configuration from application
+   */
+  json_t *jconfig = handle-&gt;kernel_config;
+  json_t *val;
+  vvasSampleKernelPriv *kpriv =
+      (vvasSampleKernelPriv *) calloc (1, sizeof (vvasSampleKernelPriv));
+  if (!kpriv)
+  {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv-&gt;log_level,
+        &quot;ERROR: SAMPLE_KERNEL: failed to allocate kernelprivate memory&quot;);
+    return -1;
+  }
+
+  /*
+   *  Initaializing the kernel parameters
+   *  Below values are hard coded for better understanding
+   */
+  kpriv-&gt;c_value = &#39;\0&#39;;      /* Initialize the char value */
+  kpriv-&gt;uc_value = &#39;\0&#39;;     /* Initialize the unsigned char value */
+  kpriv-&gt;s_value = -100;      /* Initialize the short value */
+  kpriv-&gt;us_value = 0;        /* Initialize the unsigned short value */
+  kpriv-&gt;i_value = -10000;    /* Initialize the int value */
+  kpriv-&gt;ui_value = 0;        /* Initialize the unsigned int value */
+  kpriv-&gt;f_value = 0.2;       /* Initialize the float value */
+  kpriv-&gt;d_value = 1000000.1; /* Initialize the double value */
+  kpriv-&gt;ll_value = 10000000; /* Initialize the long long value */
+  kpriv-&gt;ul_value = 10000000; /* Initialize the unsigned long long value */
+
+  /*
+   *  Initaializing the kernel parameters
+   *  from the configuration file passed to infrastructure plugin.
+   */
+
+  /* Set the debug level for logging purpose */
+  val = json_object_get (jconfig, &quot;debug_level&quot;);
+  if (!val || !json_is_integer (val)) {
+    kpriv-&gt;log_level = LOG_LEVEL_WARNING;
+    LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv-&gt;log_level, &quot;debug_level %d&quot;,
+        kpriv-&gt;log_level);
+  } else {
+    kpriv-&gt;log_level = json_integer_value (val);
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level, &quot;debug_level %d&quot;,
+        kpriv-&gt;log_level);
+  }
+
+  /* Get and set the input string that should be passed
+   * to sample kernel
+   */
+  val = json_object_get (jconfig, &quot;input_string&quot;);
+  if (!val || !json_is_string (val)) {
+    LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv-&gt;log_level,
+        &quot;Input String not provided taking default&quot;);
+    strcpy (kpriv-&gt;input_string, &quot;HELLO SAMPLE&quot;);
+  } else {
+    strcpy (kpriv-&gt;input_string, (char *) json_string_value (val));
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level,
+        &quot;Input String is : %s&quot;, kpriv-&gt;input_string);
+  }
+
+  /* Get and set the height of the overlay image */
+  val = json_object_get (jconfig, &quot;overlay_image_height&quot;);
+  if (!val || !json_is_integer (val)) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv-&gt;log_level,
+        &quot;Overlay image height not provided&quot;);
+    return -1;
+  } else {
+    kpriv-&gt;overlay_image_height = json_integer_value (val);
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level,
+        &quot;Overlay image height : %d&quot;, kpriv-&gt;overlay_image_height);
+  }
+
+  /* Get and set the width of the overlay image */
+  val = json_object_get (jconfig, &quot;overlay_image_width&quot;);
+  if (!val || !json_is_integer (val)) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv-&gt;log_level,
+        &quot;Overlay image width not provided&quot;);
+    return -1;
+  } else {
+    kpriv-&gt;overlay_image_width = json_integer_value (val);
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level,
+        &quot;Overlay image width : %d&quot;, kpriv-&gt;overlay_image_width);
+  }
+
+  /* Get and set the path/location of the overlay image */
+  val = json_object_get (jconfig, &quot;overlay_image_path&quot;);
+  if (!val || !json_is_string (val)) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv-&gt;log_level,
+        &quot;Overlay image path not provided&quot;);
+    return -1;
+  } else {
+    strcpy (kpriv-&gt;overlay_image_path, (char *) json_string_value (val));
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level,
+        &quot;Overlay image path : %s&quot;, kpriv-&gt;overlay_image_path);
+  }
+
+  /* Get and set the x position of the overlay image
+   * to draw on input buffer
+   */
+  val = json_object_get (jconfig, &quot;overlay_image_xpos&quot;);
+  if (!val || !json_is_integer (val)) {
+    kpriv-&gt;overlay_image_xpos = DEFAULT_X_POS;
+    LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv-&gt;log_level,
+        &quot;Overlay xpos is not set&quot; &quot; taking default : %d&quot;,
+        kpriv-&gt;overlay_image_xpos);
+  } else {
+    kpriv-&gt;overlay_image_xpos = json_integer_value (val);
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level,
+        &quot;Overlay xpos is  : %d&quot;, kpriv-&gt;overlay_image_xpos);
+  }
+
+
+  /* Get and set the y position of the overlay image
+   * to draw on input buffer
+   */
+  val = json_object_get (jconfig, &quot;overlay_image_ypos&quot;);
+  if (!val || !json_is_integer (val)) {
+    kpriv-&gt;overlay_image_ypos = DEFAULT_Y_POS;
+    LOG_MESSAGE (LOG_LEVEL_WARNING, kpriv-&gt;log_level,
+        &quot;Overlay xpos is not set&quot; &quot; taking default : %d&quot;,
+        kpriv-&gt;overlay_image_ypos);
+  } else {
+    kpriv-&gt;overlay_image_ypos = json_integer_value (val);
+    LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level,
+        &quot;Overlay ypos is  : %d&quot;, kpriv-&gt;overlay_image_ypos);
+  }
+
+  /* Open, read and store the overlay image */
+  ifstream input_file (kpriv-&gt;overlay_image_path);
+  if (!input_file.is_open ()) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, kpriv-&gt;log_level,
+        &quot;Could not open overlay image  : %s&quot;, kpriv-&gt;overlay_image_path);
+
+    return EXIT_FAILURE;
+  }
+  input_file.read (kpriv-&gt;input_overlay_image,
+      (int) (kpriv-&gt;overlay_image_height * kpriv-&gt;overlay_image_width *
+          NV12_BYTE_SIZE));
+  input_file.close ();
+
+  LOG_MESSAGE (LOG_LEVEL_INFO, kpriv-&gt;log_level,
+      &quot;Completed reading %s &quot;, kpriv-&gt;overlay_image_path);
+
+  /* Populate the kernel private in the kernel handle */
+  handle-&gt;kernel_priv = (void *) kpriv;
+
+  /* Enable multiprocess as we are using ``vvas_kernel_start`` method */
+  handle-&gt;is_multiprocess = 1;
+
+  return 0;
+}
+</pre></div>
+</div>
+<p>After completing all the initializations in <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_init</span></code> API , it is the time to execute the kernel in <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_start</span></code> API. <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_start</span></code> is called by infrastructure plug-in for each input frame/buffer it has received for further processing by the kernel.</p>
+<p>As the <code class="docutils literal notranslate"><span class="pre">vvas_xsample</span></code> is a hard kernel, all the arguments passed to it deals with physical addresses.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uint32_t</span>
+    <span class="n">xlnx_kernel_start</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="nb">int</span> <span class="n">start</span><span class="p">,</span>
+    <span class="n">VVASFrame</span> <span class="o">*</span> <span class="nb">input</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">],</span> <span class="n">VVASFrame</span> <span class="o">*</span> <span class="n">output</span><span class="p">[</span><span class="n">MAX_NUM_OBJECT</span><span class="p">])</span> <span class="p">{</span>
+
+  <span class="nb">int</span> <span class="n">ret</span><span class="p">;</span>
+  <span class="n">vvasSampleKernelPriv</span> <span class="o">*</span><span class="n">kpriv</span> <span class="o">=</span> <span class="p">(</span><span class="n">vvasSampleKernelPriv</span> <span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">kernel_priv</span><span class="p">;</span>
+  <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_INFO</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;Kernel Start&quot;</span><span class="p">);</span>
+  <span class="o">/*</span> <span class="n">Get</span> <span class="n">the</span> <span class="n">physical</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">buffer</span> <span class="o">*/</span>
+  <span class="n">uint64_t</span> <span class="n">input_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">paddr</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="o">/*</span> <span class="n">Get</span> <span class="n">the</span> <span class="n">physical</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="n">output</span> <span class="n">buffer</span> <span class="o">*/</span>
+  <span class="n">uint64_t</span> <span class="n">output_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">paddr</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="o">/*</span> <span class="n">Get</span> <span class="n">the</span> <span class="n">height</span> <span class="n">of</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">buffer</span> <span class="o">*/</span>
+  <span class="n">short</span> <span class="n">width</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">props</span><span class="o">.</span><span class="n">width</span><span class="p">;</span>
+  <span class="o">/*</span> <span class="n">Get</span> <span class="n">the</span> <span class="n">width</span> <span class="n">of</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">buffer</span> <span class="o">*/</span>
+  <span class="n">short</span> <span class="n">height</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">props</span><span class="o">.</span><span class="n">height</span><span class="p">;</span>
+
+  <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">arguments</span> <span class="n">that</span> <span class="n">we</span> <span class="n">are</span> <span class="n">going</span> <span class="n">to</span> <span class="k">pass</span>
+   <span class="o">*</span> <span class="n">to</span> <span class="n">the</span> <span class="n">vvas_xsample</span> <span class="n">kernel</span> <span class="k">with</span> <span class="n">the</span> <span class="n">initialized</span> <span class="n">values</span>
+   <span class="o">*</span>  <span class="ow">in</span> <span class="n">xlnx_kernel_init</span>
+   <span class="o">*/</span>
+  <span class="n">char</span> <span class="n">c_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">c_value</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">char</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="n">char</span> <span class="n">uc_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">uc_value</span><span class="p">;</span>   <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">unsigned</span> <span class="n">char</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="n">short</span> <span class="n">s_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">s_value</span><span class="p">;</span>     <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">short</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="n">short</span> <span class="n">us_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">us_value</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">unsigned</span> <span class="n">short</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="nb">int</span> <span class="n">i_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">i_value</span><span class="p">;</span>       <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="nb">int</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="nb">int</span> <span class="n">ui_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">ui_value</span><span class="p">;</span>    <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">unsigned</span> <span class="nb">int</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="nb">float</span> <span class="n">f_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">f_value</span><span class="p">;</span>     <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="nb">float</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="n">double</span> <span class="n">d_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">d_value</span><span class="p">;</span>    <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">double</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="n">long</span> <span class="n">long</span> <span class="n">ll_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">ll_value</span><span class="p">;</span>       <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">long</span> <span class="n">long</span> <span class="n">argument</span> <span class="o">*/</span>
+  <span class="n">unsigned</span> <span class="n">long</span> <span class="n">long</span> <span class="n">ul_value</span> <span class="o">=</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">ul_value</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">unsigned</span> <span class="n">long</span> <span class="n">long</span> <span class="n">argument</span> <span class="o">*/</span>
+
+  <span class="o">/*</span> <span class="n">Get</span> <span class="n">the</span> <span class="n">device</span> <span class="ow">and</span> <span class="n">kernel</span> <span class="n">handle</span> <span class="n">to</span> <span class="n">create</span> <span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="n">s</span>
+   <span class="o">*</span> <span class="n">which</span> <span class="n">are</span> <span class="n">passed</span> <span class="n">to</span> <span class="n">vvas_xsample</span> <span class="n">kernel</span>
+   <span class="o">*/</span>
+  <span class="n">xrt</span><span class="p">::</span><span class="n">device</span> <span class="o">*</span> <span class="n">device</span> <span class="o">=</span> <span class="p">(</span><span class="n">xrt</span><span class="p">::</span><span class="n">device</span> <span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">dev_handle</span><span class="p">;</span>
+  <span class="n">xrt</span><span class="p">::</span><span class="n">kernel</span> <span class="o">*</span> <span class="n">kernel</span> <span class="o">=</span> <span class="p">(</span><span class="n">xrt</span><span class="p">::</span><span class="n">kernel</span> <span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">kern_handle</span><span class="p">;</span>
+
+  <span class="o">/*</span> <span class="n">In</span> <span class="n">this</span> <span class="n">example</span><span class="p">,</span> <span class="n">the</span> <span class="n">xrt</span><span class="p">::</span><span class="n">kernel</span><span class="p">::</span><span class="n">group_id</span><span class="p">()</span> <span class="n">member</span> <span class="n">function</span> <span class="ow">is</span> <span class="n">used</span> <span class="n">to</span> <span class="k">pass</span> <span class="n">the</span> <span class="n">memory</span> <span class="n">bank</span> <span class="n">index</span><span class="o">.</span>
+   <span class="o">*</span> <span class="n">This</span> <span class="n">member</span> <span class="n">function</span> <span class="n">accept</span> <span class="n">kernel</span> <span class="n">argument</span><span class="o">-</span><span class="n">index</span> <span class="ow">and</span> <span class="n">automatically</span>
+   <span class="o">*</span> <span class="n">detect</span> <span class="n">corresponding</span> <span class="n">memory</span> <span class="n">bank</span> <span class="n">index</span> <span class="n">by</span> <span class="n">inspecting</span> <span class="n">XCLBIN</span><span class="o">.</span>
+   <span class="o">*/</span>
+
+  <span class="o">/*</span> <span class="n">Passing</span> <span class="mi">13</span> <span class="n">to</span> <span class="n">group_id</span> <span class="n">indicates</span> <span class="n">to</span> <span class="n">create</span> <span class="n">the</span> <span class="n">bo</span> <span class="n">on</span> <span class="n">memory</span> <span class="n">bank</span>
+   <span class="o">*</span> <span class="n">index</span> <span class="n">attached</span> <span class="n">to</span> <span class="mi">13</span><span class="n">th</span> <span class="n">argument</span> <span class="n">of</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">function</span>
+   <span class="o">*</span> <span class="n">which</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">input_overlay_buffer</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">example</span><span class="o">.</span>
+   <span class="o">*/</span>
+
+  <span class="n">auto</span> <span class="n">input_overlay_buffer</span> <span class="o">=</span> <span class="n">new</span> <span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="p">(</span><span class="o">*</span><span class="n">device</span><span class="p">,</span>
+      <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_height</span> <span class="o">*</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_width</span> <span class="o">*</span>
+          <span class="n">NV12_BYTE_SIZE</span><span class="p">),</span>
+      <span class="n">XRT_BO_FLAGS_NONE</span><span class="p">,</span> <span class="n">kernel</span><span class="o">-&gt;</span><span class="n">group_id</span> <span class="p">(</span><span class="mi">13</span><span class="p">));</span>
+
+  <span class="o">/*</span> <span class="n">Passing</span> <span class="mi">18</span> <span class="n">to</span> <span class="n">group_id</span> <span class="n">indicates</span> <span class="n">to</span> <span class="n">create</span> <span class="n">the</span> <span class="n">bo</span> <span class="n">on</span> <span class="n">memory</span> <span class="n">bank</span>
+   <span class="o">*</span> <span class="n">index</span> <span class="n">attached</span> <span class="n">to</span> <span class="mi">18</span><span class="n">th</span> <span class="n">argument</span> <span class="n">of</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">function</span>
+   <span class="o">*</span> <span class="n">which</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">input_string</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">example</span><span class="o">.</span>
+   <span class="o">*/</span>
+
+  <span class="n">auto</span> <span class="n">input_string</span> <span class="o">=</span> <span class="n">new</span>
+      <span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="p">(</span><span class="o">*</span><span class="n">device</span><span class="p">,</span> <span class="n">strlen</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">XRT_BO_FLAGS_NONE</span><span class="p">,</span>
+      <span class="n">kernel</span><span class="o">-&gt;</span><span class="n">group_id</span> <span class="p">(</span><span class="mi">18</span><span class="p">));</span>
+
+  <span class="o">/*</span> <span class="n">Passing</span> <span class="mi">19</span> <span class="n">to</span> <span class="n">group_id</span> <span class="n">indicates</span> <span class="n">to</span> <span class="n">create</span> <span class="n">the</span> <span class="n">bo</span> <span class="n">on</span> <span class="n">memory</span> <span class="n">bank</span>
+   <span class="o">*</span> <span class="n">index</span> <span class="n">attached</span> <span class="n">to</span> <span class="mi">19</span><span class="n">th</span> <span class="n">argument</span> <span class="n">of</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">function</span>
+   <span class="o">*</span> <span class="n">which</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">output_string</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">example</span><span class="o">.</span>
+   <span class="o">*/</span>
+
+  <span class="n">auto</span> <span class="n">output_string</span> <span class="o">=</span> <span class="n">new</span>
+      <span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="p">(</span><span class="o">*</span><span class="n">device</span><span class="p">,</span> <span class="n">strlen</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">XRT_BO_FLAGS_NONE</span><span class="p">,</span>
+      <span class="n">kernel</span><span class="o">-&gt;</span><span class="n">group_id</span> <span class="p">(</span><span class="mi">19</span><span class="p">));</span>
+
+  <span class="o">/*</span> <span class="n">Passing</span> <span class="mi">13</span> <span class="n">to</span> <span class="n">group_id</span> <span class="n">indicates</span> <span class="n">to</span> <span class="n">create</span> <span class="n">the</span> <span class="n">bo</span> <span class="n">on</span> <span class="n">memory</span> <span class="n">bank</span>
+   <span class="o">*</span> <span class="n">index</span> <span class="n">attached</span> <span class="n">to</span> <span class="mi">13</span><span class="n">th</span> <span class="n">argument</span> <span class="n">of</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">function</span>
+   <span class="o">*</span> <span class="n">which</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">output_structure</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">example</span><span class="o">.</span>
+   <span class="o">*/</span>
+
+  <span class="n">auto</span> <span class="n">xrt_output_structure</span> <span class="o">=</span> <span class="n">new</span>
+      <span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="p">(</span><span class="o">*</span><span class="n">device</span><span class="p">,</span> <span class="n">sizeof</span> <span class="p">(</span><span class="n">VvasSampleStruct</span><span class="p">),</span> <span class="n">XRT_BO_FLAGS_NONE</span><span class="p">,</span>
+      <span class="n">kernel</span><span class="o">-&gt;</span><span class="n">group_id</span> <span class="p">(</span><span class="mi">21</span><span class="p">));</span>
+
+  <span class="o">/*</span> <span class="n">Hold</span> <span class="n">the</span> <span class="n">references</span> <span class="n">to</span> <span class="n">validate</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">after</span> <span class="n">its</span> <span class="n">functionality</span> <span class="ow">is</span> <span class="n">done</span> <span class="o">*/</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_input_string</span> <span class="o">=</span> <span class="p">(</span><span class="n">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">input_string</span><span class="p">;</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_input_overlay_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="n">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">input_overlay_buffer</span><span class="p">;</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_output_string</span> <span class="o">=</span> <span class="p">(</span><span class="n">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">output_string</span><span class="p">;</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_output_structure</span> <span class="o">=</span> <span class="p">(</span><span class="n">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">xrt_output_structure</span><span class="p">;</span>
+
+  <span class="o">/*</span> <span class="n">Reset</span> <span class="n">the</span> <span class="n">buffer</span> <span class="n">objects</span> <span class="o">*/</span>
+  <span class="n">memset</span> <span class="p">(</span><span class="n">input_overlay_buffer</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">(),</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_height</span> <span class="o">*</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_width</span> <span class="o">*</span>
+          <span class="n">NV12_BYTE_SIZE</span><span class="p">));</span>
+  <span class="n">memset</span> <span class="p">(</span><span class="n">xrt_output_structure</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sizeof</span> <span class="p">(</span><span class="n">VvasSampleStruct</span><span class="p">));</span>
+  <span class="n">memset</span> <span class="p">(</span><span class="n">input_string</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">strlen</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">memset</span> <span class="p">(</span><span class="n">output_string</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">strlen</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+
+  <span class="o">/*</span> <span class="n">Fill</span> <span class="n">the</span> <span class="n">buffer</span> <span class="n">objects</span> <span class="k">with</span> <span class="n">Input</span> <span class="n">Data</span> <span class="o">*/</span>
+  <span class="n">memcpy</span> <span class="p">(</span><span class="n">input_overlay_buffer</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">(),</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_overlay_image</span><span class="p">,</span>
+      <span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_height</span> <span class="o">*</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_width</span> <span class="o">*</span>
+      <span class="n">NV12_BYTE_SIZE</span><span class="p">);</span>
+  <span class="n">memcpy</span> <span class="p">(</span><span class="n">input_string</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">(),</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">,</span>
+      <span class="n">strlen</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+
+  <span class="o">/*</span> <span class="n">Check</span> <span class="n">whether</span> <span class="n">x</span><span class="o">-</span><span class="n">position</span> <span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="n">position</span> <span class="n">of</span> <span class="n">overlay</span>
+   <span class="o">*</span> <span class="n">image</span> <span class="n">exceeds</span> <span class="n">the</span> <span class="n">boundaries</span> <span class="n">of</span> <span class="nb">input</span> <span class="n">buffer</span>
+   <span class="o">*/</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_xpos</span> <span class="o">+</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_width</span> <span class="o">&gt;</span> <span class="n">width</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_xpos</span> <span class="o">=</span> <span class="n">DEFAULT_X_POS</span><span class="p">;</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_WARNING</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;Overlay xpos is making the image to overlay out of bounds so&quot;</span>
+        <span class="s2">&quot; taking default : </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_xpos</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_ypos</span> <span class="o">+</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_height</span> <span class="o">&gt;</span> <span class="n">width</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_ypos</span> <span class="o">=</span> <span class="n">DEFAULT_Y_POS</span><span class="p">;</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_WARNING</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;Overlay ypos is making the image to overlay out of bounds so&quot;</span>
+        <span class="s2">&quot; taking default : </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_ypos</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="o">/*</span> <span class="n">Use</span> <span class="n">the</span> <span class="nb">format</span> <span class="n">specifier</span> <span class="k">for</span> <span class="n">kernel</span> <span class="n">arguments</span> <span class="k">as</span> <span class="n">explained</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">Execution</span> <span class="n">APIs</span> <span class="n">section</span>
+   <span class="o">*</span>   <span class="s2">&quot;i&quot;</span> <span class="p">:</span> <span class="n">Signed</span> <span class="nb">int</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;u&quot;</span> <span class="p">:</span> <span class="n">Unsigned</span> <span class="nb">int</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;f&quot;</span> <span class="p">:</span> <span class="n">Float</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;F&quot;</span> <span class="p">:</span> <span class="n">Double</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;c&quot;</span> <span class="p">:</span> <span class="n">Char</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;C&quot;</span> <span class="p">:</span> <span class="n">Unsigned</span> <span class="n">char</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;S&quot;</span> <span class="p">:</span> <span class="n">Short</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;U&quot;</span> <span class="p">:</span> <span class="n">Unsigned</span> <span class="n">short</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;l&quot;</span> <span class="p">:</span> <span class="n">Unsigned</span> <span class="n">long</span> <span class="n">long</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;d&quot;</span> <span class="p">:</span> <span class="n">Long</span> <span class="n">long</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;p&quot;</span> <span class="p">:</span> <span class="n">Any</span> <span class="n">pointer</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;b&quot;</span> <span class="p">:</span> <span class="n">Buffer</span> <span class="n">Object</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>   <span class="s2">&quot;s&quot;</span> <span class="p">:</span> <span class="n">If</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span> <span class="n">skip</span> <span class="n">the</span> <span class="n">argument</span><span class="o">.</span>
+   <span class="o">*</span>
+   <span class="o">*</span>   <span class="n">For</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">arguments</span> <span class="n">passing</span> <span class="n">to</span> <span class="n">vvas_xsample</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">the</span> <span class="nb">format</span> <span class="n">specifier</span> <span class="n">string</span> <span class="n">looks</span>
+   <span class="o">*</span>   <span class="n">like</span> <span class="s2">&quot;iufFcCSUldpSSpSSSSppSbp&quot;</span>
+   <span class="o">*/</span>
+
+
+  <span class="o">/*</span> <span class="n">Execute</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">using</span> <span class="n">vvas_kernel_start</span> <span class="n">API</span><span class="o">.</span>
+   <span class="o">*</span> <span class="n">This</span> <span class="n">API</span> <span class="n">internally</span> <span class="n">uses</span> <span class="n">Xilinx</span> <span class="n">Run</span> <span class="n">Time</span> <span class="p">(</span><span class="n">XRT</span><span class="p">)</span> <span class="n">APIs</span> <span class="n">to</span> <span class="n">start</span> <span class="n">the</span> <span class="n">kernel</span><span class="o">.</span>
+   <span class="o">*/</span>
+
+
+  <span class="n">ret</span> <span class="o">=</span>
+      <span class="n">vvas_kernel_start</span> <span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s2">&quot;iufFcCSUldpSSpSSSSppSbp&quot;</span><span class="p">,</span> <span class="n">i_value</span><span class="p">,</span> <span class="n">ui_value</span><span class="p">,</span>
+      <span class="n">f_value</span><span class="p">,</span> <span class="n">d_value</span><span class="p">,</span> <span class="n">c_value</span><span class="p">,</span> <span class="n">uc_value</span><span class="p">,</span> <span class="n">s_value</span><span class="p">,</span> <span class="n">us_value</span><span class="p">,</span> <span class="n">ul_value</span><span class="p">,</span>
+      <span class="n">ll_value</span><span class="p">,</span> <span class="n">input_buffer</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">input_overlay_buffer</span><span class="o">-&gt;</span><span class="n">address</span> <span class="p">(),</span>
+      <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_height</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_width</span><span class="p">,</span>
+      <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_xpos</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">overlay_image_ypos</span><span class="p">,</span>
+      <span class="n">input_string</span><span class="o">-&gt;</span><span class="n">address</span> <span class="p">(),</span> <span class="n">output_string</span><span class="o">-&gt;</span><span class="n">address</span> <span class="p">(),</span>
+      <span class="n">strlen</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">),</span> <span class="n">xrt_output_structure</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">);</span>
+
+  <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_INFO</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+      <span class="s2">&quot;SAMPLE KERNEL : Kernel Started&quot;</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_ERROR</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;SAMPLE KERNEL : failed to issue execute command&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To know whether the kernel has finished processing the current frame/buffer, infrastructure plug-in or an application will call <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_done</span></code>. We must call <code class="docutils literal notranslate"><span class="pre">vvas_kernel_done</span></code> utility API to know if kernel has finished processing the current job in <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_done</span></code>. When it returns true we can validate the functionality of the kernel.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">int32_t</span> <span class="n">xlnx_kernel_done</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="nb">int</span> <span class="n">ret</span><span class="p">;</span>
+  <span class="n">vvasSampleKernelPriv</span> <span class="o">*</span><span class="n">kpriv</span> <span class="o">=</span> <span class="p">(</span><span class="n">vvasSampleKernelPriv</span> <span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">kernel_priv</span><span class="p">;</span>
+
+  <span class="o">/*</span> <span class="n">Use</span> <span class="n">the</span> <span class="n">vvas_kernel_done</span> <span class="n">API</span> <span class="n">to</span> <span class="n">check</span> <span class="n">whether</span> <span class="n">the</span> <span class="n">IP</span> <span class="ow">or</span> <span class="n">kernel</span> <span class="n">has</span> <span class="n">finished</span> <span class="n">execution</span><span class="o">.</span>
+   <span class="o">*</span> <span class="n">This</span> <span class="n">function</span> <span class="n">internally</span> <span class="n">loops</span> <span class="k">for</span> <span class="n">MAX_EXEC_WAIT_RETRY_CNT</span> <span class="n">times</span>
+   <span class="o">*</span> <span class="n">until</span> <span class="n">a</span> <span class="n">timeout</span> <span class="n">before</span> <span class="n">returning</span> <span class="n">an</span> <span class="n">error</span><span class="o">.</span>
+   <span class="o">*/</span>
+  <span class="n">ret</span> <span class="o">=</span> <span class="n">vvas_kernel_done</span> <span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">VVAS_SAMPLE_KERNEL_TIMEOUT</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_ERROR</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;ROTATE: failed to receive response from kernel&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_INFO</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+      <span class="s2">&quot;SAMPLE KERNEL : Kernel Done&quot;</span><span class="p">);</span>
+
+  <span class="o">/*</span>
+   <span class="o">*</span> <span class="n">Validating</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">parameters</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">kernel</span>
+   <span class="o">*/</span>
+  <span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="o">*</span> <span class="n">xrt_output_string</span> <span class="o">=</span> <span class="p">(</span><span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="o">*</span><span class="p">)</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_output_string</span><span class="p">;</span>
+  <span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="o">*</span> <span class="n">xrt_output_structure</span> <span class="o">=</span> <span class="p">(</span><span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="o">*</span><span class="p">)</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_output_structure</span><span class="p">;</span>
+
+  <span class="o">/*</span> <span class="n">One</span> <span class="n">of</span> <span class="n">the</span> <span class="n">functionality</span> <span class="n">of</span> <span class="n">the</span> <span class="n">vvas_xsample</span> <span class="n">hard</span> <span class="n">kernel</span> <span class="ow">is</span> <span class="n">to</span>
+   <span class="o">*</span> <span class="n">increment</span> <span class="n">the</span> <span class="n">arguments</span> <span class="p">(</span><span class="kn">from</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">10</span><span class="p">)</span> <span class="n">values</span> <span class="n">by</span> <span class="mi">1</span> <span class="ow">and</span>
+   <span class="o">*</span>  <span class="n">store</span> <span class="n">them</span> <span class="ow">in</span> <span class="n">xrt_output_structure</span>
+   <span class="o">*/</span>
+
+  <span class="o">/*</span> <span class="n">Get</span> <span class="n">the</span> <span class="n">virtual</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="n">xrt_output_structure</span> <span class="n">bo</span> <span class="k">for</span> <span class="n">validating</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">data</span> <span class="n">types</span> <span class="o">*/</span>
+  <span class="n">VvasSampleStruct</span> <span class="o">*</span><span class="n">output_structure</span> <span class="o">=</span>
+      <span class="p">(</span><span class="n">VvasSampleStruct</span> <span class="o">*</span><span class="p">)</span> <span class="n">xrt_output_structure</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">i_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">i_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;int TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;int TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">ui_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">ui_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned int TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned int TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">f_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">f_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;float TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;float TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">d_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">d_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;double TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;double TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">c_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">c_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;char TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;char TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">uc_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">uc_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned char TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned char TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">s_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">s_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;short TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;short TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">us_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">us_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned short TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned short TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">ul_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">ul_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned long long TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;unsigned long long TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">output_structure</span><span class="o">-&gt;</span><span class="n">ll_value</span> <span class="o">==</span> <span class="p">(</span><span class="o">++</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">ll_value</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;long long TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;long long TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;output string </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+      <span class="p">(</span><span class="n">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">xrt_output_string</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">());</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">strcmp</span> <span class="p">(</span><span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">input_string</span><span class="p">,</span> <span class="p">(</span><span class="n">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">xrt_output_string</span><span class="o">-&gt;</span><span class="nb">map</span> <span class="p">()))</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot; void TEST FAILED&quot;</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">LOG_MESSAGE</span> <span class="p">(</span><span class="n">LOG_LEVEL_DEBUG</span><span class="p">,</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">log_level</span><span class="p">,</span> <span class="s2">&quot;void TEST PASSED&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="o">/*</span> <span class="n">delete</span> <span class="n">the</span> <span class="n">xrt</span> <span class="n">bos</span> <span class="n">which</span> <span class="n">are</span> <span class="n">allocated</span> <span class="ow">in</span> <span class="n">xlnx_kernel_start</span> <span class="o">*/</span>
+
+  <span class="n">delete</span> <span class="p">(</span><span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="o">*</span><span class="p">)</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_input_string</span><span class="p">;</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_input_string</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
+
+  <span class="n">delete</span> <span class="p">(</span><span class="n">xrt</span><span class="p">::</span><span class="n">bo</span> <span class="o">*</span><span class="p">)</span> <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_input_overlay_buffer</span><span class="p">;</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_input_overlay_buffer</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
+
+  <span class="n">delete</span> <span class="n">xrt_output_string</span><span class="p">;</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_output_string</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
+
+  <span class="n">delete</span> <span class="n">xrt_output_structure</span><span class="p">;</span>
+  <span class="n">kpriv</span><span class="o">-&gt;</span><span class="n">xrt_output_structure</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We must perform any clean-up, de-initialization tasks such as freeing private handles and internal memory allocation in <code class="docutils literal notranslate"><span class="pre">xlnx_kernel_deinit</span></code> API.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uint32_t</span> <span class="n">xlnx_kernel_deinit</span> <span class="p">(</span><span class="n">VVASKernel</span> <span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">vvasSampleKernelPriv</span> <span class="o">*</span><span class="n">kpriv</span> <span class="o">=</span> <span class="p">(</span><span class="n">vvasSampleKernelPriv</span> <span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">kernel_priv</span><span class="p">;</span>
+
+  <span class="o">/*</span> <span class="n">Free</span> <span class="n">private</span> <span class="n">handle</span> <span class="n">which</span> <span class="n">was</span> <span class="n">created</span> <span class="n">during</span> <span class="n">initialization</span> <span class="o">*/</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">kpriv</span><span class="p">)</span>
+    <span class="n">free</span> <span class="p">(</span><span class="n">kpriv</span><span class="p">);</span>
+  <span class="n">handle</span><span class="o">-&gt;</span><span class="n">kernel_priv</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The overlay image on the input buffer need to be visually verified.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="for_developers.html" class="btn btn-neutral float-left" title="Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Acceleration-Hardware.html" class="btn btn-neutral float-right" title="Acceleration Kernels" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

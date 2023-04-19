@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>VVAS Opticalflow Metadata &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Development Guide" href="../for_developers.html" />
+    <link rel="prev" title="VVAS Overlay Metadata" href="vvas_overlay_metadata.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../../../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../../../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="vvas_meta_data_structures.html">VVAS Meta Data</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vvas_inference_metadata.html">VVAS Inference Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vvas_overlay_metadata.html">VVAS Overlay Metadata</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">VVAS OpticleFlow Metadata</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gstoptflowmeta">GstOptflowMeta</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="vvas_meta_data_structures.html">VVAS Meta Data Structures</a> &raquo;</li>
+      <li>VVAS Opticalflow Metadata</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/docs/common/meta_data/vvas_optflow_metadata.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="vvas-opticalflow-metadata">
+<span id="vvas-optflow-metadata"></span><h1>VVAS Opticalflow Metadata<a class="headerlink" href="#vvas-opticalflow-metadata" title="Permalink to this heading">¶</a></h1>
+<p>VVAS optical flow metadata structure hold the information of motion of frame in x and y direction and object motion information. VVAS optical flow plugin set the optical flow meta data of frame. This metadata structure also supports storing of motion information in object level for further analysis by downstream plugins.  The GStreamer plug-ins can set and get optical flow metadata from the GstBuffer by using the gst_buffer_add_meta () API and gst_buffer_get_meta () API respectively.</p>
+<div class="section" id="gstoptflowmeta">
+<h2>GstOptflowMeta<a class="headerlink" href="#gstoptflowmeta" title="Permalink to this heading">¶</a></h2>
+<p>GstOptflowMeta stores the information of optical flow of frames and object motion information.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">_vvas_obj_motinfo</span>
+<span class="p">{</span>
+  <span class="nb">float</span> <span class="n">mean_x_displ</span><span class="p">;</span>
+  <span class="nb">float</span> <span class="n">mean_y_displ</span><span class="p">;</span>
+  <span class="nb">float</span> <span class="n">angle</span><span class="p">;</span>
+  <span class="nb">float</span> <span class="n">dist</span><span class="p">;</span>
+  <span class="n">char</span> <span class="n">dirc_name</span><span class="p">[</span><span class="n">DIR_NAME_SZ</span><span class="p">];</span>
+  <span class="n">BoundingBox</span> <span class="n">bbox</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+<span class="o">/**</span>
+<span class="o">*</span> <span class="n">GstVvasOverlayMeta</span><span class="p">:</span>
+<span class="o">*</span> <span class="nd">@num_objs</span><span class="p">:</span> <span class="n">number</span> <span class="n">of</span> <span class="n">objects</span> <span class="k">with</span> <span class="n">motion</span> <span class="n">information</span>
+<span class="o">*</span> <span class="nd">@obj_mot_infos</span><span class="p">:</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">objects</span>
+<span class="o">*</span> <span class="nd">@x_displ</span><span class="p">:</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">motion</span> <span class="n">data</span> <span class="n">of</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">x</span><span class="o">-</span><span class="n">direction</span>
+<span class="o">*</span> <span class="nd">@y_displ</span><span class="p">:</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">motion</span> <span class="n">data</span> <span class="n">of</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">y</span><span class="o">-</span><span class="n">directiont</span>
+<span class="o">*/</span>
+<span class="n">struct</span> <span class="n">_GstVvasOFMeta</span>
+<span class="p">{</span>
+  <span class="n">GstMeta</span> <span class="n">meta</span><span class="p">;</span>
+
+  <span class="n">guint</span> <span class="n">num_objs</span><span class="p">;</span>
+  <span class="n">GList</span> <span class="o">*</span><span class="n">obj_mot_infos</span><span class="p">;</span>
+
+  <span class="n">GstBuffer</span> <span class="o">*</span><span class="n">x_displ</span><span class="p">;</span>
+  <span class="n">GstBuffer</span> <span class="o">*</span><span class="n">y_displ</span><span class="p">;</span>
+
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="vvas_overlay_metadata.html" class="btn btn-neutral float-left" title="VVAS Overlay Metadata" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../for_developers.html" class="btn btn-neutral float-right" title="Development Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<!-- OneTrust Cookies Consent Notice start for xilinx.github.io -->
+
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="03af8d57-0a04-47a6-8f10-322fa00d8fc7" ></script>
+<script type="text/javascript">
+function OptanonWrapper() { }
+</script>
+<!-- OneTrust Cookies Consent Notice end for xilinx.github.io -->
+<!-- Google Tag Manager -->
+<script type="text/plain" class="optanon-category-C0002">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5RHQV7');</script>
+<!-- End Google Tag Manager -->
+  <title>Vitis Video Analytics SDK Release V3.0 &mdash; Vitis™ Video Analytics SDK 3.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="GStreamer Plug-ins" href="common/gstreamer_plugins/common_plugins.html" />
+    <link rel="prev" title="Vitis Video Analytics SDK Overview" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-5RHQV7" height="0" width="0" style="display:none;visibility:hidden" class="optanon-category-C0002"></iframe></noscript>
+<!-- End Google Tag Manager --> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+            <a href="../index.html" class="icon icon-home"> Vitis™ Video Analytics SDK
+            <img src="../_static/xilinx-header-logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#release-summary">Release Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-new-in-this-release">What is new in this release?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other-changes-compared-to-previous-release">Other changes compared to previous release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#known-limitations">Known Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#known-issues">Known Issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#embedded-platforms">Embedded Platforms</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Base Infrastructure</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="common/gstreamer_plugins/common_plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/meta_data/vvas_meta_data_structures.html">VVAS Meta Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/for_developers.html">VVAS For Advanced Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common/debug_support.html">VVAS Debug Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Embedded</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Embedded/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Embedded/embedded-plugins.html">VVAS GStreamer Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Embedded/Tutorials/Tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Data Center</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="DC/platforms_and_applications.html">Platforms &amp; Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="freq_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Vitis™ Video Analytics SDK</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Vitis Video Analytics SDK Release V3.0</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/release_notes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="vitis-video-analytics-sdk-release-v3-0">
+<h1>Vitis Video Analytics SDK Release V3.0<a class="headerlink" href="#vitis-video-analytics-sdk-release-v3-0" title="Permalink to this heading">¶</a></h1>
+<div class="section" id="release-summary">
+<h2>Release Summary<a class="headerlink" href="#release-summary" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Based on 2022.2 Tools</p></li>
+<li><p>Based on Vitis AI 3.0 for Machine Learning</p></li>
+<li><p>Based on GStreamer 1.18.5</p></li>
+<li><dl class="simple">
+<dt>Embedded Platforms</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Zynq</span> <span class="pre">UltraScale+</span> <span class="pre">MPSoC</span></code> as well as <code class="docutils literal notranslate"><span class="pre">Versal</span></code> based platforms</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>PCIe/Data Center Platform</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Alveo</span> <span class="pre">V70</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="what-is-new-in-this-release">
+<h2>What is new in this release?<a class="headerlink" href="#what-is-new-in-this-release" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Added support for below mentioned models</dt><dd><ul>
+<li><p>Pose detection</p></li>
+<li><p>Lane detection</p></li>
+<li><p>Crowd detection</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Added software resize and colorspace conversion support in <code class="docutils literal notranslate"><span class="pre">vvas_xabrscaler</span></code> plug-in</p></li>
+<li><p>Added support for xmodel where user can use any model supported by Vitis AI and <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in will perform the ML operation and returns the output tensor. User can perform his/her post-processing on the output tensor data. For more details, refer to  <a class="reference internal" href="common/gstreamer_plugins/plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a></p></li>
+<li><p>In Embedded platform example designs Autologin has been disabled and user need to enter login and password for each boot. “root” is the default user name and users are required to set the new password at the time of fist login.</p></li>
+<li><p>VVAS Tracker implementation uses <cite>Simd &lt;https://github.com/ermig1979/Simd&gt;</cite> library for high performance image processing operations. User has option to build VVAS with Simd library or not.</p></li>
+</ul>
+</div>
+<div class="section" id="other-changes-compared-to-previous-release">
+<h2>Other changes compared to previous release<a class="headerlink" href="#other-changes-compared-to-previous-release" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> accel-sw-lib has been discontinued and removed from this release. <code class="docutils literal notranslate"><span class="pre">vvas_xmetaconvert</span></code> and <code class="docutils literal notranslate"><span class="pre">vvas_xoverlay</span></code>  plug-ins can be used to implement the features supported by <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> and many more new features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> accel-sw-lib has been discontinued and removed from this release. <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in shall be used for the inference requirements.</p></li>
+<li><p>JSON file schema and fields have been updated. Refer to the relavant section in this document to know details about the modifications. In case you were already using previous version of VVAS release, then please adapt your applications as per changes in this release.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vvas_xpreprocessor</span></code> accel-sw-lib has been discontinued and removed from this release. Pre-processing functionality can be achieved through <code class="docutils literal notranslate"><span class="pre">vvas_xabrscaler</span></code> plug-in. Preprocessing needed by Machine Learning can also be done by <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vvas_xvcudec</span></code> plug-in has been discontinued and removed from this release and instead <code class="docutils literal notranslate"><span class="pre">vvas_xvideodec</span></code> plug-in has been introduced for video decoding on PCIe platform. This plug-in will not work on Alveo U30 platform.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vvas_xvcuenc</span></code> plug-in is not supported this release.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vvas_xlookahead</span></code> plug-in is not supported in this release.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v_multiscaler</span></code> kernel has been renamed to <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel to align with the features it supports.</p></li>
+<li><p>Support for Alveo U30 card has been discontinued and removed from this release</p></li>
+<li><p>Encoding and transcoding support has been removed in PCIe platform.</p></li>
+<li><p>GstInference metadata structure has been re-organized and hence it is not backward compatible with previous VVAS releases. In case you were already using previous version of VVAS release and GstInference metadata, then please adapt your applications as per changes in this release.</p></li>
+</ul>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Supports different input sources like Camera, RTP/RTSP streaming, file source etc.</p></li>
+<li><p>Hardware accelerated H264/H265 Video Encoding/Decoding.</p></li>
+<li><p>Vitis AI based inferencing for detection and classification</p></li>
+<li><p>VVAS offers extensive support for popular AI model classes like Object Detection, Object Classification, Segmentation, Pose Detection etc. For complete list of supported classes of models, refer to <strong>model-class</strong> in infer-config section of <a class="reference internal" href="common/gstreamer_plugins/plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a></p></li>
+<li><p>Hardware accelerated Resize and color space conversion</p></li>
+<li><p>On-screen displaying bounding box around objects, text, circle. arrows, polygon etc.</p></li>
+<li><p>HDMI Tx and Display Port interface for displaying the contents</p></li>
+</ul>
+</div>
+<div class="section" id="known-limitations">
+<h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Image_processing kernel require minimum cropping width and height to be 16. In case the cropping width or height is less than 16, then cropping is not performed.</p></li>
+<li><p>Due to the above limitation, during cascaded ML inferencing, in case the first stage ML inference generates objects with region of interest having width and/height less than 16, then the object is not cropped and the ML inference for that object in next stages will not be correct.</p></li>
+<li><p>In case <code class="docutils literal notranslate"><span class="pre">Image</span> <span class="pre">Processing</span></code> kernel is being used for resize, scaling or cropping, then output resolution width must be multiple of 8*PPC (Pixel Per Clock). <code class="docutils literal notranslate"><span class="pre">Image_processing</span></code> kernel can be configured to process 1, 2 or 4 Pixels Per Clock. Higher the PPC value, higher will be throughput. The kernel will always write the data in chunks of 8*PPC. In case the output width is not multiple of 8*PPC, then there may be some garbage data in the right side of the image, depending on the difference between the actual width and the 8*PPC aligned width.</p></li>
+<li><p>All inputs to the <code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> shall have same frame rate otherwise the processing will be controlled by the slowest frame rate input stream.</p></li>
+</ul>
+<p>For platform/example specific known limitations, refer to the example/application design.</p>
+</div>
+<div class="section" id="known-issues">
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this heading">¶</a></h2>
+<div class="section" id="embedded-platforms">
+<h3>Embedded Platforms<a class="headerlink" href="#embedded-platforms" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>On zcu104 boards, Cascaded pipelines OR several ML instances running simultaneously OR few models need more processing power when running in performance mode are sending board into bad state and needs reboot to recover from it. The default value of IOUT_OC_FAULT_LIMIT on PMIC chip irps5401 is too low and that is causing the temperature fault limit getting crossed. Workaround is to increase this limit. But there is risk of board getting damaged if running for long time.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          
+                  <style>
+                        .footer {
+                        position: fixed;
+                        left: 0;
+                        bottom: 0;
+                        width: 100%;
+                        }
+                  </style>
+				  
+				  <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Vitis Video Analytics SDK Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="common/gstreamer_plugins/common_plugins.html" class="btn btn-neutral float-right" title="GStreamer Plug-ins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2023, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on January 31, 2023.
+      </span></p>
+  </div>
+
+
+
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+
+													                    <div class="row">
+                        <div class="col-xs-24">
+                          <p><a target="_blank" href="https://www.amd.com/en/corporate/copyright">Terms and Conditions</a> | <a target="_blank" href="https://www.amd.com/en/corporate/privacy">Privacy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/cookies">Cookie Policy</a> | <a target="_blank" href="https://www.amd.com/en/corporate/trademarks">Trademarks</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/statement-human-trafficking-forced-labor.pdf">Statement on Forced Labor</a> | <a target="_blank" href="https://www.amd.com/en/corporate/competition">Fair and Open Competition</a> | <a target="_blank" href="https://www.amd.com/system/files/documents/amd-uk-tax-strategy.pdf">UK Tax Strategy</a> | <a target="_blank" href="https://docs.xilinx.com/v/u/9x6YvZKuWyhJId7y7RQQKA">Inclusive Terminology</a> | <a href="#cookiessettings" class="ot-sdk-show-settings">Cookies Settings</a></p>
+                        </div>
+                    </div>
+												</div>
+											</div>
+										</div>
+										
+</br>
+
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>
