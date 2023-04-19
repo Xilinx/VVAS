@@ -3,8 +3,11 @@
 vvas_xmetaconvert
 =================
 
-GStreamer vvas_xmetaconvert plug-in produces overlay metadata(GstVvasOverlayMeta) structure needed by :ref:`vvas_xoverlay` plug-in from VVAS ML inference metadata (i.e.GstInferenceMeta) which is attached input buffer. Static configuration parameters like font type, font size and etc need to be provided in JSON format via **config-location** property of this plugin.
-For implementation details, refer to `vvas_xmetaconvert source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaconvert>`_
+The ``vvas_xmetaconvert`` plug-in is used to convert VVAS ML inference metadata, which is attached to an input buffer, into overlay metadata, ``GstVvasOverlayMeta`` that is needed by the ``vvas_xoverlay`` plug-in.
+
+The ``vvas_xmetaconvert`` plug-in requires some static configuration parameters, such as font type and size, which are provided in the configuration file in JSON format. **config-location** property allows you to specify the location of the configuration file that contains the necessary parameters.
+
+By using these two plug-ins together, you can create an overlay, like bounding box, text etc., on a video frame/image that displays ML inference results in real-time. For implementation details, refer to `vvas_xmetaconvert source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaconvert>`_
 
 Input and Output
 --------------------
@@ -167,3 +170,27 @@ The following example demonstrates use of vvas_xmetaconvert with :ref:`vvas_xove
     ! vvas_xinfer infer-config="<PATH>/kernel_resnet50.json"
     ! vvas_xmetaconvert config-location="<PATH>/metaconvert.json"
     ! vvas_xoverlay ! filesink location=output.bgr
+
+..
+  ------------
+  
+  © Copyright 2023, Advanced Micro Devices, Inc.
+  
+   MIT License
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+

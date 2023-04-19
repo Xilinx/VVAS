@@ -3,19 +3,13 @@
 vvas_xtracker
 ===============
 
-The tracker plug-in tracks detected objects in a sequence of video frames. Because tracking is easier than detection, tracking algorithms can use fewer computational resources 
-than running an object detector on every frame and hence finds many applications.
+The tracker plug-in follows detected objects across a sequence of video frames. Since tracking is simpler than detection, tracking algorithms require fewer computational resources than running an object detector on every frame, which makes it useful in many applications.
 
-Each tracker element in the frame is given a unique ID and is initialized with the coordinates of the object detected by ML block. 
-The object is snipped from the frame and taken as a template. Afterwards, the tracker element updates the filter every time that there is an object hit, 
-adapting itself to the possible changes which an object might have during the video. 
+For each object in the frame, a unique ID is assigned and it is initialized with the coordinates of the object detected by the ML block. The object is extracted from the frame and used as a template. The tracker element then updates its filter every time the object is detected, adapting to any possible changes the object may undergo during the video.
 
-The tracker plug-in supports three types of object tracking algorithms, namely **Intersection-Over-Union (IOU), Kernelized Correlation Filters (KCF) and 
-Minimum Output Sum of Squared Error (MOSSE)**.  IOU algorithm is used when detection output is available for every frame.  
-Kernelized Correlation Filters (KCF) algorithm or Minimum Output Sum of Squared Error (MOSSE) filter algorithm implemented completely in software 
-using optimizations for the host processor.
+The tracker plug-in provides three types of object tracking algorithms: Intersection-Over-Union **(IOU)**, Kernelized Correlation Filters **(KCF)**, and Minimum Output Sum of Squared Error **(MOSSE)**. The IOU algorithm is used when detection output is available for every frame, while the KCF and MOSSE algorithms are implemented in software and optimized for the host processor.
 
-Tracker plugin supports tracking up to 16 objects. Tracker Id starts from 0 and supported till MAX_INT32, -1 will be used when Id is not aaigned yet by tracker.
+The tracker plug-in can track up to 16 objects, with the tracker ID starting at 0 and continuing up to MAX_INT32. An ID of -1 is used when the tracker has not yet been assigned an ID.
 
 
 .. figure:: ../../images/tracker_embedded_pipeline.png
@@ -230,3 +224,27 @@ The following is an example pipeline to demonstrate usage of vvas_xtracker plugi
    vvas_xoverlay ! \
    queue ! \
    fpsdisplaysink name="fpssink0" video-sink=\"fakesink async=false sync=false\" text-overlay=false sync=false -v
+
+..
+  ------------
+
+  © Copyright 2023, Advanced Micro Devices, Inc.
+
+   MIT License
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+

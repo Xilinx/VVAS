@@ -84,7 +84,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <li class="toctree-l4"><a class="reference internal" href="#scaler-types">Scaler Types</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#letterbox">Letterbox</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#envelope-cropped">Envelope Cropped</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#example-pipelines-and-jsons">Example Pipelines and Jsons</a></li>
 </ul>
 </li>
@@ -151,16 +150,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="vvas-xinfer">
 <span id="id1"></span><h1>vvas_xinfer<a class="headerlink" href="#vvas-xinfer" title="Permalink to this heading">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> is a GStreamer plug-in to performs inferencing on video frames/images and gives output as <code class="docutils literal notranslate"><span class="pre">GstInferenceMeta</span></code> object which is tree like structure of inference results. This metadata structure is attached to input GstBuffer. This plug-in can also perform hardware accelerated preprocessing operations like resize/crop/normalization etc. on incoming video frames/images before performing inferencing. <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is based on <code class="docutils literal notranslate"><span class="pre">Vitis-AI</span></code> library for inferencing. Hardware accelerated pre-processing using <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> is optional and requires <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel in the design. User may also use software based pre-processing which is internally using <code class="docutils literal notranslate"><span class="pre">Vitis-AI</span></code> library for pre-processing.</p>
-<p>If hardware accelerated preprocessing is enabled and <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is not receiving physically contiguous memory, then data will be an overhead of copying data into a physically contiguous memory before sending to preprocessing engine.</p>
-<p>Another useful feature of this plug-in is to consolidte the inferencing results of different stages of cascadded inferencing usecases. This plug-in can update/apend the new meta data information generated at each stage in to the metadata of the previous stages.</p>
-<p>For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/infer">vvas_xinfer source code</a></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> GStreamer plug-in is capable of performing inferencing on video frames/images and generating output in the form of a <code class="docutils literal notranslate"><span class="pre">GstInferenceMeta</span></code> object, which is a tree-like structure containing inference results. This metadata is attached to the input GstBuffer. Additionally, this plug-in can perform hardware-accelerated preprocessing operations, such as resize/crop/normalization, on incoming video frames/images before conducting inferencing. The <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in relies on the <code class="docutils literal notranslate"><span class="pre">Vitis-AI</span></code> library for inferencing.</p>
+<p>The use of hardware-accelerated preprocessing with the <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is optional and requires the presence of the <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel in the hardware design. Users may also opt to use software-based preprocessing, which internally uses the <code class="docutils literal notranslate"><span class="pre">Vitis-AI</span></code> library.</p>
+<p>If hardware-accelerated preprocessing is enabled and the <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is not receiving physically contiguous memory, there may be an overhead of copying data into physically contiguous memory before sending it to the preprocessing engine.</p>
+<p>Another useful feature of the <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in is its ability to consolidate the inferencing results of different stages of cascaded inferencing use cases. The plug-in can update/append the new metadata information generated at each stage into the metadata of the previous stages.</p>
+<p>For implementation details, please refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/infer">vvas_xinfer source code</a></p>
 <div class="figure align-center">
 <a class="reference internal image-reference" href="../../../_images/vvas_xinfer_blockdiagram.png"><img alt="../../../_images/vvas_xinfer_blockdiagram.png" src="../../../_images/vvas_xinfer_blockdiagram.png" style="width: 393.6px; height: 268.8px;" /></a>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In case of multithreaded applications, ML pipeline should be created by ensuring that the vvas_xinfer instances are created in a sequence and not concurrently by multiple threads.</p>
+<p>To ensure smooth operation of multithreaded applications, it is important to create the ML pipeline in such a way that vvas_xinfer instances are sequentially created instead of concurrently by multiple threads.</p>
 </div>
 <div class="section" id="input-and-output">
 <h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
@@ -171,7 +171,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <li><p>In case <code class="docutils literal notranslate"><span class="pre">image_processing</span></code> kernel in not there in the design then the input image to <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in must be in BGR/RGB format (depending on the model requirements) otherwise the results are unexpected.</p></li>
 </ul>
 </li>
-<li><p>Attaches <code class="docutils literal notranslate"><span class="pre">GstInferenceMeta</span></code> metadata to output GstBuffer. For details about meta data, refer to <a class="reference internal" href="../meta_data/vvas_inference_metadata.html#vvas-inference-metadata"><span class="std std-ref">VVAS Inference Metadata</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> attaches the <code class="docutils literal notranslate"><span class="pre">GstInferenceMeta</span></code> metadata to the output GstBuffer.. For details about meta data, refer to <a class="reference internal" href="../meta_data/vvas_inference_metadata.html#vvas-inference-metadata"><span class="std std-ref">VVAS Inference Metadata</span></a></p></li>
 </ul>
 </div>
 <div class="section" id="control-parameters">
@@ -469,14 +469,7 @@ When low-latency is disabled, vvas_xinfer plug-in will wait for inference-max-qu
 Embedded: /usr/lib/libvvascore_postprocessor.so
 PCIe: /opt/xilinx/vvas/lib/libvvascore_postprocessor.so</p></td>
 </tr>
-<tr class="row-odd"><td><p>postprocess-function</p></td>
-<td><p>string</p></td>
-<td><p>vvas_postprocess_rawtensor
-implemented.</p></td>
-<td><p>N/A</p></td>
-<td><p>Name of the custom function implemented in postprocess-lib-path for post-procesing.</p></td>
-</tr>
-<tr class="row-even"><td><p>debug-level</p></td>
+<tr class="row-odd"><td><p>debug-level</p></td>
 <td><p>Integer</p></td>
 <td><p>0 to 3</p></td>
 <td><p>1</p></td>
@@ -691,20 +684,6 @@ center: Image will be at the center i.e, padding will be added at both top and b
 <td><p>0</p></td>
 <td><p>VVAS output memory bank to allocate memory.</p></td>
 </tr>
-<tr class="row-odd"><td><p>debug-level</p></td>
-<td><p>Integer</p></td>
-<td><p>0 to 3</p></td>
-<td><p>1</p></td>
-<td><p>Used to enable log levels.</p>
-<p>There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity
-till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a
-log-level lower than it, (therefore messages with an higher severity) are displayed.</p>
-<p>0: This is the highest level in order of severity: it is used for messages about critical errors.</p>
-<p>1: This level is used in situations where you attention is immediately required.</p>
-<p>2: This is the log level used for information messages about the action performed by the kernel and output of model.</p>
-<p>3: This level is used for debugging.</p>
-</td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -713,35 +692,25 @@ log-level lower than it, (therefore messages with an higher severity) are displa
 </div>
 <div class="section" id="letterbox">
 <h2>Letterbox<a class="headerlink" href="#letterbox" title="Permalink to this heading">¶</a></h2>
-<p>Letterbox scaling is a method of preserving the aspect ratio of an image when resizing it to fit a specific resolution. The algorithm works by first determining the target aspect ratio, and then scaling the image down so that it fits within that aspect ratio while maintaining its original aspect ratio. The resulting image will have “letterbox” bars on the top and bottom (or left and right) of the image to fill the remaining space. This is done to ensure that the entire image is visible, and no important parts of the image are cut off.</p>
-<p>Example: Below input image of 1920x1080 is first being scaled down to a resolution of 416x234 using a technique that preserves the aspect ratio of the original image. After that, a letterbox method is applied to the scaled image by adding black bars horizontally to the image, which will result in the final resolution of 416x416 pixels.</p>
+<p>The letterbox scaling technique is used to maintain the aspect ratio of an image while resizing it to a specific resolution. This method involves determining the target aspect ratio and scaling the image down to fit within that ratio while preserving its original aspect ratio. The resulting image will have bars (either on the top and bottom or left and right) to fill in the remaining space, allowing the entire image to be visible without cutting off important parts.</p>
+<p>For instance, consider an input image of 1920x1080 which needs to be resized to a resolution of 416x234 while preserving the aspect ratio. After resizing, the letterbox method is applied by adding black bars horizontally to the image, resulting in a final resolution of 416x416 pixels.</p>
 <div class="figure align-center">
 <a class="reference internal image-reference" href="../../../_images/infer_letter_box.png"><img alt="../../../_images/infer_letter_box.png" src="../../../_images/infer_letter_box.png" style="width: 446.40000000000003px; height: 147.20000000000002px;" /></a>
 </div>
 </div>
 <div class="section" id="envelope-cropped">
 <h2>Envelope Cropped<a class="headerlink" href="#envelope-cropped" title="Permalink to this heading">¶</a></h2>
-<p>Envelope cropped scaling is a technique used in digital image processing to resize an image to fit within a specific resolution while preserving its aspect ratio.
-The algorithm for implementing envelope cropped scaling consists of several steps:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Determining the target aspect ratio by comparing the aspect ratio of the original image to the aspect ratio of the target resolution.</p></li>
-<li><p>Scaling the image down by a factor that preserves the original aspect ratio while ensuring that the smallest side of the image fits within the target resolution.</p></li>
-<li><p>Cropping the image by removing equal parts from both sides of the image, maintaining the central part of the image.</p></li>
-</ul>
-<p>By scaling the image so that the smallest side fits within the target resolution, it ensures that the input image is resized in a way that preserves its aspect ratio while fitting the target resolution. However, this method can result in important parts of the image being cut off, so it’s important to carefully consider the potential impact on the performance of the model.</p>
-</div></blockquote>
-</div>
-<div class="section" id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
-<p>Below input image of 1920x1080 is being scaled down to a resolution of 455x256 using the smallest side factor of 256 pixels. This new resolution preserves the aspect ratio of the original image. After that, a center crop of 224x224 pixels is taken from the scaled image to obtain the final resolution of 224x224 pixels.</p>
+<p>Envelope cropped scaling is a digital image processing technique that resizes an image to fit a specific resolution while maintaining its aspect ratio. The algorithm involves several steps:</p>
+<p>First, the target aspect ratio is determined by comparing the aspect ratio of the original image to that of the target resolution. Next, the image is scaled down by a factor that preserves its original aspect ratio while ensuring that the smallest side of the image fits within the target resolution. Finally, the image is cropped by removing equal parts from both sides of the image, thereby retaining the central part of the image.</p>
+<p>This technique ensures that the input image is resized while preserving its aspect ratio and fitting the target resolution by scaling the image down to ensure that the smallest side fits within the target resolution. However, it may result in cutting off important parts of the image, so the potential impact on the model’s performance must be carefully considered.</p>
+<p>For example, consider an input image of size 1920x1080 being scaled down to a resolution of 455x256 using the smallest side factor of 256 pixels, which preserves the original image’s aspect ratio. Following this, a center crop of 224x224 pixels is taken from the scaled image to achieve a final resolution of 224x224 pixels.</p>
 <div class="figure align-center">
 <a class="reference internal image-reference" href="../../../_images/infer_example_envelop_crop.png"><img alt="../../../_images/infer_example_envelop_crop.png" src="../../../_images/infer_example_envelop_crop.png" style="width: 592.0px; height: 192.0px;" /></a>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>scaler-type is not needed for all models. Few models have requirements that image be resized using specific techniques for better inference. Use scaler-type only when needed. Otherwise leave it unset.</p></li>
+<li><p>Not all models require the use of the scaler-type parameter. Some models have specific requirements for image resizing to achieve better inference results. Therefore, it is recommended to use the scaler-type parameter only when necessary, and leave it unset otherwise.</p></li>
 <li><p>bcc uses letterbox scaler-type for re-sizing.</p></li>
 <li><p>efficientnetd2 models use envelope_cropped scaler-type for re-sizing.</p></li>
 </ul>
@@ -749,9 +718,9 @@ The algorithm for implementing envelope cropped scaling consists of several step
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>Color format conversion is not supported by vitis-ai-preprocess. It is user’s responsibility to feed the frame in the format required by the model if “vitis-ai-preprocess” = true.</p></li>
-<li><p>If “vitis-ai-preprocess” = false and preprocess-config is not provided, then pre-processing operations like, Normalization, scaling must be performed on the frame before feeding to vvas_xinfer, otherwise results may not be as expected.</p></li>
-<li><p>If preprocess-config json is provided and “vitis-ai-preprocess” = true in infer-config json, then pre-processing is done by VVAS using hardware acceleration for better performance.</p></li>
+<li><p>Vitis-AI-Preprocess does not support color format conversion. Therefore, if “vitis-ai-preprocess” is set to true, it is the user’s responsibility to provide the frame in the format required by the model.</p></li>
+<li><p>If “vitis-ai-preprocess” is set to false and no preprocess-config is provided, it is necessary to perform pre-processing operations such as normalization and scaling on the frame prior to feeding it to vvas_xinfer. Failure to do so may result in unexpected outcomes.</p></li>
+<li><p>When “vitis-ai-preprocess” is set to true in the infer-config json and a preprocess-config json is also provided, VVAS performs pre-processing using hardware acceleration for improved performance.</p></li>
 </ul>
 </div>
 <div class="admonition note">
@@ -762,7 +731,7 @@ The algorithm for implementing envelope cropped scaling consists of several step
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>If tensors are needed instead of post-processed results, user can set “model-class” = “RAWTENSOR” in the infer-config json file.</p></li>
-<li><p>Users can implement their own post-processing to process the tensors. <code class="docutils literal notranslate"><span class="pre">vvascore_postprocessor</span></code> library is implemented to demonstrate how to implement post-processing library. This is only an example library for reference and is not optimized.</p></li>
+<li><p>Users have the option to implement their own post-processing to handle the tensors. For instance, the vvascore_postprocessor library serves as a demonstration of how to create a post-processing library. It should be noted that this is simply an example library for reference purposes, and is not optimized.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">vvascore_postprocessor</span></code> library only supports yolov3_voc, yolov3_voc_tf, plate_num, densebox_320_320, resnet_v1_50_tf models.</p></li>
 </ul>
 </div>
@@ -771,8 +740,8 @@ The algorithm for implementing envelope cropped scaling consists of several step
 <h2>Example Pipelines and Jsons<a class="headerlink" href="#example-pipelines-and-jsons" title="Permalink to this heading">¶</a></h2>
 <div class="section" id="single-stage-inference-example">
 <h3>Single stage inference example<a class="headerlink" href="#single-stage-inference-example" title="Permalink to this heading">¶</a></h3>
-<p>An example simple inference (YOLOv3) pipeline which takes NV12 YUV file (test.nv12) as input is described below:</p>
-<p>The below pipeline performs ML using a yolov3_voc_tf model. A 1920x1080 NV12 frame is fed to the vvas_xinfer plugin. The vvas_xinfer feeds this frame to the pre-processor which re-sizes the frame and convert color format as the model requires an RGB input. Along with this mean value subtraction and normalization operations are also performed on the frame. Now this re-sized and pre-processed frame is fed to inference library which gives the inference predictions. These inference predictions are then upscaled to the original resolution (1920x1080) and attached to the output buffer.</p>
+<p>Below is an example of a simple inference pipeline using YOLOv3. The input for this pipeline is an NV12 YUV file (test.nv12):</p>
+<p>The pipeline employs the yolov3_voc_tf model for ML inference. First, a 1920x1080 NV12 frame is fed into the vvas_xinfer plugin. The pre-processor then resizes the frame and converts the color format to RGB, which is required by the model. In addition, mean value subtraction and normalization operations are performed on the frame. The resized and pre-processed frame is then passed to the inference library, which generates the inference predictions. These predictions are then upscaled to the original resolution (1920x1080) and attached to the output buffer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&lt;test.nv12&gt; ! videoparse width=1920 height=1080 format=nv12 ! \
 vvas_xinfer preprocess-config=yolov_preproc.json infer-config=yolov3_voc_tf.json ! fakesink -v
 </pre></div>
@@ -804,8 +773,7 @@ vvas_xinfer preprocess-config=yolov_preproc.json infer-config=yolov3_voc_tf.json
    <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
       <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-         <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span>
       <span class="p">}</span>
    <span class="p">}</span>
 <span class="p">}</span>
@@ -849,8 +817,7 @@ vvas_xinfer preprocess-config=resnet_preproc.json infer-config=resnet18.json ! f
    <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
       <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-         <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span>
       <span class="p">}</span>
    <span class="p">}</span>
 <span class="p">}</span>
@@ -892,14 +859,13 @@ vvas_xinfer preprocess-config=yolov_preproc.json infer-config=yolov3_voc_tf.json
    <span class="s2">&quot;kernel&quot;</span> <span class="p">:</span> <span class="p">{</span>
       <span class="s2">&quot;kernel-name&quot;</span><span class="p">:</span> <span class="s2">&quot;image_processing:</span><span class="si">{image_processing_1}</span><span class="s2">&quot;</span><span class="p">,</span>
       <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-         <span class="s2">&quot;debug-level&quot;</span> <span class="p">:</span> <span class="mi">0</span>
+         <span class="s2">&quot;ppc&quot;</span><span class="p">:</span> <span class="mi">4</span>
       <span class="p">}</span>
    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Using the same pipeline described above, if post-processing has to be performed on the tensors, <code class="docutils literal notranslate"><span class="pre">postprocess-lib-path</span></code> and <code class="docutils literal notranslate"><span class="pre">postprocess-function</span></code> are added in the infer-config json. Note that the post-processing library used here is only a refernce library and does not support all models.</p>
+<p>Using the same pipeline described above, if post-processing has to be performed on the tensors, <code class="docutils literal notranslate"><span class="pre">postprocess-lib-path</span></code> is added in the infer-config json. Note that the post-processing library used here is only a refernce library and does not support all models.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="s2">&quot;inference-level&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
     <span class="s2">&quot;inference-max-queue&quot;</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span>
@@ -911,7 +877,6 @@ vvas_xinfer preprocess-config=yolov_preproc.json infer-config=yolov3_voc_tf.json
           <span class="s2">&quot;model-name&quot;</span> <span class="p">:</span> <span class="s2">&quot;yolov3_voc_tf&quot;</span><span class="p">,</span>
           <span class="s2">&quot;model-class&quot;</span> <span class="p">:</span> <span class="s2">&quot;RAWTENSOR&quot;</span><span class="p">,</span>
           <span class="s2">&quot;postprocess-lib-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/opt/xilinx/vvas/lib/libvvascore_postprocessor.so&quot;</span><span class="p">,</span>
-          <span class="s2">&quot;postprocess-function&quot;</span> <span class="p">:</span> <span class="s2">&quot;vvas_postprocess_tensor&quot;</span><span class="p">,</span>
           <span class="s2">&quot;model-format&quot;</span> <span class="p">:</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
           <span class="s2">&quot;model-path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/usr/share/vitis_ai_library/models/&quot;</span><span class="p">,</span>
           <span class="s2">&quot;vitis-ai-preprocess&quot;</span> <span class="p">:</span> <span class="n">false</span><span class="p">,</span>

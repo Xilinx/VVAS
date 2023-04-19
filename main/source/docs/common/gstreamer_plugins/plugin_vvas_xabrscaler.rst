@@ -3,9 +3,9 @@
 vvas_xabrscaler
 =================
 
-There are several use cases where the available frame resolution and color formats may not be suitable for the consumption by the next component. For example, in case of Machine Learning applications, input can be from different sources, resolutions, but ML models work on a fixed resolution. In such cases, the input image needs to be re-sized to a different resolution. Also, the input image color format may be YUV/NV12, but the ML models require image to be in BGR format. In this case we need to do the color space conversion as well. ML model may also require some pre-processing, like Mean Subtraction, Normalization etc. on the input image. 
+There are certain situations where the available frame resolution and color format may not be suitable for the next component's consumption. For instance, in machine learning applications, inputs can be sourced from different resolutions and color formats, but the ML models require fixed resolution and specific color formats. Thus, it becomes necessary to resize the input image to a different resolution and convert its color space, for example, to BGR.
 
-In adaptive bit rate (ABR) use cases, one video is encoded at different bit rates so that it can be streamed in different network bandwidth conditions without any artifacts. To achieve this, input frame is decoded, resized to different resolutions and then re-encoded. vvas_xabrscaler is a plug-in that takes one input frame and can produce several outputs frames having different resolutions and color formats. The ``vvas_xabrscaler`` is a GStreamer plug-in developed to accelerate the resize and color space conversion, Mean Subtraction, Normalization, and cropping. For more implementation details, refer to `vvas_xabrscaler source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/abrscaler>`_.
+In some adaptive bit rate (ABR) use cases, a single video is encoded at different bit rates to allow streaming under different network bandwidth conditions without artifacts. This requires the input frame to be decoded, resized to different resolutions, and then re-encoded. To accelerate these processes, ``vvas_xabrscaler`` is a GStreamer plug-in that can take one input frame and produce multiple output frames with different resolutions and color formats. This plug-in can also perform the ``pre-processing`` operations like mean subtraction, normalization, and cropping. For implementation details, please refer to `vvas_xabrscaler source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/abrscaler>`_.
 
 This plug-in supports:
 
@@ -22,7 +22,7 @@ This plug-in supports:
 Prerequisite
 ----------------
 
-This plug-in requires the ``image_processing`` kernel to be available in the hardware design and the kernel is configured with required color formats and maximum resolution as per your application needs. ``image_processing`` kernel configuration, like maximum resolution supported, color formats etc. can be found in `image-processing kernel config <https://github.com/Xilinx/VVAS/blob/master/vvas-accel-hw/image_processing/image_processing_config.h>`_
+To use this plug-in, your hardware design must have the ``image_processing`` kernel available and it must be configured to support the required color formats and maximum resolution for your application. You can find the configuration details for the ``image_processing`` kernel, including the supported maximum resolution and color formats, in `image-processing kernel config <https://github.com/Xilinx/VVAS/blob/master/vvas-accel-hw/image_processing/image_processing_config.h>`_
 
 Input and Output
 ------------------------
@@ -51,6 +51,7 @@ This plug-in accepts buffers with the following color format standards:
 * GBR
 
 .. important:: Make sure that the color formats needed for your application are supported by the image-processing hardware kernel. 
+
 ``image_processing`` kernel configuration, like maximum resolution supported, color formats etc. can be found in `image-processing kernel config <https://github.com/Xilinx/VVAS/blob/master/vvas-accel-hw/image_processing/image_processing_config.h>`_
 
 
@@ -281,3 +282,27 @@ Example pipeline:
 		! video/x-raw, width=1920, height=1080, format=NV12  \
 		! vvas_xabrscaler kernel-name="image_processing_sw:{image_processing_sw_1}" software-scaling=true coef-load-type=0 num-taps=12 \
 		! video/x-raw, width=1280, height=720, format=NV12 !  filesink location=output_sw_scale.nv12 -v
+
+..
+  ------------
+  
+  © Copyright 2023, Advanced Micro Devices, Inc.
+  
+   MIT License
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
