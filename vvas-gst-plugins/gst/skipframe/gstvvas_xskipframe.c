@@ -76,6 +76,8 @@ static gboolean gst_vvas_xskipframe_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_vvas_xskipframe_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
+static gboolean gst_vvas_xskip_frame_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 
 /**
  *  @brief Defines sink pad's template
@@ -208,6 +210,9 @@ gst_vvas_xskipframe_init (GstVvas_Xskipframe * vvas_xskipframe)
   gst_element_add_pad (GST_ELEMENT (vvas_xskipframe),
       vvas_xskipframe->skip_srcpad);
 
+  gst_pad_set_query_function (vvas_xskipframe->skip_srcpad,
+      GST_DEBUG_FUNCPTR (gst_vvas_xskip_frame_query));
+
   /* Create a hash table for maintain src_id and frame_id mapping */
   vvas_xskipframe->frameid_pair =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
@@ -289,6 +294,51 @@ gst_vvas_xskipframe_get_property (GObject * object, guint property_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
+}
+
+/**
+ *  @fn static GstFlowReturn gst_vvas_xskip_frame_query (GstPad * pad,
+ *                             GstObject * parent, GstQuery * query)
+ *  @param [in] pad     - GstPad onto which data was pushed
+ *  @param [in] parent  - Handle to GstVvas_Xskipframe instance
+ *  @param [in] query   - GstQuery
+ *  @return TRUE when query was successfully handled FALSE otherwise
+ *  @brief  This function will get invoked whenever a query is received onto the pad.
+ *  @details    The query function is the function in which handles all queries
+ *   received on pad.
+ */
+
+static gboolean
+gst_vvas_xskip_frame_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstVvas_Xskipframe *vvas_xskipframe = GST_VVAS_XSKIPFRAME (parent);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CUSTOM:{
+      const GstStructure *s = gst_query_get_structure (query);
+      GstStructure *st;
+
+      if (gst_structure_has_name (s, "infer-interval")) {
+        query = gst_query_make_writable (query);
+        st = gst_query_writable_structure (query);
+
+        if (st) {
+          gst_structure_set (st,
+              "infer_interval", G_TYPE_UINT, vvas_xskipframe->infer_interval,
+              NULL);
+        }
+        return TRUE;
+      }
+      break;
+    }
+
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  return ret;
 }
 
 /**
@@ -430,6 +480,7 @@ gst_vvas_xskipframe_sink_event (GstPad * pad, GstObject * parent,
       gst_event_parse_caps (event, &caps);
       gst_pad_set_caps (vvas_xskipframe->inference_srcpad, caps);
       gst_pad_set_caps (vvas_xskipframe->skip_srcpad, caps);
+      break;
     }
 
     case GST_EVENT_CUSTOM_DOWNSTREAM:{

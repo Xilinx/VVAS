@@ -638,8 +638,8 @@ vvas_xfilter_allocate_sink_internal_pool (GstVvas_XFilter * self)
   alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
 
   config = gst_buffer_pool_get_config (pool);
-  if (vvas_caps_get_sink_stride_align (vvas_handle) > 0 ||
-      vvas_caps_get_sink_height_align (vvas_handle) > 0) {
+  if (vvas_caps_get_sink_stride_align (vvas_handle) > 1 ||
+      vvas_caps_get_sink_height_align (vvas_handle) > 1) {
     GstVideoAlignment video_align = { 0, };
 
     gst_video_alignment_reset (&video_align);
@@ -748,8 +748,8 @@ gst_vvas_xfilter_propose_allocation (GstBaseTransform * trans,
     gst_buffer_pool_config_set_params (structure, caps, size, MIN_POOL_BUFFERS,
         0);
 
-    if (vvas_caps_get_sink_stride_align (vvas_handle) > 0
-        || vvas_caps_get_sink_height_align (vvas_handle) > 0) {
+    if (vvas_caps_get_sink_stride_align (vvas_handle) > 1
+        || vvas_caps_get_sink_height_align (vvas_handle) > 1) {
       GstVideoAlignment video_align = { 0, };
 
       gst_video_alignment_reset (&video_align);
@@ -806,7 +806,7 @@ static gboolean
 gst_vvas_xfilter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstVvas_XFilter *self = GST_VVAS_XFILTER (trans);
-  GstVideoInfo info;
+  GstVideoInfo info = { 0 };
   GstAllocator *allocator = NULL;
   GstAllocationParams params;
   GstBufferPool *pool = NULL;
@@ -860,8 +860,8 @@ gst_vvas_xfilter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     config = gst_buffer_pool_get_config (pool);
 
     GST_DEBUG_OBJECT (self, "got pool");
-    if ((vvas_caps_get_src_stride_align (vvas_handle) > 0
-            || vvas_caps_get_src_height_align (vvas_handle) > 0)
+    if ((vvas_caps_get_src_stride_align (vvas_handle) > 1
+            || vvas_caps_get_src_height_align (vvas_handle) > 1)
         && gst_buffer_pool_config_get_video_alignment (config,
             &video_align) == TRUE) {
 
@@ -997,8 +997,8 @@ next:
 
     GST_DEBUG_OBJECT (self, "no pool, making new pool");
     if (kernel->name) {         /* Hardware IP */
-      if (vvas_caps_get_src_stride_align (vvas_handle) > 0
-          || vvas_caps_get_src_height_align (vvas_handle) > 0) {
+      if (vvas_caps_get_src_stride_align (vvas_handle) > 1
+          || vvas_caps_get_src_height_align (vvas_handle) > 1) {
         pool =
             gst_vvas_buffer_pool_new (vvas_caps_get_src_stride_align
             (vvas_handle), vvas_caps_get_src_height_align (vvas_handle));
@@ -1038,8 +1038,8 @@ next:
       }
     } else {                    /* Software IP */
 
-      if (vvas_caps_get_src_stride_align (vvas_handle) > 0
-          || vvas_caps_get_src_height_align (vvas_handle) > 0) {
+      if (vvas_caps_get_src_stride_align (vvas_handle) > 1
+          || vvas_caps_get_src_height_align (vvas_handle) > 1) {
         pool = gst_video_buffer_pool_new ();
         GST_INFO_OBJECT (self, "created new pool %p %" GST_PTR_FORMAT, pool,
             pool);
@@ -1094,7 +1094,7 @@ next:
   }
 
   if (alignment_matched == FALSE && metadata_supported == FALSE) {
-    GST_ERROR_OBJECT (self, "slow copy to external buffer will happened");
+    GST_DEBUG_OBJECT (self, "slow copy to external buffer will happened");
     self->priv->need_copy = TRUE;
   }
 
@@ -1170,6 +1170,7 @@ vvas_xfilter_init (GstVvas_XFilter * self)
   iret = priv->kernel->kernel_init_func (vvas_handle);
   if (iret < 0) {
     GST_ERROR_OBJECT (self, "failed to do kernel init..");
+    pthread_mutex_unlock (&count_mutex);
     return FALSE;
   }
   pthread_mutex_unlock (&count_mutex);
@@ -1187,7 +1188,6 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
   GstVvas_XFilterPrivate *priv = self->priv;
   int iret, i;
   gint cu_idx = -1;
-  gboolean has_error = FALSE;
 
   if (priv->kernel) {
     if (priv->kernel->input[0])
@@ -1255,7 +1255,7 @@ vvas_xfilter_deinit (GstVvas_XFilter * self)
     }
     vvas_xrt_close_device (priv->dev_handle);
   }
-  return has_error ? FALSE : TRUE;
+  return TRUE;
 }
 
 static gboolean
@@ -1473,8 +1473,7 @@ gst_vvas_xfilter_start (GstBaseTransform * trans)
     }
   }
 
-  if (lib_path)
-    g_free (lib_path);
+  g_free (lib_path);
   if (root)
     json_decref (root);
   return TRUE;
@@ -2002,8 +2001,8 @@ vvas_xfilter_validate_inbuf (GstVvas_XFilter * self, GstBuffer * inbuf,
 
   vmeta = gst_buffer_get_video_meta (inbuf);
 
-  if (vvas_caps_get_sink_stride_align (vvas_handle) > 0 ||
-      vvas_caps_get_sink_height_align (vvas_handle) > 0) {
+  if (vvas_caps_get_sink_stride_align (vvas_handle) > 1 ||
+      vvas_caps_get_sink_height_align (vvas_handle) > 1) {
 
     if (inbuf->pool && (in_config = gst_buffer_pool_get_config (inbuf->pool)) &&
         gst_buffer_pool_config_get_video_alignment (in_config, &in_align) &&
@@ -2105,35 +2104,8 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
         && gst_vvas_memory_can_avoid_copy (in_mem, priv->dev_idx,
             vvas_handle->in_mem_bank)) {
 
-      if (use_inpool == TRUE) {
-        bret = vvas_xfilter_copy_input_buffer (self, inbuf, new_inbuf);
-        if (!bret)
-          goto error;
-
-        gst_memory_unref (in_mem);
-
-        in_mem = gst_buffer_get_memory (*new_inbuf, 0);
-        if (in_mem == NULL) {
-          GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
-          goto error;
-        }
-
-        phy_addr = gst_vvas_allocator_get_paddr (in_mem);
-        if (!phy_addr) {
-          GST_ERROR_OBJECT (self, "failed to get physical address");
-          goto error;
-        }
-        bo_handle = gst_vvas_allocator_get_bo (in_mem);
-        inbuf = *new_inbuf;
-        /* syncs data when VVAS_SYNC_TO_DEVICE flag is enabled */
-        bret = gst_vvas_memory_sync_bo (in_mem);
-        if (!bret)
-          goto error;
-
-      } else {
-        phy_addr = gst_vvas_allocator_get_paddr (in_mem);
-        bo_handle = gst_vvas_allocator_get_bo (in_mem);
-      }
+      phy_addr = gst_vvas_allocator_get_paddr (in_mem);
+      bo_handle = gst_vvas_allocator_get_bo (in_mem);
     } else if (gst_is_dmabuf_memory (in_mem)) {
       gint dma_fd = -1;
 
@@ -2178,6 +2150,13 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
         GST_ERROR_OBJECT (self, "failed to get physical address");
         goto error;
       }
+      /* free the previous imported bo if any */
+      if (free_bo && bo_handle) {
+        vvas_xrt_free_bo (bo_handle);
+        free_bo = FALSE;
+      }
+      /* We should not free this bo_handle as it would be free by vvas allocator
+         whenever memory got released */
       bo_handle = gst_vvas_allocator_get_bo (in_mem);
       inbuf = *new_inbuf;
     }
@@ -2193,25 +2172,14 @@ vvas_xfilter_prepare_input_frame (GstVvas_XFilter * self, GstBuffer * inbuf,
   } else {                      /* Soft IP */
 
     if (use_inpool) {
+      /* If it is a soft-ip xfilter is using s/w video buffer pool
+       * sync bo is not required as the memory is not a vvas memory */
       bret = vvas_xfilter_copy_input_buffer (self, inbuf, new_inbuf);
       if (!bret) {
         GST_ERROR_OBJECT (self, "failed to copy input buffer");
         goto error;
-        inbuf = *new_inbuf;
       }
-
-      in_mem = gst_buffer_get_memory (*new_inbuf, 0);
-      if (in_mem == NULL) {
-        GST_ERROR_OBJECT (self, "failed to get memory from input buffer");
-        goto error;
-      }
-
       inbuf = *new_inbuf;
-      /* syncs data when VVAS_SYNC_TO_DEVICE flag is enabled */
-      bret = gst_vvas_memory_sync_bo (in_mem);
-      if (!bret)
-        goto error;
-
     }
 
     map_flags = GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF;
@@ -2473,6 +2441,7 @@ gst_vvas_xfilter_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
   GstBuffer *inbuf = NULL;
   GstBuffer *cur_outbuf = NULL;
   guint plane_id = 0;
+  gboolean need_inplace_copy = false;
 
   *outbuf = NULL;
 
@@ -2508,8 +2477,14 @@ gst_vvas_xfilter_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
   }
 
   if (new_inbuf && inbuf != new_inbuf) {
-    gst_buffer_unref (inbuf);
-    inbuf = new_inbuf;
+    /* This only happens if the input buffer alignment not matching
+       with kernel alignment. Copy the content of new_inbuf to
+       original inbuf after its usage in the kernel when element is in
+       inplace mode. Modifying the content of input buffer
+       is invalid in passthrough mode. */
+    if (priv->element_mode == VVAS_ELEMENT_MODE_IN_PLACE) {
+      need_inplace_copy = true;
+    }
   }
 
   if (priv->element_mode == VVAS_ELEMENT_MODE_TRANSFORM) {
@@ -2594,6 +2569,31 @@ gst_vvas_xfilter_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
     }
   }
 
+  if (need_inplace_copy) {
+    /* This only happens if the input buffer alignment not matching with kernel alignment.
+       copy content of new_inbuf to original inbuf after its usage in the kernel */
+    GstVideoFrame inbuf_vframe, newinbuf_vframe;
+
+
+    gst_video_frame_map (&newinbuf_vframe, self->priv->internal_in_vinfo,
+        new_inbuf, GST_MAP_READ);
+    gst_video_frame_map (&inbuf_vframe, priv->in_vinfo, inbuf, GST_MAP_WRITE);
+    GST_LOG_OBJECT (self, "slow copy data in inplace");
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, self,
+        "slow copy data from %p to %p", new_inbuf, inbuf);
+    gst_video_frame_copy (&inbuf_vframe, &newinbuf_vframe);
+    gst_video_frame_unmap (&inbuf_vframe);
+    gst_video_frame_unmap (&newinbuf_vframe);
+
+    gst_buffer_copy_into (inbuf, new_inbuf, GST_BUFFER_COPY_FLAGS, 0, -1);
+  }
+
+
+  if (new_inbuf && inbuf != new_inbuf) {
+    /* Unref the new_inbuf after its usage either in inplace/passthrough mode */
+    gst_buffer_unref (new_inbuf);
+  }
+
   if (priv->need_copy) {
     GstBuffer *new_outbuf;
     GstVideoFrame new_frame, out_frame;
@@ -2624,7 +2624,7 @@ gst_vvas_xfilter_generate_output (GstBaseTransform * trans, GstBuffer ** outbuf)
     gst_video_frame_unmap (&new_frame);
 
     gst_buffer_copy_into (new_outbuf, cur_outbuf, GST_BUFFER_COPY_FLAGS, 0, -1);
-//      gst_buffer_unref (*outbuf);
+    gst_buffer_unref (cur_outbuf);
 
     *outbuf = new_outbuf;
   } else

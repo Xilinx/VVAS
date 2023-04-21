@@ -155,8 +155,6 @@ struct _GstVvas_XVideoDecPrivate
   GstAllocator *allocator;
   /** Flag to indicate whether to copy output decoded frames */
   gboolean need_copy;
-  /** Flag to indicate any error before decode begins */
-  gboolean has_error;
   /** Retry timeout in micro sec */
   gint64 retry_timeout;
   /** PTS of earlier frame */
@@ -237,6 +235,8 @@ enum
   PROP_VDU_INSTANCE_ID,
   /** Property to set I-Frame only decode */
   PROP_I_FRAME_ONLY,
+  /** Property to set decoding rate */
+  PROP_FORCE_DECODE_RATE,
 #endif
 };
 
@@ -1065,7 +1065,6 @@ vvas_xvideodec_calculate_load (GstVvas_XVideoDec * dec, gint * load)
         iret);
     GST_ELEMENT_ERROR (dec, RESOURCE, FAILED,
         ("failed to get load from xrm plugin"), NULL);
-    priv->has_error = TRUE;
     return FALSE;
   }
 
@@ -1160,7 +1159,6 @@ vvas_xvideodec_allocate_resource (GstVvas_XVideoDec * dec, gint dec_load)
       GST_ELEMENT_ERROR (dec, RESOURCE, NOT_FOUND,
           ("failed to allocate resources from reservation id %lu",
               xrm_reserve_id), NULL);
-      priv->has_error = TRUE;
       return FALSE;
     }
 
@@ -1380,19 +1378,39 @@ compose_dec_config (GstVvas_XVideoDec * dec, VvasDecoderInCfg * dec_cfg)
 
   vinfo = dec->input_state->info;
 
+  dec_cfg->frame_rate = GST_VIDEO_INFO_FPS_N (&vinfo);
+  dec_cfg->clk_ratio = GST_VIDEO_INFO_FPS_D (&vinfo);
+
+#ifdef XLNX_V70_PLATFORM
+  if (dec->force_decode_rate) {
+    /* use user provided fps, irrespective of i_frame_only flag */
+    dec_cfg->frame_rate = dec->force_decode_rate;
+    dec_cfg->clk_ratio = 1000;
+  } else {
+    if (dec->i_frame_only) {
+      /* Fixed usecase of max. 25 streams per VDU with each max. fps = 9600/1000 = 9.6 fps.
+       * so that, 25 * 9.6 = 240 fps which is max. load a VDU can process. */
+      dec_cfg->frame_rate = 9600;
+      dec_cfg->clk_ratio = 1000;
+    } else {
+      /* default parser provided fps */
+    }
+  }
+  GST_INFO_OBJECT (dec,
+      "framerate to use : %d clock ratio %d", dec_cfg->frame_rate,
+      dec_cfg->clk_ratio);
+#endif
+
   /* assign retry timeout based on resolution & framerate */
   priv->retry_timeout =
       vvas_xvideodec_get_push_command_retry_timeout (GST_VIDEO_INFO_WIDTH
       (&vinfo),
-      GST_VIDEO_INFO_HEIGHT
-      (&vinfo), GST_VIDEO_INFO_FPS_N (&vinfo), GST_VIDEO_INFO_FPS_D (&vinfo));
+      GST_VIDEO_INFO_HEIGHT (&vinfo), dec_cfg->frame_rate, dec_cfg->clk_ratio);
 
   GST_INFO_OBJECT (dec,
       "retry timeout for push command %" G_GINT64_FORMAT
       " micro sec", priv->retry_timeout);
 
-  dec_cfg->frame_rate = GST_VIDEO_INFO_FPS_N (&vinfo);
-  dec_cfg->clk_ratio = GST_VIDEO_INFO_FPS_D (&vinfo);
   dec_cfg->width = GST_VIDEO_INFO_WIDTH (&vinfo);
   dec_cfg->height = GST_VIDEO_INFO_HEIGHT (&vinfo);
   dec_cfg->level =
@@ -1517,6 +1535,15 @@ vvas_xvideodec_create_context (GstVvas_XVideoDec * dec)
   }
 #endif
 
+  if (!dec->xclbin_path) {
+    GST_ERROR_OBJECT (dec, "XCLBIN path is not set");
+    return FALSE;
+  }
+
+  if (DEFAULT_DEVICE_INDEX == dec->dev_index) {
+    GST_ERROR_OBJECT (dec, "device index is not set");
+    return FALSE;
+  }
 
   /* create a vvas context */
   priv->vvas_ctx = vvas_context_create (dec->dev_index, dec->xclbin_path,
@@ -1539,6 +1566,8 @@ vvas_xvideodec_create_context (GstVvas_XVideoDec * dec)
 #endif
   if (!priv->vvas_dec) {
     GST_ERROR_OBJECT (dec, "Couldn't create VVAS Decoder");
+    vvas_context_destroy (priv->vvas_ctx);
+    priv->vvas_ctx = NULL;
     return FALSE;
   }
 
@@ -1549,6 +1578,10 @@ vvas_xvideodec_create_context (GstVvas_XVideoDec * dec)
   /* Configure decoder */
   vret = vvas_decoder_config (priv->vvas_dec, &incfg, &outcfg);
   if (vret != VVAS_RET_SUCCESS) {
+    vvas_decoder_destroy (priv->vvas_dec);
+    vvas_context_destroy (priv->vvas_ctx);
+    priv->vvas_dec = NULL;
+    priv->vvas_ctx = NULL;
     GST_ERROR_OBJECT (dec, "vvas_decoder_config Failed vret = %d", vret);
     return FALSE;
   }
@@ -1673,6 +1706,7 @@ gstvvas_xvideodec_set_format (GstVideoDecoder * decoder,
     gst_video_codec_state_unref (dec->input_state);
     dec->input_state = NULL;
   }
+
   dec->input_state = gst_video_codec_state_ref (state);
 
   mimetype =
@@ -1685,13 +1719,14 @@ gstvvas_xvideodec_set_format (GstVideoDecoder * decoder,
     priv->dec_type = VVAS_CODEC_H265;
   } else {
     GST_ERROR_OBJECT (dec, "mimetype=%s is not supported", mimetype);
+    goto error;
   }
 
   /* Check for "profile" info in the caps for H264 case */
   if (!gst_structure_get_string
       (gst_caps_get_structure (dec->input_state->caps, 0), "profile")) {
     GST_WARNING_OBJECT (dec, "Profile info not present in the caps");
-    return FALSE;
+    goto error;
   }
 
   if (!GST_VIDEO_INFO_FPS_N (&dec->input_state->info)) {
@@ -1708,8 +1743,7 @@ gstvvas_xvideodec_set_format (GstVideoDecoder * decoder,
 #ifdef ENABLE_XRM_SUPPORT
     bret = vvas_xvideodec_calculate_load (dec, &load);
     if (!bret) {
-      priv->has_error = TRUE;
-      return FALSE;
+      goto error;
     }
 
     if (priv->cur_load != load) {
@@ -1719,15 +1753,13 @@ gstvvas_xvideodec_set_format (GstVideoDecoder * decoder,
       /* destroy XRT context as new load received */
       bret = vvas_xvideodec_destroy_context (dec);
       if (!bret) {
-        priv->has_error = TRUE;
-        return FALSE;
+        goto error;
       }
 
       /* create XRT context */
       bret = vvas_xvideodec_create_context (dec);
       if (!bret) {
-        priv->has_error = TRUE;
-        return FALSE;
+        goto error;
       }
     }
 #else
@@ -1735,14 +1767,18 @@ gstvvas_xvideodec_set_format (GstVideoDecoder * decoder,
       /* create vvas core context and decoder */
       bret = vvas_xvideodec_create_context (dec);
       if (!bret) {
-        priv->has_error = TRUE;
-        return FALSE;
+        goto error;
       }
     }
 #endif
   }
 
   return TRUE;
+
+error:
+  gst_video_codec_state_unref (dec->input_state);
+  dec->input_state = NULL;
+  return FALSE;
 }
 
 /** @fn void gstvvas_xvideodec_set_property (GObject * object,
@@ -1817,6 +1853,9 @@ gstvvas_xvideodec_set_property (GObject * object, guint prop_id,
     case PROP_I_FRAME_ONLY:
       dec->i_frame_only = g_value_get_boolean (value);
       break;
+    case PROP_FORCE_DECODE_RATE:
+      dec->force_decode_rate = g_value_get_uint (value);
+      break;
 #endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1888,6 +1927,9 @@ gstvvas_xvideodec_get_property (GObject * object, guint prop_id,
     case PROP_I_FRAME_ONLY:
       g_value_set_boolean (value, dec->i_frame_only);
       break;
+    case PROP_FORCE_DECODE_RATE:
+      g_value_set_uint (value, dec->force_decode_rate);
+      break;
 #endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1922,15 +1964,17 @@ gstvvas_xvideodec_decide_allocation (GstVideoDecoder * decoder,
   guint size, min, max;
   GstAllocator *allocator = NULL;
   GstAllocationParams params;
-  GstStructure *config = NULL, *tmp_config = NULL;
+  GstStructure *config = NULL;
   gboolean update_pool, update_allocator;
   GstVideoInfo vinfo;
   GstVideoAlignment align;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
   gst_video_info_init (&vinfo);
-  if (outcaps)
-    gst_video_info_from_caps (&vinfo, outcaps);
+  if (outcaps && !gst_video_info_from_caps (&vinfo, outcaps)) {
+    GST_ERROR_OBJECT (dec, "failed to get out video info from caps");
+    return FALSE;
+  }
 
   /* we got configuration from our peer or the decide_allocation method,
    * parse them */
@@ -2017,6 +2061,10 @@ gstvvas_xvideodec_decide_allocation (GstVideoDecoder * decoder,
     GST_INFO_OBJECT (dec, "created new pool %p %" GST_PTR_FORMAT, pool, pool);
   }
 
+  /* Not always downstream will have requirement of min buffers,
+   * lets add min decoder required buffers */
+  min = dec->priv->num_out_bufs + min;
+
   if (max) {
     max = dec->priv->num_out_bufs + max + 1;
     if (max >= FRM_BUF_POOL_SIZE) {
@@ -2028,17 +2076,22 @@ gstvvas_xvideodec_decide_allocation (GstVideoDecoder * decoder,
     }
   } else {
     if (dec->avoid_dynamic_alloc) {
-      if (dec->additional_output_buffers)
-        max = dec->additional_output_buffers;
-      else
-        max = min;
-      max = dec->priv->num_out_bufs + max + 1;
+      if (dec->additional_output_buffers) {
+        max = dec->priv->num_out_bufs + dec->additional_output_buffers + 1;
+        if (min > max) {
+          /* Giving preference to number of additional buffers
+           * that user has set rather than what downstream elements
+           * require. */
+          min = max;
+        }
+      } else {
+        max = dec->priv->num_out_bufs + min + 1;
+      }
     } else {
       max = FRM_BUF_POOL_SIZE - 1;
     }
   }
 
-  min = dec->priv->num_out_bufs + min;
   if (min >= FRM_BUF_POOL_SIZE || max >= FRM_BUF_POOL_SIZE) {
     gst_object_unref (allocator);
     gst_object_unref (pool);
@@ -2121,8 +2174,8 @@ gstvvas_xvideodec_decide_allocation (GstVideoDecoder * decoder,
 config_failed:
   if (allocator)
     gst_object_unref (allocator);
-  if (tmp_config)
-    gst_structure_free (tmp_config);
+  if (config)
+    gst_structure_free (config);
   if (pool)
     gst_object_unref (pool);
   GST_ELEMENT_ERROR (decoder, RESOURCE, SETTINGS,
@@ -2153,7 +2206,7 @@ gstvvas_xvideodec_handle_frame (GstVideoDecoder * decoder,
   GstBuffer *inbuf = NULL;
   VvasMemory *in_mem = NULL;
   VvasVideoFrame *voframe = NULL;
-  VvasMetadata in_meta_data;
+  VvasMetadata in_meta_data = { 0 };
   VvasReturnType vret = VVAS_RET_SUCCESS;
 
   GST_LOG_OBJECT (dec, "input %" GST_PTR_FORMAT, frame ? frame->input_buffer :
@@ -2303,9 +2356,6 @@ exit:
 
   if (inbuf)
     gst_buffer_unref (inbuf);
-
-  if (frame)
-    gst_video_codec_frame_unref (frame);
   return fret;
 }
 
@@ -2637,13 +2687,18 @@ gstvvas_xvideodec_class_init (GstVvas_XVideoDecClass * klass)
   g_object_class_install_property (gobject_class, PROP_VDU_INSTANCE_ID,
       g_param_spec_int ("instance-id", "VDU HW instance Id",
           "VDU instance Id selected by user",
-          0, 3, DEFAULT_VDU_INSTANCE_ID,
+          0, (MAX_VDU_HW_INSTANCES - 1), DEFAULT_VDU_INSTANCE_ID,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
   g_object_class_install_property (gobject_class, PROP_I_FRAME_ONLY,
       g_param_spec_boolean ("i-frame-only", "I-frame only",
           "Enable I-frame decode only",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+  g_object_class_install_property (gobject_class, PROP_FORCE_DECODE_RATE,
+      g_param_spec_uint ("force-decode-rate", "decoding rate for current input",
+          "Multiply the desired framerate by 1000 and set the parameter as integer. Ex: if user wants to set the frame rate = 29.97 then She/He should specify 29.97*1000 = 29970. This parameter will influence how many hardware resources are allocated for this stream decoding. Decoding may happen at a rate different than specified here as decoding rate is dependent on the allocated hardware resources. It is highly recommended to let the underlying decoder logic to decide the hardware allocation strategy based on the encoded parameters. For example if the stream is encoded @60 fps and if user has specified force-decode-rate=30, then the hardware resources required to decode this stream @30 fps may be less than the resources required for decoding @60 fps and the same hardware can decode more such streams.",
+          0, 60000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 #endif
   GST_DEBUG_CATEGORY_INIT (gstvvas_xvideodec_debug_category, "vvas_xvideodec",
@@ -2670,6 +2725,7 @@ gstvvas_xvideodec_init (GstVvas_XVideoDec * dec)
 #ifdef XLNX_U30_PLATFORM
   dec->sk_cur_idx = DEFAULT_SK_CURRENT_INDEX;
 #endif
+  dec->xclbin_path = NULL;
   dec->kernel_name = g_strdup (VVAS_VIDEODEC_KERNEL_NAME_DEFAULT);
   dec->avoid_output_copy = VVAS_VIDEODEC_AVOID_OUTPUT_COPY_DEFAULT;
   dec->input_state = NULL;
@@ -2690,6 +2746,7 @@ gstvvas_xvideodec_init (GstVvas_XVideoDec * dec)
 #ifdef XLNX_V70_PLATFORM
   dec->hw_instance_id = DEFAULT_VDU_INSTANCE_ID;
   dec->i_frame_only = FALSE;
+  dec->force_decode_rate = 0;
 #endif
   /* Initialize the vvas core objects */
   priv->vvas_ctx = NULL;

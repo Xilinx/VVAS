@@ -688,6 +688,7 @@ vvas_xoptflow_prepare_input_buffer (GstVvas_XOptflow * self, GstBuffer ** inbuf)
     if (!gst_video_frame_map (&in_vframe, self->priv->in_vinfo, *inbuf,
             GST_MAP_READ)) {
       GST_ERROR_OBJECT (self, "failed to map input buffer");
+      gst_video_frame_unmap (&inpool_vframe);
       goto error;
     }
     gst_video_frame_copy (&inpool_vframe, &in_vframe);
@@ -738,10 +739,6 @@ vvas_xoptflow_prepare_input_buffer (GstVvas_XOptflow * self, GstBuffer ** inbuf)
   return TRUE;
 
 error:
-  if (in_vframe.data)
-    gst_video_frame_unmap (&in_vframe);
-  if (inpool_vframe.data)
-    gst_video_frame_unmap (&inpool_vframe);
   if (in_mem)
     gst_memory_unref (in_mem);
 

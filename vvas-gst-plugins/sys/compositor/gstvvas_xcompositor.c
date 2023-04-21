@@ -134,6 +134,11 @@
  */
 #define VVAS_XCOMPOSITOR_ENABLE_PIPELINE_DEFAULT FALSE
 
+/** @def VVAS_XCOMPOSITOR_ENABLE_SOFTWARE_SCALING_DEFAULT
+ *  @brief Default value for software-scaling property.
+ */
+#define VVAS_XCOMPOSITOR_ENABLE_SOFTWARE_SCALING_DEFAULT FALSE
+
 /** @def STOP_COMMAND
  *  @brief Macro to replace the STOP quark
  */
@@ -343,6 +348,8 @@ enum
   PROP_AVOID_OUTPUT_COPY,
   /** Property to set enable pipeline */
   PROP_ENABLE_PIPELINE,
+  /** Software scaling */
+  PROP_SOFTWARE_SCALING,
 #ifdef ENABLE_XRM_SUPPORT
   /** Property to set xrm reservation id */
   PROP_RESERVATION_ID,
@@ -467,7 +474,7 @@ struct _GstVvasXCompositorPrivate
 /**
  *  @brief Defines plugin's source pad template.
  */
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
@@ -477,7 +484,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 /**
  *  @brief Defines plugin's sink pad template.
  */
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
+static GstStaticPadTemplate sink_request_template =
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
@@ -622,6 +630,53 @@ vvas_xcompositor_coef_load_type (void)
 }
 
 /**
+ *  @fn static GstCaps *vvas_xcompositor_generate_caps (void)
+ *  @return Returns GstCaps pointer.
+ *  @brief This function generates GstCaps based on scaler capabilities
+ */
+static GstCaps *
+vvas_xcompositor_generate_caps (void)
+{
+  GstStructure *s;
+  GValue format = G_VALUE_INIT;
+  GstCaps *caps = NULL;
+  int i;
+  VvasScalerProp sc_prop = { 0, };
+  VvasReturnType vret;
+
+  vret = vvas_scaler_prop_get (NULL, &sc_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    return caps;
+  }
+
+  if (sc_prop.n_fmts) {
+    g_value_init (&format, GST_TYPE_LIST);
+
+    s = gst_structure_new ("video/x-raw",
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+    for (i = 0; i < sc_prop.n_fmts; i++) {
+      GValue v = G_VALUE_INIT;
+      g_value_init (&v, G_TYPE_STRING);
+
+      g_value_set_static_string (&v,
+          gst_video_format_to_string (gst_coreutils_get_gst_fmt_from_vvas
+              (sc_prop.supported_fmts[i])));
+      gst_value_list_append_and_take_value (&format, &v);
+    }
+
+    gst_structure_take_value (s, "format", &format);
+    caps = gst_caps_new_full (s, NULL);
+
+  }
+
+  return caps;
+}
+
+
+/**
  *  @fn static guint vvas_xcompositor_get_stride (GstVideoInfo * info, guint width)
  *  @param [in] *info	- Information describing video properties.
  *  @param [in] width	- width of the video.
@@ -674,41 +729,39 @@ vvas_xcompositor_get_stride (GstVideoInfo * info, guint width)
 }
 
 /**
- *  @fn static gboolean vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
- *  @param [in] agg         - Handle to GstAggregator typecasted to GObject.
- *  @param [in] query       - Response for the allocation query.
+ *  @fn static gboolean vvas_xcompositor_sw_scaling_decide_allocation (GstVvasXCompositor * self,
+ *                                                                     GstQuery * query,
+ *								       GstAllocator ** gst_allocator,
+ *								       GstBufferPool ** buffer_pool)
+ *  @param [in] self		- Handle to GstVvasXCompositor instance.
+ *  @param [in] query		- Response for the allocation query.
+ *  @param [in] gst_allocator	- Allocator that need to be set in the response to the query.
+ *  @param [in] buffer_pool	- Pool that need to be set in  the response to the query
  *  @return On Success returns TRUE
  *          On Failure returns FALSE
  *  @brief  This function will decide allocation strategy based on the preference from downstream element.
- *  @details The proposed query will be parsed through, verified if the proposed pool is VVAS and alignments
- *           are quoted. Otherwise it will be discarded and new pool,allocator will be created.
+ *  @details The proposed query will be parsed through and configures the pool.
  */
 static gboolean
-vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
+vvas_xcompositor_sw_scaling_decide_allocation (GstVvasXCompositor * self,
+    GstQuery * query, GstAllocator ** gst_allocator,
+    GstBufferPool ** buffer_pool)
 {
-  GstVvasXCompositor *self = GST_VVAS_XCOMPOSITOR (agg);
-  GstVvasXCompositorPrivate *priv = self->priv;
-  GstCaps *outcaps;
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params;
-  GstBufferPool *pool = NULL;
   guint size, min, max;
-  gboolean update_allocator, update_pool, bret, have_new_allocator = FALSE;
+  gboolean update_pool, bret;
   GstStructure *config = NULL;
-  GstVideoInfo out_vinfo;
-  guint chan_id;
+  GstVideoInfo out_vinfo = { 0 };
+  GstCaps *outcaps;
+  GstAllocationParams params = { 0 };
+  GstBufferPool *pool = NULL;
+  GstAllocator *allocator = NULL;
 
- /** we got configuration from our peer or the decide_allocation method,
-  *  parse them 
-  */
   if (gst_query_get_n_allocation_params (query) > 0) {
     /* try the allocator */
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
     GST_DEBUG_OBJECT (self, "has allocator %p", allocator);
-    update_allocator = TRUE;
   } else {
     allocator = NULL;
-    update_allocator = FALSE;
     gst_allocation_params_init (&params);
   }
 
@@ -734,7 +787,183 @@ vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     size = out_vinfo.size;
     update_pool = FALSE;
   }
+  /* If we have a pool, lets just configure it */
+  if (pool) {
+    GstVideoAlignment video_align = { 0, };
+    guint padded_width = 0;
+    guint padded_height = 0;
+    guint stride = 0;
 
+    config = gst_buffer_pool_get_config (pool);
+
+    /* Check if the proposed buffer pool has alignment information */
+    if (config && gst_buffer_pool_config_has_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+      gst_buffer_pool_config_get_video_alignment (config, &video_align);
+
+      /* We have padding_right and padding_left in pixels.
+       * We need to convert them to bytes for finding out the complete stride with alignment */
+      padded_width =
+          out_vinfo.width + video_align.padding_right +
+          video_align.padding_left;
+      padded_height =
+          out_vinfo.height + video_align.padding_top +
+          video_align.padding_bottom;
+      gst_video_info_align (&out_vinfo, &video_align);
+      stride = vvas_xcompositor_get_stride (&out_vinfo, padded_width);
+
+      GST_INFO_OBJECT (self, "output stride = %u", stride);
+      /* Stride can't be zero here */
+      if (!stride) {
+        gst_structure_free (config);
+        config = NULL;
+        gst_object_unref (pool);
+        pool = NULL;
+        return FALSE;
+      }
+      /* We don't have stride alignment here, but the stride calculated here
+       * itself can be passed.
+       */
+      self->out_stride_align = stride;
+      self->out_elevation_align = padded_height;
+    } else {
+      /* Looks like we don't have any alignment requirement from downstream */
+      self->out_stride_align = 1;
+      self->out_elevation_align = 1;
+      self->avoid_output_copy = TRUE;
+    }
+    min = 3;
+    max = 0;
+    size = out_vinfo.size;
+    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+    /* buffer pool may have to do some changes */
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      config = gst_buffer_pool_get_config (pool);
+
+      /* If change are not acceptable, fallback to video buffer pool */
+      if (!gst_buffer_pool_config_validate_params (config, outcaps, size, min,
+              max)) {
+        GST_DEBUG_OBJECT (self, "unsupported pool, making new pool");
+
+        gst_object_unref (pool);
+        pool = NULL;
+      }
+    }
+  }
+
+  /* Looks like we have to create our own pool */
+  if (!pool) {
+    pool = gst_video_buffer_pool_new ();
+    size = out_vinfo.size;
+    min = 3;
+    max = 0;
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    bret = gst_buffer_pool_set_config (pool, config);
+    if (!bret) {
+      GST_ERROR_OBJECT (self, "failed configure pool");
+      goto error;
+    }
+    /* We are using a video buffer pool, no need of copy even if
+     * downstream element is non video intelligent.
+     */
+    self->avoid_output_copy = TRUE;
+    update_pool = FALSE;
+    /* We have created a pool without any stride/elevation alignment */
+    self->out_stride_align = 1;
+    self->out_elevation_align = 1;
+  }
+  if (update_pool && (gst_query_get_n_allocation_pools (query) > 0))
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  GST_INFO_OBJECT (self,
+      "allocated pool %p with parameters : size %u, min_buffers = %u, "
+      "max_buffers = %u", pool, size, min, max);
+
+  *buffer_pool = pool;
+  *gst_allocator = allocator;
+
+  return TRUE;
+
+error:
+  return FALSE;
+
+}
+
+/**
+ *  @fn static gboolean vvas_xcompositor_hw_scaling_decide_allocation (GstVvasXCompositor * self,
+ *                                                                     GstQuery * query,
+ *								       GstAllocator ** gst_allocator,
+ *								       GstBufferPool ** buffer_pool)
+ *  @param [in] self		- Handle to GstVvasXCompositor instance.
+ *  @param [in] query		- Response for the allocation query.
+ *  @param [in] gst_allocator	- Allocator that need to be set in the response to the query.
+ *  @param [in] buffer_pool	- Pool that need to be set in  the response to the query
+ *  @return On Success returns TRUE
+ *          On Failure returns FALSE
+ *  @brief  This function will decide allocation strategy based on the preference from downstream element.
+ *  @details The proposed query will be parsed through, verified if the proposed pool is VVAS and alignments
+ *           are quoted. Otherwise it will be discarded and new pool,allocator will be created.
+ */
+static gboolean
+vvas_xcompositor_hw_scaling_decide_allocation (GstVvasXCompositor * self,
+    GstQuery * query, GstAllocator ** gst_allocator,
+    GstBufferPool ** buffer_pool)
+{
+
+  guint size, min, max;
+  gboolean update_allocator, update_pool, bret, have_new_allocator = FALSE;
+  GstStructure *config = NULL;
+  GstVideoInfo out_vinfo = { 0 };
+  GstCaps *outcaps;
+  GstAllocationParams params;
+  GstBufferPool *pool = NULL;
+  GstAllocator *allocator = NULL;
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    GST_DEBUG_OBJECT (self, "has allocator %p", allocator);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    update_allocator = FALSE;
+    gst_allocation_params_init (&params);
+  }
+
+  /* Fetch the video information from requested caps */
+  gst_query_parse_allocation (query, &outcaps, NULL);
+
+  if (!outcaps) {
+    GST_ERROR_OBJECT (self, "failed to parse outcaps from the query");
+    goto error;
+  }
+
+  if (!gst_video_info_from_caps (&out_vinfo, outcaps)) {
+    GST_ERROR_OBJECT (self, "failed to get video info from outcaps");
+    goto error;
+  }
+  self->priv->out_vinfo = gst_video_info_copy (&out_vinfo);
+  /* Get the pool parameters in query */
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    size = MAX (size, out_vinfo.size);
+    update_pool = TRUE;
+    if (min == 0)
+      min = 3;
+  } else {
+    /* If there are no proposed pools create a new pool */
+    pool = NULL;
+    min = 3;
+    max = 0;
+    size = out_vinfo.size;
+    update_pool = FALSE;
+  }
  /** Check if the proposed pool is VVAS Buffer Pool and stride
   *  is aligned with (8 * ppc)
   *  If otherwise, discard the pool. Will create a new one
@@ -908,15 +1137,71 @@ next:
       GST_ERROR_OBJECT (self, "failed configure pool");
       goto error;
     }
+
   }
+  if (update_pool && (gst_query_get_n_allocation_pools (query) > 0))
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+
+  GST_INFO_OBJECT (self,
+      "allocated pool %p with parameters : size %u, min_buffers = %u, "
+      "max_buffers = %u", pool, size, min, max);
+  *buffer_pool = pool;
+  *gst_allocator = allocator;
+  return TRUE;
+error:
+  return FALSE;
+}
+
+
+/**
+ *  @fn static gboolean vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
+ *  @param [in] agg         - Handle to GstAggregator typecasted to GObject.
+ *  @param [in] query       - Response for the allocation query.
+ *  @return On Success returns TRUE
+ *          On Failure returns FALSE
+ *  @brief  This function will decide allocation strategy based on the preference from downstream element.
+ *  @details The proposed query will be parsed through and decides whether to use a pool from vvas
+ *           or use gst_video_bufferpool based on enabling software scaling.
+ */
+static gboolean
+vvas_xcompositor_decide_allocation (GstAggregator * agg, GstQuery * query)
+{
+  GstVvasXCompositor *self = GST_VVAS_XCOMPOSITOR (agg);
+  GstVvasXCompositorPrivate *priv = self->priv;
+  GstAllocator *allocator = NULL;
+  GstBufferPool *pool = NULL;
+  gboolean bret;
+  guint chan_id;
+ /** we got configuration from our peer or the decide_allocation method,
+  *  parse them
+  */
+
+  if (!self->software_scaling) {
+    /* Decide allocation as per the h/w requirement */
+    bret =
+        vvas_xcompositor_hw_scaling_decide_allocation (self, query, &allocator,
+        &pool);
+    if (!bret)
+      goto error;
+  } else {
+    bret =
+        vvas_xcompositor_sw_scaling_decide_allocation (self, query, &allocator,
+        &pool);
+    if (!bret)
+      goto error;
+  }
+
   /**  Since self->out_stride_align is common for all channels
    *   reset the output stride to 1 (its default), so that other channels
    *   are not affected
    */
   self->out_stride_align = 1;
   self->out_elevation_align = 1;
-/* avoid output frames copy when downstream supports video meta */
-  if (!self->avoid_output_copy) {
+  /* avoid output frames copy when downstream supports video meta */
+  if (!self->avoid_output_copy && !self->software_scaling) {
     if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
       self->priv->need_copy = FALSE;
       GST_INFO_OBJECT (self, "no need to copy output frames");
@@ -925,18 +1210,12 @@ next:
     self->priv->need_copy = FALSE;
     GST_INFO_OBJECT (self, "Don't copy output frames");
   }
-  GST_INFO_OBJECT (self,
-      "allocated pool %p with parameters : size %u, min_buffers = %u, "
-      "max_buffers = %u", pool, size, min, max);
+
 
   if (allocator)
     gst_object_unref (allocator);
 
-  if (update_pool && (gst_query_get_n_allocation_pools (query) > 0))
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min, max);
-/* unreffing the old pool if already present */
+  /* unreffing the old pool if already present */
   if (self->priv->output_pool)
     gst_object_unref (self->priv->output_pool);
 
@@ -967,6 +1246,7 @@ next:
     priv->input_copy_thread = g_thread_new ("compositor-input-copy-thread",
         vvas_xcompositor_input_copy_thread, self);
   }
+
 
   /** When all the pools are configured successfully, open the resources for
    *  compositor plugin
@@ -1543,6 +1823,18 @@ vvas_xcompositor_open (GstVvasXCompositor * self)
 
   GST_DEBUG_OBJECT (self, "Xlnx Compositor open");
 
+  /* Use the xclbin only in hw processing */
+  if (self->software_scaling) {
+    if (self->xclbin_path)
+      g_free (self->xclbin_path);
+    self->xclbin_path = NULL;
+  } else {
+    if (self->xclbin_path == NULL) {
+      GST_ERROR_OBJECT (self, "xclbin-location is not set");
+      return FALSE;
+    }
+  }
+
   if (!self->kern_name) {
     GST_ERROR_OBJECT (self, "kernel name is not set");
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
@@ -1562,11 +1854,14 @@ vvas_xcompositor_open (GstVvasXCompositor * self)
 #endif
 
 #ifdef XLNX_PCIe_PLATFORM
-  if (self->dev_index < 0) {
-    GST_ERROR_OBJECT (self, "device index %d is not valid", self->dev_index);
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("device index %d is not valid", self->dev_index));
-    return FALSE;
+/* device index is not required in softawre scaling */
+  if (!self->software_scaling) {
+    if (self->dev_index < 0) {
+      GST_ERROR_OBJECT (self, "device index %d is not valid", self->dev_index);
+      GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
+          ("device index %d is not valid", self->dev_index));
+      return FALSE;
+    }
   }
 #endif
 
@@ -1958,6 +2253,8 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
   GstVideoAggregatorClass *videoaggregator_class =
       (GstVideoAggregatorClass *) klass;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
+  GstCaps *caps;
+  GstPadTemplate *pad_templ;
 
   /* Initilizing debug category structure */
 
@@ -1974,12 +2271,24 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
   gst_element_class_set_metadata (element_class, "VVAS Compositor",
       "Vvas Compositor", "VVAS Compositor", "Xilinx Inc <www.xilinx.com>");
 
-  /* Add src pad template */
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &src_factory, GST_TYPE_AGGREGATOR_PAD);
-  /* Add sink pad template */
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &sink_factory, GST_TYPE_VVAS_XCOMPOSITOR_PAD);
+  caps = vvas_xcompositor_generate_caps ();
+  if (caps) {
+    pad_templ = gst_pad_template_new_with_gtype ("sink_%u",
+        GST_PAD_SINK, GST_PAD_REQUEST, caps, GST_TYPE_VVAS_XCOMPOSITOR_PAD);
+    /* Add sink and source templates to element based scaler core supported formats */
+    gst_element_class_add_pad_template (element_class, pad_templ);
+    pad_templ =
+        gst_pad_template_new_with_gtype ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+        caps, GST_TYPE_AGGREGATOR_PAD);
+    gst_element_class_add_pad_template (element_class, pad_templ);
+    gst_caps_unref (caps);
+  } else {
+    /* Add sink and source templates to element based on static templates */
+    gst_element_class_add_static_pad_template_with_gtype (element_class,
+        &sink_request_template, GST_TYPE_VVAS_XCOMPOSITOR_PAD);
+    gst_element_class_add_static_pad_template_with_gtype (element_class,
+        &src_template, GST_TYPE_AGGREGATOR_PAD);
+  }
 
   /* Update element class callback functions */
   element_class->request_new_pad =
@@ -2101,7 +2410,13 @@ gst_vvas_xcompositor_class_init (GstVvasXCompositorClass * klass)
           VVAS_XCOMPOSITOR_BEST_FIT_DEFAULT,
           G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
-
+  g_object_class_install_property (gobject_class, PROP_SOFTWARE_SCALING,
+      g_param_spec_boolean ("software-scaling",
+          "Flag to to enable software scaling flow.",
+          "Set this flag to true in case of software scaling.",
+          VVAS_XCOMPOSITOR_ENABLE_SOFTWARE_SCALING_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 }
 
 /**
@@ -2131,6 +2446,7 @@ gst_vvas_xcompositor_init (GstVvasXCompositor * self)
   self->out_mem_bank = DEFAULT_MEM_BANK;
   self->avoid_output_copy = VVAS_XCOMPOSITOR_AVOID_OUTPUT_COPY_DEFAULT;
   self->enabled_pipeline = VVAS_XCOMPOSITOR_ENABLE_PIPELINE_DEFAULT;
+  self->software_scaling = VVAS_XCOMPOSITOR_ENABLE_SOFTWARE_SCALING_DEFAULT;
 #ifdef ENABLE_XRM_SUPPORT
   self->priv->xrm_ctx = NULL;
   self->priv->cu_resource = NULL;
@@ -2401,7 +2717,7 @@ gst_vvas_xcompositor_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
   GstCaps *tmp;
   GstVvasXCompositor *self = GST_VVAS_XCOMPOSITOR (agg);
   GstVvasXCompositorPad *sinkpad = (GstVvasXCompositorPad *) bpad;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
 
@@ -2412,8 +2728,8 @@ gst_vvas_xcompositor_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
       mycaps = gst_pad_get_pad_template_caps (GST_PAD (bpad));
       /* set supported caps response to the query */
       gst_query_set_caps_result (query, mycaps);
-      return TRUE;
     }
+      break;
 
     case GST_QUERY_ACCEPT_CAPS:
     {
@@ -2427,26 +2743,33 @@ gst_vvas_xcompositor_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
       if (ret) {
         pad_idx = sinkpad->index;
         /* store the incoming caps video information of the current pad  */
-        gst_video_info_from_caps (self->priv->in_vinfo[pad_idx], caps);
+        if (!gst_video_info_from_caps (self->priv->in_vinfo[pad_idx], caps)) {
+          ret = FALSE;
+        }
       }
       /* set the response to the accep caps query */
       gst_query_set_accept_caps_result (query, ret);
+
+      /* return TRUE, we answered the query */
+      ret = TRUE;
     }
-      return TRUE;
       break;
 
     case GST_QUERY_ALLOCATION:
     {
       /* Propose allocation if the query is allocation type */
-      ret = vvas_xcompositor_propose_allocation (self, query);
-      return ret;
+      if (!self->software_scaling) {
+        ret = vvas_xcompositor_propose_allocation (self, query);
+      }
     }
       break;
 
       /* call the parent class sink_query callback in default case */
     default:
-      return GST_AGGREGATOR_CLASS (parent_class)->sink_query (agg, bpad, query);
+      ret = GST_AGGREGATOR_CLASS (parent_class)->sink_query (agg, bpad, query);
+      break;
   }
+  return ret;
 }
 
 /**
@@ -2638,7 +2961,7 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
     /* if pipeline is enabled deal with the already copied input buffer */
     if (self->enabled_pipeline) {
       own_inbuf = g_async_queue_try_pop (priv->copy_outqueue[sinkpad->index]);
-      if (!own_inbuf && !priv->is_first_frame) {
+      if (!own_inbuf && !priv->is_first_frame[sinkpad->index]) {
         own_inbuf = g_async_queue_pop (priv->copy_outqueue[sinkpad->index]);
       }
 
@@ -2674,6 +2997,7 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
       if (!gst_video_frame_map
           (&in_vframe, self->priv->in_vinfo[pad_idx], *inbuf, GST_MAP_READ)) {
         GST_ERROR_OBJECT (self, "failed to map input buffer");
+        gst_video_frame_unmap (&own_vframe);
         goto error;
       }
       gst_video_frame_copy (&own_vframe, &in_vframe);
@@ -2696,7 +3020,7 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
   /* Get the video data from input buffer */
   vmeta = gst_buffer_get_video_meta (*inbuf);
   if (vmeta == NULL) {
-    GST_ERROR_OBJECT (self, "video meta not present in buffer");
+    GST_ERROR_OBJECT (self, "video meta not present in input buffer");
     goto error;
   }
 
@@ -2723,10 +3047,6 @@ vvas_xcompositor_prepare_input_buffer (GstVvasXCompositor * self,
   return TRUE;
 
 error:
-  if (in_vframe.data)
-    gst_video_frame_unmap (&in_vframe);
-  if (own_vframe.data)
-    gst_video_frame_unmap (&own_vframe);
   if (in_mem)
     gst_memory_unref (in_mem);
 
@@ -2749,7 +3069,6 @@ vvas_xcompositor_prepare_output_buffer (GstVvasXCompositor * self,
     GstBuffer * outbuf)
 {
   GstMemory *mem = NULL;
-  GstVideoMeta *vmeta;
   guint64 phy_addr = -1;
 
 
@@ -2790,13 +3109,6 @@ vvas_xcompositor_prepare_output_buffer (GstVvasXCompositor * self,
     phy_addr = vvas_xrt_get_bo_phy_addres (bo);
     if (bo != NULL)
       vvas_xrt_free_bo (bo);
-  }
-
-  /* Get the video meta data of the output buffer */
-  vmeta = gst_buffer_get_video_meta (outbuf);
-  if (vmeta == NULL) {
-    GST_ERROR_OBJECT (self, "video meta not present in buffer");
-    goto error;
   }
 
   GST_DEBUG_OBJECT (self, "Output buffer phy address: %lu", phy_addr);
@@ -2844,9 +3156,9 @@ vvas_xcompositor_free_vvas_video_frame (GstVvasXCompositor * self)
 static bool
 vvas_xcompsitor_add_processing_channels (GstVvasXCompositor * self)
 {
-  GstVideoMeta *meta_out;
   guint chan_id;
   guint quad_in_each_row_column = (guint) ceil (sqrt (self->num_request_pads));
+  guint composition_output_height = 0, composition_output_width = 0;
   gfloat in_width_scale_factor = 1, in_height_scale_factor = 1;
   GstVvasXCompositorPrivate *priv = self->priv;
 
@@ -2884,15 +3196,15 @@ vvas_xcompsitor_add_processing_channels (GstVvasXCompositor * self)
     pad = gst_vvas_xcompositor_sinkpad_at_index (self,
         self->priv->pad_of_zorder[chan_id]);
 
-    meta_out = gst_buffer_get_video_meta (priv->outbuf);
-    if (!meta_out) {
-      return FALSE;
-    }
+    composition_output_width = GST_VIDEO_INFO_WIDTH (self->priv->out_vinfo);
+    composition_output_height = GST_VIDEO_INFO_HEIGHT (self->priv->out_vinfo);
 
     if (self->best_fit) {
       guint quadrant_height, quadrant_width;
-      quadrant_width = (int) (meta_out->width / quad_in_each_row_column);
-      quadrant_height = (int) (meta_out->height / quad_in_each_row_column);
+      quadrant_width =
+          (int) (composition_output_width / quad_in_each_row_column);
+      quadrant_height =
+          (int) (composition_output_height / quad_in_each_row_column);
       out_width = quadrant_width;
       out_height = quadrant_height;
       xpos_offset = quadrant_width * (chan_id % quad_in_each_row_column);
@@ -2900,7 +3212,8 @@ vvas_xcompsitor_add_processing_channels (GstVvasXCompositor * self)
     } else {
       if (pad->width != -1) {
         out_width = pad->width;
-        if (pad->width < -1 || pad->width > meta_out->width || pad->width == 0) {
+        if (pad->width < -1 || pad->width > composition_output_width
+            || pad->width == 0) {
           GST_ERROR_OBJECT (self, "width of sink_%d is invalid",
               self->priv->pad_of_zorder[chan_id]);
           return false;
@@ -2911,7 +3224,7 @@ vvas_xcompsitor_add_processing_channels (GstVvasXCompositor * self)
 
       if (pad->height != -1) {
         out_height = pad->height;
-        if (pad->height < -1 || pad->height > meta_out->height
+        if (pad->height < -1 || pad->height > composition_output_height
             || pad->height == 0) {
           GST_ERROR_OBJECT (self, "height of sink_%d is invalid",
               self->priv->pad_of_zorder[chan_id]);
@@ -2924,30 +3237,32 @@ vvas_xcompsitor_add_processing_channels (GstVvasXCompositor * self)
       xpos_offset = pad->xpos;
       ypos_offset = pad->ypos;
 
-      if (xpos_offset < 0 || xpos_offset > meta_out->width) {
+      if (xpos_offset > composition_output_width) {
         GST_ERROR_OBJECT (self, "xpos of sink_%d is invalid",
             self->priv->pad_of_zorder[chan_id]);
         return false;
       }
-      if (ypos_offset < 0 || ypos_offset > meta_out->height) {
+      if (ypos_offset > composition_output_height) {
         GST_ERROR_OBJECT (self, "ypos of sink_%d is invalid",
             self->priv->pad_of_zorder[chan_id]);
         return false;
       }
 
       /* cropping the image  at right corner if xpos exceeds output width */
-      if (xpos_offset + out_width > meta_out->width) {
+      if (xpos_offset + out_width > composition_output_width) {
         in_width_scale_factor = ((float) in_width / out_width);
         in_width =
-            (int) ((meta_out->width - xpos_offset) * in_width_scale_factor);
-        out_width = meta_out->width - xpos_offset;
+            (int) ((composition_output_width -
+                xpos_offset) * in_width_scale_factor);
+        out_width = composition_output_width - xpos_offset;
       }
       /* cropping the image  at bottom corner if ypos exceeds output height */
-      if (ypos_offset + out_height > meta_out->height) {
+      if (ypos_offset + out_height > composition_output_height) {
         in_height_scale_factor = ((float) in_height / out_height);
         in_height =
-            (int) ((meta_out->height - ypos_offset) * in_height_scale_factor);
-        out_height = meta_out->height - ypos_offset;
+            (int) ((composition_output_height -
+                ypos_offset) * in_height_scale_factor);
+        out_height = composition_output_height - ypos_offset;
       }
 
     }
@@ -3001,11 +3316,30 @@ vvas_xcompositor_process (GstVvasXCompositor * self)
 {
   GstVvasXCompositorPrivate *priv = self->priv;
   bool ret;
-  GstMemory *mem = NULL;
   VvasReturnType vret;
 
-  priv->output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
-      self->out_mem_bank, priv->outbuf, priv->out_vinfo, GST_MAP_READ);
+  /* Convert output GstBuffer to VvasVideoFrame */
+  if (!self->software_scaling) {
+    /* When we are working with hardware scaling no need to sync
+     * the content to device as it is already at device side.
+     * Mapping in write mode sets the VVAS_SYNC_TO_DEVICE flag
+     * which overrides the same buffer with same content
+     * so mapping in read mode.
+     */
+    priv->output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+        self->out_mem_bank, priv->outbuf, priv->out_vinfo, GST_MAP_READ);
+  } else {
+    /* When we are working with software scaling and if the
+     * output buffer pool proposed is device memory, then
+     * we need to map in write mode as we have to work with
+     * the shadow buffer and then sync the content to the device side
+     * to make the data available to next plugin.
+     */
+    priv->output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
+        self->out_mem_bank, priv->outbuf, priv->out_vinfo,
+        (GST_MAP_READ | GST_MAP_WRITE));
+  }
+
   if (!priv->output_frame) {
     GST_ERROR_OBJECT (self, "Could convert output GstBuffer to VvasVideoFrame");
     return FALSE;
@@ -3022,16 +3356,20 @@ vvas_xcompositor_process (GstVvasXCompositor * self)
     GST_ERROR_OBJECT (self, "Failed to process frame in scaler");
     return FALSE;
   }
-
-  mem = gst_buffer_get_memory (priv->outbuf, 0);
-  if (mem == NULL) {
-    GST_ERROR_OBJECT (self,
-        "chan-%d : failed to get memory from output buffer", 0);
-    return FALSE;
+  /* no need to set VVAS_SYNC_FROM_DEVICE on
+   * output buffer while doing software scaling */
+  if (!self->software_scaling) {
+    GstMemory *mem = NULL;
+    mem = gst_buffer_get_memory (priv->outbuf, 0);
+    if (mem == NULL) {
+      GST_ERROR_OBJECT (self,
+          "chan-%d : failed to get memory from output buffer", 0);
+      return FALSE;
+    }
+    /* sync from device to host */
+    gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_FROM_DEVICE);
+    gst_memory_unref (mem);
   }
-  /* sync from device to host */
-  gst_vvas_memory_set_sync_flag (mem, VVAS_SYNC_FROM_DEVICE);
-  gst_memory_unref (mem);
 
   return TRUE;
 }
@@ -3110,6 +3448,9 @@ gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
     }
 
     ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL);
+    if (ret != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (self, "failed to allocate buffer from pool %p", pool);
+    }
     gst_object_unref (pool);
   } else {
     /** going to allocate the sw buffers of size out_vinfo
@@ -3119,7 +3460,6 @@ gst_vvas_xcompositor_create_output_buffer (GstVideoAggregator * videoaggregator,
       gst_object_unref (pool);
     *outbuf =
         gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&videoaggregator->info));
-
 
     if (*outbuf == NULL) {
       GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
@@ -3177,44 +3517,69 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
     } else {
       self->priv->inbufs[pad_id] = prepared_frame->buffer;
     }
+    /* Lets go with incoming buffer itself, as we don't have any stride alignment
+     * requirement for software scaling.
+     */
+    if (!self->software_scaling) {
+      /* prepare input buffer from the data on sinkpad */
+      bret =
+          vvas_xcompositor_prepare_input_buffer (self, sinkpad,
+          &self->priv->inbufs[pad_id]);
 
-    /* prepare input buffer from the data on sinkpad */
-    bret =
-        vvas_xcompositor_prepare_input_buffer (self, sinkpad,
-        &self->priv->inbufs[pad_id]);
-    if (!bret)
-      goto error;
+      if (!bret)
+        goto error;
+    }
 
     pad_id++;
   }
-  /** Creating a multi scaler aligned buffer, as the default buffer allocated is
+  /* Lets go with the decided output software buffer itself, as we don't
+   * have any stride alignment requirement for software scaling and memset
+   * the software software buffer before processing it.
+   */
+
+  if (!self->software_scaling) {
+  /** Creating a hw multi scaler aligned buffer, as the default buffer allocated is
    *  unaligned to multiscaler if the downstream does not understand video meta
    */
-  if (self->priv->need_copy && self->priv->output_pool) {
-    GstBuffer *aligned_buffer = NULL;
-    if (!gst_buffer_pool_is_active (self->priv->output_pool)) {
-      if (!gst_buffer_pool_set_active (self->priv->output_pool, TRUE)) {
-        GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
-            ("failed to activate bufferpool"),
-            ("failed to activate bufferpool"));
-        return GST_FLOW_ERROR;
+    if (self->priv->need_copy && self->priv->output_pool) {
+      GstBuffer *aligned_buffer = NULL;
+      if (!gst_buffer_pool_is_active (self->priv->output_pool)) {
+        if (!gst_buffer_pool_set_active (self->priv->output_pool, TRUE)) {
+          GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+              ("failed to activate bufferpool"),
+              ("failed to activate bufferpool"));
+          return GST_FLOW_ERROR;
+        }
       }
-    }
 
-    fret =
-        gst_buffer_pool_acquire_buffer (self->priv->output_pool,
-        &aligned_buffer, NULL);
-    gst_buffer_copy_into (aligned_buffer, outbuf,
-        GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS |
-        GST_BUFFER_COPY_FLAGS, 0, -1);
-    /* Prepare aligned output buffer in case of no video meta data */
-    bret = vvas_xcompositor_prepare_output_buffer (self, aligned_buffer);
+      fret =
+          gst_buffer_pool_acquire_buffer (self->priv->output_pool,
+          &aligned_buffer, NULL);
+      if (fret != GST_FLOW_OK) {
+        GST_ERROR_OBJECT (self, "failed to allocate buffer from pool %p",
+            self->priv->output_pool);
+        goto error;
+      }
+      gst_buffer_copy_into (aligned_buffer, outbuf,
+          GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS |
+          GST_BUFFER_COPY_FLAGS, 0, -1);
+      /* Prepare aligned output buffer in case of no video meta data */
+      bret = vvas_xcompositor_prepare_output_buffer (self, aligned_buffer);
+    } else {
+      /* Prepare output buffer which is acquired from the pool */
+      bret = vvas_xcompositor_prepare_output_buffer (self, outbuf);
+    }
+    if (!bret)
+      goto error;
   } else {
-    /* Prepare output buffer which is acquired from the pool */
-    bret = vvas_xcompositor_prepare_output_buffer (self, outbuf);
+    /* memset the output software buffer */
+    GstMapInfo info;
+    gst_buffer_map (outbuf, &info, GST_MAP_WRITE);
+    memset (info.data, 0x00, info.size);
+    gst_buffer_unmap (outbuf, &info);
+    self->priv->outbuf = outbuf;
   }
-  if (!bret)
-    goto error;
+
   /** Aggregate the frames using multi scaler kernel after
    *  preparing i/p and o/p buffers
    */
@@ -3251,8 +3616,15 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
       GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
       gst_buffer_get_size (outbuf));
-  for (pad_id = 0; pad_id < self->num_request_pads; pad_id++)
-    gst_buffer_unref (self->priv->inbufs[pad_id]);
+  /* In case of hw scaling we are increasing the
+   * ref count of input buffer in prepare_input_buffer function
+   * and unreffing after usage.
+   * So no need to unref in sw scaling as we are not calling prepatre_input_buffer function */
+  if (!self->software_scaling) {
+    for (pad_id = 0; pad_id < self->num_request_pads; pad_id++) {
+      gst_buffer_unref (self->priv->inbufs[pad_id]);
+    }
+  }
 
   vvas_xcompositor_free_vvas_video_frame (self);
   return GST_FLOW_OK;
@@ -3260,8 +3632,14 @@ gst_vvas_xcompositor_aggregate_frames (GstVideoAggregator * vagg,
 error:
   fret = GST_FLOW_ERROR;
   vvas_xcompositor_free_vvas_video_frame (self);
-  for (pad_id = 0; pad_id < self->num_request_pads; pad_id++)
-    gst_buffer_unref (self->priv->inbufs[pad_id]);
+  /* In case of hw scaling we are increasing the
+   * ref count of input buffer in prepare_input_buffer function
+   * and unreffing after usage.
+   * So no need to unref in sw scaling as we are not calling prepatre_input_buffer function */
+  if (!self->software_scaling) {
+    for (pad_id = 0; pad_id < self->num_request_pads; pad_id++)
+      gst_buffer_unref (self->priv->inbufs[pad_id]);
+  }
   return fret;
 }
 
@@ -3323,6 +3701,9 @@ gst_vvas_xcompositor_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ENABLE_PIPELINE:
       g_value_set_boolean (value, self->enabled_pipeline);
+      break;
+    case PROP_SOFTWARE_SCALING:
+      g_value_set_boolean (value, self->software_scaling);
       break;
 #ifdef ENABLE_XRM_SUPPORT
     case PROP_RESERVATION_ID:
@@ -3409,6 +3790,9 @@ gst_vvas_xcompositor_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ENABLE_PIPELINE:
       self->enabled_pipeline = g_value_get_boolean (value);
+      break;
+    case PROP_SOFTWARE_SCALING:
+      self->software_scaling = g_value_get_boolean (value);
       break;
 #ifdef ENABLE_XRM_SUPPORT
     case PROP_RESERVATION_ID:

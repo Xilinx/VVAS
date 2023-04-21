@@ -65,11 +65,20 @@ GST_DEBUG_CATEGORY_STATIC (gst_vvas_xfunnel_debug_category);
  */
 #define DEFAULT_SINK_QUEUE_SIZE   2
 
+/**
+ *  1. Default timeout is infinite.
+ *  2. If user provided timeout, use that timeout
+ *     whether pipeline is in live or non-live.
+ *  3. If any live source is connected and user not
+ *     provided the timeout, use the timeout that is
+ *     calculated using framerate.
+ */
+
 /** @def DEFAULT_SINKWAIT_TIMEOUT
  *  @brief Default time to wait for sink's buffer before switching to
  *  the next sink pad
  */
-#define DEFAULT_SINKWAIT_TIMEOUT  33
+#define DEFAULT_SINKWAIT_TIMEOUT  G_MAXUINT/G_TIME_SPAN_MILLISECOND
 
 /** @enum Vvas_XFunnel_Properties
  *  @brief  Vvas_XFunnel properties
@@ -106,6 +115,10 @@ static void gst_vvas_xfunnel_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec);
 static void gst_vvas_xfunnel_dispose (GObject * object);
 static void gst_vvas_xfunnel_release_pad (GstElement * element, GstPad * pad);
+static gboolean gst_vvas_xfunnel_pad_is_live (GstVvas_Xfunnel *
+    vvas_xfunnel, GstPad * pad);
+static void
+gst_vvas_xfunnel_update_sink_wait_timeout (GstVvas_Xfunnel * vvas_xfunnel);
 static GstStateChangeReturn gst_vvas_xfunnel_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_vvas_xfunnel_sink_event (GstPad * pad, GstObject * parent,
@@ -125,6 +138,8 @@ static gboolean gst_vvas_xfunnel_send_event (const GstVvas_Xfunnel *
 static gboolean gst_vvas_xfunnel_is_all_pad_got_eos (GstVvas_Xfunnel *
     vvas_xfunnel);
 static void gst_vvas_xfunnelpad_dispose (GObject * object);
+static gboolean gst_vvas_xfunnel_src_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 
 /**
  *  @brief Defines sink pad's template
@@ -159,6 +174,12 @@ gst_vvas_xfunnelpad_dispose (GObject * object)
   /* Pad is getting disposed, release all resources allocated for pad */
   GST_DEBUG_OBJECT (vvas_xfunnelpad, "disposing pad: %s, queue_len: %u",
       vvas_xfunnelpad->name, g_queue_get_length (vvas_xfunnelpad->queue));
+  /* Lets clear out if any buffers remaining in the queue */
+  while (g_queue_get_length (vvas_xfunnelpad->queue)) {
+    GstBuffer *buffer = NULL;
+    buffer = g_queue_pop_head (vvas_xfunnelpad->queue);
+    gst_buffer_unref (buffer);
+  }
   g_free (vvas_xfunnelpad->name);
   g_queue_free (vvas_xfunnelpad->queue);
   g_mutex_clear (&vvas_xfunnelpad->lock);
@@ -261,8 +282,8 @@ gst_vvas_xfunnel_class_init (GstVvas_XfunnelClass * klass)
       g_param_spec_uint ("sink-wait-timeout",
           "sink wait timeout in milliseconds",
           "time to wait before switching to the next sink in milliseconds, "
-          "default will be calculated as 1/FPS", 1, 1000,
-          DEFAULT_SINKWAIT_TIMEOUT,
+          "default will be calculated as 1/FPS in live mode", 1,
+          DEFAULT_SINKWAIT_TIMEOUT, DEFAULT_SINKWAIT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
@@ -307,6 +328,9 @@ gst_vvas_xfunnel_init (GstVvas_Xfunnel * vvas_xfunnel)
   gst_pad_set_event_function (vvas_xfunnel->srcpad,
       GST_DEBUG_FUNCPTR (gst_vvas_xfunnel_src_event));
 
+  gst_pad_set_query_function (vvas_xfunnel->srcpad,
+      GST_DEBUG_FUNCPTR (gst_vvas_xfunnel_src_query));
+
   /* Initialize variables to their default values */
   vvas_xfunnel->processing_thread = NULL;
   vvas_xfunnel->sink_pad_idx = 0;
@@ -317,6 +341,7 @@ gst_vvas_xfunnel_init (GstVvas_Xfunnel * vvas_xfunnel)
   vvas_xfunnel->sink_caps = NULL;
   vvas_xfunnel->is_user_timeout = FALSE;
   g_mutex_init (&vvas_xfunnel->mutex_lock);
+  vvas_xfunnel->live_pad_hash = g_hash_table_new (g_direct_hash, g_int_equal);
 }
 
 /**
@@ -341,20 +366,43 @@ gst_vvas_xfunnel_set_property (GObject * object, guint property_id,
   GstVvas_Xfunnel *vvas_xfunnel = GST_VVAS_XFUNNEL (object);
 
   switch (property_id) {
-    case PROP_QUEUE_SIZE:
+    case PROP_QUEUE_SIZE:{
       /* got queue size from the user */
-      vvas_xfunnel->queue_size = g_value_get_uint (value);
-      GST_DEBUG_OBJECT (vvas_xfunnel, "queue_size set to %u",
-          vvas_xfunnel->queue_size);
-      break;
+      GstState state;
+      state = GST_STATE (GST_ELEMENT (vvas_xfunnel));
+      /* set the queue size value during NULL or READY state */
+      if (state <= GST_STATE_READY) {
+        vvas_xfunnel->queue_size = g_value_get_uint (value);
+        GST_DEBUG_OBJECT (vvas_xfunnel, "queue_size set to %u",
+            vvas_xfunnel->queue_size);
+      } else {
+        GST_WARNING_OBJECT (vvas_xfunnel,
+            "queue size value can be set during NULL or READY state only, so using previous value %d",
+            vvas_xfunnel->queue_size);
+      }
 
-    case PROP_SINK_WAIT_TIMEOUT:
-      /* got sink_wait_timeout from the user */
-      vvas_xfunnel->sink_wait_timeout = g_value_get_uint (value);
-      GST_DEBUG_OBJECT (vvas_xfunnel, "sink_wait_timeout set to %u",
-          vvas_xfunnel->sink_wait_timeout);
-      vvas_xfunnel->is_user_timeout = TRUE;
       break;
+    }
+    case PROP_SINK_WAIT_TIMEOUT:{
+      /* got sink_wait_timeout from the user */
+      GstState state;
+      state = GST_STATE (GST_ELEMENT (vvas_xfunnel));
+
+      GST_OBJECT_LOCK (vvas_xfunnel);
+      /* set the timeout value during NULL or READY state */
+      if (state <= GST_STATE_READY) {
+        vvas_xfunnel->sink_wait_timeout = g_value_get_uint (value);
+        GST_DEBUG_OBJECT (vvas_xfunnel, "sink_wait_timeout set to %u",
+            vvas_xfunnel->sink_wait_timeout);
+        vvas_xfunnel->is_user_timeout = TRUE;
+      } else {
+        GST_WARNING_OBJECT (vvas_xfunnel,
+            "timeout value can be set during NULL or READY state only, so using previous value %d",
+            vvas_xfunnel->sink_wait_timeout);
+      }
+      GST_OBJECT_UNLOCK (vvas_xfunnel);
+      break;
+    }
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -391,7 +439,9 @@ gst_vvas_xfunnel_get_property (GObject * object, guint property_id,
 
     case PROP_SINK_WAIT_TIMEOUT:
       /* Set sink_wait_timeout value for the user */
+      GST_OBJECT_LOCK (vvas_xfunnel);
       g_value_set_uint (value, vvas_xfunnel->sink_wait_timeout);
+      GST_OBJECT_UNLOCK (vvas_xfunnel);
       break;
 
     default:
@@ -430,6 +480,7 @@ restart:
       goto restart;
     }
   }
+  g_hash_table_destroy (vvas_xfunnel->live_pad_hash);
   G_OBJECT_CLASS (gst_vvas_xfunnel_parent_class)->dispose (object);
 }
 
@@ -526,6 +577,36 @@ gst_vvas_xfunnel_send_event (const GstVvas_Xfunnel * funnel, GstEvent * event)
 }
 
 /**
+ *  @fn static gboolean gst_vvas_xfunnel_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+ *  @param [in] pad          - Pointer to src GstPad.
+ *  @param [in] parent       - Pointer to GstObject
+ *  @param [out] query       - Allocation Query to be answered/executed.
+ *  @return  On Success returns TRUE
+ *           On Failure returns FALSE
+ *  @brief   This function will be invoked whenever an downstream element sends query on the src pad.
+ *  @details This function will be registered using function gst_pad_set_query_function as a query handler.
+ *
+ */
+static gboolean
+gst_vvas_xfunnel_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+      gst_query_unref (query);
+      ret = FALSE;
+      break;
+
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  return ret;
+}
+
+/**
  *  @fn static gboolean gst_vvas_xfunnel_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
  *  @param [in] pad       - The GstPad to handle the event.
  *  @param [in] parent    - The parent of the pad, which is the GstVvas_Xfunnel handle, typecasted to GstObject
@@ -617,7 +698,6 @@ gst_vvas_xfunnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_vvas_xfunnel_sink_event));
 
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_CAPS);
-  GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_ALLOCATION);
 
   /* Activate and add the pad to the funnel element */
   gst_pad_set_active (sinkpad, TRUE);
@@ -627,7 +707,6 @@ gst_vvas_xfunnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_PAD_NAME (sinkpad), fpad->pad_idx);
 
   fpad->name = gst_pad_get_name (sinkpad);
-
   return sinkpad;
 }
 
@@ -684,7 +763,128 @@ gst_vvas_xfunnel_release_pad (GstElement * element, GstPad * pad)
   /* Mark this sink pad as inactive and remove it from the element */
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (vvas_xfunnel), pad);
+  if (!vvas_xfunnel->is_user_timeout) {
+    /* Remove the pad from hash table and update the
+     * wait timeout value based on status of remaining pads
+     */
+    GST_OBJECT_LOCK (vvas_xfunnel);
+    g_hash_table_remove (vvas_xfunnel->live_pad_hash, pad);
+    gst_vvas_xfunnel_update_sink_wait_timeout (vvas_xfunnel);
+    GST_OBJECT_UNLOCK (vvas_xfunnel);
+  }
 
+}
+
+/**
+ *  @fn static void gst_vvas_xfunnel_signal_all_pads (GstVvas_Xfunnel * vvas_xfunnel)
+ *  @param [in] vvas_xfunnel	- Handle to GstVvas_Xfunnel
+ *  @return None
+ *  @brief  This function will get invoked whenever vvas_xfunnel needs to
+ *          exit its processing thread.
+ *  @details  This function signals all the vvas_xfunnel sinkpads which are
+ *            waiting in processing thread which is anticipated to exit.
+ */
+
+static void
+gst_vvas_xfunnel_signal_all_pads (GstVvas_Xfunnel * vvas_xfunnel)
+{
+  GstIterator *itr = NULL;
+  GValue item = G_VALUE_INIT;
+  gboolean done = FALSE;
+  itr = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (vvas_xfunnel));
+  while (!done) {
+    switch (gst_iterator_next (itr, &item)) {
+      case GST_ITERATOR_OK:{
+        GstVvas_XfunnelPad *fpad;
+        GstPad *pad;
+        pad = g_value_get_object (&item);
+        fpad = GST_VVAS_XFUNNEL_PAD_CAST (pad);
+
+        g_mutex_lock (&fpad->lock);
+        /* signal the pad that is waiting in processing thread
+         * which is anticipated to exit */
+        g_cond_signal (&fpad->cond);
+        g_mutex_unlock (&fpad->lock);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (itr);
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  g_value_unset (&item);
+  gst_iterator_free (itr);
+  return;
+}
+
+/**
+ *  @fn static void
+ *	gst_vvas_xfunnel_update_sink_wait_timeout (GstVvas_Xfunnel * vvas_xfunnel)
+ *  @param [in] vvas_xfunnel	- Handle to GstVvas_Xfunnel
+ *  @return None.
+ *  @brief  This function adjust the sink wait timeout value based on
+ *          mode (live/non-live) the pads are running.
+ *  @details  This function adjust the sink wait timeout value based on
+ *            mode (live/non-live) the pads are running. If any pad is live it adjusts the
+ *            wait timeout value based on framerate else it sets the timeout to infinite.
+ */
+static void
+gst_vvas_xfunnel_update_sink_wait_timeout (GstVvas_Xfunnel * vvas_xfunnel)
+{
+  GList *live_pads = g_hash_table_get_values (vvas_xfunnel->live_pad_hash);
+  /* g_list_find (live_pads, GINT_TO_POINTER(TRUE)) returns non NULL
+   * if value of any pad from the list is live */
+  if (g_list_find (live_pads, GINT_TO_POINTER (TRUE))) {
+    /* If any pad is live set the wait timeout value based on framerate
+     * which was already calculated during GST_EVENT_CAPS.
+     * All the input caps to funnel are expected to receive streams
+     * of same framerate. So calculated timeout is same for all pads.
+     */
+    vvas_xfunnel->sink_wait_timeout =
+        vvas_xfunnel->sink_wait_timeout_calculated;
+  } else {
+    /* Set infinite timeout if none of the pads are live */
+    vvas_xfunnel->sink_wait_timeout = DEFAULT_SINKWAIT_TIMEOUT;
+  }
+  GST_DEBUG_OBJECT (vvas_xfunnel, "updated timeout value to %d",
+      vvas_xfunnel->sink_wait_timeout);
+
+  g_list_free (live_pads);
+}
+
+/**
+ *  @fn static gboolean gst_vvas_xfunnel_pad_is_live (GstVvas_Xfunnel * vvas_xfunnel
+ *                                                    GstPad * pad)
+ *  @param [in] vvas_xfunnel	- Handle to GstVvas_Xfunnel
+ *  @param [in] pad		- reference to a pad on which query to be performed
+ *  @return TRUE on success.
+ *          FALSE on failure.
+ *  @brief  This function will get invoked whenever a new pad is added to the funnel.
+ *  @details  This function queries the pad whether it is running in live mode.
+ */
+static gboolean
+gst_vvas_xfunnel_pad_is_live (GstVvas_Xfunnel * vvas_xfunnel, GstPad * pad)
+{
+  GstQuery *query;
+  gboolean query_ret = FALSE, live = FALSE;
+
+  query = gst_query_new_latency ();
+
+  /* Query the peer pad to know whether it is running in live */
+  query_ret = gst_pad_peer_query (pad, query);
+  if (!query_ret) {
+    GST_DEBUG_OBJECT (vvas_xfunnel, "Latency query failed on pad %p", pad);
+  } else {
+    gst_query_parse_latency (query, &live, NULL, NULL);
+  }
+  gst_query_unref (query);
+  return live;
 }
 
 /**
@@ -824,6 +1024,7 @@ gst_vvas_xfunnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstVvas_XfunnelPad *fpad = GST_VVAS_XFUNNEL_PAD_CAST (pad);
   gboolean forward = TRUE;
   gboolean res = TRUE;
+  gboolean live = FALSE;
   GstEvent *local_event = gst_event_copy (event);
   /* We need to add pad-index info into the outgoing event, by making copy
    * we are insuring that it becomes writable
@@ -845,9 +1046,12 @@ gst_vvas_xfunnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CAPS:{
       GstCaps *caps;
       gst_event_parse_caps (event, &caps);
+
+      GST_OBJECT_LOCK (vvas_xfunnel);
       if (!vvas_xfunnel->sink_caps) {
         //first caps event, need to forward this downstream
         vvas_xfunnel->sink_caps = gst_caps_copy (caps);
+        GST_OBJECT_UNLOCK (vvas_xfunnel);
 
         if (!vvas_xfunnel->is_user_timeout) {
           GstVideoInfo vinfo = { 0 };
@@ -867,14 +1071,20 @@ gst_vvas_xfunnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
           fps_d = GST_VIDEO_INFO_FPS_D (&vinfo);
           fps_n = GST_VIDEO_INFO_FPS_N (&vinfo);
-          vvas_xfunnel->sink_wait_timeout =
+          if (!fps_n || !fps_d) {
+            GST_ERROR_OBJECT (pad, "Invalid framerate %d/%d", fps_n, fps_d);
+            return FALSE;
+          }
+
+          vvas_xfunnel->sink_wait_timeout_calculated =
               (guint) ((fps_d * 1000) / (float) fps_n);
-          delta = (vvas_xfunnel->sink_wait_timeout * 10) / 100;
+          delta = (vvas_xfunnel->sink_wait_timeout_calculated * 10) / 100;
           //consider 10% as delta
-          vvas_xfunnel->sink_wait_timeout += delta;
+          vvas_xfunnel->sink_wait_timeout_calculated += delta;
           GST_DEBUG_OBJECT (vvas_xfunnel, "sink_wait_timeout: %u ms",
-              vvas_xfunnel->sink_wait_timeout);
+              vvas_xfunnel->sink_wait_timeout_calculated);
         }
+
       } else {
         /* For funnel, caps on all sink pads must be same, this is to avoid
          * re-negotiation of caps on SRC pad always before sending buffer with
@@ -889,6 +1099,7 @@ gst_vvas_xfunnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         const gchar *caps_format, *new_format;
         forward = FALSE;
 
+        GST_OBJECT_UNLOCK (vvas_xfunnel);
         caps_struct = gst_caps_get_structure (vvas_xfunnel->sink_caps, 0);
         new_struct = gst_caps_get_structure (caps, 0);
         if (!caps_struct || !new_struct) {
@@ -933,6 +1144,20 @@ gst_vvas_xfunnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           gst_event_unref (event);
           return FALSE;
         }
+      }
+      if (!vvas_xfunnel->is_user_timeout) {
+        /* If user did not set any timeout, check whether
+         * any upstream element is live */
+        live = gst_vvas_xfunnel_pad_is_live (vvas_xfunnel, pad);
+        /* Insert the pad's response in Hash table and
+         * adjust the timeout value based on mode of the
+         * pads whether they are in live/non-live
+         */
+        GST_OBJECT_LOCK (vvas_xfunnel);
+        g_hash_table_insert (vvas_xfunnel->live_pad_hash, pad,
+            GINT_TO_POINTER (live));
+        gst_vvas_xfunnel_update_sink_wait_timeout (vvas_xfunnel);
+        GST_OBJECT_UNLOCK (vvas_xfunnel);
       }
     }
       break;
@@ -984,6 +1209,9 @@ gst_vvas_xfunnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       //Custom pad-eos and EOS will be sent from processing_thread
       g_mutex_lock (&fpad->lock);
       fpad->got_eos = TRUE;
+      /* signal the pad that is waiting in processing thread
+       * which is anticipated to exit */
+      g_cond_signal (&fpad->cond);
       g_mutex_unlock (&fpad->lock);
       forward = FALSE;
     }
@@ -1040,7 +1268,6 @@ gst_vvas_xfunnel_processing_thread (gpointer data)
     g_mutex_lock (&vvas_xfunnel->mutex_lock);
     break_loop = vvas_xfunnel->is_exit_thread;
     g_mutex_unlock (&vvas_xfunnel->mutex_lock);
-
     /* Stop processing_thread */
     if (break_loop) {
       GST_DEBUG_OBJECT (vvas_xfunnel, "breaking thread's main loop");
@@ -1067,10 +1294,17 @@ gst_vvas_xfunnel_processing_thread (gpointer data)
           GstBuffer *buffer = NULL;
           guint queue_len = 0;
           gboolean is_send_pad_eos = FALSE;
+          g_mutex_lock (&vvas_xfunnel->mutex_lock);
+          break_loop = vvas_xfunnel->is_exit_thread;
+          g_mutex_unlock (&vvas_xfunnel->mutex_lock);
 
+          /* Stop processing_thread */
+          if (break_loop) {
+            GST_DEBUG_OBJECT (vvas_xfunnel, "exit thread");
+            break;
+          }
           pad = g_value_get_object (&item);
           fpad = GST_VVAS_XFUNNEL_PAD_CAST (pad);
-
           g_mutex_lock (&fpad->lock);
           /* Get sink's queue length */
           queue_len = g_queue_get_length (fpad->queue);
@@ -1078,7 +1312,6 @@ gst_vvas_xfunnel_processing_thread (gpointer data)
           GST_DEBUG_OBJECT (fpad,
               "pad_%u: queue_len= %u, eos: %d, eos_sent: %d", fpad->pad_idx,
               queue_len, fpad->got_eos, fpad->is_eos_sent);
-
           if (queue_len > 0) {
             /* Sink pad's queue has buffer, pop it */
             buffer = g_queue_pop_head (fpad->queue);
@@ -1088,26 +1321,29 @@ gst_vvas_xfunnel_processing_thread (gpointer data)
             if (!fpad->got_eos) {
               gint64 current_time, elapsed_time;
               gint64 elapsed_miliseconds;
+              guint64 sink_wait_timeout;
               current_time = g_get_monotonic_time ();
 
+              GST_OBJECT_LOCK (vvas_xfunnel);
+              sink_wait_timeout = vvas_xfunnel->sink_wait_timeout;
+              GST_OBJECT_UNLOCK (vvas_xfunnel);
               /* sink pad hasn't submitted the buffer to its queue, need to wait
                * till sink_wait_timeout is elapsed before switching to the next
                * sink pad.
                */
-
               elapsed_time =
                   (fpad->time >= 0) ? (current_time - fpad->time) : 0;
               elapsed_miliseconds = elapsed_time / G_TIME_SPAN_MILLISECOND;
-
-              if (elapsed_miliseconds < vvas_xfunnel->sink_wait_timeout) {
+              if (elapsed_miliseconds < sink_wait_timeout) {
                 //Need to wait still
                 gboolean is_signalled;
                 gint64 end_time;
-                gint64 wait_time = (vvas_xfunnel->sink_wait_timeout *
+                gint64 wait_time;
+
+                wait_time = (sink_wait_timeout *
                     G_TIME_SPAN_MILLISECOND) - elapsed_time;
                 GST_DEBUG_OBJECT (fpad, "elapsed: %ld, waiting for %ld in us",
                     elapsed_time, wait_time);
-
                 end_time = g_get_monotonic_time () + wait_time;
                 is_signalled =
                     g_cond_wait_until (&fpad->cond, &fpad->lock, end_time);
@@ -1252,13 +1488,11 @@ gst_vvas_xfunnel_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
 
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      /* READY -> PAUSED transition, start processing_thread */
       GST_DEBUG_OBJECT (vvas_xfunnel, "Starting processing thread");
       vvas_xfunnel->is_exit_thread = FALSE;
       vvas_xfunnel->processing_thread = g_thread_new ("vvas_xfunnel-thread",
           gst_vvas_xfunnel_processing_thread, vvas_xfunnel);
       break;
-
     default:
       break;
   }
@@ -1274,14 +1508,13 @@ gst_vvas_xfunnel_change_state (GstElement * element, GstStateChange transition)
         g_mutex_lock (&vvas_xfunnel->mutex_lock);
         vvas_xfunnel->is_exit_thread = TRUE;
         g_mutex_unlock (&vvas_xfunnel->mutex_lock);
-
+        gst_vvas_xfunnel_signal_all_pads (vvas_xfunnel);
         GST_LOG_OBJECT (vvas_xfunnel, "waiting for processing thread to join");
         g_thread_join (vvas_xfunnel->processing_thread);
         vvas_xfunnel->processing_thread = NULL;
         GST_LOG_OBJECT (vvas_xfunnel, "processing thread joined");
       }
       break;
-
     default:
       break;
   }

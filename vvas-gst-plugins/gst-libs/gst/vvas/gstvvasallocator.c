@@ -520,6 +520,8 @@ gst_vvas_allocator_free (GstAllocator * allocator, GstMemory * mem)
   if (vvasmem->bo != NULL && mem->parent == NULL)
     vvas_xrt_free_bo (vvasmem->bo);
 
+  GST_DEBUG ("freeing mem: %p", mem);
+
   g_mutex_clear (&vvasmem->lock);
   g_slice_free (GstVvasMemory, vvasmem);
 
@@ -527,7 +529,6 @@ gst_vvas_allocator_free (GstAllocator * allocator, GstMemory * mem)
   alloc->priv->cur_mem--;
   GST_OBJECT_UNLOCK (alloc);
 
-  GST_DEBUG ("%p: freed", mem);
 }
 
 /**
@@ -579,7 +580,9 @@ gst_vvas_allocator_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE_INDEX:
       alloc->priv->dev_idx = g_value_get_int (value);
-      vvas_xrt_open_device (alloc->priv->dev_idx, &alloc->priv->handle);
+      if (!vvas_xrt_open_device (alloc->priv->dev_idx, &alloc->priv->handle)) {
+        GST_ERROR_OBJECT (alloc, "failed to open device");
+      }
       break;
     case PROP_NEED_DMA:
       alloc->priv->need_dma = g_value_get_boolean (value);
@@ -973,7 +976,6 @@ gst_vvas_memory_set_sync_flag (GstMemory * mem, VvasSyncFlags flag)
   GstVvasMemory *vvasmem;
   vvasmem = get_vvas_mem (mem);
   if (vvasmem == NULL) {
-    GST_ERROR ("failed to get vvas memory");
     return;
   }
   vvasmem->sync_flags |= flag;

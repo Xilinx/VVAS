@@ -517,7 +517,7 @@ vvas_xmultisrc_open (GstVvasXMSRC * self)
   char *error;
   json_error_t jerror;
   VVASKernel *vvas_handle;
-  char kernel_name[1024];
+  char kernel_name[1024] = { '\0' };
   bool shared_access = true;
 
   GST_DEBUG_OBJECT (self, "vvas MSRC open");
@@ -603,7 +603,12 @@ vvas_xmultisrc_open (GstVvasXMSRC * self)
   /* kernel name */
   value = json_object_get (kernel, "kernel-name");
   if (json_is_string (value)) {
-    strcpy (kernel_name, json_string_value (value));
+    if (strlen (json_string_value (value)) < sizeof (kernel_name)) {
+      strcpy (kernel_name, json_string_value (value));
+    } else {
+      GST_ERROR_OBJECT (self, "ERROR: kernel-name string length %ld higher \
+          than Max length %ld", strlen (json_string_value (value)), sizeof (kernel_name));
+    }
   } else {
     GST_INFO_OBJECT (self,
         "kernel name is not available, kernel lib is non-XRT based one");
@@ -702,9 +707,7 @@ vvas_xmultisrc_open (GstVvasXMSRC * self)
       priv->kernel.vvas_handle->cu_idx);
   GST_DEBUG_OBJECT (self, "\n---------\n");
 #endif
-  if (lib_path) {
-    g_free (lib_path);
-  }
+  g_free (lib_path);
   if (root) {
     json_decref (root);
   }
@@ -760,8 +763,8 @@ vvas_xmultisrc_allocate_internal_pool (GstVvasXMSRC * self)
   alloc_params.flags = GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS;
 
   config = gst_buffer_pool_get_config (pool);
-  if (vvas_caps_get_sink_stride_align (vvas_handle) > 0 ||
-      vvas_caps_get_sink_height_align (vvas_handle) > 0) {
+  if (vvas_caps_get_sink_stride_align (vvas_handle) > 1 ||
+      vvas_caps_get_sink_height_align (vvas_handle) > 1) {
     GstVideoAlignment video_align = { 0, };
 
     gst_video_alignment_reset (&video_align);
@@ -922,6 +925,7 @@ vvas_xmultisrc_write_input_registers (GstVvasXMSRC * self, GstBuffer ** inbuf)
     if (!gst_video_frame_map (&in_vframe, self->priv->in_vinfo, *inbuf,
             GST_MAP_READ)) {
       GST_ERROR_OBJECT (self, "failed to map input buffer");
+      gst_video_frame_unmap (&own_vframe);
       goto error;
     }
     gst_video_frame_copy (&own_vframe, &in_vframe);
@@ -995,10 +999,6 @@ vvas_xmultisrc_write_input_registers (GstVvasXMSRC * self, GstBuffer ** inbuf)
   return TRUE;
 
 error:
-  if (in_vframe.data)
-    gst_video_frame_unmap (&in_vframe);
-  if (own_vframe.data)
-    gst_video_frame_unmap (&own_vframe);
   if (in_mem)
     gst_memory_unref (in_mem);
 
@@ -1141,7 +1141,8 @@ error:
 static gboolean
 vvas_xmultisrc_process (GstVvasXMSRC * self)
 {
-  size_t ret, start = 0x1;
+  size_t start = 0x1;
+  int ret;
   json_t *value, *kernel;
 
   /* Update the kernel parameters if changed dynamically through
@@ -1382,6 +1383,7 @@ gst_vvas_xmultisrc_request_new_pad (GstElement * element,
 
   if (GST_STATE (self) > GST_STATE_NULL) {
     GST_ERROR_OBJECT (self, "adding pads is supported only when state is NULL");
+    GST_OBJECT_UNLOCK (self);
     return NULL;
   }
 
@@ -1460,6 +1462,7 @@ gst_vvas_xmultisrc_release_pad (GstElement * element, GstPad * pad)
   if (GST_STATE (self) > GST_STATE_NULL) {
     GST_ERROR_OBJECT (self,
         "Releasing of pads is supported only when state is NULL");
+    GST_OBJECT_UNLOCK (self);
     return;
   }
 
@@ -1467,6 +1470,7 @@ gst_vvas_xmultisrc_release_pad (GstElement * element, GstPad * pad)
   lsrc = g_list_find (self->srcpads, GST_VVAS_XMSRC_PAD_CAST (pad));
   if (!lsrc) {
     GST_ERROR_OBJECT (self, "could not find pad to release");
+    GST_OBJECT_UNLOCK (self);
     return;
   }
 
@@ -1475,6 +1479,8 @@ gst_vvas_xmultisrc_release_pad (GstElement * element, GstPad * pad)
   self->srcpads = g_list_remove (self->srcpads, GST_VVAS_XMSRC_PAD_CAST (pad));
   index = GST_VVAS_XMSRC_PAD_CAST (pad)->index;
   GST_DEBUG_OBJECT (self, "releasing pad with index = %d", index);
+  g_hash_table_remove (self->pad_indexes, GUINT_TO_POINTER (index));
+  self->num_request_pads--;
 
   GST_OBJECT_UNLOCK (self);
 
@@ -1484,12 +1490,6 @@ gst_vvas_xmultisrc_release_pad (GstElement * element, GstPad * pad)
   gst_pad_set_active (pad, FALSE);
 
   gst_object_unref (pad);
-
-  self->num_request_pads--;
-
-  GST_OBJECT_LOCK (self);
-  g_hash_table_remove (self->pad_indexes, GUINT_TO_POINTER (index));
-  GST_OBJECT_UNLOCK (self);
 }
 
 /**
@@ -2396,10 +2396,10 @@ vvas_xmultisrc_decide_allocation (GstVvasXMSRC * self, GstVvasXMSRCPad * srcpad,
     GstQuery * query, GstCaps * outcaps)
 {
   GstAllocator *allocator = NULL;
-  GstVideoInfo info;
-  GstAllocationParams params;
+  GstVideoInfo info = { 0 };
+  GstAllocationParams params = { 0 };
   GstBufferPool *pool = NULL;
-  guint size, min, max;
+  guint size = 0, min = 0, max = 0;
   gboolean update_allocator, update_pool, bret;
   GstStructure *config = NULL;
   VVASKernel *vvas_handle = self->priv->kernel.vvas_handle;
@@ -2443,8 +2443,8 @@ vvas_xmultisrc_decide_allocation (GstVvasXMSRC * self, GstVvasXMSRCPad * srcpad,
     config = gst_buffer_pool_get_config (pool);
 
     GST_DEBUG_OBJECT (srcpad, "got pool");
-    if ((vvas_caps_get_src_stride_align (vvas_handle) > 0
-            || vvas_caps_get_src_height_align (vvas_handle) > 0)
+    if ((vvas_caps_get_src_stride_align (vvas_handle) > 1
+            || vvas_caps_get_src_height_align (vvas_handle) > 1)
         && gst_buffer_pool_config_get_video_alignment (config,
             &video_align) == TRUE) {
 
@@ -2562,8 +2562,8 @@ next:
     gst_video_alignment_reset (&video_align);
 
     GST_DEBUG_OBJECT (srcpad, "no pool, making new pool");
-    if (vvas_caps_get_src_stride_align (vvas_handle) > 0
-        || vvas_caps_get_src_height_align (vvas_handle) > 0) {
+    if (vvas_caps_get_src_stride_align (vvas_handle) > 1
+        || vvas_caps_get_src_height_align (vvas_handle) > 1) {
 
       pool =
           gst_vvas_buffer_pool_new (vvas_caps_get_src_stride_align
@@ -2850,8 +2850,8 @@ vvas_xmultisrc_propose_allocation (GstVvasXMSRC * self, GstQuery * query)
     structure = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (structure, caps, size, MIN_POOL_BUFFERS,
         0);
-    if (vvas_caps_get_sink_stride_align (vvas_handle) > 0
-        || vvas_caps_get_sink_height_align (vvas_handle) > 0) {
+    if (vvas_caps_get_sink_stride_align (vvas_handle) > 1
+        || vvas_caps_get_sink_height_align (vvas_handle) > 1) {
       GstVideoAlignment video_align = { 0, };
 
       gst_video_alignment_reset (&video_align);

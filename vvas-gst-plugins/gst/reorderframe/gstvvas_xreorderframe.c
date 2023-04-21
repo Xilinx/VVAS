@@ -70,6 +70,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_vvas_xreorderframe_parent_class parent_class
 G_DEFINE_TYPE (Gstvvasxreorderframe, gst_vvas_xreorderframe, GST_TYPE_ELEMENT);
 
+/* default value is calculated by using max supported batch-size and infer-interval i.e., 14 and 7 */
+#define DEFAULT_MAX_SKIP_BUFFERS_LEN 175
+
 /* Static function's prototype */
 static gboolean gst_vvas_xreorderframe_infer_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
@@ -163,7 +166,12 @@ gst_vvas_xreorderframe_init (Gstvvasxreorderframe * reorderframe)
   reorderframe->is_exit_thread = FALSE;
   reorderframe->is_waiting_for_buffer = FALSE;
   reorderframe->infer_buffers_len = 0;
+  reorderframe->is_waiting_for_skip_buffer = FALSE;
+  reorderframe->skip_buffers_len = 0;
+  reorderframe->max_skip_buffers = 0;
   reorderframe->is_eos = FALSE;
+  reorderframe->thread_exit_return_value = GST_FLOW_OK;
+  reorderframe->pending_pad_eos_cnt = 0;
   /* Create a hash table for maintain src_id and infer buffers queue mapping */
   reorderframe->infer_hash =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
@@ -182,8 +190,9 @@ gst_vvas_xreorderframe_init (Gstvvasxreorderframe * reorderframe)
   g_mutex_init (&reorderframe->infer_lock);
   g_mutex_init (&reorderframe->skip_lock);
   g_mutex_init (&reorderframe->thread_lock);
-  g_mutex_init (&reorderframe->pad_eos_lock);
+  g_mutex_init (&reorderframe->eos_lock);
   g_cond_init (&reorderframe->infer_cond);
+  g_cond_init (&reorderframe->skip_cond);
 }
 
 /**
@@ -208,8 +217,9 @@ gst_vvas_xreorderframe_dispose (GObject * object)
   g_mutex_clear (&vvas_xreorderframe->infer_lock);
   g_mutex_clear (&vvas_xreorderframe->skip_lock);
   g_mutex_clear (&vvas_xreorderframe->thread_lock);
-  g_mutex_clear (&vvas_xreorderframe->pad_eos_lock);
+  g_mutex_clear (&vvas_xreorderframe->eos_lock);
   g_cond_clear (&vvas_xreorderframe->infer_cond);
+  g_cond_clear (&vvas_xreorderframe->skip_cond);
 
   G_OBJECT_CLASS (gst_vvas_xreorderframe_parent_class)->dispose (object);
 }
@@ -231,13 +241,25 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
     GHashTableIter iter;
     gpointer key, value;
 
-    if (reorderframe->infer_buffers_len == 0) {
+    g_mutex_lock (&reorderframe->infer_lock);
+    g_mutex_lock (&reorderframe->eos_lock);
+    if (reorderframe->infer_buffers_len == 0
+        && reorderframe->pending_pad_eos_cnt == 0 && !reorderframe->is_eos) {
       /* Infer buffers length is 0, wait for new infer buffers */
-      g_mutex_lock (&reorderframe->infer_lock);
+      g_mutex_unlock (&reorderframe->eos_lock);
       reorderframe->is_waiting_for_buffer = TRUE;
       GST_DEBUG_OBJECT (reorderframe, "waiting for infer buffers");
       g_cond_wait (&reorderframe->infer_cond, &reorderframe->infer_lock);
       g_mutex_unlock (&reorderframe->infer_lock);
+    } else {
+      g_mutex_unlock (&reorderframe->eos_lock);
+      g_mutex_unlock (&reorderframe->infer_lock);
+    }
+
+    if (reorderframe->is_waiting_for_skip_buffer &&
+        reorderframe->skip_buffers_len < reorderframe->max_skip_buffers) {
+      g_cond_signal (&reorderframe->skip_cond);
+      reorderframe->is_waiting_for_skip_buffer = FALSE;
     }
 
     /* Check for is_exit_thread, if TRUE then exit from processing thread */
@@ -260,7 +282,7 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
           && isValidBuffer) {
         GstBuffer *buf = NULL;
         GstVvasSrcIDMeta *srcId_meta = NULL;
-        gulong frame_id;
+        gulong frame_id, src_id;
         buf = g_queue_peek_head (infer_queue);
         if (!GST_IS_BUFFER (buf)) {
           GST_DEBUG_OBJECT (reorderframe, "invalid buffer");
@@ -271,6 +293,7 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
             && g_hash_table_lookup_extended (reorderframe->frameId_hash,
                 GUINT_TO_POINTER (srcId_meta->src_id), NULL,
                 (gpointer) & frame_id)) {
+          src_id = srcId_meta->src_id;
           /* if frameId matches push the buffer and pop it from queue */
           if (srcId_meta->frame_id == frame_id) {
             GST_DEBUG_OBJECT (reorderframe, "Pushing infer %" GST_PTR_FORMAT,
@@ -280,15 +303,15 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
               switch (res) {
                 case GST_FLOW_FLUSHING:
                 case GST_FLOW_EOS:
-                  GST_DEBUG_OBJECT (reorderframe,
-                      "failed to push buffer. reason EOS");
-                  break;
                 case GST_FLOW_ERROR:
-                  GST_ERROR_OBJECT (reorderframe,
-                      "Got GST_FLOW_ERROR from downstream. Exiting processing thread");
+                  GST_DEBUG_OBJECT (reorderframe,
+                      "failed to push buffer. reason %s",
+                      gst_flow_get_name (res));
+                  /* exit thread and store the gst_pad_push return value incase of error */
                   g_mutex_lock (&reorderframe->thread_lock);
                   reorderframe->is_exit_thread = TRUE;
                   g_mutex_unlock (&reorderframe->thread_lock);
+                  reorderframe->thread_exit_return_value = res;
                   break;
                 default:
                   GST_DEBUG_OBJECT (reorderframe, "failed to push buffer.");
@@ -298,7 +321,7 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
               /* after pushing buffer increment the frame id and update the frameId_hash */
               frame_id++;
               g_hash_table_insert (reorderframe->frameId_hash,
-                  GUINT_TO_POINTER (GUINT_TO_POINTER (srcId_meta->src_id)),
+                  GUINT_TO_POINTER (GUINT_TO_POINTER (src_id)),
                   GULONG_TO_POINTER (frame_id));
               /* pop the buffer */
               if (infer_queue) {
@@ -330,7 +353,7 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
       while (skip_queue && g_queue_get_length (skip_queue) > 0 && isValidBuffer) {
         GstBuffer *buf = NULL;
         GstVvasSrcIDMeta *srcId_meta = NULL;
-        gulong frame_id;
+        gulong frame_id, src_id;
         buf = g_queue_peek_head (skip_queue);
         if (!GST_IS_BUFFER (buf)) {
           GST_DEBUG_OBJECT (reorderframe, "invalid buffer");
@@ -341,6 +364,7 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
             && g_hash_table_lookup_extended (reorderframe->frameId_hash,
                 GUINT_TO_POINTER (srcId_meta->src_id), NULL,
                 (gpointer) & frame_id)) {
+          src_id = srcId_meta->src_id;
           /* if frame id matches push the buffer and pop it from queue */
           if (srcId_meta->frame_id == frame_id) {
             GST_DEBUG_OBJECT (reorderframe,
@@ -350,16 +374,15 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
               switch (res) {
                 case GST_FLOW_FLUSHING:
                 case GST_FLOW_EOS:
+                case GST_FLOW_ERROR:
                   GST_DEBUG_OBJECT (reorderframe,
                       "failed to push buffer. reason %s",
                       gst_flow_get_name (res));
-                  break;
-                case GST_FLOW_ERROR:
-                  GST_ERROR_OBJECT (reorderframe,
-                      "Got GST_FLOW_ERROR from downstream. Exiting processing thread");
+                  /* exit thread and store the gst_pad_push return value incase of error */
                   g_mutex_lock (&reorderframe->thread_lock);
                   reorderframe->is_exit_thread = TRUE;
                   g_mutex_unlock (&reorderframe->thread_lock);
+                  reorderframe->thread_exit_return_value = res;
                   break;
                 default:
                   GST_DEBUG_OBJECT (reorderframe, "failed to push buffer.");
@@ -369,11 +392,12 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
               /* after pushing buffer increement frame id and update frameId hash */
               frame_id++;
               g_hash_table_insert (reorderframe->frameId_hash,
-                  GUINT_TO_POINTER (GUINT_TO_POINTER (srcId_meta->src_id)),
+                  GUINT_TO_POINTER (GUINT_TO_POINTER (src_id)),
                   GULONG_TO_POINTER (frame_id));
               /* pop the buffer */
               if (skip_queue) {
                 g_queue_pop_head (skip_queue);
+                reorderframe->skip_buffers_len--;
               }
             }
           } else {
@@ -389,12 +413,12 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
     }
     g_mutex_unlock (&reorderframe->skip_lock);
 
-    g_mutex_lock (&reorderframe->pad_eos_lock);
+    g_mutex_lock (&reorderframe->eos_lock);
     g_hash_table_iter_init (&iter, reorderframe->pad_eos_hash);
     while (g_hash_table_iter_next (&iter, &key, &value)) {
-      gboolean is_eos = GPOINTER_TO_INT (value);
+      gboolean is_pad_eos = GPOINTER_TO_INT (value);
       GQueue *infer_queue, *skip_queue;
-      if (is_eos) {
+      if (is_pad_eos) {
         if (g_hash_table_lookup_extended (reorderframe->infer_hash,
                 GUINT_TO_POINTER (key), NULL,
                 (gpointer) & infer_queue) &&
@@ -426,19 +450,20 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
             GST_PAD_STREAM_UNLOCK (reorderframe->srcpad);
             if (!res) {
               GST_ERROR_OBJECT (reorderframe, "Failed to send event");
-            } else {
-              g_hash_table_remove (reorderframe->pad_eos_hash,
-                  GINT_TO_POINTER (key));
             }
+            reorderframe->pending_pad_eos_cnt--;
           }
         }
       }
     }
-    g_mutex_unlock (&reorderframe->pad_eos_lock);
+    g_mutex_unlock (&reorderframe->eos_lock);
 
     /* check for final GStreamer EOS */
+    g_mutex_lock (&reorderframe->eos_lock);
     if (reorderframe->is_eos) {
       gboolean is_queues_empty = TRUE;
+
+      g_mutex_unlock (&reorderframe->eos_lock);
 
       /* check whether infer queues are empty or not */
       g_mutex_lock (&reorderframe->infer_lock);
@@ -484,12 +509,135 @@ gst_vvas_xreorderframe_processing_thread (gpointer data)
           }
         }
       }
+    } else {
+      g_mutex_unlock (&reorderframe->eos_lock);
     }
   }
 
   /* Exiting thread */
   GST_DEBUG_OBJECT (reorderframe, "exiting thread");
   return NULL;
+}
+
+/**
+ *  @fn static guint gst_vvas_xreorderframe_get_max_skip_length(Gstvvasxreorderframe *vvas_xreorderframe)
+ *  @param [in] vvas_xreorderframe      - The handle for Gstvvasxreorderframe.
+ *  @return guint
+ *  @brief  Gets maximum skip buffers length
+ *  @details    This function queries infer-interval and infer batch-size. And calculates the maximum skip buffers length.
+ */
+
+static guint
+gst_vvas_xreorderframe_get_max_skip_length (Gstvvasxreorderframe *
+    vvas_xreorderframe)
+{
+  const GstStructure *st;
+  GstStructure *strct;
+  GstQuery *query = NULL;
+  guint batch_size = 0;
+  guint infer_interval = 0;
+  guint max_skip_buffer_len = 0;
+
+  /* query infer for batch size */
+  GST_DEBUG_OBJECT (vvas_xreorderframe, "Doing infer-batch-size query");
+
+  strct = gst_structure_new_empty ("infer-batch-size");
+  if (!strct) {
+    goto error;
+  }
+
+  /* create new custom query */
+  query = gst_query_new_custom (GST_QUERY_CUSTOM, strct);
+  if (!query) {
+    GST_ERROR_OBJECT (vvas_xreorderframe, "couldn't create custom query");
+    gst_structure_free (strct);
+    goto error;
+  }
+
+  /* query on infer sinkpad */
+  if (!gst_pad_peer_query (GST_PAD_CAST (vvas_xreorderframe->infer_sinkpad),
+          query)) {
+    GST_WARNING_OBJECT (vvas_xreorderframe, "batch-size query failed");
+    goto error;
+  }
+
+  st = gst_query_get_structure (query);
+  if (!st) {
+    goto error;
+  }
+
+  /* get batch-size from structure */
+  if (!gst_structure_get (st, "batch_size", G_TYPE_UINT, &batch_size, NULL)) {
+    GST_DEBUG_OBJECT (vvas_xreorderframe, "couldn't get inference batch size");
+    goto error;
+  }
+
+  GST_DEBUG_OBJECT (vvas_xreorderframe,
+      "Received infer batch size batch_size - %u", batch_size);
+
+  gst_query_unref (query);
+  query = NULL;
+
+  /* query skipframe for infer-interval */
+  strct = gst_structure_new_empty ("infer-interval");
+  if (!strct) {
+    goto error;
+  }
+
+  /* create new custom query */
+  query = gst_query_new_custom (GST_QUERY_CUSTOM, strct);
+  if (!query) {
+    GST_ERROR_OBJECT (vvas_xreorderframe, "couldn't create custom query");
+    gst_structure_free (strct);
+    goto error;
+  }
+
+  /* query on skip sinkpad */
+  if (!gst_pad_peer_query (GST_PAD_CAST (vvas_xreorderframe->skip_sinkpad),
+          query)) {
+    GST_WARNING_OBJECT (vvas_xreorderframe, "infer-interval query failed");
+    goto error;
+  }
+
+  st = gst_query_get_structure (query);
+  if (!st) {
+    goto error;
+  }
+
+  /* get infer-interval from structure */
+  if (!gst_structure_get (st, "infer_interval", G_TYPE_UINT, &infer_interval,
+          NULL)) {
+    GST_DEBUG_OBJECT (vvas_xreorderframe, "couldn't get infer interval");
+    goto error;
+  }
+
+  GST_DEBUG_OBJECT (vvas_xreorderframe, "Received infer interval - %u",
+      infer_interval);
+
+  /* Infer plugin can hold batch_size number of frames with DPU and
+   * similar number frames which has completed inferencing
+   * but in the process of pushing out, hence we multiply batch size by 2.
+   * For every frame held in infer plugin,
+   * (infer_interval-1) frames are queued in this plugin,
+   * hence multiply by (infer_interval -1).
+   * One frame is held by Pre-processor at any given time,
+   * hence add corresponding skip frames too.
+   */
+  max_skip_buffer_len =
+      (batch_size * (infer_interval - 1) * 2) + infer_interval;
+  GST_DEBUG_OBJECT (vvas_xreorderframe,
+      "calculated maximum skip buffers length = %u", max_skip_buffer_len);
+
+  gst_query_unref (query);
+  query = NULL;
+
+  return max_skip_buffer_len;
+
+error:
+  if (query)
+    gst_query_unref (query);
+  GST_ERROR_OBJECT (vvas_xreorderframe, "Failed to perform query");
+  return 0;
 }
 
 /**
@@ -507,6 +655,7 @@ gst_vvas_xreorderframe_change_state (GstElement * element,
 {
   Gstvvasxreorderframe *reorderframe = GST_VVAS_XREORDERFRAME (element);
   GstStateChangeReturn ret;
+  guint max_skip_buffer_len = 0;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -515,6 +664,16 @@ gst_vvas_xreorderframe_change_state (GstElement * element,
           "Starting reorder buffer processing thread");
       g_mutex_lock (&reorderframe->thread_lock);
       reorderframe->is_exit_thread = FALSE;
+
+      /* calculate maximum skip buffers length to limit the skip buffers */
+      max_skip_buffer_len =
+          gst_vvas_xreorderframe_get_max_skip_length (reorderframe);
+      /* if max_skip_buffer_len is 0 use default value */
+      if (max_skip_buffer_len == 0) {
+        max_skip_buffer_len = DEFAULT_MAX_SKIP_BUFFERS_LEN;
+      } else {
+        reorderframe->max_skip_buffers = max_skip_buffer_len;
+      }
 
       reorderframe->processing_thread =
           g_thread_new ("vvas_xreorderframe-thread",
@@ -533,10 +692,9 @@ gst_vvas_xreorderframe_change_state (GstElement * element,
       if (reorderframe->processing_thread) {
         /* exit the thread */
         g_mutex_lock (&reorderframe->thread_lock);
-        reorderframe->is_exit_thread = TRUE;
         g_cond_signal (&reorderframe->infer_cond);
+        reorderframe->is_exit_thread = TRUE;
         g_mutex_unlock (&reorderframe->thread_lock);
-
         GST_LOG_OBJECT (reorderframe,
             "waiting for reorder buffer processing thread to join");
         g_thread_join (reorderframe->processing_thread);
@@ -652,12 +810,16 @@ gst_vvas_xreorderframe_infer_sink_event (GstPad * pad, GstObject * parent,
       if (!g_strcmp0 (gst_structure_get_name (structure), "pad-eos")) {
         gboolean is_eos = TRUE;
         GST_DEBUG_OBJECT (reorderframe, "Got pad-eos event on pad %u", pad_idx);
-        g_mutex_lock (&reorderframe->pad_eos_lock);
+        g_mutex_lock (&reorderframe->eos_lock);
         /* got eos on infer sink pad. So, update pad_eos_hash entry for corrosponding srcId */
         g_hash_table_insert (reorderframe->pad_eos_hash,
             GUINT_TO_POINTER (pad_idx), GUINT_TO_POINTER (is_eos));
-        g_mutex_unlock (&reorderframe->pad_eos_lock);
+        reorderframe->pending_pad_eos_cnt++;
+        g_mutex_unlock (&reorderframe->eos_lock);
         gst_event_unref (event);
+        g_mutex_lock (&reorderframe->infer_lock);
+        g_cond_signal (&reorderframe->infer_cond);
+        g_mutex_unlock (&reorderframe->infer_lock);
         return TRUE;
       }
       ret = gst_pad_event_default (pad, parent, event);
@@ -693,7 +855,15 @@ gst_vvas_xreorderframe_infer_sink_event (GstPad * pad, GstObject * parent,
     {
       GST_DEBUG_OBJECT (reorderframe, "unreffering eos event on infer pad");
       gst_event_unref (event);
+      g_mutex_lock (&reorderframe->eos_lock);
       reorderframe->is_eos = TRUE;
+      g_mutex_unlock (&reorderframe->eos_lock);
+
+      /* signal processing thread wait */
+      g_mutex_lock (&reorderframe->infer_lock);
+      g_cond_signal (&reorderframe->infer_cond);
+      g_mutex_unlock (&reorderframe->infer_lock);
+
       return TRUE;
       break;
     }
@@ -729,11 +899,14 @@ gst_vvas_xreorderframe_infer_chain (GstPad * pad, GstObject * parent,
 
   GST_DEBUG_OBJECT (reorderframe, "Received infer %" GST_PTR_FORMAT, buf);
 
+  /* check weather processing thread is exited. If exited return thread exit return value */
   g_mutex_lock (&reorderframe->thread_lock);
   if (reorderframe->is_exit_thread) {
-    GST_ERROR_OBJECT (reorderframe, " Xreorder processig thread exited.");
+    GST_ERROR_OBJECT (reorderframe,
+        " Xreorder processig thread exited with reason %s.",
+        gst_flow_get_name (reorderframe->thread_exit_return_value));
     g_mutex_unlock (&reorderframe->thread_lock);
-    return GST_FLOW_ERROR;
+    return reorderframe->thread_exit_return_value;
   }
   g_mutex_unlock (&reorderframe->thread_lock);
 
@@ -794,11 +967,14 @@ gst_vvas_xreorderframe_skip_chain (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (reorderframe, "Received skip buffer  %" GST_PTR_FORMAT,
       buf);
 
+  /* check weather processing thread is exited. If exited return thread exit return value */
   g_mutex_lock (&reorderframe->thread_lock);
   if (reorderframe->is_exit_thread) {
-    GST_ERROR_OBJECT (reorderframe, " Xreorder processig thread exited.");
+    GST_ERROR_OBJECT (reorderframe,
+        " Xreorder processig thread exited with reason %s.",
+        gst_flow_get_name (reorderframe->thread_exit_return_value));
     g_mutex_unlock (&reorderframe->thread_lock);
-    return GST_FLOW_ERROR;
+    return reorderframe->thread_exit_return_value;
   }
   g_mutex_unlock (&reorderframe->thread_lock);
 
@@ -812,6 +988,12 @@ gst_vvas_xreorderframe_skip_chain (GstPad * pad, GstObject * parent,
             (gpointer) & skip_queue)) {
       if (skip_queue) {
         /* Push the buffer to skip queue */
+        reorderframe->skip_buffers_len++;
+        if (reorderframe->skip_buffers_len >= reorderframe->max_skip_buffers) {
+          reorderframe->is_waiting_for_skip_buffer = TRUE;
+          GST_DEBUG_OBJECT (reorderframe, "waiting for skip buffers");
+          g_cond_wait (&reorderframe->skip_cond, &reorderframe->skip_lock);
+        }
         g_queue_push_tail (skip_queue, buf);
       }
     } else {

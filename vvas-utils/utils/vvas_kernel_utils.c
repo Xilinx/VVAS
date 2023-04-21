@@ -123,7 +123,6 @@ vvas_alloc_buffer (VVASKernel * handle, uint32_t size, VVASMemoryType mem_type,
 error:
   if (frame) {
     vvas_free_buffer (handle, frame);
-    free (frame);
   }
   return NULL;
 }
@@ -132,11 +131,6 @@ void
 vvas_free_buffer (VVASKernel * handle, VVASFrame * vvas_frame)
 {
   xrt_buffer buffer;
-
-  if (!handle) {
-    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : handle %p", handle);
-    return;
-  }
 
   if (!vvas_frame) {
     LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : vvas_frame  %p",
@@ -149,7 +143,7 @@ vvas_free_buffer (VVASKernel * handle, VVASFrame * vvas_frame)
     buffer.bo = vvas_frame->bo[0];
     buffer.size = vvas_frame->size[0];
     vvas_xrt_free_xrt_buffer (&buffer);
-  } else {
+  } else if (handle) {
     if (!handle->free_func) {
       LOG_MESSAGE (LOG_LEVEL_ERROR,
           "app did not set free_func callback function");
@@ -217,6 +211,7 @@ vvas_kernel_start (VVASKernel * handle, const char *format, ...)
   if (vvas_xrt_exec_buf (handle->dev_handle, handle->kern_handle,
           &handle->run_handle, format, args)) {
     LOG_MESSAGE (LOG_LEVEL_ERROR, "failed to issue XRT command");
+    va_end (args);
     return -1;
   }
   LOG_MESSAGE (LOG_LEVEL_DEBUG, "Submitted command to kernel");
@@ -356,12 +351,14 @@ unsigned int
 vvas_caps_get_stride_align (VVASKernel * handle, paddir dir)
 {
   if (!handle->padinfo)
-    return 0;
+    return 1;
   else {
     if (dir == SINK)
-      return handle->padinfo->sinkpad_align.stride_align;
+      return handle->padinfo->sinkpad_align.stride_align ? handle->
+          padinfo->sinkpad_align.stride_align : 1;
     else
-      return handle->padinfo->srcpad_align.stride_align;
+      return handle->padinfo->srcpad_align.stride_align ? handle->
+          padinfo->srcpad_align.stride_align : 1;
   }
 }
 
@@ -409,12 +406,14 @@ unsigned int
 vvas_caps_get_height_align (VVASKernel * handle, paddir dir)
 {
   if (!handle->padinfo)
-    return 0;
+    return 1;
   else {
     if (dir == SINK)
-      return handle->padinfo->sinkpad_align.height_align;
+      return handle->padinfo->sinkpad_align.height_align ? handle->
+          padinfo->sinkpad_align.height_align : 1;
     else
-      return handle->padinfo->srcpad_align.height_align;
+      return handle->padinfo->srcpad_align.height_align ? handle->
+          padinfo->srcpad_align.height_align : 1;
   }
 }
 

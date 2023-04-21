@@ -80,9 +80,23 @@ prediction_node_copy (const void *infer, void *data)
 
     memcpy (&dmeta->bbox, &smeta->bbox, sizeof (VvasBoundingBox));
     memcpy (&dmeta->feature, &smeta->feature, sizeof (Feature));
-    memcpy (&dmeta->segmentation, &smeta->segmentation, sizeof (Segmentation));
     memcpy (&dmeta->pose14pt, &smeta->pose14pt, sizeof (Pose14Pt));
+
     memcpy (&dmeta->reid, &smeta->reid, sizeof (Reid));
+    if (smeta->reid.data && smeta->reid.copy) {
+      smeta->reid.copy (&smeta->reid, &dmeta->reid);
+    }
+
+    memcpy (&dmeta->segmentation, &smeta->segmentation, sizeof (Segmentation));
+    if (smeta->segmentation.data && smeta->segmentation.copy) {
+      smeta->segmentation.copy (&smeta->segmentation, &dmeta->segmentation);
+    }
+
+    if (smeta->tb) {
+      dmeta->tb = smeta->tb;
+      if (smeta->tb->copy)
+        smeta->tb->copy ((void **) &smeta->tb, (void **) &dmeta->tb);
+    }
 
     dmeta->classifications = vvas_list_copy_deep (smeta->classifications,
         prediction_classification_copy, NULL);
@@ -181,7 +195,10 @@ gst_infer_node_from_vvas_infer (VvasInferPrediction * vinfer)
       }
     }
     if (vinfer->tb != NULL) {
-      vinfer->tb->copy ((void **) &vinfer->tb, (void **) &self->prediction.tb);
+      if (vinfer->tb->copy) {
+        vinfer->tb->copy ((void **) &vinfer->tb,
+            (void **) &self->prediction.tb);
+      }
     }
   }
 
@@ -324,13 +341,18 @@ vvas_memory_from_gstbuffer (VvasContext * vvas_ctx, uint8_t mbank_idx,
   gboolean bret = FALSE;
   GstMapInfo ginfo;
 
+  if (!vvas_ctx || !buf) {
+    GST_ERROR ("Invalid arguments");
+    return NULL;
+  }
+
   mem = gst_buffer_get_memory (buf, 0);
   if (mem == NULL) {
     GST_ERROR ("failed to get memory from  buffer");
     goto error;
   }
 
-  if (vvas_ctx->dev_handle && mbank_idx >= 0 && gst_is_vvas_memory (mem)) {
+  if (vvas_ctx->dev_handle && gst_is_vvas_memory (mem)) {
 
     /* validate whether VvasContext's device index and GstMemory's device index is same or not */
     if (gst_vvas_memory_can_avoid_copy (mem, vvas_ctx->dev_idx, mbank_idx)) {
@@ -451,6 +473,11 @@ vvas_videoframe_from_gstbuffer (VvasContext * vvas_ctx, int8_t mbank_idx,
   gboolean free_mem = TRUE;
   GstVideoMeta *vmeta;
 
+  if (!vvas_ctx || !buf || !gst_vinfo) {
+    GST_ERROR ("Invalid arguments");
+    return NULL;
+  }
+
   mem = gst_buffer_get_memory (buf, 0);
   if (mem == NULL) {
     GST_ERROR ("failed to get memory from  buffer");
@@ -550,12 +577,26 @@ vvas_videoframe_from_gstbuffer (VvasContext * vvas_ctx, int8_t mbank_idx,
     priv->mem_info.map_flags = VVAS_DATA_MAP_NONE;
   } else {                      /* This is a software buffer */
     VvasGstUserData *user_data = calloc (1, sizeof (VvasGstUserData));
-    GstVideoFrame *vframe = g_malloc0 (sizeof (GstVideoFrame));
     void *data[VVAS_VIDEO_MAX_PLANES];
+    GstVideoFrame *vframe = NULL;
+
+    if (NULL == user_data) {
+      GST_ERROR ("failed to allocate memory -user_data");
+      goto error;
+    }
+
+    vframe = g_malloc0 (sizeof (GstVideoFrame));
+    if (NULL == vframe) {
+      free (user_data);
+      GST_ERROR ("failed to allocate memory -vframe");
+      goto error;
+    }
 
     /* map input buffer in read mode */
     if (!gst_video_frame_map (vframe, gst_vinfo, buf, flags)) {
       GST_ERROR ("failed to map input buffer");
+      g_free (vframe);
+      free (user_data);
       goto error;
     }
 
@@ -570,6 +611,8 @@ vvas_videoframe_from_gstbuffer (VvasContext * vvas_ctx, int8_t mbank_idx,
         free_gst_buffer_from_vvas_frame, user_data, &vret);
     if (!priv) {
       GST_ERROR ("Failed to allocate VVAS Video Frame from data");
+      g_free (vframe);
+      free (user_data);
       goto error;
     }
   }

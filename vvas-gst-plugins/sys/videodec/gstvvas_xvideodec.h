@@ -116,6 +116,8 @@ struct _GstVvas_XVideoDec
   guint hw_instance_id;
   /** flag to enable I-frame only decode */
   gboolean i_frame_only;
+  /** forced framerate value */
+  guint force_decode_rate;
 #endif
 };
 

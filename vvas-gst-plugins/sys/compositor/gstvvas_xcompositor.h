@@ -123,6 +123,8 @@ struct _GstVvasXCompositor
   gboolean avoid_output_copy;
   /** Flag to enable/disable the buffer pipelining to improve performance in non zero-copy use cases */
   gboolean enabled_pipeline;
+  /** Flag to enable software scaling flow */
+  gboolean software_scaling;
 };
 
 struct _GstVvasXCompositorClass

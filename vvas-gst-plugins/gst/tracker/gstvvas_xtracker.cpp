@@ -170,8 +170,8 @@ static void gst_vvas_xtracker_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstFlowReturn gst_vvas_xtracker_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
-static gboolean gst_vvas_xtracker_sink_event(GstBaseTransform *trans,
-    GstEvent *event);
+static gboolean gst_vvas_xtracker_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 
 /** @def GST_TYPE_VVAS_TRACKER_ALGO_TYPE
  *  @brief Registers a new static enumeration type with the name GstVvasTrackerAlgoType
@@ -451,13 +451,13 @@ vvas_xtracker_deinit (GstVvas_XTracker * self)
   GHashTableIter iter;
   gpointer key, value;
 
-  g_hash_table_iter_init(&iter, self->priv->tracker_instances_hash);
-  while (g_hash_table_iter_next(&iter, &key, &value)) {
+  g_hash_table_iter_init (&iter, self->priv->tracker_instances_hash);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
     struct TrackerInstances *instance;
     instance = (struct TrackerInstances *) value;
     if (instance && instance->vvasbase_tracker) {
       /* calling tracker deinitialization function */
-      iret = vvas_tracker_destroy(instance->vvasbase_tracker);
+      iret = vvas_tracker_destroy (instance->vvasbase_tracker);
       if (iret)
         GST_DEBUG_OBJECT (self, "successfully completed tracker deinit");
       else
@@ -465,7 +465,9 @@ vvas_xtracker_deinit (GstVvas_XTracker * self)
     }
   }
 
-  g_hash_table_unref(self->priv->tracker_instances_hash);
+  g_hash_table_unref (self->priv->tracker_instances_hash);
+  self->priv->tracker_instances_hash = NULL;
+
   return iret;
 }
 
@@ -493,6 +495,12 @@ gst_vvas_xtracker_start (GstBaseTransform * trans)
   if (!priv->vvas_gctx || VVAS_IS_ERROR (vret)) {
     GST_ERROR_OBJECT (self,
         "ERROR: Failed to create vvas global context for tracker\n");
+  }
+
+  /* create tracker instances hash map, if not available */
+  if (!priv->tracker_instances_hash) {
+    priv->tracker_instances_hash =
+        g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
   }
 
   gst_base_transform_set_in_place (trans, true);
@@ -526,39 +534,6 @@ gst_vvas_xtracker_stop (GstBaseTransform * trans)
 }
 
 /**
- *  @fn gboolean gst_vvas_xtracker_set_caps (GstBaseTransform * trans,
- *                                GstCaps * incaps, GstCaps * outcaps)
- *  @param [in] trans - Pointer to GstBaseTransform object.
- *  @param [in] incaps - Pointer to input caps of GstCaps object.
- *  @param [in] outcaps - Pointer to output caps  of GstCaps object.
- *  @return TRUE on success \n
- *          FALSE on failure
- *  @brief  API to get input and output capabilities.
- *  @details This API is registered with GObjectClass by overriding GObjectClass::set_caps function pointer and
- *          this will be called to get the input and output capabilities.
- */
-static gboolean
-gst_vvas_xtracker_set_caps (GstBaseTransform * trans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstVvas_XTracker *self = GST_VVAS_XTRACKER (trans);
-  gboolean bret = TRUE;
-  GstVvas_XTrackerPrivate *priv = self->priv;
-
-  GST_INFO_OBJECT (self,
-      "incaps = %" GST_PTR_FORMAT "and outcaps = %" GST_PTR_FORMAT, incaps,
-      outcaps);
-
-  /* Reading input caps into in_vinfo */
-  if (!gst_video_info_from_caps (priv->in_vinfo, incaps)) {
-    GST_ERROR_OBJECT (self, "Failed to parse input caps");
-    return FALSE;
-  }
-
-  return bret;
-}
-
-/**
  *  @fn static void gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
  *  @param [in]klass  - Handle to GstVvas_XTrackerClass
  *  @return None
@@ -584,7 +559,6 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
 
   transform_class->start = gst_vvas_xtracker_start;
   transform_class->stop = gst_vvas_xtracker_stop;
-  transform_class->set_caps = gst_vvas_xtracker_set_caps;
   transform_class->transform_ip = gst_vvas_xtracker_transform_ip;
   transform_class->sink_event = gst_vvas_xtracker_sink_event;
 
@@ -773,9 +747,7 @@ gst_vvas_xtracker_class_init (GstVvas_XTrackerClass * klass)
       g_param_spec_boolean ("skip-inactive-objs",
           "Flag to enable marking of inactive objects",
           "Flag to enable or disable marking of inactive objects. This marking of \
-           inactive objects helps downstream plugins to process further or not",
-          GST_VVAS_TRACKER_SKIP_INACTIVE_OBJS_DEFAULT,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+           inactive objects helps downstream plugins to process further or not", GST_VVAS_TRACKER_SKIP_INACTIVE_OBJS_DEFAULT, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_details_simple (gstelement_class,
       "VVAS Tracker Plugin",
@@ -859,8 +831,7 @@ gst_vvas_xtracker_init (GstVvas_XTracker * self)
       GST_VVAS_TRACKER_CONFIDENCE_SCORE_THRESHOLD_DEFAULT;
   priv->tconfig.skip_inactive_objs =
       GST_VVAS_TRACKER_SKIP_INACTIVE_OBJS_DEFAULT;
-  priv->tracker_instances_hash =
-      g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+  priv->tracker_instances_hash = NULL;
 }
 
 /**
@@ -1063,7 +1034,7 @@ gst_vvas_xtracker_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_CONFIDENCE_SCORE_THRESHOLD:
       g_value_set_float (value, priv->tconfig.confidence_score);
       break;
-   case PROP_SKIP_INACTIVE_OBJS:
+    case PROP_SKIP_INACTIVE_OBJS:
       g_value_set_boolean (value, priv->tconfig.skip_inactive_objs);
       break;
     default:
@@ -1081,40 +1052,52 @@ gst_vvas_xtracker_get_property (GObject * object, guint prop_id, GValue * value,
  *  @brief Handle the GstEvent and invokes parent's event vmethod if event is not handled by xtracker
  */
 
-static gboolean gst_vvas_xtracker_sink_event(GstBaseTransform *trans,
-                                            GstEvent *event)
+static gboolean
+gst_vvas_xtracker_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
-  GstVvas_XTracker *self = GST_VVAS_XTRACKER(trans);
+  GstVvas_XTracker *self = GST_VVAS_XTRACKER (trans);
   GstVvas_XTrackerPrivate *priv = self->priv;
   gboolean bret = TRUE;
   const GstStructure *structure = NULL;
   guint pad_idx;
 
-  switch (GST_EVENT_TYPE(event))
-  {
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      /* set the caps to source pad */
+      gst_pad_set_caps (trans->srcpad, caps);
+
+      /* Reading input caps into in_vinfo */
+      if (!gst_video_info_from_caps (priv->in_vinfo, caps)) {
+        GST_ERROR_OBJECT (self, "Failed to parse input caps");
+        return FALSE;
+      }
+      break;
+    }
     case GST_EVENT_STREAM_START:
     {
       struct TrackerInstances *instance;
-      structure = gst_event_get_structure(event);
-      gst_structure_get_uint(structure, "pad-index", &pad_idx);
-      if (!gst_structure_get_uint(structure, "pad-index", &pad_idx))
-      {
+      structure = gst_event_get_structure (event);
+      gst_structure_get_uint (structure, "pad-index", &pad_idx);
+      if (!gst_structure_get_uint (structure, "pad-index", &pad_idx)) {
         /* may be without funnel i.e., single stream */
         pad_idx = 0;
       }
-      instance = (struct TrackerInstances *)malloc(sizeof(struct TrackerInstances));
+      instance =
+          (struct TrackerInstances *) malloc (sizeof (struct TrackerInstances));
 
       /* calling tracker initialization function */
-      instance->vvasbase_tracker = vvas_tracker_create(priv->vvas_gctx, &priv->tconfig);
-      if (instance->vvasbase_tracker == NULL)
-      {
-        GST_ERROR_OBJECT(self, "Failed to create tracker instance");
+      instance->vvasbase_tracker =
+          vvas_tracker_create (priv->vvas_gctx, &priv->tconfig);
+      if (instance->vvasbase_tracker == NULL) {
+        GST_ERROR_OBJECT (self, "Failed to create tracker instance");
+        free (instance);
         return FALSE;
       }
-      g_hash_table_insert(priv->tracker_instances_hash, GUINT_TO_POINTER(pad_idx), instance);
-
-      bret = gst_pad_event_default(trans->sinkpad,
-	            gst_element_get_parent(GST_ELEMENT(trans)), event);
+      g_hash_table_insert (priv->tracker_instances_hash,
+          GUINT_TO_POINTER (pad_idx), instance);
       break;
     }
 
@@ -1123,41 +1106,40 @@ static gboolean gst_vvas_xtracker_sink_event(GstBaseTransform *trans,
       const GstStructure *structure = NULL;
       guint pad_idx;
       int iret;
-      structure = gst_event_get_structure(event);
-      if (!gst_structure_get_uint(structure, "pad-index", &pad_idx))
-      {
+      structure = gst_event_get_structure (event);
+      if (!gst_structure_get_uint (structure, "pad-index", &pad_idx)) {
         /* may be without funnel i.e., single stream */
         pad_idx = 0;
       }
-      if (!g_strcmp0(gst_structure_get_name(structure), "pad-eos"))
-      {
+      if (!g_strcmp0 (gst_structure_get_name (structure), "pad-eos")) {
         struct TrackerInstances *instance =
-	        (struct TrackerInstances *)g_hash_table_lookup(priv->tracker_instances_hash,
-		  GUINT_TO_POINTER(pad_idx));
-        GST_LOG_OBJECT(self, "received pad-eos");
-        if (instance)
-        {
+            (struct TrackerInstances *)
+            g_hash_table_lookup (priv->tracker_instances_hash,
+            GUINT_TO_POINTER (pad_idx));
+        GST_LOG_OBJECT (self, "received pad-eos");
+        if (instance) {
           /* calling tracker deinitialization function */
-          iret = vvas_tracker_destroy(instance->vvasbase_tracker);
+          iret = vvas_tracker_destroy (instance->vvasbase_tracker);
 
           if (iret)
-            GST_DEBUG_OBJECT(self, "successfully completed tracker deinit");
+            GST_DEBUG_OBJECT (self, "successfully completed tracker deinit");
           else
-            GST_ERROR_OBJECT(self, "Failed to free tracker instances");
+            GST_ERROR_OBJECT (self, "Failed to free tracker instances");
 
-          g_hash_table_remove(priv->tracker_instances_hash,
-                              GINT_TO_POINTER(pad_idx));
+          g_hash_table_remove (priv->tracker_instances_hash,
+              GINT_TO_POINTER (pad_idx));
         }
       }
+      break;
     }
 
     default:
     {
-      bret = gst_pad_event_default(trans->sinkpad,
-	            gst_element_get_parent(GST_ELEMENT(trans)), event);
       break;
     }
   }
+  bret = gst_pad_event_default (trans->sinkpad,
+      gst_element_get_parent (GST_ELEMENT (trans)), event);
   return bret;
 }
 
@@ -1193,20 +1175,18 @@ gst_vvas_xtracker_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     vvas_infer_meta = vvas_infer_from_gstinfer (infer_meta->prediction);
 
   /* Get SrcId metadata from the Gstbuffer */
-  srcId_meta = ((GstVvasSrcIDMeta *)gst_buffer_get_meta(buf,
-                        gst_vvas_srcid_meta_api_get_type()));
+  srcId_meta = ((GstVvasSrcIDMeta *) gst_buffer_get_meta (buf,
+          gst_vvas_srcid_meta_api_get_type ()));
 
-  if (srcId_meta)
-  {
-    instance = (struct TrackerInstances *)g_hash_table_lookup(
-		    self->priv->tracker_instances_hash,
-		    GUINT_TO_POINTER(srcId_meta->src_id));
-  }
-  else
-  {
+  if (srcId_meta) {
+    instance =
+        (struct TrackerInstances *) g_hash_table_lookup (self->
+        priv->tracker_instances_hash, GUINT_TO_POINTER (srcId_meta->src_id));
+  } else {
     /* may be single source... use index 0 */
-    instance = (struct TrackerInstances *)g_hash_table_lookup(
-		    self->priv->tracker_instances_hash, 0);
+    instance =
+        (struct TrackerInstances *) g_hash_table_lookup (self->
+        priv->tracker_instances_hash, 0);
   }
 
   /* Check if buffer is from pool.  If buffer is from pool use aligments from
@@ -1221,9 +1201,8 @@ gst_vvas_xtracker_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   /* Calling vvas-core tracker function for frame processing */
   if (instance && instance->vvasbase_tracker) {
     vvas_ret = vvas_tracker_process (instance->vvasbase_tracker,
-	                                 pFrame, &vvas_infer_meta);
-  }
-  else {
+        pFrame, &vvas_infer_meta);
+  } else {
     GST_ERROR_OBJECT (self, "Tracker instance is not created");
     vvas_video_frame_free (pFrame);
     return GST_FLOW_ERROR;

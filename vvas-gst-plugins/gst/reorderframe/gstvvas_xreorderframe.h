@@ -56,19 +56,37 @@ struct _Gstvvasxreorderframe
     GThread *processing_thread;
 
     /** mutex lock for infer queues, skip queues and thread flag */
-    GMutex infer_lock, skip_lock, thread_lock, pad_eos_lock;
+    GMutex infer_lock, skip_lock, thread_lock, eos_lock;
 
     /** GCond for infer buffers length */
     GCond infer_cond;
 
+    /** GCond for skip buffers length */
+    GCond skip_cond;
+
     /** Flag to set when processing thread is waiting for infer buffers */
     gboolean is_waiting_for_buffer;
+
+    /** Flag to set when skip buffers reaches maximum limit */
+    gboolean is_waiting_for_skip_buffer;
+
+    /** Current pending pad eos events to be processed in processing thread */
+    guint pending_pad_eos_cnt;
 
     /** current infer buffers length */
     guint infer_buffers_len;
 
+    /** current skip buffers length */
+    guint skip_buffers_len;
+
+    /** maximium skip buffers length */
+    guint max_skip_buffers;
+
     /** Flag to set when GStreamer EOS is recieved */
     gboolean is_eos;
+
+    /** processing thread exit return value */
+    GstFlowReturn thread_exit_return_value;
 };
 
 G_END_DECLS

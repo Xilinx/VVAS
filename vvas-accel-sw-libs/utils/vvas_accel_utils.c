@@ -49,8 +49,8 @@ vvas_videoframe_from_vvasframe (VvasContext * vvas_ctx,
     int8_t mbank_idx, VVASFrame * vframe)
 {
   VvasVideoFramePriv *priv = NULL;
-  VvasVideoInfo vinfo;
-  uint8_t pidx;
+  VvasVideoInfo vinfo = { 0 };
+  uint8_t pidx = 0;
 
   priv = (VvasVideoFramePriv *) calloc (1, sizeof (VvasVideoFramePriv));
   if (priv == NULL) {

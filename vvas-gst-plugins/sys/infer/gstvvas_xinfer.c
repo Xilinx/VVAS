@@ -149,7 +149,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 /** @def DEFAULT_BATCH_SUBMIT_TIMEOUT
  *  *  @brief Time to wait in milliseconds before pushing current batch
  *   */
-#define DEFAULT_BATCH_SUBMIT_TIMEOUT  0
+#define DEFAULT_BATCH_SUBMIT_TIMEOUT  2000
 
 #include <vvas_core/vvas_device.h>
 
@@ -296,8 +296,6 @@ struct _GstVvas_XInferPrivate
   GstVideoInfo *in_vinfo;
   /** internal input buffer pool */
   GstBufferPool *input_pool;
-  /** Dynamic kernel configuration in JSON object */
-  json_t *dyn_json_config;
   /** pre-process HW available or not */
   gboolean do_preprocess;
   /** Stop triggered on EOS or ctrl^c */
@@ -352,8 +350,6 @@ struct _GstVvas_XInferPrivate
   gint ppe_in_mem_bank;
   /** PPE output memory bank */
   gint ppe_out_mem_bank;
-  /** PPE log level */
-  gint ppe_log_level;
   /** PPE output buffer queue */
   GQueue *ppe_buf_queue;
   /** roi data for pre-processing */
@@ -414,8 +410,6 @@ struct _GstVvas_XInferPrivate
   gboolean do_postprocess;
   /** absolute path of VVAS core library */
   gchar *postproc_lib_path;
-  /** post-procesing function name */
-  gchar *postproc_func;
   /** file descriptor of opened postprocessing lib */
   void *postproc_lib_fd;
   /** post-processor input configuration */
@@ -1021,8 +1015,7 @@ vvas_xinfer_ppe_init (GstVvas_XInfer * self)
 
   ppe_handle =
       vvas_scaler_create (priv->ppe_vvas_ctx,
-      (const char *) priv->ppe_handle->name,
-      (VvasLogLevel) priv->ppe_log_level);
+      (const char *) priv->ppe_handle->name, core_log_level);
   if (!ppe_handle) {
     GST_ERROR_OBJECT (self, "Couldn't create Scaler");
     return FALSE;
@@ -1050,16 +1043,6 @@ vvas_xinfer_ppe_init (GstVvas_XInfer * self)
   }
 
   GST_INFO_OBJECT (self, "completed preprocess init");
-
-  priv->ppe_frame = g_slice_new0 (Vvas_XInferFrame);
-  /* wait on event ppe_need_input or ppe_has_input as per ppe_need_data */
-  priv->ppe_need_data = TRUE;
-  priv->ppe_out_vinfo = gst_video_info_new ();
-  priv->ppe_buf_queue = g_queue_new ();
-
-  g_mutex_init (&priv->ppe_lock);
-  g_cond_init (&priv->ppe_has_input);
-  g_cond_init (&priv->ppe_need_input);
 
   return TRUE;
 }
@@ -1103,11 +1086,12 @@ vvas_xinfer_postproc_init (GstVvas_XInfer * self)
     return FALSE;
   }
 
-  priv->postprocess_run = dlsym (priv->postproc_lib_fd, priv->postproc_func);
+  priv->postprocess_run =
+      dlsym (priv->postproc_lib_fd, "vvas_postprocess_tensor");
   if (!priv->postprocess_run) {
     GST_ERROR_OBJECT (self,
-        "could not find %s function. reason : %s",
-        priv->postproc_func, dlerror ());
+        "could not find vvas_postprocess_tensor function. reason : %s",
+        dlerror ());
     return FALSE;
   }
 
@@ -1180,13 +1164,6 @@ vvas_xinfer_infer_init (GstVvas_XInfer * self)
       "beta_g", G_TYPE_FLOAT, priv->model_conf.scale_g,
       "beta_b", G_TYPE_FLOAT, priv->model_conf.scale_b, NULL);
 
-  g_mutex_init (&priv->infer_lock);
-  g_cond_init (&priv->infer_cond);
-  g_cond_init (&priv->infer_batch_full);
-
-  priv->infer_batch_queue = g_queue_new ();
-  priv->infer_sub_buffers = g_queue_new ();
-
   if (priv->infer_batch_size == BATCH_SIZE_ZERO ||
       priv->infer_batch_size > priv->model_conf.batch_size) {
     GST_WARNING_OBJECT (self, "infer_batch_size (%d) can't be zero"
@@ -1233,18 +1210,6 @@ vvas_xinfer_read_ppe_config (GstVvas_XInfer * self)
     return FALSE;
   }
 
-  /* get xclbin location */
-  // TODO: xclbin-loc is optional as XRM might have downloaded
-  value = json_object_get (root, "xclbin-location");
-  if (json_is_string (value)) {
-    priv->ppe_xclbin_loc = g_strdup (json_string_value (value));
-    GST_INFO_OBJECT (self, "xclbin location to download %s",
-        priv->ppe_xclbin_loc);
-  } else {
-    priv->ppe_xclbin_loc = NULL;
-    GST_INFO_OBJECT (self, "xclbin path is not set");
-  }
-
   value = json_object_get (root, "software-ppe");
   if (value) {
     if (!json_is_boolean (value)) {
@@ -1258,6 +1223,19 @@ vvas_xinfer_read_ppe_config (GstVvas_XInfer * self)
     priv->software_ppe = FALSE;
   }
 
+  /* get xclbin location if hw ppe */
+  if (!priv->software_ppe) {
+    value = json_object_get (root, "xclbin-location");
+    if (json_is_string (value)) {
+      priv->ppe_xclbin_loc = g_strdup (json_string_value (value));
+      GST_INFO_OBJECT (self, "xclbin location to download %s",
+          priv->ppe_xclbin_loc);
+    } else {
+      priv->ppe_xclbin_loc = NULL;
+      GST_ERROR_OBJECT (self, "xclbin path is not set");
+      return FALSE;
+    }
+  }
 #if defined(XLNX_PCIe_PLATFORM)
   value = json_object_get (root, "device-index");
   if (!json_is_integer (value)) {
@@ -1298,48 +1276,41 @@ vvas_xinfer_read_ppe_config (GstVvas_XInfer * self)
 
   /* get vvas kernel lib internal configuration */
   config = json_object_get (kernel, "config");
-  if (!json_is_object (config)) {
-    GST_ERROR_OBJECT (self, "config is not of object type");
-    goto error;
-  }
+  if (json_is_object (config)) {
+    /* Lets read all "config" members */
+    value = json_object_get (config, "ppc");
+    if (!value || !json_is_integer (value)) {
+      priv->ppc = DEFAULT_PPC;
+      GST_DEBUG_OBJECT (self, "PPC not set. taking default : %d", priv->ppc);
+    } else {
+      priv->ppc = json_integer_value (value);
+      GST_INFO_OBJECT (self, "PPC : %d", priv->ppc);
+    }
 
-  value = json_object_get (config, "ppc");
-  if (!value || !json_is_integer (value)) {
+    value = json_object_get (config, "in-mem-bank");
+    if (!value || !json_is_integer (value)) {
+      priv->ppe_in_mem_bank = DEFAULT_MEM_BANK;
+      GST_DEBUG_OBJECT (self, "PPE In mem bank not set. taking default : %d",
+          priv->ppe_in_mem_bank);
+    } else {
+      priv->ppe_in_mem_bank = json_integer_value (value);
+      GST_INFO_OBJECT (self, "In mem bank : %d", priv->ppe_in_mem_bank);
+    }
+
+    value = json_object_get (config, "out-mem-bank");
+    if (!value || !json_is_integer (value)) {
+      priv->ppe_out_mem_bank = DEFAULT_MEM_BANK;
+      GST_DEBUG_OBJECT (self, "PPE out mem bank not set. taking default : %d",
+          priv->ppe_out_mem_bank);
+    } else {
+      priv->ppe_out_mem_bank = json_integer_value (value);
+      GST_INFO_OBJECT (self, "out mem bank : %d", priv->ppe_out_mem_bank);
+    }
+  } else {
+    /* Looks like user has not set config, lets initialize with default values */
     priv->ppc = DEFAULT_PPC;
-    GST_DEBUG_OBJECT (self, "PPC not set. taking default : %d", priv->ppc);
-  } else {
-    priv->ppc = json_integer_value (value);
-    GST_INFO_OBJECT (self, "PPC : %d", priv->ppc);
-  }
-
-  value = json_object_get (config, "in-mem-bank");
-  if (!value || !json_is_integer (value)) {
     priv->ppe_in_mem_bank = DEFAULT_MEM_BANK;
-    GST_DEBUG_OBJECT (self, "PPE In mem bank not set. taking default : %d",
-        priv->ppe_in_mem_bank);
-  } else {
-    priv->ppe_in_mem_bank = json_integer_value (value);
-    GST_INFO_OBJECT (self, "In mem bank : %d", priv->ppe_in_mem_bank);
-  }
-
-  value = json_object_get (config, "out-mem-bank");
-  if (!value || !json_is_integer (value)) {
     priv->ppe_out_mem_bank = DEFAULT_MEM_BANK;
-    GST_DEBUG_OBJECT (self, "PPE out mem bank not set. taking default : %d",
-        priv->ppe_out_mem_bank);
-  } else {
-    priv->ppe_out_mem_bank = json_integer_value (value);
-    GST_INFO_OBJECT (self, "out mem bank : %d", priv->ppe_out_mem_bank);
-  }
-
-  value = json_object_get (config, "debug-level");
-  if (!value || !json_is_integer (value)) {
-    VvasLogLevel core_log_level =
-        vvas_get_core_log_level (gst_debug_category_get_threshold
-        (gst_vvas_xinfer_debug));
-    priv->ppe_log_level = core_log_level;
-  } else {
-    priv->ppe_log_level = json_integer_value (value);
   }
 
   value = json_object_get (root, "scaler-type");
@@ -1636,9 +1607,9 @@ vvas_xinfer_read_infer_config (GstVvas_XInfer * self)
         (char *) json_string_value (value));
   } else {
     if (!value) {
-      GST_ERROR_OBJECT (self, "model-format missing");
+      GST_ERROR_OBJECT (self, "model-class is missing");
     } else {
-      GST_ERROR_OBJECT (self, "model-format is not of string type");
+      GST_ERROR_OBJECT (self, "model-class is not of string type");
     }
     goto error;
   }
@@ -1646,11 +1617,13 @@ vvas_xinfer_read_infer_config (GstVvas_XInfer * self)
   value = json_object_get (config, "vitis-ai-preprocess");
   if (!value || !json_is_boolean (value)) {
     if (!self->ppe_json_file) {
-      GST_DEBUG_OBJECT (self, "Setting need_preprocess as TRUE");
+      GST_DEBUG_OBJECT (self,
+          "No PPE json file, setting vitis-ai-preprocess as TRUE");
       dpu_conf->need_preprocess = true;
     } else {
       dpu_conf->need_preprocess = false;
-      GST_DEBUG_OBJECT (self, "Setting need_preprocess as FALSE");
+      GST_DEBUG_OBJECT (self,
+          "PPE json file is present, setting vitis-ai-preprocess as FALSE");
     }
   } else {
     if (!self->ppe_json_file) {
@@ -1757,15 +1730,6 @@ vvas_xinfer_read_infer_config (GstVvas_XInfer * self)
     }
   }
 
-  if (priv->do_postprocess) {
-    value = json_object_get (config, "postprocess-function");
-    if (json_is_string (value)) {
-      priv->postproc_func = g_strdup (json_string_value (value));
-      GST_DEBUG_OBJECT (self, "post-processing function %s",
-          (char *) json_string_value (value));
-    }
-  }
-
   dpu_conf->batch_size = priv->infer_batch_size;
   GST_INFO_OBJECT (self, "inference-level = %d and batch-size = %d",
       priv->infer_level, priv->infer_batch_size);
@@ -1815,47 +1779,10 @@ vvas_xinfer_ppe_deinit (GstVvas_XInfer * self)
       }
       GST_DEBUG_OBJECT (self, "successfully completed preprocess deinit");
     }
-    if (priv->ppe_buf_queue) {
-      g_queue_free (priv->ppe_buf_queue);
-    }
 
     g_free (ppe_handle->name);
     free (priv->ppe_handle);
     priv->ppe_handle = NULL;
-  }
-
-  if (priv->ppe_frame)
-    g_slice_free1 (sizeof (Vvas_XInferFrame), priv->ppe_frame);
-
-  g_mutex_clear (&self->priv->ppe_lock);
-  g_cond_clear (&self->priv->ppe_has_input);
-  g_cond_clear (&self->priv->ppe_need_input);
-
-  if (priv->ppe_outpool && gst_buffer_pool_is_active (priv->ppe_outpool)) {
-    if (!gst_buffer_pool_set_active (priv->ppe_outpool, FALSE)) {
-      GST_ERROR_OBJECT (self, "failed to deactivate preprocess output pool");
-      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("failed to deactivate pool."),
-          ("failed to deactivate preprocess output pool"));
-      return FALSE;
-    }
-  }
-
-  if (priv->input_pool && gst_buffer_pool_is_active (priv->input_pool)) {
-    if (!gst_buffer_pool_set_active (priv->input_pool, FALSE)) {
-      GST_ERROR_OBJECT (self, "failed to deactivate PPE internal input pool");
-      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("failed to deactivate pool."),
-          ("failed to deactivate PPE internal input pool"));
-      return FALSE;
-    }
-  }
-
-  if (priv->ppe_outpool) {
-    gst_object_unref (priv->ppe_outpool);
-    priv->ppe_outpool = NULL;
-  }
-  if (priv->ppe_out_vinfo) {
-    gst_video_info_free (priv->ppe_out_vinfo);
-    priv->ppe_out_vinfo = NULL;
   }
 
   if (priv->ppe_xclbin_loc)
@@ -1888,9 +1815,6 @@ vvas_xinfer_postproc_deinit (GstVvas_XInfer * self)
 
   if (priv->postproc_lib_path)
     g_free (priv->postproc_lib_path);
-
-  if (priv->postproc_func)
-    g_free (priv->postproc_func);
 
   if (priv->postproc_handle) {
     vret = priv->postprocess_destroy (priv->postproc_handle);
@@ -1949,62 +1873,6 @@ vvas_xinfer_infer_deinit (GstVvas_XInfer * self)
 
   if (priv->dpu_kernel_config) {
     vvas_structure_free ((VvasStructure *) priv->dpu_kernel_config);
-  }
-
-  g_mutex_lock (&priv->infer_lock);
-
-  /* free all frames inside infer_batch_queue */
-  if (priv->infer_batch_queue) {
-    GST_INFO_OBJECT (self, "free infer batch queue of size %d",
-        g_queue_get_length (priv->infer_batch_queue));
-
-    while (!g_queue_is_empty (priv->infer_batch_queue)) {
-      Vvas_XInferFrame *frame = g_queue_pop_head (priv->infer_batch_queue);
-
-      if (frame->last_parent_buf)
-        gst_buffer_unref (frame->parent_buf);
-
-      if (frame->parent_vinfo)
-        gst_video_info_free (frame->parent_vinfo);
-
-      if (priv->infer_level > 1) {
-        if (frame->child_buf) {
-          GstInferenceMeta *child_meta = NULL;
-          /* Clear the prediction of child buf */
-          child_meta =
-              (GstInferenceMeta *) gst_buffer_get_meta (frame->child_buf,
-              gst_inference_meta_api_get_type ());
-          child_meta->prediction = gst_inference_prediction_new ();
-        }
-      }
-
-      if (frame->child_buf)
-        gst_buffer_unref (frame->child_buf);
-
-      if (frame->child_vinfo)
-        gst_video_info_free (frame->child_vinfo);
-      if (frame->vvas_frame) {
-        vvas_video_frame_free (frame->vvas_frame);
-      }
-      if (frame->event)
-        gst_event_unref (frame->event);
-
-      g_slice_free1 (sizeof (Vvas_XInferFrame), frame);
-    }
-  }
-  g_mutex_unlock (&priv->infer_lock);
-
-  g_mutex_clear (&priv->infer_lock);
-  g_cond_clear (&priv->infer_cond);
-
-  if (priv->infer_batch_queue) {
-    g_queue_free (priv->infer_batch_queue);
-  }
-
-  /* buf inside infer_sub_buffers get freed when prediction
-   * node get freed, so here just remove the queue */
-  if (priv->infer_sub_buffers) {
-    g_queue_free (priv->infer_sub_buffers);
   }
 
   /* Destroy VVAS Context */
@@ -2216,7 +2084,7 @@ vvas_xinfer_prepare_infer_input_frame (GstVvas_XInfer * self, GstBuffer * inbuf,
 static int
 xlnx_multiscaler_descriptor_create (GstVvas_XInfer * self,
     VvasVideoFrame * input[MAX_NUM_OBJECT],
-    VvasVideoFrame * output[MAX_NUM_OBJECT], vvas_ms_roi roi_data)
+    VvasVideoFrame * output[MAX_NUM_OBJECT], vvas_ms_roi * roi_data)
 {
   guint chan_id;
   GstVvas_XInferPrivate *priv = self->priv;
@@ -2228,16 +2096,19 @@ xlnx_multiscaler_descriptor_create (GstVvas_XInfer * self,
   VvasScalerParam param = { 0 };
 
   GST_DEBUG_OBJECT (self,
-      "Creating descriptor for %d scaling tasks", roi_data.nobj);
+      "Creating descriptor for %d scaling tasks", roi_data->nobj);
 
-  for (chan_id = 0; chan_id < roi_data.nobj; chan_id++) {
+  priv->ppe_frame->input_roi.nobj = priv->roi_data.nobj;
+  priv->ppe_frame->output_roi.nobj = priv->roi_data.nobj;
+
+  for (chan_id = 0; chan_id < roi_data->nobj; chan_id++) {
 
     vvas_video_frame_get_videoinfo (output[chan_id], &out_vinfo);
 
-    src_rect.x = roi_data.roi[chan_id].x_cord;
-    src_rect.y = roi_data.roi[chan_id].y_cord;
-    src_rect.width = roi_data.roi[chan_id].width;
-    src_rect.height = roi_data.roi[chan_id].height;
+    src_rect.x = roi_data->roi[chan_id].x_cord;
+    src_rect.y = roi_data->roi[chan_id].y_cord;
+    src_rect.width = roi_data->roi[chan_id].width;
+    src_rect.height = roi_data->roi[chan_id].height;
     src_rect.frame = input[0];
 
     dst_rect.x = 0;
@@ -2268,16 +2139,15 @@ xlnx_multiscaler_descriptor_create (GstVvas_XInfer * self,
           &dst_rect, NULL, &param);
     }
 
-    priv->ppe_frame->input_roi.nobj = 1;
-    priv->ppe_frame->output_roi.nobj = 1;
-    priv->ppe_frame->input_roi.roi[0].width = (uint32_t) src_rect.width;
-    priv->ppe_frame->input_roi.roi[0].height = (uint32_t) src_rect.height;
-    priv->ppe_frame->input_roi.roi[0].x_cord = (uint32_t) src_rect.x;
-    priv->ppe_frame->input_roi.roi[0].y_cord = (uint32_t) src_rect.y;
-    priv->ppe_frame->output_roi.roi[0].width = (uint32_t) dst_rect.width;
-    priv->ppe_frame->output_roi.roi[0].height = (uint32_t) dst_rect.height;
-    priv->ppe_frame->output_roi.roi[0].x_cord = (uint32_t) dst_rect.x;
-    priv->ppe_frame->output_roi.roi[0].y_cord = (uint32_t) dst_rect.y;
+    priv->ppe_frame->input_roi.roi[chan_id].width = (uint32_t) src_rect.width;
+    priv->ppe_frame->input_roi.roi[chan_id].height = (uint32_t) src_rect.height;
+    priv->ppe_frame->input_roi.roi[chan_id].x_cord = (uint32_t) src_rect.x;
+    priv->ppe_frame->input_roi.roi[chan_id].y_cord = (uint32_t) src_rect.y;
+    priv->ppe_frame->output_roi.roi[chan_id].width = (uint32_t) dst_rect.width;
+    priv->ppe_frame->output_roi.roi[chan_id].height =
+        (uint32_t) dst_rect.height;
+    priv->ppe_frame->output_roi.roi[chan_id].x_cord = (uint32_t) dst_rect.x;
+    priv->ppe_frame->output_roi.roi[chan_id].y_cord = (uint32_t) dst_rect.y;
 
     if (VVAS_IS_ERROR (vret)) {
       GST_ERROR_OBJECT (self, "failed to add processing channel in scaler");
@@ -2375,7 +2245,7 @@ xlnx_ppe_start (GstVvas_XInfer * self, VvasVideoFrame * input[MAX_NUM_OBJECT],
 
   /* set descriptor */
   ret =
-      xlnx_multiscaler_descriptor_create (self, input, output, priv->roi_data);
+      xlnx_multiscaler_descriptor_create (self, input, output, &priv->roi_data);
   if (!ret) {
     return ret;
   }
@@ -2433,9 +2303,6 @@ vvas_xinfer_prepare_ppe_output_frame (GstVvas_XInfer * self, GstBuffer * outbuf,
   return TRUE;
 
 error:
-  if (out_mem)
-    gst_memory_unref (out_mem);
-
   return FALSE;
 }
 
@@ -2519,7 +2386,7 @@ vvas_xinfer_ppe_loop (gpointer data)
       GstBuffer *child_buf = NULL;
       GstVideoInfo *child_vinfo = NULL;
 
-      if (parent_meta &&
+      if (parent_meta && parent_meta->prediction &&
           vvas_xinfer_is_sub_buffer_useful (self,
               parent_meta->prediction->sub_buffer)) {
         GstVideoMeta *vmeta = NULL;
@@ -2609,7 +2476,7 @@ vvas_xinfer_ppe_loop (gpointer data)
         do_ppe = TRUE;
       }
     } else {                    /* level > 1 */
-      if (parent_meta) {
+      if (parent_meta && parent_meta->prediction) {
         guint sub_bufs_len = 0;
 
         GST_LOG_OBJECT (self, "infer_level = %d & meta data depth = %d",
@@ -2779,8 +2646,10 @@ vvas_xinfer_ppe_loop (gpointer data)
         infer_frame->child_buf = inbuf;
         infer_frame->child_vinfo = gst_video_info_copy (priv->ppe_out_vinfo);
         infer_frame->skip_processing = FALSE;
-        infer_frame->input_roi = priv->ppe_frame->input_roi;
-        infer_frame->output_roi = priv->ppe_frame->output_roi;
+        infer_frame->input_roi.nobj = 1;
+        infer_frame->output_roi.nobj = 1;
+        infer_frame->input_roi.roi[0] = priv->ppe_frame->input_roi.roi[oidx];
+        infer_frame->output_roi.roi[0] = priv->ppe_frame->output_roi.roi[oidx];
         infer_frame->use_roi_data = TRUE;
 
         /* send input frame to inference thread */
@@ -2826,6 +2695,15 @@ vvas_xinfer_ppe_loop (gpointer data)
     g_mutex_unlock (&priv->ppe_lock);
   }
 
+exit:
+  /* Inform Infer thread */
+  priv->ppe_thread_state = VVAS_THREAD_EXITED;
+
+  g_mutex_lock (&priv->infer_lock);
+  g_cond_signal (&priv->infer_cond);
+  g_mutex_unlock (&priv->infer_lock);
+  return NULL;
+
 error:
   g_mutex_lock (&priv->ppe_lock);
   priv->stop = TRUE;
@@ -2835,15 +2713,7 @@ error:
   GST_ELEMENT_ERROR (self, STREAM, FAILED, ("failed to process frame in PPE."),
       ("failed to process frame in PPE."));
   priv->last_fret = GST_FLOW_ERROR;
-
-exit:
-  /* Inform Infer thread */
-  priv->ppe_thread_state = VVAS_THREAD_EXITED;
-
-  g_mutex_lock (&priv->infer_lock);
-  g_cond_signal (&priv->infer_cond);
-  g_mutex_unlock (&priv->infer_lock);
-  return NULL;
+  goto exit;
 }
 
 /**
@@ -2868,8 +2738,9 @@ transform_coordinates (GstVvas_XInfer * self,
   GST_LOG_OBJECT (self, "bbox : x = %d, y = %d, w = %d, h = %d",
       c_bbox->x, c_bbox->y, c_bbox->width, c_bbox->height);
 
-  c_bbox->x = nearbyintf (c_bbox->x * hfactor) + xOffset;
-  c_bbox->y = nearbyintf (c_bbox->y * vfactor) + yOffset;
+  c_bbox->x = nearbyintf (c_bbox->x * hfactor);
+  c_bbox->y = nearbyintf (c_bbox->y * vfactor);
+
   c_bbox->width = nearbyintf (c_bbox->width * hfactor);
   c_bbox->height = nearbyintf (c_bbox->height * vfactor);
 
@@ -2883,6 +2754,16 @@ transform_coordinates (GstVvas_XInfer * self,
   /* scale x offset to parent bbox resolution */
   c_bbox->x += p_bbox->x;
   c_bbox->y += p_bbox->y;
+
+  if (xOffset < 0 && abs (xOffset) > c_bbox->x)
+    c_bbox->x = 0;
+  else
+    c_bbox->x += xOffset;
+
+  if (yOffset < 0 && abs (yOffset) > c_bbox->y)
+    c_bbox->y = 0;
+  else
+    c_bbox->y += yOffset;
 }
 
 /**
@@ -3008,6 +2889,14 @@ update_child_bbox (GNode * node, gpointer data)
   GstInferencePrediction *parent_prediction =
       (GstInferencePrediction *) node->parent->data;
 
+  /* Aligned coordinates from Scaler */
+  int tx = 0;
+  int ty = 0;
+
+  /* Actual x & y from Parent box */
+  int bx = 0;
+  int by = 0;
+
   if (cur_prediction->prediction.bbox_scaled)
     return;
 
@@ -3016,6 +2905,13 @@ update_child_bbox (GNode * node, gpointer data)
     th = node_info->input_roi.roi[0].height;
     fw = node_info->output_roi.roi[0].width;
     fh = node_info->output_roi.roi[0].height;
+
+    tx = node_info->input_roi.roi[0].x_cord;
+    ty = node_info->input_roi.roi[0].y_cord;
+
+    bx = parent_prediction->prediction.bbox.x;
+    by = parent_prediction->prediction.bbox.y;
+
   } else {
     tw = GST_VIDEO_INFO_WIDTH (node_info->parent_vinfo);
     th = GST_VIDEO_INFO_HEIGHT (node_info->parent_vinfo);
@@ -3023,21 +2919,28 @@ update_child_bbox (GNode * node, gpointer data)
     fh = GST_VIDEO_INFO_HEIGHT (node_info->child_vinfo);
   }
 
-  if (!parent_prediction->prediction.bbox.width
-      && !parent_prediction->prediction.bbox.height) {
-    hfactor = tw * 1.0 / fw;
-    vfactor = th * 1.0 / fh;
-    if (node_info->use_roi_data) {
-      xOffset =
-          node_info->input_roi.roi[0].x_cord -
-          (int32_t) ((double) node_info->output_roi.roi[0].x_cord * hfactor);
-      yOffset =
-          node_info->input_roi.roi[0].y_cord -
-          (int32_t) ((double) node_info->output_roi.roi[0].y_cord * vfactor);
+  hfactor = tw * 1.0 / fw;
+  vfactor = th * 1.0 / fh;
+
+  if (node_info->use_roi_data) {
+    if (!parent_prediction->prediction.bbox.width
+        && !parent_prediction->prediction.bbox.height) {
+      xOffset = node_info->input_roi.roi[0].x_cord;
+      yOffset = node_info->input_roi.roi[0].y_cord;
     }
-  } else {
-    hfactor = parent_prediction->prediction.bbox.width * 1.0 / fw;
-    vfactor = parent_prediction->prediction.bbox.height * 1.0 / fh;
+    xOffset -=
+        (int32_t) ((double) node_info->output_roi.roi[0].x_cord * hfactor);
+    yOffset -=
+        (int32_t) ((double) node_info->output_roi.roi[0].y_cord * vfactor);
+
+    /* Coordinate are modified by scaler if it is not
+     * aligned to ppc, this will result in bounding box
+     * shifting towards left. thus we need to offset
+     * to delta, where delta is the difference between
+     * actual bounding box and aligned box coordinates.
+     */
+    xOffset -= (bx - tx);
+    yOffset -= (by - ty);
   }
 
   if (cur_prediction->prediction.bbox.width
@@ -3045,6 +2948,25 @@ update_child_bbox (GNode * node, gpointer data)
     transform_coordinates (self, &cur_prediction->prediction.bbox,
         &parent_prediction->prediction.bbox, hfactor, vfactor,
         xOffset, yOffset);
+
+    /* check if updated coordinates are extended beyong original image
+     * and clip it to make within image boudary. */
+    if (GST_VIDEO_INFO_WIDTH (node_info->parent_vinfo) <
+        (cur_prediction->prediction.bbox.width +
+            cur_prediction->prediction.bbox.x)) {
+      cur_prediction->prediction.bbox.width -=
+          (cur_prediction->prediction.bbox.width +
+          cur_prediction->prediction.bbox.x -
+          GST_VIDEO_INFO_WIDTH (node_info->parent_vinfo));
+    }
+    if (GST_VIDEO_INFO_HEIGHT (node_info->parent_vinfo) <
+        (cur_prediction->prediction.bbox.height +
+            cur_prediction->prediction.bbox.y)) {
+      cur_prediction->prediction.bbox.height -=
+          (cur_prediction->prediction.bbox.height +
+          cur_prediction->prediction.bbox.y -
+          GST_VIDEO_INFO_HEIGHT (node_info->parent_vinfo));
+    }
   }
 
   if (cur_prediction->prediction.model_class == VVAS_XCLASS_POSEDETECT) {
@@ -3266,7 +3188,7 @@ vvas_xinfer_infer_loop (gpointer data)
     batch_len = g_queue_get_length (priv->infer_batch_queue);
 
     g_cond_signal (&priv->infer_batch_full);
-    if (batch_len < priv->infer_batch_size &&
+    if (!priv->stop && batch_len < priv->infer_batch_size &&
         priv->ppe_thread_state != VVAS_THREAD_EXITED && !priv->is_eos
         && !priv->is_pad_eos) {
       /* wait for batch size frames */
@@ -3275,9 +3197,14 @@ vvas_xinfer_infer_loop (gpointer data)
         gint64 end_time =
             g_get_monotonic_time () +
             self->batch_timeout * G_TIME_SPAN_MILLISECOND;
-        g_cond_wait_until (&priv->infer_cond, &priv->infer_lock, end_time);
-        GST_DEBUG_OBJECT (self, "timeout triggered");
-        timeout_triggered = TRUE;
+        if (!g_cond_wait_until (&priv->infer_cond, &priv->infer_lock, end_time)) {
+          GST_DEBUG_OBJECT (self,
+              "Infer batch submit timeout triggered!!, batch length is %d, "
+              "batch-size is %d, current batch timeout is %d (milliseconds)",
+              g_queue_get_length (priv->infer_batch_queue)
+              , priv->infer_batch_size, self->batch_timeout);
+          timeout_triggered = TRUE;
+        }
       } else {
         g_cond_wait (&priv->infer_cond, &priv->infer_lock);
       }
@@ -3311,6 +3238,9 @@ vvas_xinfer_infer_loop (gpointer data)
         batch_len, priv->ppe_thread_state);
 
   infer_pending:
+
+    if (priv->stop)
+      goto exit;
 
     min_batch = batch_len > priv->infer_batch_size ?
         priv->infer_batch_size : batch_len;
@@ -3527,10 +3457,14 @@ vvas_xinfer_infer_loop (gpointer data)
              * when parent_buf != child_buf
              */
             GstInferenceMeta *child_meta;
-            Vvas_XInferNodeInfo node_info = { self,
-              parent_vinfos[idx], child_vinfos[idx],
-              input_roi[idx], output_roi[idx], use_roi_data[idx]
-            };
+            Vvas_XInferNodeInfo node_info = { 0 };
+
+            node_info.self = self;
+            node_info.parent_vinfo = parent_vinfos[idx];
+            node_info.child_vinfo = child_vinfos[idx];
+            node_info.input_roi = input_roi[idx];
+            node_info.output_roi = output_roi[idx];
+            node_info.use_roi_data = use_roi_data[idx];
 
             /* child_buf received from PPE, so update metadata in parent buf */
             child_meta =
@@ -3594,9 +3528,14 @@ vvas_xinfer_infer_loop (gpointer data)
         } else {                /* inference level > 1 */
           GstInferenceMeta *child_meta = NULL;
           GstInferencePrediction *parent_prediction = NULL;
-          Vvas_XInferNodeInfo node_info = { self,
-            parent_vinfos[idx], child_vinfos[idx]
-          };
+          Vvas_XInferNodeInfo node_info = { 0 };
+
+          node_info.self = self;
+          node_info.parent_vinfo = parent_vinfos[idx];
+          node_info.child_vinfo = child_vinfos[idx];
+          node_info.input_roi = input_roi[idx];
+          node_info.output_roi = output_roi[idx];
+          node_info.use_roi_data = use_roi_data[idx];
 
           child_meta =
               (GstInferenceMeta *) gst_buffer_get_meta (child_bufs[idx],
@@ -3669,6 +3608,10 @@ vvas_xinfer_infer_loop (gpointer data)
 
           priv->last_fret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (self),
               parent_bufs[idx]);
+          /* Pushed buffer will be disposed once we submit it to gst_pad_push either
+           * success or failure case, so making it NULL here, so that we don't unref again */
+          parent_bufs[idx] = NULL;
+
           if (priv->last_fret < GST_FLOW_OK) {
             switch (priv->last_fret) {
               case GST_FLOW_FLUSHING:
@@ -3686,6 +3629,7 @@ vvas_xinfer_infer_loop (gpointer data)
           }
         } else {
           gst_buffer_unref (parent_bufs[idx]);
+          parent_bufs[idx] = NULL;
         }
       }
 
@@ -3731,18 +3675,58 @@ vvas_xinfer_infer_loop (gpointer data)
     /* reset variables for next batch */
     total_queued_size = 0;
     cur_batch_size = 0;
-
-    if (sent_eos)
-      goto exit;
   }
 
-error:
-  GST_ELEMENT_ERROR (self, STREAM, FAILED,
-      ("failed to process frame in inference."),
-      ("failed to process frame in inference."));
-  priv->last_fret = GST_FLOW_ERROR;
-
 exit:
+  if (!sent_eos) {
+    for (int i = 0; i < priv->max_infer_queue; i++) {
+      GstInferencePrediction *parent_prediction = NULL;
+
+      if (vvas_frames && vvas_frames[i]) {
+        vvas_video_frame_free (vvas_frames[i]);
+        vvas_frames[i] = NULL;
+      }
+      if (child_bufs && child_bufs[i]) {
+        if (priv->infer_level > 1) {
+          GstInferenceMeta *child_meta = NULL;
+          /* Clear the prediction of child buf */
+          child_meta =
+              (GstInferenceMeta *) gst_buffer_get_meta (child_bufs[i],
+              gst_inference_meta_api_get_type ());
+
+          parent_prediction = (GstInferencePrediction *)
+              child_meta->prediction->prediction.node->parent->data;
+
+          if (parent_prediction)
+            gst_inference_prediction_unref (parent_prediction);
+
+          /* Adding a dummy prediction instance, which will get cleared
+           * when buffer is cleaned */
+          child_meta->prediction = gst_inference_prediction_new ();
+        }
+        gst_buffer_unref (child_bufs[i]);
+        child_bufs[i] = NULL;
+      }
+
+      if (child_vinfos && child_vinfos[i]) {
+        gst_video_info_free (child_vinfos[i]);
+        child_vinfos[i] = NULL;
+      }
+      if (push_parent_bufs && push_parent_bufs[i]) {
+        if (parent_bufs[i]) {
+          GST_INFO_OBJECT (self,
+              "Unreffing  parent buff in exit : %p Infer level : %d",
+              parent_bufs[i], priv->infer_level);
+          gst_buffer_unref (parent_bufs[i]);
+          parent_bufs[i] = NULL;
+        }
+      }
+      if (parent_vinfos && parent_vinfos[i]) {
+        gst_video_info_free (parent_vinfos[i]);
+        parent_vinfos[i] = NULL;
+      }
+    }
+  }
   if (parent_bufs)
     free (parent_bufs);
   if (parent_vinfos)
@@ -3768,6 +3752,14 @@ exit:
   priv->infer_thread_state = VVAS_THREAD_EXITED;
 
   return NULL;
+
+error:
+  GST_ELEMENT_ERROR (self, STREAM, FAILED,
+      ("failed to process frame in inference."),
+      ("failed to process frame in inference."));
+  priv->last_fret = GST_FLOW_ERROR;
+  goto exit;
+
 }
 
 /**
@@ -3876,15 +3868,17 @@ gst_vvas_xinfer_submit_input_buffer (GstBaseTransform * trans,
   GST_LOG_OBJECT (self, "received %" GST_PTR_FORMAT, inbuf);
 
   g_mutex_lock (&priv->infer_lock);
-  if (g_queue_get_length (priv->infer_batch_queue) >=
+  if (!priv->stop && g_queue_get_length (priv->infer_batch_queue) >=
       (priv->infer_batch_size << 1)) {
     GST_LOG_OBJECT (self, "inference batch queue is full. Wait for free space");
     g_cond_wait (&priv->infer_batch_full, &priv->infer_lock);
   }
   g_mutex_unlock (&priv->infer_lock);
 
-  if (priv->stop)
-    return GST_FLOW_OK;
+  if (priv->stop) {
+    gst_buffer_unref (inbuf);
+    return GST_FLOW_FLUSHING;
+  }
 
   if (priv->do_preprocess) {    /* send frames to PPE thread */
     GstBuffer *new_inbuf = NULL;
@@ -3945,7 +3939,10 @@ gst_vvas_xinfer_submit_input_buffer (GstBaseTransform * trans,
         vvas_frame, FALSE, TRUE, NULL);
     if (!bret) {
       gst_video_info_free (child_vinfo);
-      return GST_FLOW_OK;
+      vvas_video_frame_free (vvas_frame);
+      gst_buffer_unref (inbuf);
+      gst_buffer_unref (child_buf);
+      return GST_FLOW_FLUSHING;
     }
   } else {                      /* !priv->do_preprocess */
     /* send frames to inference thread directly */
@@ -4121,22 +4118,21 @@ gst_vvas_xinfer_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 /**
- *  @fn static gboolean gst_vvas_xfilter_start (GstBaseTransform * trans)
+ *  @fn static gboolean gst_vvas_xfilter_create (GstBaseTransform * trans)
  *  @param [in] - trans xinfer's parents instance handle which will be type casted to xinfer instance
  *  @return TRUE on success\n
  *          FALSE on failure
- *  @brief This API will be invoked by parent class (i.e. GstBaseTranform) before start processing frames.
+ *  @brief This API will be invoked during NULL_TO_READY transition to acquire resources.
  *  @details This API initializes xinfer member variables, reads json of ppe and infer, opens device handle
- *           and invokes initialization of INFER and PPE acceleration library. This function also started
- *           PPE and INFER thread.
+ *           and invokes initialization of INFER and PPE acceleration library.
  *        */
 static gboolean
-gst_vvas_xinfer_start (GstBaseTransform * trans)
+gst_vvas_xinfer_create (GstBaseTransform * trans)
 {
   GstVvas_XInfer *self = GST_VVAS_XINFER (trans);
   GstVvas_XInferPrivate *priv = self->priv;
   gboolean bret = FALSE;
-  gchar *thread_name = NULL;
+  GST_INFO_OBJECT (self, "create");
 
   self->priv = priv;
   priv->ppe_dev_idx = DEFAULT_DEVICE_INDEX;
@@ -4214,16 +4210,6 @@ gst_vvas_xinfer_start (GstBaseTransform * trans)
   priv->ppe_thread_state = VVAS_THREAD_NOT_CREATED;
   priv->infer_thread_state = VVAS_THREAD_NOT_CREATED;
 
-  if (priv->do_preprocess) {
-    thread_name = g_strdup_printf ("%s-ppe-thread", GST_ELEMENT_NAME (self));
-    priv->ppe_thread = g_thread_new (thread_name, vvas_xinfer_ppe_loop, self);
-    g_free (thread_name);
-  }
-
-  thread_name = g_strdup_printf ("%s-infer-thread", GST_ELEMENT_NAME (self));
-  priv->infer_thread = g_thread_new (thread_name, vvas_xinfer_infer_loop, self);
-  g_free (thread_name);
-
   GST_INFO_OBJECT (self, "start completed");
   return TRUE;
 
@@ -4267,11 +4253,39 @@ gst_vvas_xinfer_query (GstBaseTransform * trans,
       GValue list = { 0, };
       GValue aval = { 0, };
       const char *fourcc;
+      GstCaps *peercaps = NULL;
+      GstPad *peer = NULL;
+      gint par_n = 0, par_d = 0;
 
       if (self->priv->do_init == TRUE)
         return FALSE;
 
       gst_query_parse_caps (query, &filter);
+
+      /* When we are queried about our caps requirement, we should also considier the
+       * pixel aspect ratio required by the downstream, this is important when
+       * are using a video sink, might not be required for fakesink/filesink */
+      if (direction == GST_PAD_SINK) {
+        GstStructure *structure;
+        peer = gst_pad_get_peer (trans->srcpad);
+        peercaps = gst_pad_query_caps (peer, NULL);
+
+        if (peercaps && gst_caps_get_size (peercaps)) {
+          structure = gst_caps_get_structure (peercaps, 0);
+          if (structure && gst_structure_has_field (structure,
+                  "pixel-aspect-ratio")) {
+            gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n,
+                &par_d);
+          } else {
+            par_n = 0;
+            par_d = 0;
+          }
+          gst_caps_unref (peercaps);
+        }
+        if (peer) {
+          gst_object_unref (peer);
+        }
+      }
 
       /* Same buffer for sink and src,
        * so the same caps for sink and src pads
@@ -4295,6 +4309,14 @@ gst_vvas_xinfer_query (GstBaseTransform * trans,
       gst_value_list_append_value (&list, &aval);
       gst_structure_set_value (s, "format", &list);
       g_value_reset (&aval);
+
+      /* If there is pixel aspect ratio from downstream
+       * we should consider it */
+      if (par_n) {
+        gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            par_n, par_d, NULL);
+      }
+
       gst_caps_append_structure (newcap, s);
       gst_caps_append (allcaps, newcap);
 
@@ -4347,20 +4369,28 @@ gst_vvas_xinfer_query (GstBaseTransform * trans,
     case GST_QUERY_CUSTOM:{
       const GstStructure *s = gst_query_get_structure (query);
       GstStructure *st;
-      if (!gst_structure_has_name (s, "vvas-kernel-config")) {
-        break;
-      }
-      GST_DEBUG_OBJECT (self, "received vvas-kernel-config query");
-      query = gst_query_make_writable (query);
-      st = gst_query_writable_structure (query);
+      if (gst_structure_has_name (s, "vvas-kernel-config")) {
+        GST_DEBUG_OBJECT (self, "received vvas-kernel-config query");
+        query = gst_query_make_writable (query);
+        st = gst_query_writable_structure (query);
 
-      if (st) {
-        gst_structure_set (st,
-            "pp_config", G_TYPE_POINTER, priv->dpu_kernel_config, NULL);
+        if (st) {
+          gst_structure_set (st,
+              "pp_config", G_TYPE_POINTER, priv->dpu_kernel_config, NULL);
+        }
+        return TRUE;
+      } else if (gst_structure_has_name (s, "infer-batch-size")) {
+        GST_DEBUG_OBJECT (self, "receied infer-batch-size query");
+        query = gst_query_make_writable (query);
+        st = gst_query_writable_structure (query);
+        if (st) {
+          gst_structure_set (st,
+              "batch_size", G_TYPE_UINT, self->priv->infer_batch_size, NULL);
+        }
+        return TRUE;
       }
-      return TRUE;
-    }
       break;
+    }
 
     default:
       ret = TRUE;
@@ -4522,7 +4552,7 @@ gst_vvas_xinfer_propose_allocation (GstBaseTransform * trans,
   GstVvas_XInferPrivate *priv = self->priv;
   GstCaps *caps;
   GstVideoInfo info;
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
   GstVideoAlignment align;
   guint size;
 
@@ -4616,6 +4646,31 @@ gst_vvas_xinfer_propose_allocation (GstBaseTransform * trans,
       gst_object_unref (allocator);
     if (pool)
       gst_object_unref (pool);
+  } else {
+    /* Downstream has proposal. Append current buffer requirment and 
+     * send to upstream. 
+     */
+    guint min = 0;
+    guint max = 0;
+
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    min += self->priv->infer_batch_size + 1;
+
+    /* max value 0 indicates unlimited buffers, so do not 
+     * modify the value if it is 0. 
+     */
+    if (0 != max) {
+      max += self->priv->infer_batch_size + 1;
+    }
+
+    /* update min and max buffers */
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+
+    GST_INFO_OBJECT (self, "updated min buffers %u and max buffers = %u", min,
+        max);
+
+    gst_object_unref (pool);
   }
 
   return TRUE;
@@ -4672,7 +4727,6 @@ gst_vvas_xinfer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GST_ERROR_OBJECT (self, "Failed to parse input caps");
     return FALSE;
   }
-
 
   priv->pref_infer_width = priv->model_conf.model_width;
   priv->pref_infer_height = priv->model_conf.model_height;
@@ -4789,6 +4843,10 @@ gst_vvas_xinfer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     } else {
       GstVideoAlignment align;
       GstVideoInfo ppe_out_info;
+      if (!gst_video_info_from_caps (&ppe_out_info, ppe_out_caps)) {
+        GST_ERROR_OBJECT (self, "Failed to parse input caps");
+        return FALSE;
+      }
       priv->ppe_outpool = gst_vvas_buffer_pool_new (PPE_WIDTH_ALIGN, 1);
 
       allocator = gst_vvas_allocator_new_and_set (self->priv->ppe_dev_idx,
@@ -4802,7 +4860,6 @@ gst_vvas_xinfer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       structure = gst_buffer_pool_get_config (priv->ppe_outpool);
 
       gst_video_alignment_reset (&align);
-      gst_video_info_from_caps (&ppe_out_info, ppe_out_caps);
       for (int idx = 0; idx < GST_VIDEO_INFO_N_PLANES (&ppe_out_info); idx++) {
         align.stride_align[idx] = (PPE_WIDTH_ALIGN - 1);
       }
@@ -4861,24 +4918,71 @@ gst_vvas_xinfer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 }
 
 /**
+ *  @fn static gboolean gst_vvas_xinfer_start (GstBaseTransform * trans)
+ *  @param [in] - trans xinfer's parents instance handle which will be type casted to xfilter instance
+ *  @return TRUE on success
+ *          FALSE on failure
+ *  @brief This API will be invoked during READY_TO_PAUSED transition.
+ *  @detail This function creates ppe and infer threads and initializes other members.
+ */
+static gboolean
+gst_vvas_xinfer_start (GstBaseTransform * trans)
+{
+  GstVvas_XInfer *self = GST_VVAS_XINFER (trans);
+  GstVvas_XInferPrivate *priv = self->priv;
+  gchar *thread_name = NULL;
+
+  priv->stop = FALSE;
+  priv->last_fret = GST_FLOW_OK;
+
+  g_mutex_init (&priv->infer_lock);
+  g_cond_init (&priv->infer_cond);
+  g_cond_init (&priv->infer_batch_full);
+
+  priv->infer_batch_queue = g_queue_new ();
+  priv->infer_sub_buffers = g_queue_new ();
+
+  priv->ppe_frame = g_slice_new0 (Vvas_XInferFrame);
+  /* wait on event ppe_need_input or ppe_has_input as per ppe_need_data */
+  priv->ppe_need_data = TRUE;
+  priv->ppe_out_vinfo = gst_video_info_new ();
+  priv->ppe_buf_queue = g_queue_new ();
+
+  g_mutex_init (&priv->ppe_lock);
+  g_cond_init (&priv->ppe_has_input);
+  g_cond_init (&priv->ppe_need_input);
+  if (priv->do_preprocess) {
+    thread_name = g_strdup_printf ("%s-ppe-thread", GST_ELEMENT_NAME (self));
+    priv->ppe_thread = g_thread_new (thread_name, vvas_xinfer_ppe_loop, self);
+    GST_DEBUG_OBJECT (self, "ppe thread created");
+    g_free (thread_name);
+  }
+
+  thread_name = g_strdup_printf ("%s-infer-thread", GST_ELEMENT_NAME (self));
+  priv->infer_thread = g_thread_new (thread_name, vvas_xinfer_infer_loop, self);
+  GST_DEBUG_OBJECT (self, "inference thread created");
+  g_free (thread_name);
+
+  return TRUE;
+}
+
+/**
  *  @fn static gboolean gst_vvas_xinfer_stop (GstBaseTransform * trans)
  *  @param [in] - trans xinfer's parents instance handle which will be type casted to xfilter instance
  *  @return TRUE on success
  *          FALSE on failure
- *  @brief This API will be invoked by parent class (i.e. GstBaseTranform) before stop processing
- *         frames to free up resources
+ *  @brief This API will be invoked during PAUSED_TO_READY transition.
  *  @detail This function broadcast signals to PPE and INFER thread to exit and wait till
- *          both thread exit. De-initialization of INFER and PPE is also done after both thread exits.
+ *          both thread exit. All pending buffers and pool are freed up.
  */
 static gboolean
 gst_vvas_xinfer_stop (GstBaseTransform * trans)
 {
   GstVvas_XInfer *self = GST_VVAS_XINFER (trans);
-  GST_INFO_OBJECT (self, "stopping");
+  GstVvas_XInferPrivate *priv = self->priv;
+
+  GST_DEBUG_OBJECT (self, "sending stop to ppe and infer threads");
   self->priv->stop = TRUE;
-
-  gst_video_info_free (self->priv->in_vinfo);
-
   if (self->priv->infer_thread) {
     g_mutex_lock (&self->priv->infer_lock);
     g_cond_broadcast (&self->priv->infer_cond);
@@ -4899,16 +5003,143 @@ gst_vvas_xinfer_stop (GstBaseTransform * trans)
   if (self->priv->infer_thread) {
     GST_DEBUG_OBJECT (self, "waiting for inference thread to exit");
     g_thread_join (self->priv->infer_thread);
-    GST_DEBUG_OBJECT (self, "inference thread exited. sending EOS downstream");
+    GST_DEBUG_OBJECT (self, "inference thread exited");
     self->priv->infer_thread = NULL;
   }
 
   if (self->priv->ppe_thread) {
-    GST_DEBUG_OBJECT (self, "waiting for inference thread to exit");
+    GST_DEBUG_OBJECT (self, "waiting for ppe thread to exit");
     g_thread_join (self->priv->ppe_thread);
-    GST_DEBUG_OBJECT (self, "inference thread exited");
+    GST_DEBUG_OBJECT (self, "ppe thread exited");
     self->priv->ppe_thread = NULL;
   }
+
+  g_mutex_lock (&priv->infer_lock);
+  /* free all frames inside infer_batch_queue */
+  if (priv->infer_batch_queue) {
+    GST_INFO_OBJECT (self, "free infer batch queue of size %d",
+        g_queue_get_length (priv->infer_batch_queue));
+
+    while (!g_queue_is_empty (priv->infer_batch_queue)) {
+      Vvas_XInferFrame *frame = g_queue_pop_head (priv->infer_batch_queue);
+
+      if (frame->parent_vinfo)
+        gst_video_info_free (frame->parent_vinfo);
+
+      if (frame->vvas_frame) {
+        vvas_video_frame_free (frame->vvas_frame);
+      }
+
+      if (frame->child_buf) {
+        if (priv->infer_level > 1) {
+          GstInferenceMeta *child_meta = NULL;
+          GstInferencePrediction *parent_prediction = NULL;
+          /* Clear the prediction of child buf */
+          child_meta =
+              (GstInferenceMeta *) gst_buffer_get_meta (frame->child_buf,
+              gst_inference_meta_api_get_type ());
+          if (child_meta) {
+            parent_prediction = (GstInferencePrediction *)
+                child_meta->prediction->prediction.node->parent->data;
+
+            gst_inference_prediction_unref (parent_prediction);
+            /* Adding a dummy prediction instance, which will get cleared
+             * when buffer is cleaned */
+            child_meta->prediction = gst_inference_prediction_new ();
+          }
+        }
+        GST_INFO_OBJECT (self, "Deinit Unreffing child buf : %p",
+            frame->child_buf);
+        gst_buffer_unref (frame->child_buf);
+      }
+      if (frame->child_vinfo)
+        gst_video_info_free (frame->child_vinfo);
+
+      if (frame->last_parent_buf)
+        gst_buffer_unref (frame->parent_buf);
+
+      g_slice_free1 (sizeof (Vvas_XInferFrame), frame);
+    }
+  }
+  g_mutex_unlock (&priv->infer_lock);
+
+  g_mutex_clear (&priv->infer_lock);
+  g_cond_clear (&priv->infer_cond);
+  g_cond_clear (&priv->infer_batch_full);
+
+  if (priv->infer_batch_queue) {
+    g_queue_free (priv->infer_batch_queue);
+  }
+
+  /* buf inside infer_sub_buffers get freed when prediction
+   * node get freed, so here just remove the queue */
+  if (priv->infer_sub_buffers) {
+    g_queue_free (priv->infer_sub_buffers);
+  }
+
+  if (priv->ppe_frame)
+    g_slice_free1 (sizeof (Vvas_XInferFrame), priv->ppe_frame);
+
+  if (priv->ppe_outpool && gst_buffer_pool_is_active (priv->ppe_outpool)) {
+    if (!gst_buffer_pool_set_active (priv->ppe_outpool, FALSE)) {
+      GST_ERROR_OBJECT (self, "failed to deactivate preprocess output pool");
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("failed to deactivate pool."),
+          ("failed to deactivate preprocess output pool"));
+      return FALSE;
+    }
+  }
+
+  if (priv->input_pool && gst_buffer_pool_is_active (priv->input_pool)) {
+    if (!gst_buffer_pool_set_active (priv->input_pool, FALSE)) {
+      GST_ERROR_OBJECT (self, "failed to deactivate PPE internal input pool");
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("failed to deactivate pool."),
+          ("failed to deactivate PPE internal input pool"));
+      return FALSE;
+    }
+  }
+
+  if (self->priv->input_pool) {
+    gst_object_unref (self->priv->input_pool);
+    priv->input_pool = NULL;
+  }
+
+  if (priv->ppe_outpool) {
+    gst_object_unref (priv->ppe_outpool);
+    priv->ppe_outpool = NULL;
+  }
+
+  g_mutex_clear (&self->priv->ppe_lock);
+  g_cond_clear (&self->priv->ppe_has_input);
+  g_cond_clear (&self->priv->ppe_need_input);
+
+  if (priv->ppe_buf_queue) {
+    g_queue_free (priv->ppe_buf_queue);
+  }
+
+  if (priv->ppe_out_vinfo) {
+    gst_video_info_free (priv->ppe_out_vinfo);
+    priv->ppe_out_vinfo = NULL;
+  }
+
+  return TRUE;
+}
+
+/**
+ *  @fn static gboolean gst_vvas_xinfer_destroy (GstBaseTransform * trans)
+ *  @param [in] - trans xinfer's parents instance handle which will be type casted to xfilter instance
+ *  @return TRUE on success
+ *          FALSE on failure
+ *  @brief This API will be invoked during READY_TO_NULL transition to free up resources.
+ *  @detail This function frees resources used for infer and preprocessing libraries.
+ */
+static gboolean
+gst_vvas_xinfer_destroy (GstBaseTransform * trans)
+{
+  GstVvas_XInfer *self = GST_VVAS_XINFER (trans);
+  GST_INFO_OBJECT (self, "destroy");
+
+  gst_video_info_free (self->priv->in_vinfo);
+
 #ifdef DUMP_INFER_INPUT
   if (self->priv->fp)
     fclose (self->priv->fp);
@@ -4938,9 +5169,6 @@ gst_vvas_xinfer_finalize (GObject * obj)
 {
   GstVvas_XInfer *self = GST_VVAS_XINFER (obj);
 
-  if (self->priv->input_pool)
-    gst_object_unref (self->priv->input_pool);
-
   if (self->ppe_json_file) {
     g_free (self->ppe_json_file);
     self->ppe_json_file = NULL;
@@ -4960,12 +5188,35 @@ gst_vvas_xinfer_change_state (GstElement * element, GstStateChange transition)
   GstVvas_XInfer *self = GST_VVAS_XINFER (element);
   GstStateChangeReturn ret;
 
+  GST_DEBUG_OBJECT (self, "Got state change request: %s -> %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:{
-      if (!gst_vvas_xinfer_start (GST_BASE_TRANSFORM_CAST (element))) {
+      if (!gst_vvas_xinfer_create (GST_BASE_TRANSFORM_CAST (element))) {
         GST_ERROR_OBJECT (self, "failed to do initialization");
         return GST_STATE_CHANGE_FAILURE;
       }
+      break;
+    }
+    case GST_STATE_CHANGE_READY_TO_PAUSED:{
+      if (!gst_vvas_xinfer_start (GST_BASE_TRANSFORM_CAST (element))) {
+        GST_ERROR_OBJECT (self, "failed to allocate resources");
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      break;
+    }
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      /* This is called before GstElement change_state as
+       * there is a deadlock on GST_PAD_STREAM_LOCK used
+       * to deactivate pads in this state transition.
+       */
+      if (!gst_vvas_xinfer_stop (GST_BASE_TRANSFORM_CAST (element))) {
+        GST_ERROR_OBJECT (self, "failed to free resources");
+        return GST_STATE_CHANGE_FAILURE;
+      }
+
       break;
     }
     default:
@@ -4976,7 +5227,7 @@ gst_vvas_xinfer_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:{
-      if (!gst_vvas_xinfer_stop (GST_BASE_TRANSFORM_CAST (element))) {
+      if (!gst_vvas_xinfer_destroy (GST_BASE_TRANSFORM_CAST (element))) {
         GST_ERROR_OBJECT (self, "failed to do de-initialization");
         return GST_STATE_CHANGE_FAILURE;
       }

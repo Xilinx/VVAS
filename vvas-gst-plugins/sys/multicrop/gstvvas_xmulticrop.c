@@ -139,27 +139,15 @@
  */
 #define VVAS_XMULTICROP_PPE_ON_MAIN_BUF_DEFAULT FALSE
 
-#ifdef XLNX_PCIe_PLATFORM
 /** @def WIDTH_ALIGN
- *  @brief Width alignment requirement for MultiScaler IP
- */
-#define WIDTH_ALIGN 256
-
-/** @def HEIGHT_ALIGN
- *  @brief Height alignment requirement for MultiScaler IP
- */
-#define HEIGHT_ALIGN 64
-#else
-/** @def WIDTH_ALIGN
- *  @brief Width alignment requirement for MultiScaler IP
+ *  @brief Width alignment requirement for Scaler IP
  */
 #define WIDTH_ALIGN (8 * self->ppc)
 
 /** @def HEIGHT_ALIGN
- *  @brief Height alignment requirement for MultiScaler IP
+ *  @brief Height alignment requirement for Scaler IP
  */
 #define HEIGHT_ALIGN 1
-#endif
 
 /** @def DEFAULT_CROP_PARAMS
  *  @brief Default crop parameters (x, y, width, height)
@@ -433,6 +421,52 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstVvasXMultiCrop, gst_vvas_xmulticrop,
  *  @brief Get VVAS_XMULTICROP_SUBBUFFER_FORMAT_TYPE GType
  */
 #define VVAS_XMULTICROP_SUBBUFFER_FORMAT_TYPE (vvas_xmulticrop_subbuffer_format_type ())
+
+/**
+ *  @fn static GstCaps *vvas_xmulticrop_generate_caps (void)
+ *  @return Returns GstCaps pointer.
+ *  @brief This function generates GstCaps based on scaler capabilities
+ */
+static GstCaps *
+vvas_xmulticrop_generate_caps (void)
+{
+  GstStructure *s;
+  GValue format = G_VALUE_INIT;
+  GstCaps *caps = NULL;
+  int i;
+  VvasScalerProp sc_prop = { 0, };
+  VvasReturnType vret;
+
+  vret = vvas_scaler_prop_get (NULL, &sc_prop);
+  if (VVAS_IS_ERROR (vret)) {
+    return caps;
+  }
+
+  if (sc_prop.n_fmts) {
+    g_value_init (&format, GST_TYPE_LIST);
+
+    s = gst_structure_new ("video/x-raw",
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+    for (i = 0; i < sc_prop.n_fmts; i++) {
+      GValue v = G_VALUE_INIT;
+      g_value_init (&v, G_TYPE_STRING);
+
+      g_value_set_static_string (&v,
+          gst_video_format_to_string (gst_coreutils_get_gst_fmt_from_vvas
+              (sc_prop.supported_fmts[i])));
+      gst_value_list_append_and_take_value (&format, &v);
+    }
+
+    gst_structure_take_value (s, "format", &format);
+    caps = gst_caps_new_full (s, NULL);
+
+  }
+
+  return caps;
+}
 
 /**
  *  @fn static guint vvas_xmulticrop_get_stride (GstVideoFormat format, guint width)
@@ -821,13 +855,24 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *xform_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstCaps *caps;
+  GstPadTemplate *pad_templ;
 
-  /* Add pad templated to the element */
-  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
-      &src_template);
-  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
-      &sink_template);
-
+  caps = vvas_xmulticrop_generate_caps ();
+  if (caps) {
+    pad_templ = gst_pad_template_new ("sink",
+        GST_PAD_SINK, GST_PAD_ALWAYS, caps);
+    /* Add sink and source templates to element based scaler core supported formats */
+    gst_element_class_add_pad_template (gstelement_class, pad_templ);
+    pad_templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+    gst_element_class_add_pad_template (gstelement_class, pad_templ);
+    gst_caps_unref (caps);
+  } else {
+    /* Add sink and source templates to element based on static templates */
+    gst_element_class_add_static_pad_template (gstelement_class,
+        &sink_template);
+    gst_element_class_add_static_pad_template (gstelement_class, &src_template);
+  }
   /* Add element's metadata */
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "Xilinx XlnxMultiCrop plugin",
@@ -962,8 +1007,8 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
   /* Install static crop width property */
   g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
       g_param_spec_uint ("s-crop-width", "Crop width for static cropping",
-          "Crop width (minimum: 64) for static cropping, if s-crop-x is given, but "
-          "s-crop-width is 0 or not specified,"
+          "Crop width (minimum: 16) for static cropping, if s-crop-x is set, but "
+          "s-crop-width is 0 or not set,"
           "\n\t\t\ts-crop-width will be calculated as input width - s-crop-x",
           0, G_MAXUINT, DEFAULT_CROP_PARAMS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
@@ -972,8 +1017,8 @@ gst_vvas_xmulticrop_class_init (GstVvasXMultiCropClass * klass)
   /* Install static crop height property */
   g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
       g_param_spec_uint ("s-crop-height", "Crop height for static cropping",
-          "Crop height (minimum: 64) for static cropping, if s-crop-y is given, but "
-          "s-crop-height is 0 or not specified,"
+          "Crop height (minimum: 16) for static cropping, if s-crop-y is set, but "
+          "s-crop-height is 0 or not set,"
           "\n\t\t\ts-crop-height will be calculated as input height - s-crop-y",
           0, G_MAXUINT, DEFAULT_CROP_PARAMS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
@@ -1166,7 +1211,7 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
   guint size, min, max;
   gboolean update_allocator, update_pool, bret, have_new_allocator = FALSE;
   GstStructure *config = NULL;
-  GstVideoInfo out_vinfo;
+  GstVideoInfo out_vinfo = { 0 };
 
   /* Get output caps from the query */
   gst_query_parse_allocation (query, &outcaps, NULL);
@@ -1189,7 +1234,12 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
     gst_allocation_params_init (&params);
   }
 
-  if (outcaps && !gst_video_info_from_caps (&out_vinfo, outcaps)) {
+  if (!outcaps) {
+    GST_ERROR_OBJECT (self, "failed to parse outcaps from the query");
+    goto error;
+  }
+
+  if (!gst_video_info_from_caps (&out_vinfo, outcaps)) {
     GST_ERROR_OBJECT (self, "failed to get video info from outcaps");
     goto error;
   }
@@ -1197,6 +1247,7 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
   if (gst_query_get_n_allocation_pools (query) > 0) {
     /* Got pool from the peer */
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    GST_DEBUG_OBJECT (self, "has pool %p", pool);
     size = MAX (size, out_vinfo.size);
     update_pool = TRUE;
     /* minimum buffers from the pool should be 3 */
@@ -1246,7 +1297,6 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
               "Alignment not matching with 8 * self->ppc");
           gst_object_unref (pool);
           pool = NULL;
-          update_pool = FALSE;
           /* stride of proposed pool and that of Multi scaler IP is not matching,
            * we can't use this pool, free it and allocate new buffer pool */
           self->out_stride_align = multiscaler_req_stride;
@@ -1262,9 +1312,10 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
           gst_structure_free (config);
           config = NULL;
         }
+        GST_DEBUG_OBJECT (self, "Suggested pool has no alignment info, "
+            "discarding this pool: %p", pool);
         gst_object_unref (pool);
         pool = NULL;
-        update_pool = FALSE;
       }
     }
 #ifdef XLNX_EMBEDDED_PLATFORM
@@ -1290,7 +1341,7 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
       /* create own pool */
       gst_object_unref (pool);
       pool = NULL;
-      update_pool = FALSE;
+      GST_DEBUG_OBJECT (self, "pool is not VVAS buffer pool");
     }
 
     /* If proposed allocator is not VVAS allocator or if it is not created for same device,
@@ -1317,11 +1368,13 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
 #ifdef XLNX_EMBEDDED_PLATFORM
   next:
 #endif
-    if (update_allocator)
+    if (update_allocator) {
+      GST_DEBUG_OBJECT (self, "Updating allocator in query");
       gst_query_set_nth_allocation_param (query, 0, allocator, &params);
-    else
+    } else {
+      GST_DEBUG_OBJECT (self, "Adding allocator in query");
       gst_query_add_allocation_param (query, allocator, &params);
-
+    }
     /* If there is no pool alignment requirement from downstream or if scaling dimension
      * is not aligned to (8 * ppc), then we will create a new pool*/
     if (!pool && (self->out_stride_align == 1)
@@ -1463,7 +1516,6 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
        * downstream element is non video intelligent.
        */
       self->avoid_output_copy = TRUE;
-      update_pool = FALSE;
     }
   }
 
@@ -1485,10 +1537,13 @@ gst_vvas_xmulticrop_decide_allocation (GstBaseTransform * trans,
   if (allocator)
     gst_object_unref (allocator);
 
-  if (update_pool)
+  if (update_pool) {
+    GST_DEBUG_OBJECT (self, "Updating pool in query");
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
+  } else {
+    GST_DEBUG_OBJECT (self, "Adding pool in query");
     gst_query_add_allocation_pool (query, pool, size, min, max);
+  }
 
   gst_object_unref (pool);
   GST_DEBUG_OBJECT (self,
@@ -1957,21 +2012,14 @@ gst_vvas_xmulticrop_fixate_caps (GstBaseTransform * trans,
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
     if (w && h) {
-      guint n, d;
-
       GST_DEBUG_OBJECT (self, "dimensions already set to %dx%d, not fixating",
           w, h);
       if (!gst_value_is_fixed (to_par)) {
-        if (gst_video_calculate_display_ratio (&n, &d, from_w, from_h,
-                from_par_n, from_par_d, w, h)) {
-          GST_DEBUG_OBJECT (self, "fixating to_par to %dx%d", n, d);
-          if (gst_structure_has_field (outs, "pixel-aspect-ratio"))
-            gst_structure_fixate_field_nearest_fraction (outs,
-                "pixel-aspect-ratio", n, d);
-          else if (n != d)
-            gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-                n, d, NULL);
-        }
+        /* Since we don't know the PAR, lets use 1:1 as the PAR as it is the most
+         * commonly used. Its also used by some opensource plugins like videotestsrc,
+         * compositor etc _fixate_caps.*/
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+            NULL);
       }
       goto done;
     }
@@ -2356,6 +2404,18 @@ gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
   GST_DEBUG_OBJECT (self, "in_caps %p %" GST_PTR_FORMAT, in_caps, in_caps);
   GST_DEBUG_OBJECT (self, "out_caps %p %" GST_PTR_FORMAT, out_caps, out_caps);
 
+  /* Use the xclbin only in hw processing */
+  if (self->software_scaling) {
+    if (self->xclbin_path)
+      g_free (self->xclbin_path);
+    self->xclbin_path = NULL;
+  } else {
+    if (self->xclbin_path == NULL) {
+      GST_ERROR_OBJECT (self, "xclbin-location is not set");
+      return FALSE;
+    }
+  }
+
   /* store sinkpad info */
   if (!gst_video_info_from_caps (priv->in_vinfo, in_caps)) {
     GST_ERROR_OBJECT (self, "failed to get video info from input caps");
@@ -2399,7 +2459,6 @@ gst_vvas_xmulticrop_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
       return FALSE;
     }
   }
-
 
   /* Create VVAS Context, Scaler context and Set Scaler Properties */
   GST_DEBUG_OBJECT (self, "Creating VVAS context");
@@ -2774,6 +2833,7 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
       if (!gst_video_frame_map (&in_vframe, self->priv->in_vinfo, *inbuf,
               GST_MAP_READ)) {
         GST_ERROR_OBJECT (self, "failed to map input buffer");
+        gst_video_frame_unmap (&own_vframe);
         goto error;
       }
       /* slow copy data from input buffer to newly acquired buffer */
@@ -2814,10 +2874,6 @@ vvas_xmulticrop_prepare_input_buffer (GstBaseTransform * trans,
   return TRUE;
 
 error:
-  if (in_vframe.data)
-    gst_video_frame_unmap (&in_vframe);
-  if (own_vframe.data)
-    gst_video_frame_unmap (&own_vframe);
   if (in_mem)
     gst_memory_unref (in_mem);
 
@@ -3251,7 +3307,8 @@ vvas_xmulticrop_add_scaler_output_buffer_chnnels (GstVvasXMultiCrop * self)
   output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
       self->out_mem_bank, priv->outbuf, priv->out_vinfo, GST_MAP_READ);
   if (!output_frame) {
-    GST_ERROR_OBJECT (self, "Could convert output GstBuffer to VvasVideoFrame");
+    GST_ERROR_OBJECT (self,
+        "Could not convert output GstBuffer to VvasVideoFrame");
     return FALSE;
   }
 
@@ -3342,14 +3399,19 @@ vvas_xmulticrop_add_scaler_processing_chnnels (GstVvasXMultiCrop * self,
       "width", G_TYPE_INT, meta_out->width,
       "height", G_TYPE_INT, meta_out->height, NULL);
 
-  gst_video_info_from_caps (&vinfo, caps);
+  if (!gst_video_info_from_caps (&vinfo, caps)) {
+    GST_ERROR_OBJECT (self, "failed to get video info from caps");
+    gst_caps_unref (caps);
+    return FALSE;
+  }
   gst_caps_unref (caps);
 
   /* Convert GstBuffer to VvasVideoFrame which is needed by VVAS Core Scaler */
   output_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
       self->out_mem_bank, sub_buffer, &vinfo, GST_MAP_READ);
   if (!output_frame) {
-    GST_ERROR_OBJECT (self, "Could convert output GstBuffer to VvasVideoFrame");
+    GST_ERROR_OBJECT (self,
+        "Could not convert output GstBuffer to VvasVideoFrame");
     return FALSE;
   }
 
@@ -3552,7 +3614,6 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
   GstFlowReturn fret = GST_FLOW_OK;
   guint roi_meta_count, idx;
   gboolean bret;
-  VvasReturnType vret;
 
   *outbuf = NULL;
   if (NULL == trans->queued_buf) {
@@ -3597,14 +3658,15 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
   priv->input_frame = vvas_videoframe_from_gstbuffer (self->priv->vvas_ctx,
       self->in_mem_bank, inbuf, priv->in_vinfo, GST_MAP_READ);
   if (!priv->input_frame) {
-    GST_ERROR_OBJECT (self, "Could convert input GstBuffer to VvasVideoFrame");
+    GST_ERROR_OBJECT (self,
+        "Could not convert input GstBuffer to VvasVideoFrame");
     fret = GST_FLOW_ERROR;
     goto error;
   }
 
   /* Add Output buffer to Core Scaler for processing */
-  vret = vvas_xmulticrop_add_scaler_output_buffer_chnnels (self);
-  if (VVAS_IS_ERROR (vret)) {
+  bret = vvas_xmulticrop_add_scaler_output_buffer_chnnels (self);
+  if (!bret) {
     GST_ERROR_OBJECT (self, "Failed to add sub buffer channel");
     fret = GST_FLOW_ERROR;
     goto error;
@@ -3655,12 +3717,13 @@ gst_vvas_xmulticrop_generate_output (GstBaseTransform * trans,
   in_meta = gst_buffer_get_meta (inbuf, gst_inference_meta_api_get_type ());
 
   if (in_meta) {
-    GstVideoMetaTransform trans = { self->priv->in_vinfo, priv->out_vinfo };
+    GstVideoMetaTransform meta_trans =
+        { self->priv->in_vinfo, priv->out_vinfo };
     GQuark scale_quark = gst_video_meta_transform_scale_get_quark ();
 
     GST_DEBUG_OBJECT (self, "attaching scaled inference metadata");
     in_meta->info->transform_func (cur_outbuf, (GstMeta *) in_meta,
-        inbuf, scale_quark, &trans);
+        inbuf, scale_quark, &meta_trans);
   }
 
   /* Copying of input HDR metadata */

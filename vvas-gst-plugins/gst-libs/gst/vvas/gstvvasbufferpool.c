@@ -218,6 +218,44 @@ failed_to_align:
 }
 
 /**
+ *  @fn static GstFlowReturn gst_vvas_buffer_pool_acquire_buffer (GstBufferPool * pool,
+ *                                                                GstBuffer ** buffer,
+ *                                                                GstBufferPoolAcquireParams * params)
+ *  @param [in] pool - VVAS buffer pool instance handle
+ *  @param [out] buffer - Handle to buffer upon successful allocation
+ *  @param [in] params - Parameters to be used while acquiring buffer from pool
+ *  @return GST_FLOW_OK on success\nGST_FLOW_ERROR on failure
+ *  @brief Acquires a buffer from pool. Invoke the parent class implementation of acquire_buffer.
+ *         Resets the sync flags of the GstMemory object.
+ */
+static GstFlowReturn
+gst_vvas_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
+    GstBufferPoolAcquireParams * params)
+{
+  GstBufferPoolClass *pclass = GST_BUFFER_POOL_CLASS (parent_class);
+  GstFlowReturn fret = GST_FLOW_OK;
+  GstMemory *mem = NULL;
+
+  /* call parent GstVideoBufferPool to acquire buffer */
+  fret = pclass->acquire_buffer (pool, buffer, params);
+  if (fret != GST_FLOW_OK)
+    return fret;
+
+  mem = gst_buffer_get_memory (*buffer, 0);
+  if (!mem) {
+    GST_ERROR_OBJECT (pool, "failed to get memory");
+    return GST_FLOW_ERROR;
+  }
+  /* Let's reset the sync flags on buffer */
+  if (GST_IS_VVAS_ALLOCATOR (mem->allocator)) {
+    gst_vvas_memory_reset_sync_flag (mem);
+  }
+  gst_memory_unref (mem);
+
+  return fret;
+}
+
+/**
  *  @fn static GstFlowReturn gst_vvas_buffer_pool_alloc_buffer (GstBufferPool * pool,
  *                                                              GstBuffer ** buffer,
  *                                                              GstBufferPoolAcquireParams * params)
@@ -444,19 +482,7 @@ gst_vvas_buffer_pool_stop (GstBufferPool * bpool)
 static void
 gst_vvas_buffer_pool_reset_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 {
-  GstMemory *mem = NULL;
   GST_BUFFER_FLAGS (buffer) &= GST_BUFFER_FLAG_TAG_MEMORY;
-
-  mem = gst_buffer_get_memory (buffer, 0);
-
-#ifdef XLNX_PCIe_PLATFORM
-  /* Let's reset the sync flags on buffers before sending them back to pool */
-  if (GST_IS_VVAS_ALLOCATOR (mem->allocator)) {
-    gst_vvas_memory_reset_sync_flag (mem);
-  }
-#endif
-
-  gst_memory_unref (mem);
 
   /* call parent GstVideoBufferPool to reset buffer */
   GST_BUFFER_POOL_CLASS (parent_class)->reset_buffer (bpool, buffer);
@@ -522,6 +548,7 @@ gst_vvas_buffer_pool_class_init (GstVvasBufferPoolClass * klass)
   gstbufferpool_class = (GstBufferPoolClass *) klass;
   gstbufferpool_class->set_config = gst_vvas_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_vvas_buffer_pool_alloc_buffer;
+  gstbufferpool_class->acquire_buffer = gst_vvas_buffer_pool_acquire_buffer;
   gstbufferpool_class->release_buffer = gst_vvas_buffer_pool_release_buffer;
   gstbufferpool_class->start = gst_vvas_buffer_pool_start;
   gstbufferpool_class->stop = gst_vvas_buffer_pool_stop;

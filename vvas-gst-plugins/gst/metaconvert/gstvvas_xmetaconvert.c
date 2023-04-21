@@ -142,14 +142,20 @@ gst_vvas_xmetaconvert_parse_config (GstVvas_Xmetaconvert * filter)
   GstVvas_XmetaconvertPrivate *priv = filter->priv;
   json_t *root = NULL, *config = NULL, *val = NULL, *karray = NULL;
   json_error_t error;
-  uint32_t index;
+  int32_t index;
 
+  memset (&priv->cfg, 0, sizeof (VvasMetaConvertConfig));
   /* get root json object */
   root = json_load_file (filter->json_file, JSON_DECODE_ANY, &error);
   if (!root) {
     GST_ERROR_OBJECT (filter, "failed to load json file. reason %s",
         error.text);
-    goto error;
+
+    /* print to console */
+    GST_ELEMENT_ERROR (filter, RESOURCE, FAILED,
+        ("failed to load json file. reason %s", error.text), (NULL));
+
+    return FALSE;
   }
 
   config = json_object_get (root, "config");
@@ -165,11 +171,6 @@ gst_vvas_xmetaconvert_parse_config (GstVvas_Xmetaconvert * filter)
         "display_level is not set, so process all nodes at all levels");
   } else {
     priv->cfg.level = json_integer_value (val);
-    if (priv->cfg.level < 0) {
-      GST_ERROR_OBJECT (filter,
-          "display level should be greater than or equal to 0");
-      goto error;
-    }
   }
 
   val = json_object_get (config, "font-size");
@@ -260,6 +261,8 @@ gst_vvas_xmetaconvert_parse_config (GstVvas_Xmetaconvert * filter)
           (VvasFilterObjectInfo *) calloc (1, sizeof (VvasFilterObjectInfo));
       json_t *classes;
 
+      priv->cfg.allowed_classes[index] = allowed_class;
+
       classes = json_array_get (karray, index);
       if (!classes) {
         GST_ERROR_OBJECT (filter, "failed to get class object");
@@ -301,7 +304,6 @@ gst_vvas_xmetaconvert_parse_config (GstVvas_Xmetaconvert * filter)
       else
         allowed_class->do_mask = json_integer_value (val);
 
-      priv->cfg.allowed_classes[index] = allowed_class;
     }
   }
 
@@ -311,6 +313,32 @@ gst_vvas_xmetaconvert_parse_config (GstVvas_Xmetaconvert * filter)
   return TRUE;
 
 error:
+  /* print to console */
+  GST_ELEMENT_ERROR (filter, RESOURCE, FAILED,
+      ("%s file parse error", filter->json_file), (NULL));
+
+  if (priv->cfg.allowed_labels_count) {
+    for (index = 0; index < priv->cfg.allowed_labels_count; index++) {
+      if (priv->cfg.allowed_labels[index]) {
+        free (priv->cfg.allowed_labels[index]);
+        priv->cfg.allowed_labels[index] = NULL;
+      }
+    }
+    free (priv->cfg.allowed_labels);
+    priv->cfg.allowed_labels = NULL;
+  }
+
+  if (priv->cfg.allowed_classes_count) {
+    for (index = 0; index < priv->cfg.allowed_classes_count; index++) {
+      if (priv->cfg.allowed_classes[index]) {
+        free (priv->cfg.allowed_classes[index]);
+        priv->cfg.allowed_classes[index] = NULL;
+      }
+    }
+    free (priv->cfg.allowed_classes);
+    priv->cfg.allowed_classes = NULL;
+  }
+
   if (root)
     json_decref (root);
 

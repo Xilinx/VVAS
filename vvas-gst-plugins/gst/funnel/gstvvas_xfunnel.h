@@ -69,10 +69,14 @@ struct _GstVvas_Xfunnel
   GMutex mutex_lock;
   /** Sink caps info */
   GstCaps *sink_caps;
+  /** Hash table to store the status of live pad */
+  GHashTable *live_pad_hash;
   /** size of pad's queue */
   guint queue_size;
   /** Time to wait before switching to the next sink in milliseconds */
   guint sink_wait_timeout;
+  /** Calculated wait timeout based on framerate of the caps */
+  guint sink_wait_timeout_calculated;
   /** Total sink pad counter */
   guint sink_pad_idx;
   /** GstFlowreturn info  */

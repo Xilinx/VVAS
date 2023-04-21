@@ -603,7 +603,7 @@ gst_vvas_xdefunnel_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       if (srcpad) {
         /* Push event to this source pad */
-        gst_pad_push_event (srcpad, event);
+        bret = gst_pad_push_event (srcpad, event);
       } else {
         /* Couldn't find any source pad, invoke default pad handler */
         bret = gst_pad_event_default (pad, parent, event);

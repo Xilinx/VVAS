@@ -47,7 +47,6 @@ struct _GstVvas_XInfer {
 
   gchar *infer_json_file;
   gchar *ppe_json_file;
-  gchar *dyn_config;
   gboolean flag_attach_empty_infer;
   guint batch_timeout;
 };

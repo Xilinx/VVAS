@@ -258,7 +258,7 @@ rm -rf /tmp/gst-plugins-base*
 # GStreamer good package installation
 cd /tmp && git clone https://github.com/Xilinx/gst-plugins-good.git -b xlnx-rebase-v1.18.5
 cd gst-plugins-good
-CFLAGS='-std=gnu99' $MESON --prefix=/opt/xilinx/vvas --libdir=lib build && cd build
+CFLAGS='-std=gnu99' $MESON --prefix=/opt/xilinx/vvas -Dqt5=disabled --libdir=lib build && cd build
 ninja && sudo ninja install
 retval=$?
 if [ $retval -ne 0 ]; then
