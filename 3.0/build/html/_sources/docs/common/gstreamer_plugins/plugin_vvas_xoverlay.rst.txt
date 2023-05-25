@@ -3,11 +3,11 @@
 vvas_xoverlay
 =============
 
-The Overlay plug-in is utilized to draw shapes like bounding boxes, lines, arrows, circles, and polygons on a given frame or image. Users can display a clock on any part of the frame by using the display-clock property. This plug-in employs the ``vvas_overlay`` library to produce different shapes, text, and clocks.
+Overlay plug-in is used for drawing bounding boxes, text, lines, arrows, circles, and polygons on frames. Using display-clock property user can display clock on any part of the frame.  This plug-in internally uses ``vvas_xoverlay`` library for drawing different shapes, text and clock
 
-The overlay metadata structure, ``GstVvasOverlayMeta``, must be used to provide the information about the objects like, bounding boxes, lines, and arrows to be drawn. This metadata must be attached to the input buffer. For more details about this overlay metadata structure, please refer :ref:`vvas_overlay_metadata` section.
+For drawing objects like bounding box, lines, arrows etc., the information about these objects must be provided through overlay metadata structure attached to the buffer. For more information about this overlay meta data structure, refer to :ref:`vvas_overlay_metadata`. 
 
-To convert metadata generated from an upstream plug-in such as ``vvas_xinfer``, ``vvas_xoptflow``, or segmentation into ``GstVvasOverlayMeta``, an intermediate plug-in called :ref:`vvas_xmetaconvert` is provided and this can be used before the ``vvas_xoverlay`` plug-in in gstreamer pipeline.
+For converting metadata generated from upstream plug-in like infer, opticalflow, segmentation etc., to gstvvasoverlaymeta an intermediate plug-in, :ref:`vvas_xmetaconvert` is to be used before ``vvas_xoverlay`` plug-in.
 
 For implementation details, refer to `vvas_xoverlay source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/overlay>`_
 
@@ -71,7 +71,7 @@ Table 7: vvas_xoverlay Plug-in Properties
 | in-mem-bank        | Unsigned int |  0 - 65535    |           0           | VVAS input memory    |
 |                    |              |               |                       | bank to allocate     |
 |                    |              |               |                       | memory               |
-+--------------------+--------------+---------------+-----------------------+----------------------+
++---------------------+--------------+---------------+------------------------+--------------------+
 | display-clock      |   Boolean    |    0 or 1     |           0           | flag for indicating  |
 |                    |              |               |                       | displaying clock     |
 +--------------------+--------------+---------------+-----------------------+----------------------+
@@ -95,7 +95,7 @@ Table 7: vvas_xoverlay Plug-in Properties
 Example Pipelines
 ---------------------
 
-The following example demonstrates use of ``vvas_xoverlay`` plug-in with ``vvas_xinfer`` and ``vvas_xmetaconvert`` plug-ins for drawing bounding boxes. ``vvas_xinfer`` plug-in produces inference result and stores in ``GstInferenceMeta`` structure. This metadata is parsed and translated into ``GstVvasOverlayMeta`` structure that is understood by ``vvas_xmetaconvert`` plug-in to draw the bounding box. This translation of meta data is done by ``vvas_xmetaconvert`` plug-in.
+The following example demonstrates use of ``vvas_xoverlay`` plug-in with ``vvas_xinfer`` and ``vvas_xmetaconvert`` plug-ins for drawing bounding boxes. ``vvas_xinfer`` plug-in produces inference result and stores in VVAS_GstInference data structure. This metadata is parsed and translated into a different metadata structure that understood by ``vvas_xmetaconvert`` plug-in to draw the bounding box. This translation of meta data is done by ``vvas_xmetaconvert`` plug-in.
 
 .. code-block::
 
@@ -104,27 +104,3 @@ The following example demonstrates use of ``vvas_xoverlay`` plug-in with ``vvas_
      ! vvas_xfilter name="kernel1" kernels-config="<PATH>/kernel_resnet50.json"
      ! vvas_xmetaconvert config-location="<PATH>/metaconvert.json"
      ! vvas_xoverlay ! filesink location=output.bgr
-
-..
-  ------------
-  
-  © Copyright 2023, Advanced Micro Devices, Inc.
-  
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-

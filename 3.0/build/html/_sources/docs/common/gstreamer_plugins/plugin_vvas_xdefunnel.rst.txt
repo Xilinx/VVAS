@@ -3,8 +3,8 @@
 vvas_xdefunnel
 ================
 
-The Gstreamer plug-in, ``vvas_xdefunnel``, is responsible for de-serializing data received from the ``vvas_xfunnel`` plug-in. This plug-in dynamically creates and removes source pads based on events received from the ``vvas_xfunnel`` plug-in.
-
+vvas_xdefunnel gstreamer plug-in de-serializes data coming from ``vvas_xfunnel`` plug-in.
+This plug-in creates and destroys source pads based on the events from the ``vvas_xfunnel`` plug-in.
 For ``vvas_xdefunnel`` implementation details, refer to `vvas_xdefunnel source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/defunnel>`_
 
 This plug-in supports:
@@ -62,27 +62,3 @@ Example Pipelines
 	vvas_xfunnel name=funnel ! identity ! vvas_xdefunnel name=defunnel \
 	defunnel.src_0 ! queue ! filesink location=sink_0.yuv \
 	defunnel.src_1 ! queue ! filesink location=sink_1.yuv
-
-..
-  ------------
-  
-  © Copyright 2023, Advanced Micro Devices, Inc.
-  
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-

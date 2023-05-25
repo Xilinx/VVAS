@@ -134,7 +134,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="smart-model-select-application">
 <h1>Smart Model Select Application<a class="headerlink" href="#smart-model-select-application" title="Permalink to this heading">¶</a></h1>
-<p>Smart Model Select is an example application to demonstrate inferencing using 16 Machine Learning (ML) models supported by VVAS. User can select the input source, ML model to be used and the output option, like display on monitor or dump the results to file.</p>
+<p>Smart Model Select is an example application to demonstrate inferencing using 8 Machine Learning (ML) models supported by VVAS. User can select the input source, ML model to be used and the output option, like display on monitor or dump the results to file.</p>
 <p>Smart Model Select application design is built on <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> development board which, along with VVAS, provides a complete framework for building and customizing video platforms with different pipelines stages. <code class="docutils literal notranslate"><span class="pre">zcu104</span></code> development board can support below mentioned pipeline stages:</p>
 <ul class="simple">
 <li><p>Capture Pipelines</p></li>
@@ -148,11 +148,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>Smart Model Select application supports below mentioned features</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>We will update the information regarding which models we have validated using this application as soon as possible. For more information please contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
+<p>Supported Models are listed below. For more information please contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
 </div>
 <ul class="simple">
 <li><p>Supports ML Models
-- coming soon</p></li>
+- refinedet_VOC_tf
+- efficientdet_d2_tf
+- ssd_mobilenet_v2_coco_tf
+- yolov3_voc_tf
+- face_mask_detection_pt
+- chen_color_resnet18_pt
+- vehicle_make_resnet18_pt
+- vehicle_type_resnet18_pt</p></li>
 <li><p>Display Port for display</p></li>
 <li><p>H264/H265 Decode</p></li>
 <li><p>Input can be from file or rtsp source</p></li>
@@ -199,14 +206,15 @@ directly jump to <a class="reference internal" href="#preparing-setup"><span cla
 </div>
 <div class="section" id="pre-built-binaries">
 <span id="prebuilt-binaries"></span><h3>Pre-built binaries<a class="headerlink" href="#pre-built-binaries" title="Permalink to this heading">¶</a></h3>
+<p>Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Pre-built binaries for this example design will be available soon. You may also build the complete example design following the steps mentioned in <strong>Build Design</strong> section. For more information, you may contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
+<p>Pre-built binaries for this example design are available at the link mentioned below. You may also build the complete example design following the steps mentioned in <strong>Build Design</strong> section. For more information, you may contact <a class="reference external" href="mailto:vvas_discuss&#37;&#52;&#48;amd&#46;com">vvas_discuss<span>&#64;</span>amd<span>&#46;</span>com</a>.</p>
 </div>
-<p>Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.</p>
 <p>Create a folder, say <cite>PREBUILT_BINARIES</cite>, where pre-built binaries are to be downloaded.</p>
-<p>Click on <cite>Smart Model Select Prebuilt Binaries COMING SOON</cite></p>
-<p>Unzip the downloaded package <cite>vvas_smart_model_select_2022.2_zcu104.zip</cite>.</p>
+<blockquote>
+<div><p>Download from <a class="reference external" href="https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2022.2_zcu104.zip">vvas_smart_model_select_2022.2_zcu104.zip</a> and unzip the downloaded package <cite>vvas_smart_model_select_2022.2_zcu104.zip</cite>.</p>
+</div></blockquote>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unzip</span> <span class="n">vvas_smart_model_select_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">.</span><span class="n">zip</span>
 </pre></div>
 </div>
@@ -215,7 +223,7 @@ directly jump to <a class="reference internal" href="#preparing-setup"><span cla
 <li><p><code class="docutils literal notranslate"><span class="pre">sd_card.img</span></code>: Image to be flashed on the SD Card on the zcu104 board.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sdk.sh</span></code>: This is required to generate sysroot. Sysroot is required <strong>only</strong> if one wants to build the VVAS plugins and
 libraries. You do not need this if you simply want to execute the pre-built application.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code>: Supported DPU models on this platform.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code>: label.json files for the supported DPU models on this platform.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">app</span></code>: Contains application executable and input configuration/json files.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">arch.json</span></code>: Represents DPU architecture.</p></li>
 </ul>
@@ -225,7 +233,7 @@ libraries. You do not need this if you simply want to execute the pre-built appl
 </div>
 <div class="section" id="open-source-licenses-and-source-code-vvas-3-0">
 <h4>Open-Source Licenses and Source code - VVAS 3.0<a class="headerlink" href="#open-source-licenses-and-source-code-vvas-3-0" title="Permalink to this heading">¶</a></h4>
-<p>In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download <a class="reference external" href="TBD">Source Licenses and Source Code(TBD)</a> that contain the Open-Source Licenses and source code.</p>
+<p>The source code that was used to build these pre-built binaries and the corresponding licenses can be downloaded from <a class="reference external" href="https://www.xilinx.com/bin/public/openDownload?filename=license_and_sources_for_smart_model_select.tar.gz">Source Licenses and Source Code</a></p>
 <p>Once you have downloaded the prebuilt binaries, you need to prepare the setup to execute the application, as shown in the next section.</p>
 </div>
 </div>
@@ -264,9 +272,46 @@ in copying input video streams and storing output files from example application
 </pre></div>
 </div>
 </li>
+<li><p>On the host, download and untar the Vitis-AI models:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>mkdir &lt;PREBUILT_BINARIES&gt;/models
+cd &lt;PREBUILT_BINARIES&gt;/models
+
+wget https://www.xilinx.com/bin/public/openDownload?filename=refinedet_VOC_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf refinedet_VOC_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+wget https://www.xilinx.com/bin/public/openDownload?filename=efficientdet_d2_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf efficientdet_d2_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+wget https://www.xilinx.com/bin/public/openDownload?filename=ssd_mobilenet_v2_coco_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf ssd_mobilenet_v2_coco_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+wget https://www.xilinx.com/bin/public/openDownload?filename=yolov3_voc_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf yolov3_voc_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+wget https://www.xilinx.com/bin/public/openDownload?filename=face_mask_detection_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf face_mask_detection_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+wget https://www.xilinx.com/bin/public/openDownload?filename=chen_color_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf chen_color_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+wget https://www.xilinx.com/bin/public/openDownload?filename=vehicle_make_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf vehicle_make_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+wget https://www.xilinx.com/bin/public/openDownload?filename=vehicle_type_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+tar xzf vehicle_type_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+</pre></div>
+</div>
+</li>
+<li><p>Modify the ‘top_k’ in ‘prototxt’ files for the below required models:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sed</span> <span class="o">-</span><span class="n">i</span> <span class="s1">&#39;s!top_k : 5!top_k : 1!&#39;</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">models</span><span class="o">/</span><span class="n">chen_color_resnet18_pt</span><span class="o">/</span><span class="n">chen_color_resnet18_pt</span><span class="o">.</span><span class="n">prototxt</span>
+<span class="n">sed</span> <span class="o">-</span><span class="n">i</span> <span class="s1">&#39;s!top_k : 5!top_k : 1!&#39;</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">models</span><span class="o">/</span><span class="n">vehicle_make_resnet18_pt</span><span class="o">/</span><span class="n">vehicle_make_resnet18_pt</span><span class="o">.</span><span class="n">prototxt</span>
+<span class="n">sed</span> <span class="o">-</span><span class="n">i</span> <span class="s1">&#39;s!top_k : 5!top_k : 1!&#39;</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">models</span><span class="o">/</span><span class="n">vehicle_make_resnet18_pt</span><span class="o">/</span><span class="n">vehicle_make_resnet18_pt</span><span class="o">.</span><span class="n">prototxt</span>
+</pre></div>
+</div>
+</li>
 <li><p>Create <cite>/usr/share/vitis_ai_library/models</cite> folder on the board and copy the Vitis-AI models into it:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span>
-<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/*</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
+<span class="n">scp</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">models</span><span class="o">/*</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span>
+</pre></div>
+</div>
+</li>
+<li><p>Copy label.json for each model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">face_mask_detection_pt</span><span class="o">/</span><span class="n">label</span><span class="o">.</span><span class="n">json</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">face_mask_detection_pt</span><span class="o">/</span>
+<span class="n">scp</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">ssd_mobilenet_v2_coco_tf</span><span class="o">/</span><span class="n">label</span><span class="o">.</span><span class="n">json</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">ssd_mobilenet_v2_coco_tf</span><span class="o">/</span>
+<span class="n">scp</span> <span class="o">&lt;</span><span class="n">PREBUILT_BINARIES</span><span class="o">&gt;/</span><span class="n">vvas_smart_model_select_2022</span><span class="mf">.2</span><span class="n">_zcu104</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">yolov3_voc_tf</span><span class="o">/</span><span class="n">label</span><span class="o">.</span><span class="n">json</span> <span class="n">root</span><span class="o">@&lt;</span><span class="n">board</span> <span class="n">ip</span><span class="o">&gt;/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">vitis_ai_library</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="n">yolov3_voc_tf</span><span class="o">/</span>
 </pre></div>
 </div>
 </li>
@@ -296,7 +341,7 @@ to each model.</p>
 <p>When the application starts executing, you can observe the Fig 1 coming up in the display. This menu displays various models supported by the application and options on either side of the image are for input sources and output sinks supported. All these options carry an index number alongside, which user need to enter in sequence to create the pipeline of choice.</p>
 <img alt="../../_images/ExampleAppMenu.png" src="../../_images/ExampleAppMenu.png" />
 <p>Fig 1: Menu image of the application</p>
-<p>Below command line prompt will appear on console/command prompt when the application starts, which will accept the input options for creating the GStreamer pipeline of choice. As described below, user must enter four options in the sequence of input source, ML model to be used, output sink and a field to enable/disable performance mode. Example the sequence “1,2,3,0”, tells that the source is “filesrc”, ML model to be used is “resnet18”, sink is “kmssink” and 0 is to disable performance mode.</p>
+<p>When application is started, a command prompt will appear on the console. This prompt will accept the input options for creating the GStreamer pipeline of choice. As described below, user must enter four options in the sequence of input source, ML model to be used, output sink type and a field to enable/disable performance mode. For example, the sequence “1,2,3,0”, means that the source is “filesrc”, ML model to be used is “refinedet_VOC_tf”, sink is “kmssink” and 0 is to disable performance mode.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
 <span class="n">Menu</span> <span class="n">displayed</span> <span class="n">on</span> <span class="n">the</span> <span class="n">monitor</span> <span class="n">shows</span> <span class="n">various</span> <span class="n">options</span> <span class="n">available</span>
 <span class="k">for</span> <span class="nb">input</span> <span class="n">source</span><span class="p">,</span> <span class="n">ML</span> <span class="n">model</span><span class="p">,</span> <span class="n">output</span> <span class="n">sink</span><span class="o">.</span> <span class="n">Each</span> <span class="n">option</span> <span class="n">carries</span> <span class="n">an</span>
@@ -305,7 +350,7 @@ to each model.</p>
 <span class="s2">&quot;input source, ML model, output sink and performance</span>
 <span class="n">mode</span> <span class="n">flag</span><span class="s2">&quot; separated by commas.</span>
 <span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="nb">input</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span>
-<span class="n">Above</span> <span class="nb">input</span> <span class="n">will</span> <span class="n">run</span> <span class="s2">&quot;filesrc&quot;</span> <span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;resnet50&quot;</span> <span class="n">model</span>
+<span class="n">Above</span> <span class="nb">input</span> <span class="n">will</span> <span class="n">run</span> <span class="s2">&quot;filesrc&quot;</span> <span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;refinedet_VOC_tf&quot;</span> <span class="n">model</span>
 <span class="s2">&quot;kmssink&quot;</span> <span class="n">used</span> <span class="k">as</span> <span class="n">output</span> <span class="n">sink</span> <span class="ow">and</span> <span class="n">performance</span> <span class="n">mode</span> <span class="n">disabled</span><span class="o">.</span>
 <span class="n">Enter</span> <span class="s1">&#39;q&#39;</span> <span class="n">to</span> <span class="n">exit</span>
 <span class="n">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
@@ -321,13 +366,14 @@ to each model.</p>
 <p>If the selected input is file source, then by default application will look for the input video files under <cite>app/videos</cite> folder.
 Create the folder <code class="docutils literal notranslate"><span class="pre">/home/root/app/videos</span></code> and copy the video files here with names given below.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">videos</span><span class="o">/</span>
-<span class="o">+--</span> <span class="n">CLASSIFICATION</span><span class="o">.</span><span class="n">mp4</span>
-<span class="o">+--</span> <span class="n">FACEDETECT</span><span class="o">.</span><span class="n">mp4</span>
-<span class="o">+--</span> <span class="n">PLATEDETECT</span><span class="o">.</span><span class="n">mp4</span>
-<span class="o">+--</span> <span class="n">REFINEDET</span><span class="o">.</span><span class="n">mp4</span>
-<span class="o">+--</span> <span class="n">SSD</span><span class="o">.</span><span class="n">mp4</span>
-<span class="o">+--</span> <span class="n">YOLOV2</span><span class="o">.</span><span class="n">mp4</span>
-<span class="o">+--</span> <span class="n">YOLOV3</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">REFINEDET_VOC_TF</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">EFFICIENTDET_D2_TF</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">SSD_MOBILENET_V2_COCO_TF</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">YOLOV3_VOC_TF</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">FACE_MASK_DETECTION_PT</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">CHEN_COLOR_RESNET18_PT</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">VEHICLE_MAKE_RESNET18_PT</span><span class="o">.</span><span class="n">mp4</span>
+<span class="o">+--</span> <span class="n">VEHICLE_TYPE_RESNET18_PT</span><span class="o">.</span><span class="n">mp4</span>
 </pre></div>
 </div>
 <p>If the file is not available in this folder, then application will prompt for the input file. All files must be named after ML model type as given below.

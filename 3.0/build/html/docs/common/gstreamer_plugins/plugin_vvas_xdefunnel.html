@@ -140,8 +140,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="vvas-xdefunnel">
 <span id="id1"></span><h1>vvas_xdefunnel<a class="headerlink" href="#vvas-xdefunnel" title="Permalink to this heading">¶</a></h1>
-<p>The Gstreamer plug-in, <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code>, is responsible for de-serializing data received from the <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> plug-in. This plug-in dynamically creates and removes source pads based on events received from the <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> plug-in.</p>
-<p>For <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/defunnel">vvas_xdefunnel source code</a></p>
+<p>vvas_xdefunnel gstreamer plug-in de-serializes data coming from <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> plug-in.
+This plug-in creates and destroys source pads based on the events from the <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> plug-in.
+For <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/defunnel">vvas_xdefunnel source code</a></p>
 <p>This plug-in supports:</p>
 <ul class="simple">
 <li><p>Single sink pad, multiple source pads.</p></li>

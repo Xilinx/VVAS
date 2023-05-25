@@ -2,7 +2,7 @@
 Smart Model Select Application
 ##############################
 
-Smart Model Select is an example application to demonstrate inferencing using 16 Machine Learning (ML) models supported by VVAS. User can select the input source, ML model to be used and the output option, like display on monitor or dump the results to file.
+Smart Model Select is an example application to demonstrate inferencing using 8 Machine Learning (ML) models supported by VVAS. User can select the input source, ML model to be used and the output option, like display on monitor or dump the results to file.
 
 Smart Model Select application design is built on ``zcu104`` development board which, along with VVAS, provides a complete framework for building and customizing video platforms with different pipelines stages. ``zcu104`` development board can support below mentioned pipeline stages:
 
@@ -20,10 +20,17 @@ Features
 Smart Model Select application supports below mentioned features
 
 .. note::
-        We will update the information regarding which models we have validated using this application as soon as possible. For more information please contact vvas_discuss@amd.com.
+        Supported Models are listed below. For more information please contact vvas_discuss@amd.com.
 
 * Supports ML Models
-  - coming soon 
+  - refinedet_VOC_tf
+  - efficientdet_d2_tf
+  - ssd_mobilenet_v2_coco_tf
+  - yolov3_voc_tf
+  - face_mask_detection_pt
+  - chen_color_resnet18_pt
+  - vehicle_make_resnet18_pt
+  - vehicle_type_resnet18_pt
 * Display Port for display
 * H264/H265 Decode
 * Input can be from file or rtsp source
@@ -78,17 +85,15 @@ If for some reason, one wants to build the design from scratch, then refer to th
 Pre-built binaries
 ===================
 
+Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.
+
 .. Note:: 
 
-    Pre-built binaries for this example design will be available soon. You may also build the complete example design following the steps mentioned in **Build Design** section. For more information, you may contact vvas_discuss@amd.com.
-
-Ready to use Prebuilt binaries are provided with this VVAS release. You can download these binaries and required supporting files to quickly run the example application.
+    Pre-built binaries for this example design are available at the link mentioned below. You may also build the complete example design following the steps mentioned in **Build Design** section. For more information, you may contact vvas_discuss@amd.com.
 
 Create a folder, say `PREBUILT_BINARIES`, where pre-built binaries are to be downloaded.
 
-Click on `Smart Model Select Prebuilt Binaries COMING SOON`
-
-Unzip the downloaded package `vvas_smart_model_select_2022.2_zcu104.zip`.
+        Download from `vvas_smart_model_select_2022.2_zcu104.zip <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_smart_model_select_2022.2_zcu104.zip>`_ and unzip the downloaded package `vvas_smart_model_select_2022.2_zcu104.zip`.
 
 .. code-block::
    
@@ -100,7 +105,7 @@ Prebuilt binaries package includes
 * ``sd_card.img``: Image to be flashed on the SD Card on the zcu104 board.
 * ``sdk.sh``: This is required to generate sysroot. Sysroot is required **only** if one wants to build the VVAS plugins and 
   libraries. You do not need this if you simply want to execute the pre-built application.
-* ``models``: Supported DPU models on this platform.
+* ``models``: label.json files for the supported DPU models on this platform.
 * ``app``: Contains application executable and input configuration/json files.
 * ``arch.json``: Represents DPU architecture.
 
@@ -110,8 +115,7 @@ Prebuilt binaries package includes
 
 Open-Source Licenses and Source code - VVAS 3.0
 ------------------------------------------------
-
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code(TBD) <TBD>`_ that contain the Open-Source Licenses and source code.
+The source code that was used to build these pre-built binaries and the corresponding licenses can be downloaded from `Source Licenses and Source Code <https://www.xilinx.com/bin/public/openDownload?filename=license_and_sources_for_smart_model_select.tar.gz>`_
 
 Once you have downloaded the prebuilt binaries, you need to prepare the setup to execute the application, as shown in the next section.
 
@@ -161,11 +165,45 @@ One time setup
      chmod 777 ~/app/smart_model_select
      chmod 777 ~/app/setup.sh
 
+* On the host, download and untar the Vitis-AI models::
+
+     mkdir <PREBUILT_BINARIES>/models
+     cd <PREBUILT_BINARIES>/models
+
+     wget https://www.xilinx.com/bin/public/openDownload?filename=refinedet_VOC_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf refinedet_VOC_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     wget https://www.xilinx.com/bin/public/openDownload?filename=efficientdet_d2_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf efficientdet_d2_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz 
+     wget https://www.xilinx.com/bin/public/openDownload?filename=ssd_mobilenet_v2_coco_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf ssd_mobilenet_v2_coco_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     wget https://www.xilinx.com/bin/public/openDownload?filename=yolov3_voc_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf yolov3_voc_tf-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     wget https://www.xilinx.com/bin/public/openDownload?filename=face_mask_detection_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf face_mask_detection_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     wget https://www.xilinx.com/bin/public/openDownload?filename=chen_color_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf chen_color_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     wget https://www.xilinx.com/bin/public/openDownload?filename=vehicle_make_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf vehicle_make_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     wget https://www.xilinx.com/bin/public/openDownload?filename=vehicle_type_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+     tar xzf vehicle_type_resnet18_pt-zcu102_zcu104_kv260-r3.0.0.tar.gz
+
+* Modify the 'top_k' in 'prototxt' files for the below required models::
+
+      sed -i 's!top_k : 5!top_k : 1!' <PREBUILT_BINARIES>/models/chen_color_resnet18_pt/chen_color_resnet18_pt.prototxt
+      sed -i 's!top_k : 5!top_k : 1!' <PREBUILT_BINARIES>/models/vehicle_make_resnet18_pt/vehicle_make_resnet18_pt.prototxt
+      sed -i 's!top_k : 5!top_k : 1!' <PREBUILT_BINARIES>/models/vehicle_make_resnet18_pt/vehicle_make_resnet18_pt.prototxt
+
 * Create `/usr/share/vitis_ai_library/models` folder on the board and copy the Vitis-AI models into it::
 
+     
      mkdir -p /usr/share/vitis_ai_library/models
-     scp -r <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/models/* root@<board ip>/usr/share/vitis_ai_library/models/
+     scp -r <PREBUILT_BINARIES>/models/* root@<board ip>/usr/share/vitis_ai_library/models/
 
+* Copy label.json for each model::
+
+     scp <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/models/face_mask_detection_pt/label.json root@<board ip>/usr/share/vitis_ai_library/models/face_mask_detection_pt/
+     scp <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/models/ssd_mobilenet_v2_coco_tf/label.json root@<board ip>/usr/share/vitis_ai_library/models/ssd_mobilenet_v2_coco_tf/
+     scp <PREBUILT_BINARIES>/vvas_smart_model_select_2022.2_zcu104/models/yolov3_voc_tf/label.json root@<board ip>/usr/share/vitis_ai_library/models/yolov3_voc_tf/
 
 
 ************************
@@ -197,7 +235,7 @@ When the application starts executing, you can observe the Fig 1 coming up in th
 
 Fig 1: Menu image of the application
 
-Below command line prompt will appear on console/command prompt when the application starts, which will accept the input options for creating the GStreamer pipeline of choice. As described below, user must enter four options in the sequence of input source, ML model to be used, output sink and a field to enable/disable performance mode. Example the sequence “1,2,3,0”, tells that the source is “filesrc”, ML model to be used is “resnet18”, sink is “kmssink” and 0 is to disable performance mode. 
+When application is started, a command prompt will appear on the console. This prompt will accept the input options for creating the GStreamer pipeline of choice. As described below, user must enter four options in the sequence of input source, ML model to be used, output sink type and a field to enable/disable performance mode. For example, the sequence “1,2,3,0”, means that the source is “filesrc”, ML model to be used is “refinedet_VOC_tf”, sink is “kmssink” and 0 is to disable performance mode.
 
 .. code-block::
 
@@ -209,7 +247,7 @@ Below command line prompt will appear on console/command prompt when the applica
        "input source, ML model, output sink and performance 
        mode flag" separated by commas.  
        e.g. input: 1,1,3,0
-       Above input will run "filesrc" input, "resnet50" model 
+       Above input will run "filesrc" input, "refinedet_VOC_tf" model
        "kmssink" used as output sink and performance mode disabled.
        Enter 'q' to exit
        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -230,13 +268,14 @@ Create the folder ``/home/root/app/videos`` and copy the video files here with n
 .. code-block::
 
        videos/
-       +-- CLASSIFICATION.mp4
-       +-- FACEDETECT.mp4
-       +-- PLATEDETECT.mp4
-       +-- REFINEDET.mp4
-       +-- SSD.mp4
-       +-- YOLOV2.mp4
-       +-- YOLOV3.mp4
+       +-- REFINEDET_VOC_TF.mp4
+       +-- EFFICIENTDET_D2_TF.mp4
+       +-- SSD_MOBILENET_V2_COCO_TF.mp4
+       +-- YOLOV3_VOC_TF.mp4
+       +-- FACE_MASK_DETECTION_PT.mp4
+       +-- CHEN_COLOR_RESNET18_PT.mp4
+       +-- VEHICLE_MAKE_RESNET18_PT.mp4
+       +-- VEHICLE_TYPE_RESNET18_PT.mp4
 
 If the file is not available in this folder, then application will prompt for the input file. All files must be named after ML model type as given below.
 User has to enter the input file location in response to the below message prompt. 

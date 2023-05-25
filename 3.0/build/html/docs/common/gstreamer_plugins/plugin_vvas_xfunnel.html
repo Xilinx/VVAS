@@ -140,12 +140,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="vvas-xfunnel">
 <span id="id1"></span><h1>vvas_xfunnel<a class="headerlink" href="#vvas-xfunnel" title="Permalink to this heading">¶</a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> VVAS Gstreamer plug-in serializes data on its sink pads by iterating through all of them in a round-robin fashion. If a sink pad has a buffer available, it sends the data on the source pad. If a sink pad does not have data available, the plug-in will wait for a user-configurable amount of time before moving on to the next sink pad.</p>
-<p>When a new sink pad is added or removed from the <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> plug-in, it sends custom events to notify the <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> plug-in to create or destroy source pads. Each buffer includes metadata that enables the <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> plug-in to determine which source pad the buffer should be sent to.</p>
-<p>The vvas_xfunnel plug-in can support a maximum of 256 sink pads connected to it.</p>
+<p>vvas_xfunnel gstreamer plug-in serializes data on its sink pads, it iterates all the sink pads in round robin order, if sink pad has buffer available; it sends it on the source pad, else the plug-in will wait for preset (user configurable) time, by that time also if data is not available the plug-in will skip that sink pad and it will probe next sink pad.</p>
+<p>Whenever new sink pad is added to or removed from this plug-in, it sends custom events to notify <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> to create or destroy source pads.
+Metadata on each buffer is attached to enable <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> plug-in to decide the source pad to which that buffer has to be sent.</p>
+<p>At max <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> can have 256 number of sink pads connected to it.</p>
 <p><code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> supports all caps.</p>
-<p>Refer <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> plug-in which de-serializes these serialized data and pushes them to the output pads.</p>
-<p>For <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/funnel">vvas_xfunnel source code</a></p>
+<p>Refer <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> plug-in which de-serializes these serialized data and pushes them to the output pads.
+For <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/funnel">vvas_xfunnel source code</a></p>
 <p>This plug-in supports:</p>
 <ul class="simple">
 <li><p>Multiple sink pads, single source pad.</p></li>

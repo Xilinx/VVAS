@@ -3,7 +3,7 @@
 vvas_xfilter
 ==============
 
-The ``vvas_xfilter`` is an infrastructure plug-in that extends the functionality of ``GstBaseTransform``. This plug-in includes one input pad and one output pad, and it can efficiently operate with various types of acceleration software libraries, including hard-kernel, soft-kernel, and software (user-space) acceleration libraries. The figure below illustrates this capability.
+The GStreamer vvas_xfilter is an infrastructure plug-in that is derived from GstBaseTransform. It supports one input pad and one output pad. The vvas_xfilter efficiently works with hard-kernel/soft-kernel/software (user-space) acceleration software library types as shown in the following figure.
 
 .. figure:: ../../images/xfilter_plugin_arch.png 
 
@@ -19,11 +19,11 @@ You must set the mode using the JSON file. Refer to :doc:`JSON File Schema <json
 
 .. figure:: ../../images/xfilter_plugin.png 
 
-The ``vvas_xfilter`` plug-in can receive a configuration file as an input through plug-in property named ``kernel-config``. This configuration file, written in JSON format, includes kernel-specific information required for the plug-in to function. Upon initialization, the vvas_xfilter plug-in parses the JSON file and completes the following actions:
+The vvas_xfilter plug-in takes configuration file as one of the input properties, kernels- config. This configuration file is in JSON format and contains information required by the kernel. During initialization, the vvas_xfilter parses the JSON file and performs the following tasks:
 
-* Locates the VVAS acceleration software library within the designated path and loads the shared library. 
+* Finds the VVAS acceleration software library in the path and loads the shared library.
 
-* Determines the acceleration software library type and prepares the acceleration software library handle (VVASKernel) to be used by the core APIs.
+* Understands the acceleration software library type and prepares the acceleration software library handle (VVASKernel) to be passed to the core APIs.
 
 Input and Output
 -------------------
@@ -320,27 +320,3 @@ The following JSON file uses vvas_xfilter to control multi-scaler IP (hard-kerne
     "config": {}
   }
  }
-
-..
-  ------------
-  
-  © Copyright 2023, Advanced Micro Devices, Inc.
-  
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-

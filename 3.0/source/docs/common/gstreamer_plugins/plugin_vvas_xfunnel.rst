@@ -3,16 +3,16 @@
 vvas_xfunnel
 =============
 
-The ``vvas_xfunnel`` VVAS Gstreamer plug-in serializes data on its sink pads by iterating through all of them in a round-robin fashion. If a sink pad has a buffer available, it sends the data on the source pad. If a sink pad does not have data available, the plug-in will wait for a user-configurable amount of time before moving on to the next sink pad.
+vvas_xfunnel gstreamer plug-in serializes data on its sink pads, it iterates all the sink pads in round robin order, if sink pad has buffer available; it sends it on the source pad, else the plug-in will wait for preset (user configurable) time, by that time also if data is not available the plug-in will skip that sink pad and it will probe next sink pad.
 
-When a new sink pad is added or removed from the ``vvas_xfunnel`` plug-in, it sends custom events to notify the ``vvas_xdefunnel`` plug-in to create or destroy source pads. Each buffer includes metadata that enables the ``vvas_xdefunnel`` plug-in to determine which source pad the buffer should be sent to.
+Whenever new sink pad is added to or removed from this plug-in, it sends custom events to notify ``vvas_xdefunnel`` to create or destroy source pads.
+Metadata on each buffer is attached to enable ``vvas_xdefunnel`` plug-in to decide the source pad to which that buffer has to be sent.
 
-The vvas_xfunnel plug-in can support a maximum of 256 sink pads connected to it.
+At max ``vvas_xfunnel`` can have 256 number of sink pads connected to it.
 
 ``vvas_xfunnel`` supports all caps.
 
 Refer ``vvas_xdefunnel`` plug-in which de-serializes these serialized data and pushes them to the output pads.
-
 For ``vvas_xfunnel`` implementation details, refer to `vvas_xfunnel source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/funnel>`_
 
 This plug-in supports:
@@ -60,27 +60,3 @@ Example Pipelines
 	vvas_xfunnel name=funnel ! identity ! vvas_xdefunnel name=defunnel \
 	defunnel.src_0 ! queue ! filesink location=sink_0.yuv \
 	defunnel.src_1 ! queue ! filesink location=sink_1.yuv
-
-..
-  ------------
-  
-  © Copyright 2023, Advanced Micro Devices, Inc.
-  
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-

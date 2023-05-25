@@ -131,7 +131,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="vvas-xfilter">
 <span id="id1"></span><h1>vvas_xfilter<a class="headerlink" href="#vvas-xfilter" title="Permalink to this heading">¶</a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> is an infrastructure plug-in that extends the functionality of <code class="docutils literal notranslate"><span class="pre">GstBaseTransform</span></code>. This plug-in includes one input pad and one output pad, and it can efficiently operate with various types of acceleration software libraries, including hard-kernel, soft-kernel, and software (user-space) acceleration libraries. The figure below illustrates this capability.</p>
+<p>The GStreamer vvas_xfilter is an infrastructure plug-in that is derived from GstBaseTransform. It supports one input pad and one output pad. The vvas_xfilter efficiently works with hard-kernel/soft-kernel/software (user-space) acceleration software library types as shown in the following figure.</p>
 <div class="figure align-default">
 <img alt="../../../_images/xfilter_plugin_arch.png" src="../../../_images/xfilter_plugin_arch.png" />
 </div>
@@ -145,10 +145,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <div class="figure align-default">
 <img alt="../../../_images/xfilter_plugin1.png" src="../../../_images/xfilter_plugin1.png" />
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">vvas_xfilter</span></code> plug-in can receive a configuration file as an input through plug-in property named <code class="docutils literal notranslate"><span class="pre">kernel-config</span></code>. This configuration file, written in JSON format, includes kernel-specific information required for the plug-in to function. Upon initialization, the vvas_xfilter plug-in parses the JSON file and completes the following actions:</p>
+<p>The vvas_xfilter plug-in takes configuration file as one of the input properties, kernels- config. This configuration file is in JSON format and contains information required by the kernel. During initialization, the vvas_xfilter parses the JSON file and performs the following tasks:</p>
 <ul class="simple">
-<li><p>Locates the VVAS acceleration software library within the designated path and loads the shared library.</p></li>
-<li><p>Determines the acceleration software library type and prepares the acceleration software library handle (VVASKernel) to be used by the core APIs.</p></li>
+<li><p>Finds the VVAS acceleration software library in the path and loads the shared library.</p></li>
+<li><p>Understands the acceleration software library type and prepares the acceleration software library handle (VVASKernel) to be passed to the core APIs.</p></li>
 </ul>
 <div class="section" id="input-and-output">
 <h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>

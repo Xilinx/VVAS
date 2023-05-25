@@ -83,11 +83,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xdefunnel.html">vvas_xdefunnel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plugin_vvas_xmulticrop.html">vvas_xmulticrop</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">vvas_xcompositor</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#parameters-related-to-position-of-input-frame-in-output-frame-can-be-specified-using-the-input-pad-properties-mentioned-below">Parameters related to position of input frame in output frame can be specified using the input pad properties mentioned below :</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#input-and-output">Input and Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#individual-parameters-for-each-input-stream-can-be-configured-on-the-gstcompositorpad">Individual parameters for each input stream can be configured on the GstCompositorPad:</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#plugin-properties">Plugin properties</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#vvas-xcompositor-pad-properties">vvas_xcompositor pad properties</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#vvas-xcompositor-with-software-scaling-kernel">vvas_xcompositor with software scaling kernel</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="vvas_bufferpool_and_allocator.html">VVAS Bufferpool &amp; Allocator</a></li>
@@ -143,20 +142,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="vvas-xcompositor">
 <span id="id1"></span><h1>vvas_xcompositor<a class="headerlink" href="#vvas-xcompositor" title="Permalink to this heading">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> is a Gstreamer plug-in that composes multiple video frames into a single frame. The composition can be hardware accelerated using <code class="docutils literal notranslate"><span class="pre">Image_processing</span></code> IP or it can be performed using software implementation as well in case hardware IP is not available. This plug-in can accept frames in different resolutions, color formats on each input pad. Output resolution, color format and framerate can be set to the plugin through output caps. If capabilities are not set through the output caps, then output frame resolution will be set to the resolution of the biggest incoming video stream, output framerate will be set to the highest framerate among all incoming streams and the color format will be that of the first input stream.</p>
-<p>If the input and output resolution and formats differ, the vvas_xcompositor plug-in will perform the color space conversion and resize operation.</p>
-<div class="section" id="parameters-related-to-position-of-input-frame-in-output-frame-can-be-specified-using-the-input-pad-properties-mentioned-below">
-<h2>Parameters related to position of input frame in output frame can be specified using the input pad properties mentioned below :<a class="headerlink" href="#parameters-related-to-position-of-input-frame-in-output-frame-can-be-specified-using-the-input-pad-properties-mentioned-below" title="Permalink to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>“xpos”: The x-co-ordinate position of the top-left corner of the current frame in output frame.</p></li>
-<li><p>“ypos”: The y-co-ordinate position of the top-left corner of the current frame in output frame.</p></li>
-<li><p>“width”: The width of the current frame in the output frame; If the input width and the width in output frame are different, then resize operation will be performed.</p></li>
-<li><p>“height”: The height of the current frame in the output frame; If the input height and the height in output frame are different, then resize operation will be performed.</p></li>
-<li><p>“zorder”: The z-order position of the current frame in the composition.</p></li>
-</ul>
-<p>If composition is configured in such a way that xpos+width (or) ypos+height is out of bounds of the output frame’s width or height then the pixels those reside out of bounds get cropped by the plugin.</p>
-<p>For implementation details, please refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/compositor">vvas_xcompositor source code</a></p>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> is a hardware accelerated N input, 1 output Gstreamer plugin that combines two or more video frames into a single frame.
+It can accept the below mentioned video formats. For each of the requested sink pads it will compare the incoming geometry and framerate to define the output parameters. Indeed, output video frames will have the geometry of the biggest incoming video stream and the framerate of the fastest incoming one.</p>
+<p>In case input and output formats are different, then the color space conversion will be hardware accelerated by <code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code>.
+For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/compositor">vvas_xcompositor source code</a></p>
 <div class="section" id="input-and-output">
 <h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
 <p>This plug-in accepts buffers with the following color format standards:</p>
@@ -184,9 +173,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Ensure that the color formats required for your application are supported by the image-processing hardware kernel.</p>
+<p>Make sure that the color formats needed for your application are supported by the image-processing hardware kernel.</p>
 </div>
 <p>As a reference, multi-scaler configuration for <code class="docutils literal notranslate"><span class="pre">smart</span> <span class="pre">model</span> <span class="pre">select</span></code> example design can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/image_processing_config.h">image-processing configuration</a></p>
+</div>
+<div class="section" id="individual-parameters-for-each-input-stream-can-be-configured-on-the-gstcompositorpad">
+<h2>Individual parameters for each input stream can be configured on the GstCompositorPad:<a class="headerlink" href="#individual-parameters-for-each-input-stream-can-be-configured-on-the-gstcompositorpad" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>“xpos”: The x-co-ordinate position of the top-left corner of the current frame in output buffer.</p></li>
+<li><p>“ypos”: The y-co-ordinate position of the top-left corner of the current frame in output buffer.</p></li>
+<li><p>“width”: The width of the current picture in the output buffer; If the input width and the width in output buffer are different, then hardware accelerated resize operation will be performed.</p></li>
+<li><p>“height”: The height of the current picture in the output buffer; If the input height and the height in output buffer are different, then hardware accelerated resize operation will be performed.</p></li>
+<li><p>“zorder”: The z-order position of the picture in the composition.</p></li>
+</ul>
 <div class="figure align-default">
 <img alt="../../../_images/compositor.png" src="../../../_images/compositor.png" />
 </div>
@@ -327,15 +326,6 @@ mentioned in xclbin</p></td>
 xclbin to program
 devices</p></td>
 </tr>
-<tr class="row-even"><td><p>software-scaling</p></td>
-<td><p>Boolean</p></td>
-<td><p>true/false</p></td>
-<td><p>false</p></td>
-<td><p>Enable software
-scaling instead
-of accelerated
-scaling.</p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -395,6 +385,7 @@ If the input height
 and the height in
 output buffer are
 different, then
+hardware accelerated
 resize operation
 will be performed.
 Setting default/-1
@@ -413,6 +404,7 @@ If the input width
 and the width in
 output buffer are
 different, then
+hardware accelerated
 resize operation
 will be performed.
 Setting default/-1
@@ -465,78 +457,6 @@ omxh264dec !\
 queue !\
 comp.sink_3
 </pre></div>
-</div>
-</div>
-<div class="section" id="vvas-xcompositor-with-software-scaling-kernel">
-<h2>vvas_xcompositor with software scaling kernel<a class="headerlink" href="#vvas-xcompositor-with-software-scaling-kernel" title="Permalink to this heading">¶</a></h2>
-<p>VVAS plugin “vvas_xcompositor” can also work with software implementation of the IP. User has to set “software-scaling” property to “true”, set the “kernel-name” to “image_processing_sw:{image_processing_sw}”,
-also set “coef-load-type” to “fixed” type and set “num-taps” to 12. Below are the formats supported by the current implementation.</p>
-<ul class="simple">
-<li><p>NV12</p></li>
-<li><p>RGB</p></li>
-<li><p>GRAY8</p></li>
-<li><p>BGR</p></li>
-<li><p>I420</p></li>
-</ul>
-<p>Note: For GRAY8, only scaling is supported, cross format conversion is not supported.</p>
-<div class="section" id="example-pipeline">
-<h3>Example pipeline:<a class="headerlink" href="#example-pipeline" title="Permalink to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>#! /bin/bash
-
-PAD_PROPERTIES=&quot;\
-sink_0::xpos=0 sink_0::ypos=0 \
-sink_1::xpos=640 sink_1::ypos=0 \
-sink_2::xpos=0 sink_2::ypos=360 \
-sink_3::xpos=640 sink_3::ypos=360 \
-&quot;
-
-gst-launch-1.0 -v  filesrc location=$1 !\
-h264parse !\
-omxh264dec !\
-comp.sink_0 \
-vvas_xcompositor kernel-name=&quot;image_processing_sw:{image_processing_sw_1}&quot; \
-software-scaling=true coef-load-type=0 num-taps=12  $PAD_PROPERTIES name=comp !\
-video/x-raw , width=1280, height=720 , format=NV12  !\
-queue !\
-fpsdisplaysink video-sink=&quot;kmssink  bus-id=a0130000.v_mix async=true&quot; text-overlay=false sync=false \
-filesrc location=$2 !\
-h264parse !\
-omxh264dec name=decoder_1 !\
-queue !\
-comp.sink_1 \
-filesrc location=$3 !\
-h264parse !\
-omxh264dec !\
-queue !\
-comp.sink_2 \
-filesrc location=$4 !\
-h264parse !\
-omxh264dec !\
-queue !\
-comp.sink_3
-</pre></div>
-</div>
-<blockquote>
-<div><p>© Copyright 2023, Advanced Micro Devices, Inc.</p>
-<blockquote>
-<div><p>MIT License</p>
-<p>Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the “Software”), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.</p>
-</div></blockquote>
-</div></blockquote>
 </div>
 </div>
 </div>

@@ -52,7 +52,7 @@ System Requirements
 Pre-built binaries
 *******************
 
-Release package COMING SOON provides prebuilt binaries including SD card image that has the implemented design and required software, VAI models and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.
+Release package can be dowloaded from `vvas_multichannel_ml_2022.2_zcu104.zip <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.2_zcu104.zip>`_ which provides prebuilt binaries including SD card image that has the implemented design and required software, and scripts. You may use the pre-built binaries and provided scripts to quickly run the GStreamer pipelines to get a feel of the platform.
 
  .. Note::
 
@@ -64,7 +64,7 @@ Download the release package. Let the path where release package is downloaded b
 
    The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
 
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code(TBD) <TBD>`_ that contain the Open Source Licenses and source code.
+In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/bin/public/openDownload?filename=license_and_sources_for_multichannel_ml.tar.gz>`_ that contain the Open Source Licenses and source code.
 
 Once you have downloaded the pre-built binaries, you may go to section :ref:`board-bring-up` to try the released SD card image.
 
@@ -78,10 +78,10 @@ Let us begin with constructing a single stream video pipeline based on the compo
    :align: center
    :scale: 70
 
-We shall build the pipeline incrementally, starting from the source element and keep appending the pipeline per the use case.
+We shall build the pipeline incrementally, starting from the source element and keep appending the pipeline as per the use case.
 
 First setup the ZCU104 board with steps outlined in :ref:`board-bring-up`.
-Facedetect model (densebox_320_320) is used in constructing the single stream pipeline, hence choose a mp4 video file with human faces.
+Face mask detection model (face_mask_detection_pt) is used in constructing the single stream pipeline, hence choose a mp4/h264 video file with human faces.
 
 VCU Decoder block
 ---------------------------
@@ -109,7 +109,7 @@ Standalone VCU block can be tested with following pipeline:
 
 ::
 
-  gst-launch-1.0 filesrc location=/home/root/videos/FACEDETECT.mp4 ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! filesink location=./vcu_out.nv12 -v
+  gst-launch-1.0 filesrc location=/home/root/videos/face_mask_detection.mp4 ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! filesink location=./vcu_out.nv12 -v
 
 HDMI Tx Block
 ------------------------------------------
@@ -140,7 +140,7 @@ Sample video pipeline for adding HDMI Tx is shown as below
 
 ::
 
-  gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
+  gst-launch-1.0 -v filesrc location=/home/root/videos/face_mask_detection.mp4 \
         ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 \
         ! kmssink plane-id=34 bus-id="a0130000.v_mix"
 
@@ -148,11 +148,11 @@ The output can be shift to one corner of the screen by using "render-rectangle" 
 
 ::
 
-  gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
+  gst-launch-1.0 -v filesrc location=/home/root/videos/face_mask_detection.mp4 \
         ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 \
         ! kmssink plane-id=34 bus-id="a0130000.v_mix" render-rectangle="<0,0,1920,1080>"
 
-.. Note:: It is assumed that the video resolution of the input file FACEDETECT.mp4 is 1080P.
+.. Note:: It is assumed that the video resolution of the input file face_mask_detection.mp4 is 1080P.
 
 
 Machine Learning (ML) block
@@ -163,7 +163,7 @@ VVAS supports the DPU libraries released with `Vitis-AI <https://github.com/Xili
 The beauty of this VVAS solution is that user need not figure out the resolution required for various DPU supported models.
 vvas_xinfer plug-in gets this information from the requested model and perform resize, color space conversion operation on the input image as per the requirement of the model using preprocessor block (vvas_xpreprocessor). The output of the vvas_xinfer is the original input image along with the scaled metadata for that resolution.
 
-The information for the ML model to be used must be provided in the JSON file, that is passed to vvas_xfilter’s plug-in property **infer-config**.
+The information for the ML model to be used must be provided in the JSON file, that is passed to vvas_xinfer’s plug-in property **infer-config**.
 
 .. figure:: ./media/multichannel_ml/xfilter_plugin.png
    :align: center
@@ -183,17 +183,17 @@ ML block can be tested with following pipeline:
 
 ::
 
-  gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
+  gst-launch-1.0 -v filesrc location=/home/root/videos/face_mask_detection.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+    ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_face_mask_detection_pt.json name=infer1 ! queue \
     ! kmssink plane-id=34 bus-id="a0130000.v_mix" render-rectangle="<0,0,1920,1080>"
 
 You can notice that the caps are not mentioned after the decoder as the vvas_xinfer auto negotiates the caps based on the model selected.
 
 .. Note::
 
-    In this pipeline, if the debug_level of ``vvas_xinfer`` library is increased to 2, you can see the objects detected in logs.
-    The debug level can be increased in the ``kernel_densebox_320_320.json`` JSON file.
+    In this pipeline, if the debug_level of ``vvas_xinfer`` library is increased to 2, and set 'export VVAS_CORE_LOG_FILE_PATH=CONSOLE' in the board console, you can see the objects detected in logs.
+    The debug level can be increased in the ``kernel_face_mask_detection_pt.json`` JSON file.
     The sample log output is shown below.
 
     .. figure:: ./media/multichannel_ml/inference_result_dump.png
@@ -201,53 +201,46 @@ You can notice that the caps are not mentioned after the decoder as the vvas_xin
        :scale: 50
 
 
-Sample JSON files **kernel_pp.json** for preprocesing and **kernel_densebox_320_320.json** for densebox_320_320 DPU model for detection of a human face are provided for reference.
+Sample JSON files **kernel_preprocessor.json** for preprocesing and **kernel_face_mask_detection_pt.json** for face_mask_detection_pt DPU model for detection of a human face mask are provided for reference.
 
 ::
 
-        {
-          "xclbin-location":"/run/media/mmcblk0p1/dpu.xclbin",
-          "vvas-library-repo": "/usr/lib",
-          "device-index": 0,
-          "kernel" :{
-            "kernel-name":"image_processing:{image_processing_1}",
-            "library-name": "libvvas_xpreprocessor.so",
-            "config": {
-              "ppc": 2,
-              "in-mem-bank": 0,
-              "out-mem-bank": 0,
-              "inference-level" : 1,
-              "debug_level" : 0
-            }
-          }
-        }
-        kernel_pp.json
+   {
+     "xclbin-location" : "/run/media/mmcblk0p1/dpu.xclbin",
+     "device-index": 0,
+     "kernel" :{
+       "kernel-name":"image_processing:{image_processing_1}",
+       "config": {
+         "ppc": 2,
+         "in-mem-bank": 0,
+         "out-mem-bank": 0,
+         "debug-level" : 0
+       }
+     }
+   }
+
+   kernel_preprocessor.json
 
 ::
 
-    {
-      "attach-ppe-outbuf" : false,
-      "inference-level" : 1,
-      "low-latency" : false,
-      "inference-max-queue" : 0,
-      "kernel" : {
-        "config": {
-          "batch-size" : 1,
-          "model-name" : "densebox_320_320",
-          "model-class" : "FACEDETECT",
-          "model-format" : "BGR",
-          "model-path" : "/usr/share/vitis_ai_library/models/",
-          "vitis-ai-preprocess" : false,
-          "performance-test" : false,
-          "max-objects" : 3,
-          "float-feature" : 1,
-          "segoutfactor" : 1.0,
-          "seg-out-format" : "BGR",
-          "debug-level" : 0
-        }
-      }
-    }
-    kernel_densebox_320_320.json
+   {
+     "inference-level": 1,
+     "attach-ppe-outbuf": false,
+     "kernel" : {
+       "config": {
+         "batch-size" : 0,
+         "model-name" : "face_mask_detection_pt",
+         "model-class" : "YOLOV3",
+         "model-format" : "RGB",
+         "model-path" : "/usr/share/vitis_ai_library/models/",
+         "vitis-ai-preprocess" : false,
+         "performance-test" : false,
+         "debug-level" : 2
+       }
+     }
+   }
+
+   kernel_face_mask_detection_pt.json
 
 Different ML models supported by the DPU have different preprocessing requirements that can include resize, mean subtraction, scale normalization etc. Additionally, the DPU expects input image in BGR/RGB format. The VCU decoder at the input of the DPU generates NV12 images. Depending on the model selected, the preprocessor block is expected to support the following operations:
 
@@ -256,7 +249,7 @@ Different ML models supported by the DPU have different preprocessing requiremen
 * Mean Subtraction
 * Scale Normalization
 
-Although all these operations can be achieved in software, the performance impact is substantial. VVAS support hardware accelerated pre-processing. Configuration parameters for pre-processing block mean-substraction and scale-normalization is read from the modle .prototxt file.
+Although all these operations can be achieved in software, the performance impact is substantial. VVAS support hardware accelerated pre-processing. Configuration parameters for pre-processing block mean-substraction and scale-normalization is read from the model .prototxt file.
 
 Once the objects are detected, you can move to the next advanced blocks.
 
@@ -265,52 +258,46 @@ Machine Learning with preprocessing in software
 
 VVAS can also be used on the Platform that may not have hardware accelerated pre-processing (Image Processing kernel) due to any reason. In this case the preprocessing needs to be performed in software. The scaling and color space conversation are done by open source gstremaer plugins and the normalization and scaling are done by Vitis AI library.
 
-Below is the pipe pile without vvas preprocessor.
+Below is the pipeline without vvas preprocessor.
 
 ::
 
-  gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
+  gst-launch-1.0 -v filesrc location=/home/root/videos/face_mask_detection.mp4 \
     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
     ! videoscale ! queue \
     ! videoconvert ! queue \
-    ! vvas_xinfer infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+    ! vvas_xinfer infer-config=kernel_face_mask_detection_pt.json name=infer1 ! queue \
     ! videoscale ! queue \
     ! videoconvert ! queue \
     ! video/x-raw, width=1920, height=1080, format=NV12 \
     ! kmssink plane-id=34 bus-id="a0130000.v_mix" render-rectangle="<0,0,1920,1080>"
 
-The following is sample JSON kernel_densebox_320_320.json for running the densebox_320_320 DPU model that detects a human face.
+The following is sample JSON kernel_face_mask_detection_pt.json for running the face_mask_detection_pt DPU model that detects a human face.
 
 ::
 
-    {
-      "attach-ppe-outbuf" : false,
-      "inference-level" : 1,
-      "low-latency" : false,
-      "inference-max-queue" : 0,
-      "kernel" : {
-        "config": {
-          "batch-size" : 1,
-          "model-name" : "densebox_320_320",
-          "model-class" : "FACEDETECT",
-          "model-format" : "BGR",
-          "model-path" : "/usr/share/vitis_ai_library/models/",
-          "vitis-ai-preprocess" : false,
-          "performance-test" : false,
-          "max-objects" : 3,
-          "float-feature" : 1,
-          "segoutfactor" : 1.0,
-          "seg-out-format" : "BGR",
-          "debug-level" : 0
-        }
-      }
-    }
-    
-    kernel_densebox_320_320.json
+   {
+     "inference-level": 1,
+     "attach-ppe-outbuf": false,
+     "kernel" : {
+       "config": {
+         "batch-size" : 0,
+         "model-name" : "face_mask_detection_pt",
+         "model-class" : "YOLOV3",
+         "model-format" : "RGB",
+         "model-path" : "/usr/share/vitis_ai_library/models/",
+         "vitis-ai-preprocess" : true,
+         "performance-test" : false,
+         "debug-level" : 2 
+       }
+     }
+   }
+
+    kernel_face_mask_detection_pt.json
 
 You can observe that in above pipeline **preprocess-config** property of ``vvas_xinfer`` plug-in is not set. This means we do not want to use hardware accelerated pre-processing block of ``vvas_xinfer`` plug-in and the videoscale and videoconvert GStreamer opensource plug-ins are used to convert the format and colour of input image as required by DPU model and Kmssink. The caps are not mentioned before ``vvas_xinfer`` and after the decoder as ``vvas_xinfer`` auto negotiates the caps based on the model selected.
 
-Since we want Vitis AI library to perform the required pre-processing in software, we need to set **need_preprocess** to true in **kernel_densebox_320_320.json**.
+Since we want Vitis AI library to perform the required pre-processing in software, we need to set **vitis-ai-preprocess** to true in **kernel_face_mask_detection_pt.json**.
 
 Although all these operations can be achieved in software, the performance impact is substantial. So rest of the document consider that the hardware accelerated pre-processing (using Image Processing kernel) is part of the provided hardware.
 
@@ -319,81 +306,6 @@ Although all these operations can be achieved in software, the performance impac
     Though you may not observe any ML Inference information on monitor with this pipeline,
     but we should see the input image getting displayed in monitor by this pipeline.
 
-Bounding Box
-------------------------------
-
-To view the result of ML Inference displayed on the monitor, you should draw the results on an image.
-The :ref:`vvas_xmetaconvert <vvas_xmetaconvert>` along with :ref:`vvas_xoverlay <vvas_xoverlay>` software acceleration library comes in handy in this case.
-This library along with VVAS infrastructure plug-in :ref:`vvas_xfilter` can provide the bounding box functionality.
-
-Sample video pipeline for adding bounding box is shown as below
-
-.. figure:: ./media/multichannel_ml/single_channel_pipeline.png
-   :align: center
-   :scale: 70
-
-   Sample Video Pipeline adding Bounding Box
-
-*GStreamer command*:
-
-::
-
-  gst-launch-1.0 -v filesrc location=/home/root/videos/FACEDETECT.mp4 \
-    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
-    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
-    ! kmssink plane-id=34 bus-id="a0130000.v_mix" render-rectangle="<0,0,1920,1080>"
-
-The following sample JSON file metaconvert_config.json is used to draw a bounding box on detected objects.
-
-::
-
-  {
-    "config": {
-      "display-level": 0,
-      "font-size" : 1,
-      "font" : 3,
-      "thickness" : 2,
-      "radius": 5,
-      "mask-level" : 0,
-      "y-offset" : 0,
-      "label-filter" : [ "class" ],
-      "classes" : [
-        {
-          "name" : "car",
-          "blue" : 255,
-          "green" : 0,
-          "red"  : 0,
-          "masking"  : 0
-        },
-        {
-          "name" : "person",
-          "blue" : 0,
-          "green" : 255,
-          "red"  : 0,
-          "masking"  : 0
-        },
-        {
-          "name" : "bus",
-          "blue" : 0,
-          "green" : 0,
-          "red"  : 255,
-          "masking"  : 0
-        },
-        {
-          "name" : "bicycle",
-          "blue" : 0,
-          "green" : 0,
-          "red"  : 255,
-          "masking"  : 0
-        }
-      ]
-    }
-  }
-
-     
-With addition of bounding box, your pipeline for single stream is complete.
-
 Four Channel ML pipeline
 ==================================
 
@@ -401,54 +313,54 @@ Now, constructing a four-channel pipeline is simply duplicating the above pipeli
 and positioning each output video appropriately on screen on different plane-ids.
 
 Below Vitis AI models are used as example in this tutorial.
-Refer `Vitis AI User Documentation <https://docs.xilinx.com/access/sources/ud/document?Doc_Version=3.0%20English&url=ug1431-vitis-ai-documentation>`_ to compile different models using arch.json file from release package.
 
-* densebox_320_320 (Face detection)
-* yolov3_adas_pruned_0_9 (Object detection)
-* resnet50 (Classification)
-* refinedet_pruned_0_96 (Pedestrian detector)
+* efficientdet_d2_tf (Object detection)
+* face_mask_detection_pt (Object detection)
+* vehicle_type_resnet18_pt (Image Classification)
+* refinedet_VOC_tf (Object detection)
 
 A reference pipeline for four channel ML is given below.
 
 ::
 
   gst-launch-1.0 -v --no-position \
-   filesrc location=/home/root/videos/FACEDETECT.mp4 \
-    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_densebox_320_320.json name=infer1 ! queue \
+   filesrc location=/home/root/videos/efficientdet_d2_tf.h264 \
+    ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
+    ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_efficientdet_d2_tf.json name=infer1 ! queue \
     ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
     ! fpsdisplaysink video-sink="kmssink plane-id=34 bus-id=a0130000.v_mix render-rectangle=<0,0,1920,1080>" text-overlay=false sync=false \
-  filesrc location=/home/root/videos/YOLOV3.mp4 \
-    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_adas_pruned_0_9.json name=infer2 ! queue \
-    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
-    ! fpsdisplaysink video-sink="kmssink plane-id=35 bus-id=a0130000.v_mix render-rectangle=<1920,0,1920,1080>" text-overlay=false sync=false \
-  filesrc location=/home/root/videos/CLASSIFICATION.mp4 \
-    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_resnet50.json name=infer3 ! queue \
-    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
-    ! fpsdisplaysink video-sink="kmssink plane-id=36 bus-id=a0130000.v_mix render-rectangle=<0,1080,1920,1080>" text-overlay=false sync=false \
-  filesrc location=/home/root/videos/REFINEDET.mp4 \
-    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_refinedet_pruned_0_96.json name=infer4 ! queue \
-    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
-    ! fpsdisplaysink video-sink="kmssink plane-id=37 bus-id=a0130000.v_mix render-rectangle=<1920,1080,1920,1080>" text-overlay=false sync=false
+   filesrc location=/home/root/videos/face_mask_detection_pt_1920x1080.h264 \
+    ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
+   ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_face_mask_detection_pt.json name=infer2 ! queue \
+   ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+   ! fpsdisplaysink video-sink="kmssink plane-id=35 bus-id=a0130000.v_mix render-rectangle=<1920,0,1920,1080>" text-overlay=false sync=false \
+  filesrc location=/home/root/videos/vehicleclassification-type.mp4 \
+   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
+   ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_vehicle_type_resnet18_pt.json name=infer3 ! queue \
+   ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+   ! fpsdisplaysink video-sink="kmssink plane-id=36 bus-id=a0130000.v_mix render-rectangle=<0,1080,1920,1080>" text-overlay=false sync=false \
+  filesrc location=/home/root/videos/refinedet_VOC_tf.mp4 \
+   ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue \
+   ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_refinedet_VOC_tf.json name=infer4 ! queue \
+   ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
+   ! fpsdisplaysink video-sink="kmssink plane-id=37 bus-id=a0130000.v_mix render-rectangle=<1920,1080,1920,1080>" text-overlay=false sync=false
 
 The above command is available in the release package as ``multichannel_ml.sh``.
 
 VVAS Cascaded Machine Learning usecase
 ======================================
 
-There might be multiple use cases where the user wants to process inference on the required portion of image only and not on full image. One of the examples is to detect the faces of people sitting inside a car. In this case, if multiple cars are present in frame, the system must identify the car by some parameters like car number plate, color or make of the car. This information is needed to process the face of the person inside the car.
+There might be multiple use cases where the user wants to process inference on the required portion of image only and not on full image. One of the examples is to determine the color of the car(s) in an image containing multiple objects/cars. In this case, as a first step, system must identify all the cars in the image. This information is used to perform second stage of inference to identify the color of each car.
+
 The scenario mentioned above required multiple levels of ML inference operation in serial or cascade manner where the following inference block works only on the output of the previous inference block.
 
 This tutorial demonstrates how to build such types of use cases using VVAS with minimal configuration and with ease.
 
-In this tutorial, the end goal is to figure out the plate number of Cars in the frame. We will be using the ``plate num`` model to detect the number plate. This model expects image that has number in it, no extra border. So, to feed the image of the number plate to the ``plate num`` model one should crop the plate from the frame and provide it to ``plate num`` model after doing Mean Subtraction and Scale Normalization. So, to achieve this use case 3 levels of ML inference operations are performed. First level ML inference detect the cars in the frame, 2nd level detects the number plate in the provided image of the car and 3rd level finds the number in the plate.
+In this tutorial, the end goal is to determine the color of the cars in an image. We will be using the ssd_mobilenet_v2_coco_tf model to detect the cars in the input image. Then, to feed the image of the car(s) to the chen_color_resnet18_pt model, one should crop the car from the input image and provide it to chen_color_resnet18_pt model after doing preprocessing. So, to achieve this use case, 2 levels of ML inference operations are performed. First level ML inference detect the cars in the image, 2nd level inference determines the color of the car in the provided image of the car.
 
 Below diagram express the use case mentioned above. 
 
-.. image:: ./media/Cascade1/plate_detect_usecase.png
+.. image:: ./media/Cascade1/color_detect_usecase.png
    :align: center
 
 
@@ -456,7 +368,7 @@ Below diagram express the use case mentioned above.
 By the end of this tutorial, you should be able to build and run the following pipeline.
 
 
-.. image:: ./media/Cascade1/cascase1_pipeline.png
+.. image:: ./media/Cascade1/cascade_pipeline.png
    :align: center
 
 Cascade Building Blocks
@@ -474,9 +386,9 @@ Let us begin with constructing incremental video pipeline based on the component
 First Level inference
 -------------------------------------
  
-We start to add the first level of ML inference that will detect the cars. This can be achieved using ``yolov3_voc`` model.
+We start to add the first level of ML inference that will detect the cars. This can be achieved using ``ssd_mobilenet_v2_coco_tf`` model.
 
-.. image:: ./media/Cascade1/cascase_1st_level_pipeline.png
+.. image:: ./media/Cascade1/cascade_1st_level_pipeline.png
    :align: center
 
 Pipeline to demonstrate the car detection from frame and display output to monitor is as mentioned below.
@@ -484,9 +396,9 @@ Pipeline to demonstrate the car detection from frame and display output to monit
 ::
 
   gst-launch-1.0 -v --no-position \
-    filesrc location=/home/root/videos/PLATEDETECT.mp4   \
-     ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-     ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
+    filesrc location=/home/root/videos/Cars_1900.264 \
+     ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
+     ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_ssd_mobilenet_v2_coco_tf.json name=infer1 ! queue  \
      ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
      ! kmssink plane-id=34 bus-id="a0130000.v_mix" sync=false
 
@@ -499,47 +411,41 @@ Below are the sample json files.
    "device-index": 0,
    "kernel" :{
      "kernel-name":"image_processing:{image_processing_1}",
-     "library-name": "libvvas_xpreprocessor.so",
      "config": {
        "ppc": 2,
        "in-mem-bank": 0,
        "out-mem-bank": 0,
-       "inference-level" : 1,
-       "debug_level" : 0
-     }
-   }
+       "debug-level" : 0
+    }
+  }
+
  }
  
- kernel_pp.json
+ kernel_preprocessor.json
 
 ::
 
  {
-   "attach-ppe-outbuf" : false,
-   "inference-level" : 1,
-   "low-latency" : false,
-   "inference-max-queue" : 0,
+   "inference-level":1,
+   "attach-ppe-outbuf": false,
+   "low-latency":false,
    "kernel" : {
      "config": {
-       "batch-size" : 1,
-       "model-name" : "yolov3_voc",
-       "model-class" : "YOLOV3",
+       "model-name" : "ssd_mobilenet_v2_coco_tf",
+       "model-class" : "TFSSD",
        "model-format" : "RGB",
+       "batch-size":1,
        "model-path" : "/usr/share/vitis_ai_library/models/",
        "vitis-ai-preprocess" : false,
        "performance-test" : false,
-       "max-objects" : 3,
-       "float-feature" : 1,
-       "segoutfactor" : 1.0,
-       "seg-out-format" : "BGR",
-       "debug-level" : 0
-     }
+       "debug-level" : 3
+       }
    }
  }
 
- kernel_yolov3_voc.json
+ kernel_ssd_mobilenet_v2_coco_tf.json 
 
-Here we need to understand the complexity which is taken care of by the VVAS framework in a very easy user interface. The output of VCU Decoder is 1920X1080 ``NV12`` and the requirement for ``yolov3_voc`` is 360X360 ``RGB``. This conversion is taken care of by the preprocessor block which is part of ``vvas_xinfer`` plugin. Not only the color and format conversion, the preprocessor block also does Mean Subtraction and Scale Normalization. Although all these operations can be achieved in software, the performance impact is substantial.
+The output of VCU Decoder is 1920X1080 image in NV12 format and the requirement for ssd_mobilenet_v2_coco_tf is 300X300 image in RGB color format. This conversion can be taken care of by the hardware accelerated preprocessor block which is part of vvas_xinfer plugin. Not only the color format conversion, the preprocessor block also perform the Mean Subtraction and Scale Normalization. Although all these operations can be achieved in software, the performance impact is substantial.
 
 For simplicity, a common json file is used for meta convert. Please refer :ref:`vvas_xmetaconvert <vvas_xmetaconvert>` for more detailed parameters of meta convert.
 
@@ -547,42 +453,39 @@ For simplicity, a common json file is used for meta convert. Please refer :ref:`
 
  {
    "config": {
-     "display-level": 0,
-     "font-size" : 1,
-     "font" : 3,
-     "thickness" : 2,
+     "display-level": 1,
+     "font-size" : 2,
+     "font" : 4,
+     "thickness" : 1,
      "radius": 5,
-     "mask-level" : 0,
+     "mask-level" : 5,
      "y-offset" : 0,
      "label-filter" : [ "class" ],
+     "debug-level" : 3,
      "classes" : [
        {
          "name" : "car",
-         "blue" : 255,
-         "green" : 0,
-         "red"  : 0,
-         "masking"  : 0
+         "blue" : 183,
+         "green" : 255,
+         "red"  : 183
        },
        {
          "name" : "person",
-         "blue" : 0,
+         "blue" : 183,
          "green" : 255,
-         "red"  : 0,
-         "masking"  : 0
+         "red"  : 183
        },
        {
          "name" : "bus",
-         "blue" : 0,
-         "green" : 0,
-         "red"  : 255,
-         "masking"  : 0
+         "blue" : 183,
+         "green" : 255,
+         "red"  : 183
        },
        {
          "name" : "bicycle",
-         "blue" : 0,
-         "green" : 0,
-         "red"  : 255,
-         "masking"  : 0
+         "blue" : 183,
+         "green" : 255,
+         "red"  : 183
        }
      ]
    }
@@ -593,106 +496,51 @@ For simplicity, a common json file is used for meta convert. Please refer :ref:`
 Second Level inference
 -------------------------------
 
-First level inference detects the car in the frame, now we need to find the number plate in the area where the car is detected. So, lets add second level ML Inference with ``plate detect`` model just after the first level ML Inference with ``yolov3_voc`` model.
+First level inference detects the car(s) in the input image. Now we need to determine the color of the detected car. So, lets add second level ML Inference with chen_color_resnet18_pt model just after the first level ML Inference with ssd_mobilenet_v2_coco_tf model.
 
-.. image:: ./media/Cascade1/cascase_2nd_level_pipeline.png
+.. image:: ./media/Cascade1/cascade_2nd_level_pipeline.png
    :align: center
 
-Below is the GStreamer pipe demonstrating the number plate detect after car detect and display output to monitor using the kmssink plugin.
+Below is the GStreamer pipe demonstrating the car color detect after car detect and display output to monitor using the kmssink plugin.
 
 ::
 
-  gst-launch-1.0 -v --no-position \
-   filesrc location=/home/root/videos/PLATEDETECT.mp4   \
-    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
-    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
-    ! kmssink plane-id=34 bus-id="a0130000.v_mix" sync=false
+  gst-launch-1.0 -v --no-position  \
+   filesrc location=/home/root/videos/Cars_1900.264 \
+   ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue   \
+   ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_ssd_mobilenet_v2_coco_tf.json name=infer1 ! queue \
+   ! vvas_xinfer preprocess-config=kernel_preprocessor.json infer-config=kernel_chen_color_resnet18_pt.json name=infer2 ! queue \
+   ! vvas_xmetaconvert config-location="metaconvert_config.json" \
+   ! vvas_xoverlay ! queue \
+   ! kmssink plane-id=34 bus-id="a0130000.v_mix" sync=false
 
 Below are the sample json files for 2nd level.
 
 ::
 
  {
-   "attach-ppe-outbuf" : false,
-   "inference-level" : 2,
-   "low-latency" : false,
-   "inference-max-queue" : 0,
+   "inference-level":2,
+   "attach-ppe-outbuf": false,
+   "low-latency":false,
    "kernel" : {
      "config": {
-       "batch-size" : 1,
-       "model-name" : "plate_detect",
-       "model-class" : "PLATEDETECT",
-       "model-format" : "BGR",
+       "model-name" : "chen_color_resnet18_pt",
+       "model-class" : "CLASSIFICATION",
+       "model-format" : "RGB",
+       "batch-size":13,
        "model-path" : "/usr/share/vitis_ai_library/models/",
        "vitis-ai-preprocess" : false,
        "performance-test" : false,
-       "max-objects" : 3,
-       "float-feature" : 1,
-       "segoutfactor" : 1.0,
-       "seg-out-format" : "BGR",
-       "debug-level" : 0
-     }
-   }
- }
- 
- kernel_platedetect.json
-
-Please note the "inference-level" parameter in both the json is 2 which tells the framework that this model is placed at level 2 in full use case.
-As we discussed, there might be multiple cars in frame and we need to find the number plate for each of them so when the image, along with the metadata detected in first level reaches 2nd- level, the pre-processing stage at 2nd level inference first crops the car found in first level and scale down to format/resolution required by ``plate detect`` model. All this cropping and scaling is done by preprocessor block without user know about it.
-
-Similarly, when data passes to 3rd level, vvas framework reads the metadata and crop the number plate from full image, scale to required format and pass it to ``plate number`` model which find the number inside the image provided to model.
-
-Third Level inference
--------------------------------------
-
-.. image:: ./media/Cascade1/cascase_3rd_level_pipeline.png
-   :align: center
-
-Below is the full GStreamer pipe demonstrating the number plate detect and display using the kmssink plugin.
-
-::
-
-  gst-launch-1.0 -v --no-position \
-   filesrc location=/home/root/videos/PLATEDETECT.mp4   \
-    ! qtdemux ! h264parse ! omxh264dec internal-entropy-buffers=2 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_yolov3_voc.json name=infer1 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_platedetect.json name=infer2 ! queue  \
-    ! vvas_xinfer preprocess-config=kernel_pp.json infer-config=kernel_plate_num.json name=infer3 ! queue  \
-    ! vvas_xmetaconvert config-location="metaconvert_config.json" ! vvas_xoverlay ! queue \
-    ! kmssink plane-id=34 bus-id="a0130000.v_mix" sync=false
-
-Below are the sample json files for 3rd level.
-
-::
-
- {
-   "attach-ppe-outbuf" : false,
-   "inference-level" : 3,
-   "low-latency" : false,
-   "inference-max-queue" : 0,
-   "kernel" : {
-     "config": {
-       "batch-size" : 0,
-       "model-name" : "plate_num",
-       "model-class" : "PLATENUM",
-       "model-format" : "BGR",
-       "model-path" : "/usr/share/vitis_ai_library/models/",
-       "vitis-ai-preprocess" : false,
-       "performance-test" : false,
-       "max-objects" : 3,
-       "float-feature" : 1,
-       "segoutfactor" : 1.0,
-       "seg-out-format" : "BGR",
-       "debug-level" : 0
+       "debug-level" : 3
      }
    }
  }
 
- kernel_plate_num.json
+ kernel_chen_color_resnet18_pt.json 
 
-Please note the "inference-level" parameter in both the json is 3 which tells the framework that this model placed at level 3 in full use case.
+Please note the "inference-level" parameter in the json is 2 which tells the framework that pre-processing and ML must be performed on the results of the 1st level inference. Also, "display-level" must be set to 2 in metaconvert_config.json, to use only the information of the 2nd level inference results for the overlay.
+
+There might be multiple cars in an image and we need to determine the color for each of them. So when the image, along with the metadata detected in 1st level inference reaches 2nd level infrence, the pre-processing stage at 2nd level inference first crops the car found in first level and resize to the resolution and perform color space conversion required by chen_color_resnet18_pt model. All this cropping and re-sizing and color space conversion can be performed by preprocessor block without user knowing about it.
 
 Hope you enjoyed the tutorial.
 
@@ -828,12 +676,18 @@ Once the build is completed, you can find the sdcard image at
 ``<VVAS_REPO>/VVAS/vvas-examples/Embedded/multichannel_ml/binary_container_1/sd_card.img``.
 
 
+Model Binaries
+==============
+
+Multichannel ML design uses 3136 DPU architecture. One must use the models compiled for this DPU architecture.
+To obtain the model binaries, please contact vvas_discuss@amd.com.
+
 .. _board-bring-up:
 
 Board bring up
 ==================================
 
-1. Burn the SD card image ``sd_card.img`` (Either from `Release package(TBD) <TBD>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
+1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.2_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
 
    Boot the board using this SD card.
 
@@ -855,22 +709,26 @@ Board bring up
 5. Copy the Vitis-AI model files on board. Execute the command mentioned below on the target board::
 
       mkdir -p /usr/share/vitis_ai_library/models
-      scp -r <RELEASE_PATH>/vvas_multichannel_ml_2022.2_zcu104/models/* /usr/share/vitis_ai_library/models/
+      scp -r <WORKSPACE>/models/* root@<board ip>:/usr/share/vitis_ai_library/models/
 
-6. Execute four channel GStreamer pipeline script. Execute the command mentioned below on the target board::
+6. Copy label.json files::
+
+      scp <RELEASE_PATH>/vvas_multichannel_ml_2022.2_zcu104/models/face_mask_detection_pt/label.json root@<board ip>:/usr/share/vitis_ai_library/models/face_mask_detection_pt/
+      scp <RELEASE_PATH>/vvas_multichannel_ml_2022.2_zcu104/models/ssd_mobilenet_v2_coco_tf/label.json root@<board ip>:/usr/share/vitis_ai_library/models/ssd_mobilenet_v2_coco_tf/
+      scp <RELEASE_PATH>/vvas_multichannel_ml_2022.2_zcu104/models/yolov3_voc_tf/label.json root@<board ip>:/usr/share/vitis_ai_library/models/yolov3_voc_tf/
+
+7. Execute four channel GStreamer pipeline script. Execute the command mentioned below on the target board::
       
       cd ~/scripts_n_utils/multichannel_ml/
       ./multichannel_ml.sh
 
 You can now see the 4-channel mixed video on the HDMI monitor.
 
-7. Execute multi level cascade Gstreamer pipeline scripts::
+8. Execute multi level cascade Gstreamer pipeline scripts::
 
       cd ~/scripts_n_utils/cascade/
       ./1_level_cascade.sh
       ./2_level_cascade.sh
-      ./3_level_cascade.sh
-
 
 *************
 Known Issues

@@ -3,7 +3,7 @@
 vvas_xmetaaffixer
 ==================
 
-The ``vvas_xmetaaffixer`` plug-in is designed to adjust the metadata information for different resolutions. When performing machine learning on a frame with a different resolution or color format from the original, the metadata may still be associated with the original, full-resolution frame. The vvas_metaaffixer includes two types of pads: master pads and slave pads. The number of input pads created depends on the number of input sources and can be requested as needed. The plug-in requires at least one mandatory master input pad (sink pad) to receive the original/reference metadata, while the remaining input pads are referred to as slave pads. The metadata received on the master sink pad is adjusted based on the resolution of each slave sink pad. The adjusted metadata is then added to the output buffer coming out of the source slave pads. Up to 16 slave pads can be created as required. For implementation details, refer to `vvas_xmetaaffixer source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaaffixer>`_
+The metaaffixer plug-in, ``vvas_xmetaaffixer``, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The vvas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to `vvas_xmetaaffixer source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaaffixer>`_
 
 .. figure:: ../../images/metaaffixer_pipeline.png
 
@@ -11,7 +11,7 @@ The ``vvas_xmetaaffixer`` plug-in is designed to adjust the metadata information
 Input and Output
 --------------------
 
-This plug-in is format agnostic and can accept any input format. It operates only on the metadata. The ``vvas_xmetaaffixer`` plug-in supports the ``GstInferenceMeta`` data structure. For details about this structure, refer to the :doc:`VVAS Inference Metadata <../meta_data/vvas_meta_data_structures>` section.
+This plug-in is format agnostic and can accept any input format. It operates only on the metadata. The vvas_xmetaaffixer plug-in supports the GstInferenceMeta data structure. For details about this structure, refer to the :doc:`VVAS Inference Metadata <../meta_data/vvas_meta_data_structures>` section.
 
 
 Control Parameters and Plug-in Properties
@@ -86,28 +86,4 @@ This section covers the example pipelines using the metaaffixer plug-in.
         ! ima.sink_slave_0 ima.src_slave_0 \
         ! queue \
         ! fakesink -v.. _vvas_xmetaaffixer:
-
-
-..
-  ------------
-  
-  © Copyright 2023, Advanced Micro Devices, Inc.
-  
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
 
