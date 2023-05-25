@@ -4,15 +4,13 @@
 vvas_xinfer
 ============
 
-The ``vvas_xinfer`` GStreamer plug-in is capable of performing inferencing on video frames/images and generating output in the form of a ``GstInferenceMeta`` object, which is a tree-like structure containing inference results. This metadata is attached to the input GstBuffer. Additionally, this plug-in can perform hardware-accelerated preprocessing operations, such as resize/crop/normalization, on incoming video frames/images before conducting inferencing. The ``vvas_xinfer`` plug-in relies on the ``Vitis-AI`` library for inferencing.
+``vvas_xinfer`` is a GStreamer plug-in to performs inferencing on video frames/images and gives output as ``GstInferenceMeta`` object which is tree like structure of inference results. This metadata structure is attached to input GstBuffer. This plug-in can also perform hardware accelerated preprocessing operations like resize/crop/normalization etc. on incoming video frames/images before performing inferencing. ``vvas_xinfer`` plug-in is based on ``Vitis-AI`` library for inferencing. Hardware accelerated pre-processing using ``vvas_xinfer`` is optional and requires ``image_processing`` kernel in the design. User may also use software based pre-processing which is internally using ``Vitis-AI`` library for pre-processing. 
 
-The use of hardware-accelerated preprocessing with the ``vvas_xinfer`` plug-in is optional and requires the presence of the ``image_processing`` kernel in the hardware design. Users may also opt to use software-based preprocessing, which internally uses the ``Vitis-AI`` library.
+If hardware accelerated preprocessing is enabled and ``vvas_xinfer`` plug-in is not receiving physically contiguous memory, then data will be an overhead of copying data into a physically contiguous memory before sending to preprocessing engine. 
 
-If hardware-accelerated preprocessing is enabled and the ``vvas_xinfer`` plug-in is not receiving physically contiguous memory, there may be an overhead of copying data into physically contiguous memory before sending it to the preprocessing engine.
+Another useful feature of this plug-in is to consolidte the inferencing results of different stages of cascadded inferencing usecases. This plug-in can update/apend the new meta data information generated at each stage in to the metadata of the previous stages.
 
-Another useful feature of the ``vvas_xinfer`` plug-in is its ability to consolidate the inferencing results of different stages of cascaded inferencing use cases. The plug-in can update/append the new metadata information generated at each stage into the metadata of the previous stages.
-
-For implementation details, please refer to `vvas_xinfer source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/infer>`_
+For implementation details, refer to `vvas_xinfer source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/infer>`_
 
 .. figure:: ../../images/vvas_xinfer_blockdiagram.png
    :align: center
@@ -20,7 +18,8 @@ For implementation details, please refer to `vvas_xinfer source code <https://gi
 
 .. note::
 
-        To ensure smooth operation of multithreaded applications, it is important to create the ML pipeline in such a way that vvas_xinfer instances are sequentially created instead of concurrently by multiple threads.
+        In case of multithreaded applications, ML pipeline should be created by ensuring that the vvas_xinfer instances are created in a sequence and not concurrently by multiple threads.
+
 
 Input and Output
 --------------------
@@ -30,7 +29,7 @@ Input and Output
   - In case there is ``image_processing`` kernel in the design, then user may choose to use hardware accelerated pre-processing and/or color space conversion. Make sure ``image_processing`` kernel supports the required color format.
   - In case ``image_processing`` kernel in not there in the design then the input image to ``vvas_xinfer`` plug-in must be in BGR/RGB format (depending on the model requirements) otherwise the results are unexpected.
 
-* ``vvas_xinfer`` attaches the ``GstInferenceMeta`` metadata to the output GstBuffer.. For details about meta data, refer to :ref:`vvas_inference_metadata`
+* Attaches ``GstInferenceMeta`` metadata to output GstBuffer. For details about meta data, refer to :ref:`vvas_inference_metadata`
 
 Control Parameters
 --------------------
@@ -210,6 +209,9 @@ infer-config::config json members
 |                     |         |                                         |              | Embedded: /usr/lib/libvvascore_postprocessor.so                                                                                                                                                                                                                                                                                                                                                              |
 |                     |         |                                         |              | PCIe: /opt/xilinx/vvas/lib/libvvascore_postprocessor.so                                                                                                                                                                                                                                                                                                                                                      |
 +---------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| postprocess-function| string  | vvas_postprocess_rawtensor              | N/A          | Name of the custom function implemented in postprocess-lib-path for post-procesing.                                                                                                                                                                                                                                                                                                                          |
+|                     |         | implemented.                            |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
++---------------------+---------+-----------------------------------------+--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | debug-level         | Integer | 0 to 3                                  | 1            | Used to enable log levels.                                                                                                                                                                                                                                                                                                                                                                                   |
 |                     |         |                                         |              |                                                                                                                                                                                                                                                                                                                                                                                                              |
 |                     |         |                                         |              | There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a log-level lower than it, (therefore messages with an higher severity) are displayed.                                                                        |
@@ -332,6 +334,20 @@ preprocess-config::config json members
 +---------------------+---------+-----------------------------------------+--------------+---------------------------------------------------------------------------------------------------------------------------+
 | out-mem-bank        | Integer | 0 - 65535                               | 0            | VVAS output memory bank to allocate memory.                                                                               |
 +---------------------+---------+-----------------------------------------+--------------+---------------------------------------------------------------------------------------------------------------------------+
+| debug-level         | Integer | 0 to 3                                  | 1            | Used to enable log levels.                                                                                                |
+|                     |         |                                         |              |                                                                                                                           |
+|                     |         |                                         |              | There are four log levels for a message sent by the kernel library code, starting from level 0 and decreasing in severity |
+|                     |         |                                         |              | till level 3 the lowest log-level identifier. When a log level is set, it acts as a filter, where only messages with a    |
+|                     |         |                                         |              | log-level lower than it, (therefore messages with an higher severity) are displayed.                                      |
+|                     |         |                                         |              |                                                                                                                           |
+|                     |         |                                         |              | 0: This is the highest level in order of severity: it is used for messages about critical errors.                         |
+|                     |         |                                         |              |                                                                                                                           |
+|                     |         |                                         |              | 1: This level is used in situations where you attention is immediately required.                                          |
+|                     |         |                                         |              |                                                                                                                           |
+|                     |         |                                         |              | 2: This is the log level used for information messages about the action performed by the kernel and output of model.      |
+|                     |         |                                         |              |                                                                                                                           |
+|                     |         |                                         |              | 3: This level is used for debugging.                                                                                      |
++---------------------+---------+-----------------------------------------+--------------+---------------------------------------------------------------------------------------------------------------------------+
 
 Scaler Types
 --------------------
@@ -339,9 +355,9 @@ Scaler Types
 Letterbox
 --------------------
 
-The letterbox scaling technique is used to maintain the aspect ratio of an image while resizing it to a specific resolution. This method involves determining the target aspect ratio and scaling the image down to fit within that ratio while preserving its original aspect ratio. The resulting image will have bars (either on the top and bottom or left and right) to fill in the remaining space, allowing the entire image to be visible without cutting off important parts.
+Letterbox scaling is a method of preserving the aspect ratio of an image when resizing it to fit a specific resolution. The algorithm works by first determining the target aspect ratio, and then scaling the image down so that it fits within that aspect ratio while maintaining its original aspect ratio. The resulting image will have "letterbox" bars on the top and bottom (or left and right) of the image to fill the remaining space. This is done to ensure that the entire image is visible, and no important parts of the image are cut off.
 
-For instance, consider an input image of 1920x1080 which needs to be resized to a resolution of 416x234 while preserving the aspect ratio. After resizing, the letterbox method is applied by adding black bars horizontally to the image, resulting in a final resolution of 416x416 pixels.
+Example: Below input image of 1920x1080 is first being scaled down to a resolution of 416x234 using a technique that preserves the aspect ratio of the original image. After that, a letterbox method is applied to the scaled image by adding black bars horizontally to the image, which will result in the final resolution of 416x416 pixels.
 
 .. figure:: ../../images/infer_letter_box.png
    :align: center
@@ -350,34 +366,41 @@ For instance, consider an input image of 1920x1080 which needs to be resized to 
 Envelope Cropped
 --------------------
 
-Envelope cropped scaling is a digital image processing technique that resizes an image to fit a specific resolution while maintaining its aspect ratio. The algorithm involves several steps:
+Envelope cropped scaling is a technique used in digital image processing to resize an image to fit within a specific resolution while preserving its aspect ratio. 
+The algorithm for implementing envelope cropped scaling consists of several steps:
 
-First, the target aspect ratio is determined by comparing the aspect ratio of the original image to that of the target resolution. Next, the image is scaled down by a factor that preserves its original aspect ratio while ensuring that the smallest side of the image fits within the target resolution. Finally, the image is cropped by removing equal parts from both sides of the image, thereby retaining the central part of the image.
+  * Determining the target aspect ratio by comparing the aspect ratio of the original image to the aspect ratio of the target resolution.
+  * Scaling the image down by a factor that preserves the original aspect ratio while ensuring that the smallest side of the image fits within the target resolution.
+  * Cropping the image by removing equal parts from both sides of the image, maintaining the central part of the image.
 
-This technique ensures that the input image is resized while preserving its aspect ratio and fitting the target resolution by scaling the image down to ensure that the smallest side fits within the target resolution. However, it may result in cutting off important parts of the image, so the potential impact on the model's performance must be carefully considered.
+  By scaling the image so that the smallest side fits within the target resolution, it ensures that the input image is resized in a way that preserves its aspect ratio while fitting the target resolution. However, this method can result in important parts of the image being cut off, so it's important to carefully consider the potential impact on the performance of the model.
 
-For example, consider an input image of size 1920x1080 being scaled down to a resolution of 455x256 using the smallest side factor of 256 pixels, which preserves the original image's aspect ratio. Following this, a center crop of 224x224 pixels is taken from the scaled image to achieve a final resolution of 224x224 pixels.
+Example
+--------
+
+Below input image of 1920x1080 is being scaled down to a resolution of 455x256 using the smallest side factor of 256 pixels. This new resolution preserves the aspect ratio of the original image. After that, a center crop of 224x224 pixels is taken from the scaled image to obtain the final resolution of 224x224 pixels.
 
 .. figure:: ../../images/infer_example_envelop_crop.png
    :align: center
    :scale: 80
 
 .. note::
-        * Not all models require the use of the scaler-type parameter. Some models have specific requirements for image resizing to achieve better inference results. Therefore, it is recommended to use the scaler-type parameter only when necessary, and leave it unset otherwise.
+        * scaler-type is not needed for all models. Few models have requirements that image be resized using specific techniques for better inference. Use scaler-type only when needed. Otherwise leave it unset.
         * bcc uses letterbox scaler-type for re-sizing.
         * efficientnetd2 models use envelope_cropped scaler-type for re-sizing.
 
 .. note::
-        * Vitis-AI-Preprocess does not support color format conversion. Therefore, if "vitis-ai-preprocess" is set to true, it is the user's responsibility to provide the frame in the format required by the model.
-        * If "vitis-ai-preprocess" is set to false and no preprocess-config is provided, it is necessary to perform pre-processing operations such as normalization and scaling on the frame prior to feeding it to vvas_xinfer. Failure to do so may result in unexpected outcomes.
-        * When "vitis-ai-preprocess" is set to true in the infer-config json and a preprocess-config json is also provided, VVAS performs pre-processing using hardware acceleration for improved performance.
+        * Color format conversion is not supported by vitis-ai-preprocess. It is user's responsibility to feed the frame in the format required by the model if "vitis-ai-preprocess" = true.
+        * If "vitis-ai-preprocess" = false and preprocess-config is not provided, then pre-processing operations like, Normalization, scaling must be performed on the frame before feeding to vvas_xinfer, otherwise results may not be as expected.
+
+        * If preprocess-config json is provided and "vitis-ai-preprocess" = true in infer-config json, then pre-processing is done by VVAS using hardware acceleration for better performance.
 
 .. note::
         Set "device-index" = -1 and "kernel-name" = image_processing_sw:{image_processing_sw_1} when using software-ppe from VVAS.
 
 .. note::
         * If tensors are needed instead of post-processed results, user can set "model-class" = "RAWTENSOR" in the infer-config json file.
-        * Users have the option to implement their own post-processing to handle the tensors. For instance, the vvascore_postprocessor library serves as a demonstration of how to create a post-processing library. It should be noted that this is simply an example library for reference purposes, and is not optimized.
+        * Users can implement their own post-processing to process the tensors. ``vvascore_postprocessor`` library is implemented to demonstrate how to implement post-processing library. This is only an example library for reference and is not optimized.
         * The ``vvascore_postprocessor`` library only supports yolov3_voc, yolov3_voc_tf, plate_num, densebox_320_320, resnet_v1_50_tf models.
 
 Example Pipelines and Jsons
@@ -386,9 +409,9 @@ Example Pipelines and Jsons
 Single stage inference example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Below is an example of a simple inference pipeline using YOLOv3. The input for this pipeline is an NV12 YUV file (test.nv12):
+An example simple inference (YOLOv3) pipeline which takes NV12 YUV file (test.nv12) as input is described below:
 
-The pipeline employs the yolov3_voc_tf model for ML inference. First, a 1920x1080 NV12 frame is fed into the vvas_xinfer plugin. The pre-processor then resizes the frame and converts the color format to RGB, which is required by the model. In addition, mean value subtraction and normalization operations are performed on the frame. The resized and pre-processed frame is then passed to the inference library, which generates the inference predictions. These predictions are then upscaled to the original resolution (1920x1080) and attached to the output buffer.
+The below pipeline performs ML using a yolov3_voc_tf model. A 1920x1080 NV12 frame is fed to the vvas_xinfer plugin. The vvas_xinfer feeds this frame to the pre-processor which re-sizes the frame and convert color format as the model requires an RGB input. Along with this mean value subtraction and normalization operations are also performed on the frame. Now this re-sized and pre-processed frame is fed to inference library which gives the inference predictions. These inference predictions are then upscaled to the original resolution (1920x1080) and attached to the output buffer.
 
 .. code-block::
   
@@ -425,7 +448,8 @@ The pipeline employs the yolov3_voc_tf model for ML inference. First, a 1920x108
       "kernel" : {
          "kernel-name": "image_processing:{image_processing_1}",
          "config": {
-            "ppc": 4
+            "ppc": 4,
+            "debug-level" : 0
          }
       }
    }
@@ -475,7 +499,8 @@ Refer to jsons in above example for level-1. jsons files for level-2 are provide
       "kernel" : {
          "kernel-name": "image_processing:{image_processing_1}",
          "config": {
-            "ppc": 4
+            "ppc": 4,
+            "debug-level" : 0
          }
       }
    }
@@ -524,13 +549,14 @@ The below pipeline performs inference using yolov3_voc_tf model. In the infer-js
       "kernel" : {
          "kernel-name": "image_processing:{image_processing_1}",
          "config": {
-            "ppc": 4
+            "ppc": 4,
+            "debug-level" : 0
          }
       }
    }
 
 
-Using the same pipeline described above, if post-processing has to be performed on the tensors, ``postprocess-lib-path`` is added in the infer-config json. Note that the post-processing library used here is only a refernce library and does not support all models.
+Using the same pipeline described above, if post-processing has to be performed on the tensors, ``postprocess-lib-path`` and ``postprocess-function`` are added in the infer-config json. Note that the post-processing library used here is only a refernce library and does not support all models.
 
 .. code-block::
 
@@ -545,6 +571,7 @@ Using the same pipeline described above, if post-processing has to be performed 
             "model-name" : "yolov3_voc_tf",
             "model-class" : "RAWTENSOR",
             "postprocess-lib-path" : "/opt/xilinx/vvas/lib/libvvascore_postprocessor.so",
+            "postprocess-function" : "vvas_postprocess_tensor",
             "model-format" : "RGB",
             "model-path" : "/usr/share/vitis_ai_library/models/",
             "vitis-ai-preprocess" : false,
@@ -553,27 +580,3 @@ Using the same pipeline described above, if post-processing has to be performed 
          }
       }
    }
-
-..
-  ------------
-  
-  © Copyright 2023, Advanced Micro Devices, Inc.
-  
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-

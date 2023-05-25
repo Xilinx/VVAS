@@ -141,21 +141,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <div class="section" id="vvas-xskipframe">
 <span id="id1"></span><h1>vvas_xskipframe<a class="headerlink" href="#vvas-xskipframe" title="Permalink to this heading">¶</a></h1>
 <p>vvas_xskipframe plugin is used in video analytics pipelines in conjunction with <a class="reference internal" href="plugin_vvas_xreorderframe.html#vvas-xreorderframe"><span class="std std-ref">vvas_xreorderframe</span></a> plugin to control inference rate.
-It achieves this by using the user configured infer-interval property and determines which frames to be sent for inference and which frames to be skipped from inference.
+It achieves this by using the user configured infer-interval property and determines which frames to be served for inference and which frames to be skipped for inference.
 For example, if the infer-interval is 1, all frames are sent for inference,
 if infer-interval is 2, then every alternate frame is sent for inference.</p>
 <p>This element has one sink pad and two source pads. It is multi-stream aware and its sink pad can connect with <a class="reference internal" href="plugin_vvas_xfunnel.html#vvas-xfunnel"><span class="std std-ref">vvas_xfunnel</span></a> element to accept frames from multiple streams.
 One source pad is connected to <a class="reference internal" href="plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> element to send the frames that are marked for inference, another source pad is connected to <a class="reference internal" href="plugin_vvas_xreorderframe.html#vvas-xreorderframe"><span class="std std-ref">vvas_xreorderframe</span></a>
 to send the frames marked skipped.</p>
-<p><a class="reference internal" href="#vvas-xskipframe"><span class="std std-ref">vvas_xskipframe</span></a> plug-in adds frame id to the <code class="docutils literal notranslate"><span class="pre">GstVvasSrcIDMeta</span></code> metadata so that <a class="reference internal" href="plugin_vvas_xreorderframe.html#vvas-xreorderframe"><span class="std std-ref">vvas_xreorderframe</span></a> plug-in can identify the order of the frames.</p>
+<p>vvas_xskipframe plugin adds frame id to the GstVvasSrcIDMeta metadata so that <a class="reference internal" href="plugin_vvas_xreorderframe.html#vvas-xreorderframe"><span class="std std-ref">vvas_xreorderframe</span></a> plugin can identify the order of the frames.</p>
 <div class="section" id="input-and-output">
 <h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">vvas_xskipframe</span></code> plug-in is format agnostic and can accept any format on input and output pads.</p>
+<p>vvas_xskipframe plugin is format agnostic and can accept any format on input and output pads.</p>
 </div>
 <div class="section" id="control-parameters-and-plugin-properties">
 <h2>Control Parameters and Plugin Properties<a class="headerlink" href="#control-parameters-and-plugin-properties" title="Permalink to this heading">¶</a></h2>
-<p>The following table lists the GStreamer plug-in properties supported by the <code class="docutils literal notranslate"><span class="pre">vvas_xskipframe</span></code> plugin.</p>
-<p>Table 9: vvas_xskipframe plug-in properties</p>
+<p>The following table lists the GStreamer plugin properties supported by the vvas_xskipframe plugin.</p>
+<p>Table 9: vvas_xskipframe plugin properties</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 24%" />

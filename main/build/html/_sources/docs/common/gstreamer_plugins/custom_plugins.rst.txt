@@ -3,8 +3,13 @@
 #################
 Custom Plug-ins
 #################
+There are specific functions, like video decoder, encoder, meta-affixer etc. where the requirements are different and are difficult to implement in an optimized way using highly simplified and generic infrastructure plug-ins framework. Hence, these functions are implemented using custom GStreamer plug-ins. This section covers details about the custom plug-ins.
 
-Certain functions, such as video decoding, encoding, and metadata handling, require specific and complex implementations that cannot be efficiently achieved using the standard infrastructure plugins provided by GStreamer. As a result, custom GStreamer plugins are developed to provide this functionality. This section will provide more information about these custom plugins, which can be found in the ``vvas-gst-plugins`` folder within the vvas source code tree. Each custom plugin will be described in detail.
+Infrastructure plug-ins are generic plug-ins that interact with the acceleration kernel through a set of APIs exposed by an acceleration software library corresponding to that kernel. Infrastructure plug-ins abstract the core/common functionality of the GStreamer framework (for example: caps negotiation and buffer management).
+
+Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel.These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.
+
+GStreamer infrastructure plug-ins are available in the ``vvas-gst-plugins`` folder in the vvas source code tree. The following section describes each infrastructure plug-in.
 
 
 .. toctree::
@@ -76,27 +81,4 @@ Certain functions, such as video decoding, encoding, and metadata handling, requ
    :maxdepth: 1
 
    VVAS Bufferpool & Allocator <./vvas_bufferpool_and_allocator>
-
-..
-  ------------
-
-  © Copyright 2023, Advanced Micro Devices, Inc.
-
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
 

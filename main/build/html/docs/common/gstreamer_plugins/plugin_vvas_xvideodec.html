@@ -112,14 +112,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
              
   <div class="section" id="vvas-xvideodec">
 <span id="id1"></span><h1>vvas_xvideodec<a class="headerlink" href="#vvas-xvideodec" title="Permalink to this heading">¶</a></h1>
-<p>The Versal family of devices includes an IP called <code class="docutils literal notranslate"><span class="pre">VDU</span></code> which is designed for hardware accelerated video decoding. This IP is capable of decoding video formats such as H264/HEVC. Please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a> for more information on the AMD/Xilinx VDU block.</p>
+<p>In Versal family of devices, there is an IP, <code class="docutils literal notranslate"><span class="pre">VDU</span></code>, for hardware accelerated video decoding. This IP supports decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a> for more information on the AMD/Xilinx VDU block.</p>
 <p><code class="docutils literal notranslate"><span class="pre">vvas_xvideodec</span></code> plugin controls the <code class="docutils literal notranslate"><span class="pre">VDU</span></code> IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/videodec">vvas_xvideodec source code</a></p>
 <div class="figure align-default">
 <img alt="../../../_images/video_decoder.png" src="../../../_images/video_decoder.png" />
 </div>
 <div class="section" id="input-and-output">
 <h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
-<p>This plug-in supports H264 and HEVC encoded streams of various profile, level values as input. For complete list of supported profiles and levels, please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a>
+<p>This plugin supports H264 and HEVC encoded streams of various profile, level values as input. For complete list of supported profiles and levels, please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a>
 The native output of this plugin is NV12 format. For any other desired output format, it should be software-converted and will affect performance.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
@@ -128,11 +128,11 @@ The native output of this plugin is NV12 format. For any other desired output fo
 <p>Table 1: vvas_xvideodec Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 27%" />
+<col style="width: 26%" />
 <col style="width: 14%" />
-<col style="width: 15%" />
-<col style="width: 21%" />
-<col style="width: 24%" />
+<col style="width: 16%" />
+<col style="width: 26%" />
+<col style="width: 19%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
@@ -143,111 +143,114 @@ The native output of this plugin is NV12 format. For any other desired output fo
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>additional-output-buffers</p></td>
-<td><p>unsigned int</p></td>
-<td><p>0 to 149</p></td>
-<td><p>0</p></td>
-<td><p>Use this property to
-specify the additional
-output buffers to be
-allocated by decoder
-in addition to the
-min. buffers required
-by the decoder.</p></td>
-</tr>
-<tr class="row-odd"><td><p>avoid-output-copy</p></td>
+<tr class="row-even"><td><p>avoid-output-copy</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>False</p></td>
-<td><p>Avoid output frames
-copy even when
-downstream does not
-support GstVideoMeta
-metadata.</p></td>
+<td><p>Avoid output
+frames copy
+even when
+downstream does
+not support
+GstVideoMeta
+metadata</p></td>
 </tr>
-<tr class="row-even"><td><p>avoid-dynamic-alloc</p></td>
+<tr class="row-odd"><td><p>avoid-dynamic-alloc</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>True</p></td>
 <td><p>Avoid dynamic
-allocation of output
-buffers</p></td>
+allocation of
+output buffers</p></td>
 </tr>
-<tr class="row-odd"><td><p>dev-idx</p></td>
+<tr class="row-even"><td><p>dev-idx</p></td>
 <td><p>Integer</p></td>
 <td><p>0 to 31</p></td>
 <td><p>0</p></td>
-<td><p>Index of the device on
-which this instance to
-be created.</p></td>
+<td><p>Device index
+This is valid
+only in PCIe/
+Data Center
+platforms.</p></td>
 </tr>
-<tr class="row-even"><td><p>i-frame-only</p></td>
+<tr class="row-odd"><td><p>i-frame-only</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>false</p></td>
-<td><p>Whether to decode ‘I’
-frames only or all
-frames from the given
-input stream.</p></td>
+<td><p>Whether to
+decode ‘I’ frames
+only or not from
+the given input
+encoded stream</p></td>
 </tr>
-<tr class="row-odd"><td><p>instance-id</p></td>
+<tr class="row-even"><td><p>instance-id</p></td>
 <td><p>Integer</p></td>
 <td><p>0 to 1</p></td>
 <td><p>0</p></td>
-<td><p>Specify one of the VDU
-hardware IP instance
-to be used.</p></td>
+<td><p>Select one of
+the VDU hardware
+IP instances</p></td>
 </tr>
-<tr class="row-even"><td><p>disable-hdr10-sei</p></td>
+<tr class="row-odd"><td><p>disable-hdr10-sei</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>false</p></td>
-<td><p>Whether to passthrough
-HDR10/10+ SEI messages
-or not.</p></td>
+<td><p>Whether to
+passthrough
+HDR10/10+
+SEI messages or
+not</p></td>
 </tr>
-<tr class="row-odd"><td><p>interpolate-timestamps</p></td>
+<tr class="row-even"><td><p>interpolate-timestamps</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>false</p></td>
-<td><p>Whether to interpolate
-timestamp or not.</p></td>
+<td><p>Whether to
+interpolate
+timestamps
+or not</p></td>
 </tr>
-<tr class="row-even"><td><p>kernel-name</p></td>
+<tr class="row-odd"><td><p>kernel-name</p></td>
 <td><p>String</p></td>
 <td><p>N/A</p></td>
 <td><p>decoder:{decoder_1}</p></td>
-<td><p>Kernel name and
-instance separated by
-a colon.</p></td>
+<td><p>Kernel name
+and
+instance
+separated
+by a colon.</p></td>
 </tr>
-<tr class="row-odd"><td><p>low-latency</p></td>
-<td><p>Boolean</p></td>
-<td><p>true/false</p></td>
-<td><p>false</p></td>
-<td><p>Whether to enable low
-latency or not</p></td>
-</tr>
-<tr class="row-even"><td><p>num-entropy-buf</p></td>
-<td><p>Unsigned
-Integer</p></td>
-<td><p>2 - 10</p></td>
-<td><p>2</p></td>
-<td><p>Number of entropy
-buffers.</p></td>
-</tr>
-<tr class="row-odd"><td><p>splitbuff-mode</p></td>
+<tr class="row-even"><td><p>low-latency</p></td>
 <td><p>Boolean</p></td>
 <td><p>true/false</p></td>
 <td><p>false</p></td>
 <td><p>Whether to enable
-splitbuff mode or not</p></td>
+low latency
+or not</p></td>
 </tr>
-<tr class="row-even"><td><p>xclbin-location</p></td>
+<tr class="row-odd"><td><p>num-entropy-buf</p></td>
+<td><p>Unsigned
+Integer</p></td>
+<td><p>2 - 10</p></td>
+<td><p>2</p></td>
+<td><p>Number of
+entropy buffers</p></td>
+</tr>
+<tr class="row-even"><td><p>splitbuff-mode</p></td>
+<td><p>Boolean</p></td>
+<td><p>true/false</p></td>
+<td><p>false</p></td>
+<td><p>Whether to enable
+splitbuff mode or
+not</p></td>
+</tr>
+<tr class="row-odd"><td><p>xclbin-location</p></td>
 <td><p>String</p></td>
 <td><p>N/A</p></td>
 <td><p>null</p></td>
-<td><p>The location of xclbin</p></td>
+<td><p>The
+location of
+xclbin.</p></td>
 </tr>
 </tbody>
 </table>
@@ -264,11 +267,11 @@ splitbuff mode or not</p></td>
 ! fpsdisplaysink <span class="nv">name</span><span class="o">=</span>fpssink video-sink<span class="o">=</span>fakesink text-overlay<span class="o">=</span><span class="nb">false</span> <span class="nv">sync</span><span class="o">=</span><span class="nb">false</span>
 </pre></div>
 </div>
-<p><strong>kernel-name</strong> is mandatory and represents both the name of the decoder kernel as well as its instance. In above example, “kernel-name=kernel_vdu_decoder:{kernel_vdu_decoder_0}” represents decoder kernel name as “kernel_vdu_decoder” and instance “0”. Instance Id range can be known from the below command:</p>
+<p>kernel name is mandatory and the name represents both the name of the decoder kernel as well as its instance. In above example, “kernel-name=kernel_vdu_decoder:{kernel_vdu_decoder_0}” represents decoder kernel name as “kernel_vdu_decoder” and instance “0”. Instance Id range can be known from the below command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>xbutil examine -d &lt;PCI bdf&gt;
 </pre></div>
 </div>
-<p>Currently, 2 instances of video decoder IP (VDU) are supported and can be selected with the plugin parameter <strong>instance-id</strong>. Above example uses instance id = 0.</p>
+<p>Currently, 2 instances of video decoder IP (VDU) is supported and can be selected with the plugin parameter ‘instance-id’. Above example uses instance id = 0.</p>
 </div>
 </div>
 </div>

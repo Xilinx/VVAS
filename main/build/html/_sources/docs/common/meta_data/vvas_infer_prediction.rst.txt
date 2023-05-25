@@ -1,5 +1,5 @@
 ##############################
-VVAS Infer Prediction
+VVAS Infere Prediction
 ##############################
 
 .. c:struct:: VvasInferPrediction

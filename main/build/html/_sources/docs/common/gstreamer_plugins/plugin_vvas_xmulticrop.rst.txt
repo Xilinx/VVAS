@@ -3,11 +3,16 @@
 vvas_xmulticrop
 ================
 
-In machine learning applications, it is common to extract specific objects or regions from images or video frames for processing, and the number of objects to be cropped in each frame may vary. Preprocessing may also be required for the cropped object to be suitable for machine learning algorithms. The ``vvas_xmulticrop`` plugin is capable of resizing, color space conversion, preprocessing, and cropping one or multiple objects from a single input frame or image.
+In ML applications we often need to crop the video frame for processing objects and number of objects per frame may differ. For ML we may also need preprocessing.
 
-The vvas_xmulticrop plugin supports two types of cropping. In static cropping, the user specifies a fixed region in the frame or image to be cropped, and the cropped buffer is pushed as an output buffer onto the source pad of the plugin. The region to be cropped is specified via plugin properties. In dynamic cropping, multiple objects or regions can be cropped from a frame or image, and the cropped objects or buffers are attached as metadata to the output buffer pushed onto the source pad. The regions to be cropped are specified as part of the metadata attached to the input buffer. Both static and dynamic cropping can be used together.
 
-In summary, video frames often need to be cropped in machine learning applications to process objects, and the number of objects to be cropped may vary. Preprocessing may also be required. The vvas_xmulticrop plugin is capable of performing resizing, color space conversion, preprocessing, and both static and dynamic cropping to streamline the workflow for machine learning developers. For more implementation details, refer to `vvas_xmulticrop source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/multicrop>`_.
+`vvas_xmulticrop` is a GStreamer plug-in to do scaling, color space conversion, preprocessing and to crop single or multiple objects.
+It takes one input frame and can crop one or more objects from it. Scaling, color space conversion and preprocessing can be applied to all the cropped objects/buffers.
+If user wants to get cropped buffer directly on the source pad, they can use static cropping, but with static cropping user can crop only one object.
+If user wants to crop more than one objects, they can use dynamic cropping, dynamically cropped objects/buffers are not sent onto the source pad, they are attached as metadata into the output buffer.
+Both static and dynamic cropping can be performed simultaneously.
+
+For more implementation details, refer to `vvas_xmulticrop source code <https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/multicrop>`_.
 
 This plug-in supports:
 
@@ -28,33 +33,24 @@ vvas_xmulticrop plug-in is similar to ``vvas_xabrscaler`` excepts below features
 * It supports dynamic cropping.
 
 
-Static Cropping
-----------------
-
-Static cropping can be used for cropping only one object. The cropped object/buffer is sent onto the source pad. `s-crop-x`, `s-crop-y`, `s-crop-width`, `s-crop-height` are the plug-in properties to set the static crop parameters.
+Static Cropping: For cropping only one object. The cropped object/buffer is sent to the source pad. `s-crop-x`, `s-crop-y`, `s-crop-width`, `s-crop-height` are the properties to set the crop parameters.
 
 
-Dynamic Cropping
------------------
+Dynamic Cropping: For cropping more than one objects from the input buffer. To use dynamic crop feature user must send crop coordinates attached to the buffer in GstVideoRegionOfInterestMeta metadata and GstVideoRegionOfInterestMeta->roi_type must be set to "roi-crop-meta". One instance of GstVideoRegionOfInterestMeta in buffer represents one object for dynamic crop. `vvas_xmulticrop` will dynamically crop the object and attach the cropped objects/buffers to output buffer in GstVideoRegionOfInterestMeta->params. GstVideoRegionOfInterestMeta->params is a GList * of GstStructure. Dynamically cropped buffer is attached into this field, The name of GstStructure is "roi-buffer", and this GstStructure has only one field "sub-buffer" of type GST_TYPE_BUFFER. User should extract this cropped buffer use it and unref it.
+User can choose to resize these cropped buffers to some width and height by setting `d-height` and `d-width` properties. If these properties are not set, then cropped buffers will not be resized.
 
-In order to crop multiple objects from the input buffer, the dynamic crop feature must be utilized. This involves sending crop coordinates along with the buffer in the GstVideoRegionOfInterestMeta metadata, and setting the GstVideoRegionOfInterestMeta->roi_type to "roi-crop-meta". It's important to note that each instance of GstVideoRegionOfInterestMeta in the buffer represents a single object for dynamic crop.
+If user wants cropped buffers to be of different format than the input format, they can specify this by setting `d-format` gstreamer property. If this property is not set all cropped buffers will have format same as input buffer.
 
-The tool ``vvas_xmulticrop`` will dynamically crop the object and attach the cropped objects/buffers to the output buffer in GstVideoRegionOfInterestMeta->params. GstVideoRegionOfInterestMeta->params is a GList* of GstStructure. The dynamically cropped buffer is attached to this field, with the name of the GstStructure being "roi-buffer". This GstStructure only has one field, "sub-buffer", which is of type GST_TYPE_BUFFER. The user must extract this cropped buffer, use it, and then unref it.
+User specified pre-processing is applied to dynamically cropped buffers only, if user wants it to be applied on output buffer/static crop buffers also, they can set `ppe-on-main buffer` gstreamer property.
 
-User can choose to resize these cropped buffers to some width and height by setting **d-height** and **d-width** properties. If these properties are not set, then cropped buffers will not be resized.
-
-To specify that cropped buffers should be in a different format than the input format, the user can set the d-format GStreamer property. If this property is not set, then all cropped buffers will have the same format as the input buffer format.
-
-The user-specified pre-processing is only applied to dynamically cropped buffers. If the user wants it to be applied to the output buffer and static crop buffers as well, they can set the **ppe-on-main buffer** GStreamer property.
-
-It is possible to perform both static and dynamic cropping simultaneously. As previously explained, the statically cropped buffer is sent on the source pad, while the dynamically cropped buffers are attached as metadata to the output buffer.
+Static and dynamic cropping both is possible simultaneously. As explained statically cropped buffer is sent on the source pad and dynamically cropped buffers are attached into that output buffer.
 
 `vvas_xmulticrop` supports at max 39 dynamic crops.
-The memory for dynamically cropped buffers is allocated from a GStreamer buffer pool, and there is no upper limit on this buffer pool. However, if the buffers are not freed, new buffers will be allocated, potentially leading to increased memory consumption.
+Memory for dynamically cropped buffers is allocated from a GStreamer buffer pool, there is no upper limit on this buffer pool. So, if buffers are not freed, new buffers will be allocated which may lead to more memory consumption.
 
 .. important:: The `vvas_xmulticrop` plug-in controls the image-processing kernel. If your application uses this plug-in, then make sure that image-processing kernel is included in your hardware design.
 
-.. important:: Ensure that the image-processing hardware kernel supports maximum resolution required by your application.
+.. important:: Make sure that the image-processing hardware kernel supports maximum resolution required by your application.
 
 
 Prerequisite
@@ -430,27 +426,3 @@ Example pipeline:
         videotestsrc num-buffers=10 ! video/x-raw,format=NV12,width=1920,height=1080 \
         ! vvas_xmulticrop kernel-name="image_processing_sw:{image_processing_sw_1}" software-scaling=true coef-load-type=0 num-taps=12 \
         ! video/x-raw,format=RGB,width=640,height=480 ! filesink location=out.yuv
-
-..
-  ------------
-  
-  © Copyright 2023, Advanced Micro Devices, Inc.
-  
-   MIT License
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-

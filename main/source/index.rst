@@ -1,16 +1,14 @@
-####################################
+############################################################
 Vitis Video Analytics SDK Overview
-####################################
+############################################################
 
-The Vitis Video Analytics SDK (VVAS) is a framework designed for AMD platforms that allows creation of various AI and transcoding solutions. It supports input data from USB/CSI camera, video from file or streams over RTSP, and uses Vitis AI to generate insights from pixels for various use cases. VVAS SDK can be the foundation layer for multiple video analytic solutions like understanding traffic and pedestrians in smart city, health and safety monitoring in hospitals, self-checkout, and analytics in retail, detecting component defects at a manufacturing facility and others. VVAS can also be used to build Adaptive Bitrate Transcoding solutions that may require re-encoding the incoming video at different bitrates, resolution and encoding format. 
+The Vitis Video Analytics SDK **(VVAS)** is a framework to build AI and transcoding solutions on AMD platforms. It takes input data - from USB/CSI camera, video from file or streams over RTSP, and uses Vitis AI to generate insights from pixels for various use cases. VVAS SDK can be the foundation layer for several video analytic solutions like understanding traffic and pedestrians in smart city, health and safety monitoring in hospitals, self-checkout, and analytics in retail, detecting component defects at a manufacturing facility and others. VVAS can also be used to build Adaptive Bitrate Transcoding solutions that may require re-encoding the incoming video at different bitrates, resolution and encoding format. 
 
-The core SDK comprises of optimized VVAS Core C-APIs, as well as GStreamer plug-ins that employ various accelerators such as video encoders, decoders, image processing kernels for resizing and color space conversion, Deep learning Processing Units (DPUs) for machine learning, etc.
+The core SDK consists of highly optimized VVAS Core C-APIs as well as GStreamer plug-ins that use various accelerators such as Video Encoder, Decoder, Image_processing kernel (for resize and color space conversion), Deep learning Processing Unit (DPU) for Machine Learning etc. By performing all the compute heavy operations in dedicated accelerators, VVAS can help in building highest performance pipelines for video analytics, transcoding and several other application areas. 
 
-By running computationally heavy operations on specialized accelerators, VVAS facilitates the creation of high-performance video analytics, transcoding pipelines and other applications.
+For the developer community, VVAS also provides a framework in the form of generic Infrastructure GStreamer plug-ins and a simplified interface to develop their own acceleration library to control a custom hardware accelerator. Using this framework, user can easily integrate their custom accelerators/kernels into Gstreamer framework. VVAS builds on top of Xilinx Run Time (XRT) and Vitis AI and abstracts these complex interfaces, making it easy for developers to build video analytics and transcoding pipelines without having to learn the complexities of XRT, Vitis AI.
 
-For developers, VVAS provides a framework in the form of Infrastructure GStreamer plug-ins and a simplified interface to create custom acceleration libraries to control a custom hardware accelerator. This framework enables users to easily integrate their custom accelerators/kernels into the GStreamer framework. VVAS builds on top of Xilinx Run Time (XRT) and Vitis AI, abstracting these complex interfaces, so developers can create video analytics and transcoding pipelines without having to learn the intricacies of XRT or Vitis AI.
-
-VVAS SDK supports deployment on embedded edge devices, as well as larger edge or data center platforms like Alveo V70.
+Using VVAS SDK, applications can be deployed on an embedded edge devices or can be deployed on larger edge or datacenter platforms like Alveo V70.
 
 .. figure:: /docs/images/VVA_TopLevel_Overview.png
    :width: 1300
@@ -21,16 +19,16 @@ VVAS SDK supports deployment on embedded edge devices, as well as larger edge or
 VVAS Graph Architecture
 ************************
 
-VVAS is a streamlined graph structure constructed with the help of the GStreamer framework. The diagram below demonstrates a common video analytic pipeline that begins with the input of video data and concludes with the presentation of valuable insights. Each of the constituent blocks is composed of distinct plugins. The application employs several hardware engines, which are depicted at the bottom. By implementing efficient memory management techniques, avoiding unnecessary memory duplication between plugins, and utilizing diverse accelerators, the system attains optimal performance.
+VVAS is an optimized graph architecture built using the open source GStreamer framework. The graph below shows a typical video analytic application starting from input video to outputting insights. All the individual blocks are various plugins that are used. At the bottom are the different hardware engines that are utilized throughout the application. Optimum memory management with zero-memory copy between plugins and the use of various accelerators ensure the highest performance.
 
 .. figure:: /docs/images/VVA_Graph.png
    :width: 1100
 
-*  Data that is being streamed can originate from multiple sources such as the network through RTSP, the local file system, or directly from a camera. The received frames are then sent for decoding using a hardware-accelerated video decoder. The decoding process is carried out using plugins such as ``vvas_xvideodec``, ``omxh264dec``, and ``omxh265dec``.
-* Once decoding is complete, there is an optional image pre-processing phase where the input image can undergo certain adjustments prior to inference. Pre-processing can entail resizing the image, converting its color space, or performing mean subtraction, among other operations. The ``vvas_xabrscaler`` plugin can facilitate hardware-accelerated resizing, color format conversion and pre-processing operations like mean subtraction, normalization etc. on the frame.
-* Following pre-processing, the frame is directed to undergo inference, which is carried out through the use of the ``vvas_xinfer`` plugin. This plugin not only performs pre-processing but also facilitates ML inferencing in batch mode, thereby enhancing overall performance.
-* In order to overlay inference results such as bounding boxes, labels, and arrows into the video output, two plugins are utilized: ``vvas_xmetaconvert`` and ``vvas_xoverlay``. The former plugin comprehends the ``GstInferenceMeta`` meta-data structure and carries out parsing operations to create new metadata for lines, arrows, text, and other such elements, which can be understood by the ``vvas_xoverlay`` plugin. The ``vvas_xoverlay`` plugin is responsible for drawing various components such as bounding boxes, arrows, circles, and text based on the received information.
-* Lastly, VVAS offers a range of options for presenting the results, including displaying the output with bounding boxes on the screen, saving the output to the local disk, or streaming it out over RTSP.
+* Streaming data can come over the network through RTSP or from a local file system or from a camera directly. The captured frames are sent for decoding using the hardware accelerated video decoder. ``vvas_xvideodec``, ``omxh264dec`` and ``omxh265dec`` are the plugin for decoding. 
+* After decoding, there is an optional image pre-processing step where the input image can be pre-processed before inference. The pre-processing can be resizing the image or color space conversion, mean subtrction etc.. ``vvas_xabrscaler`` plugin can perform hardware accelerated resize as well as color format conversion on the frame.
+* After pre-processing, frame is sent for inference. Inference is performed using ``vvas_xinfer`` plug-in that performs pre-processing as well as ML inferencing in batch mode to give improved performance.
+* To overlay the inference results such as bounding boxes, labels. arrows etc., there are two plug-ins, ``vvas_xmetaconvert`` and ``vvas_xoverlay``. ``vvas_xmetaconvert`` understands the ``VVASInference`` meta data structure and it does parsing of this information and creates new meta data for lines, arrowa, text etc. that are understood by ``vvas_xoverlay`` plug-in. ``vvas_xoverlay`` plug-in draws the bounding box, arrows, circles, text etc. depending on the information it receives.
+* Finally, to output the results, VVAS presents various options, like render the output with the bounding boxes on the screen, save the output to the local disk, stream out over RTSP.
 
 
 
@@ -77,11 +75,10 @@ VVAS is a streamlined graph structure constructed with the help of the GStreamer
 Why VVAS?
 ============
 
-VVAS enables application developers to construct seamless streaming pipelines for AI-based video and image analytics, complex adaptive bitrate transcoding pipelines, and various other solutions without requiring any comprehension of FPGA or other complex development environments. VVAS comes equipped with a multitude of hardware accelerators for various functionalities, along with highly optimized GStreamer plugins that satisfy most requirements for video analytics and transcoding solutions.
-
-For advanced developers, VVAS offers a user-friendly framework that allows for integration of their own hardware accelerators/kernels into GStreamer-based applications. VVAS also provides support for popular object detection and classification models such as SSD, YOLO, and others.
-
-All of this infrastructure grants the flexibility for swift prototyping and progression to full-fledged production-level solutions, thereby significantly reducing the time-to-market for AMD platform-based solutions.
+Application developers can build seamless streaming pipelines for AI-based video and image analytics, complex Adaptive Bitrate Transcoding pipelines and several other solutions using VVAS without having any understanding about FPGA or other development environment complexities. VVAS ships with several hardware accelerators for various functionalities, highly optimized GStreamer plugins meeting most of the requirements of the Video Analytics and transcoding solutions.
+For advanced developers, VVAS provides an easy-to-use framework to integrate their own hardware accelerators/kernels in to Gstreamer framework-based applications.  
+VVAS provide AI model support for popular object detection and classification models such as SSD, YOLO etc.
+All these infrastructure gives the flexibility for rapid prototyping to full production level solutions by significantly reducing time to market for the solutions on AMD platforms. 
 
 
 VVAS Core Components
@@ -101,12 +98,12 @@ These are highly optimized GStreamer plug-ins developed to provide very specific
 Infrastructure GStreamer Plug-ins
 ------------------------------------------------
 
-These GStreamer plugins are designed as generic infrastructure to assist users in directly integrating their kernels into the GStreamer framework without requiring an in-depth understanding of the framework itself. Refer to :ref:`VVAS Infrastructure Plug-ins <infra_plugins_label>` for more details about how to use these plug-ins.
+These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to :ref:`VVAS Infrastructure Plug-ins <infra_plugins_label>` for more details about how to use these plug-ins. These plug-ins are part of “vvas-gst-plugins” folder in the VVAS sources tree.
 
 Acceleration S/W Libs
 -----------------------------------
 
-These optimized software libraries for acceleration have been developed to manage the state machine of acceleration kernels/IPs and provide an interface for integration with VVAS generic infrastructure plugins. They can serve as a reference for developing new acceleration software libraries based on the VVAS framework. Information on VVAS acceleration software libraries and their integration with infrastructure plugins is elaborated upon in the following details. :ref:`VVAS Infrastructure Plug-ins and Acceleration s/w Libraries <infra_plugins_label>` section.
+These are optimized Acceleration s/w libs developed to manage the state machine of the acceleration Kernels/IPs and expose the interface so that these Acceleration s/w libs can be hooked into VVAS Generic Infrastructure Plug-ins. These can be used as reference to develop a new Acceleration s/w lib based on VVAS framework. Details about the vvas acceleration s/w libs and how can these be used with infrastructure plugins are explained in :ref:`VVAS Infrastructure Plug-ins and Acceleration s/w Libraries <infra_plugins_label>` section.
 
 Acceleration H/W (Kernels/IPs)
 ------------------------------------------------
@@ -116,4 +113,4 @@ These are highly optimized Kernels being developed by AMD. Details of these are 
 Reference Platforms and Applications
 ------------------------------------------
 
-Various applications have distinct requirements, and VVAS addresses these by offering several reference platforms tailored to different needs. Examples of embedded platform designs and details on sample applications can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section. Similarly Platforms and application details for PCIe/Data center are covered in :doc:`PCIe/Data Center Platforms and Applications <docs/DC/platforms_and_applications>`
+There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms example designs and sample application details can be found in :doc:`Platforms And Applications <docs/Embedded/platforms_and_applications>` section. Similarly Platforms and application details for PCIe/Data center are covered in :doc:`PCIe/Data Center Platforms and Applications <docs/DC/platforms_and_applications>`
