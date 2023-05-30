@@ -64,7 +64,7 @@ Download the release package. Let the path where release package is downloaded b
 
    The pre-buit binaries available for download from the link  mentioned above contain software copyrighted by Xilinx and third parties subject to one or more open source software licenses that are contained in the source code files available for download at the link mentioned below.  Please see the source code for the copyright notices and licenses applicable to the software in these binary files.  By downloading these binary files, you agree to abide by the licenses contained in the corresponding source code
 
-In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download `Source Licenses and Source Code <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_rel_2_0_thirdparty_sources.zip>`_ that contain the Open Source Licenses and source code.
+In case user wants to see the Licenses and source code that was used to build these pre-built binaries, download <COMING SOON> that contain the Open Source Licenses and source code.
 
 Once you have downloaded the pre-built binaries, you may go to section :ref:`board-bring-up` to try the released SD card image.
 
@@ -872,7 +872,7 @@ Once the build is completed, you can find the sdcard image at
 Board bring up
 ==================================
 
-1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
+1. Burn the SD card image ``sd_card.img`` using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
 
    Boot the board using this SD card.
 

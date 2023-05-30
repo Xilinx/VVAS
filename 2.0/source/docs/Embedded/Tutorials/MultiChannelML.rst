@@ -872,7 +872,7 @@ Once the build is completed, you can find the sdcard image at
 Board bring up
 ==================================
 
-1. Burn the SD card image ``sd_card.img`` (Either from `Release package <https://www.xilinx.com/member/forms/download/xef.html?filename=vvas_multichannel_ml_2022.1_zcu104.zip>`_ or generated)  using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
+1. Burn the SD card image ``sd_card.img`` using a SD card flashing tool like dd, Win32DiskImager, or Balena Etcher.
 
    Boot the board using this SD card.
 
