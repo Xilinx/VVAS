@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -122,11 +120,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-overlay-metadata">
-<span id="id1"></span><h1>VVAS Overlay Metadata<a class="headerlink" href="#vvas-overlay-metadata" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>VVAS Overlay Metadata<a class="headerlink" href="#vvas-overlay-metadata" title="Permalink to this headline">¶</a></h1>
 <p>VVAS overlay metadata structure hold the information of geometric shapes and text need to be overlaid on video frames. VVAS overlay plugin parses the overlay metadata structures to overlay information on the frames. An intermediate plugin is required for converting metadata generated from upstream plugins like infer, segmentation or optical flow plugins to overlay metadata for displaying information on frames. Currently supported structures in gstvvasoverlaymeta are rectangles, text, lines, arrows, circles and polygons. For displaying text, text need to be display must be copied into the text structure.</p>
 <p>The GStreamer plug-ins can set and get overlay metadata from the GstBuffer by using the gst_buffer_add_meta () API and gst_buffer_get_meta () API, respectively.</p>
 <div class="section" id="gstoverlaymeta">
-<span id="id2"></span><h2>GstOverlayMeta<a class="headerlink" href="#gstoverlaymeta" title="Permalink to this heading">¶</a></h2>
+<span id="id2"></span><h2>GstOverlayMeta<a class="headerlink" href="#gstoverlaymeta" title="Permalink to this headline">¶</a></h2>
 <p>GstOverlayMeta structure holds VvasOverlayShapeInfo of vvas_core which intern stores the information of different geometric structures and text. The structural information of different shapes, VvasOverlayShapeInfo and GstOverlayMeta are as described below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">typedef</span> <span class="n">enum</span>  <span class="p">{</span>
   <span class="n">ARROW_DIRECTION_START</span> <span class="p">,</span>

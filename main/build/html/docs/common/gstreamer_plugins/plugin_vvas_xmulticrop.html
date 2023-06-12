@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -142,7 +140,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xmulticrop">
-<span id="id1"></span><h1>vvas_xmulticrop<a class="headerlink" href="#vvas-xmulticrop" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xmulticrop<a class="headerlink" href="#vvas-xmulticrop" title="Permalink to this headline">¶</a></h1>
 <p>In ML applications we often need to crop the video frame for processing objects and number of objects per frame may differ. For ML we may also need preprocessing.</p>
 <p><cite>vvas_xmulticrop</cite> is a GStreamer plug-in to do scaling, color space conversion, preprocessing and to crop single or multiple objects.
 It takes one input frame and can crop one or more objects from it. Scaling, color space conversion and preprocessing can be applied to all the cropped objects/buffers.
@@ -180,12 +178,12 @@ Memory for dynamically cropped buffers is allocated from a GStreamer buffer pool
 <p>Make sure that the image-processing hardware kernel supports maximum resolution required by your application.</p>
 </div>
 <div class="section" id="prerequisite">
-<h2>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this heading">¶</a></h2>
+<h2>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this headline">¶</a></h2>
 <p><cite>vvas_xmulticrop</cite> plug-in is dependent on the <code class="docutils literal notranslate"><span class="pre">image-processing</span></code> kernel. If your application uses this plug-in, then make sure that <code class="docutils literal notranslate"><span class="pre">image-processing</span></code> kernel is included in your hardware design. Also make sure that the <code class="docutils literal notranslate"><span class="pre">image-processing</span></code> hardware kernel supports maximum resolution and required color formats by your application.</p>
 <p>Maximum resolution and various color formats supported by <code class="docutils literal notranslate"><span class="pre">image-processing</span></code> kernel can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/vvas-accel-hw/image_processing/image_processing_config.h">image-processing kernel config</a></p>
 </div>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>This plug-in accepts buffers with the following color format standards:</p>
 <ul class="simple">
 <li><p>RGBx</p></li>
@@ -211,7 +209,7 @@ Memory for dynamically cropped buffers is allocated from a GStreamer buffer pool
 </ul>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h2>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xmulticrop plug-in.</p>
 <p>Table 13: vvas_xmulticrop Plug-in Properties</p>
 <table class="docutils align-default">
@@ -513,7 +511,7 @@ scaling.</p></td>
 </div>
 </div>
 <div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
 <p>The pipeline mentioned below is for PCIe/Data Center platform. In case you want to execute this pipeline on Embedded platform, then remove <strong>dev-idx</strong> property in the pipelines mentioned below.</p>
 <ul class="simple">
 <li><p>Below pipeline converts NV12 to RGB and performs scaling from 1920x1080 to 640x480. The pipeline mentioned below is for PCIe/Data Center platform.</p></li>
@@ -653,7 +651,7 @@ videotestsrc num-buffers=10 ! video/x-raw,format=NV12,width=1920,height=1080 \
 </div>
 </div>
 <div class="section" id="vvas-xmulticrop-with-software-scaling-kernel">
-<h2>vvas_xmulticrop with software scaling kernel<a class="headerlink" href="#vvas-xmulticrop-with-software-scaling-kernel" title="Permalink to this heading">¶</a></h2>
+<h2>vvas_xmulticrop with software scaling kernel<a class="headerlink" href="#vvas-xmulticrop-with-software-scaling-kernel" title="Permalink to this headline">¶</a></h2>
 <p>VVAS plugin “vvas_xmulticrop” can also work with software implementation of the IP. User has to set “software-scaling” property to “true”, set the “kernel-name” to “image_processing_sw:{image_processing_sw}”,
 also set “coef-load-type” to “fixed” type and set “num-taps” to 12. Below are the formats supported by the current implementation.</p>
 <ul class="simple">
@@ -665,7 +663,7 @@ also set “coef-load-type” to “fixed” type and set “num-taps” to 12. 
 </ul>
 <p>Note: For GRAY8, only scaling is supported, cross format conversion is not supported.</p>
 <div class="section" id="example-pipeline">
-<h3>Example pipeline:<a class="headerlink" href="#example-pipeline" title="Permalink to this heading">¶</a></h3>
+<h3>Example pipeline:<a class="headerlink" href="#example-pipeline" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v \
 videotestsrc num-buffers=10 ! video/x-raw,format=NV12,width=1920,height=1080 \
 ! vvas_xmulticrop kernel-name=&quot;image_processing_sw:{image_processing_sw_1}&quot; software-scaling=true coef-load-type=0 num-taps=12 \

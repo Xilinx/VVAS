@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -123,18 +121,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-debugging-support">
-<h1>VVAS Debugging Support<a class="headerlink" href="#vvas-debugging-support" title="Permalink to this heading">¶</a></h1>
+<h1>VVAS Debugging Support<a class="headerlink" href="#vvas-debugging-support" title="Permalink to this headline">¶</a></h1>
 <p>This section covers various debugging options available in VVAS.</p>
 <div class="section" id="gstreamer-logs">
-<h2>GStreamer logs<a class="headerlink" href="#gstreamer-logs" title="Permalink to this heading">¶</a></h2>
+<h2>GStreamer logs<a class="headerlink" href="#gstreamer-logs" title="Permalink to this headline">¶</a></h2>
 <p>VVAS relies on debugging tools supported by GStreamer framework. For more details, you may refer to <a class="reference external" href="https://gstreamer.freedesktop.org/documentation/tutorials/basic/debugging-tools.html?gi-language=c">GStreamer Debugging Tools</a></p>
 </div>
 <div class="section" id="vvas-core-library-logs">
-<h2>vvas-core library logs<a class="headerlink" href="#vvas-core-library-logs" title="Permalink to this heading">¶</a></h2>
+<h2>vvas-core library logs<a class="headerlink" href="#vvas-core-library-logs" title="Permalink to this headline">¶</a></h2>
 <p>VVAS GStreamer plug-ins are using different vvas-core libraries for different functionalities. Logs specific to each of these vvas-core libraries can be enabled/disabled. How to rout these to syslog, to a file or to the console is covered in the section below.
 vvas-core library logs will be routed to one of the options mentioned below.</p>
 <div class="section" id="to-syslog">
-<h3>To syslog<a class="headerlink" href="#to-syslog" title="Permalink to this heading">¶</a></h3>
+<h3>To syslog<a class="headerlink" href="#to-syslog" title="Permalink to this headline">¶</a></h3>
 <p>This is the default destination for the logs. Logs will be routed to either <code class="docutils literal notranslate"><span class="pre">/var/log/syslog</span></code> or <code class="docutils literal notranslate"><span class="pre">/var/logs/messages</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -142,7 +140,7 @@ vvas-core library logs will be routed to one of the options mentioned below.</p>
 </div>
 </div>
 <div class="section" id="to-a-file">
-<h3>To a File<a class="headerlink" href="#to-a-file" title="Permalink to this heading">¶</a></h3>
+<h3>To a File<a class="headerlink" href="#to-a-file" title="Permalink to this headline">¶</a></h3>
 <p>If environment variable <code class="docutils literal notranslate"><span class="pre">VVAS_CORE_LOG_FILE_PATH</span></code> is set to file path then vvas-core logs will be routed to file provided.
 if file path is invalid or unable to create file in the provided path due to permissions then logs will be routed to SYSLOG.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Example: export VVAS_CORE_LOG_FILE_PATH=$PWD/log.txt
@@ -150,7 +148,7 @@ if file path is invalid or unable to create file in the provided path due to per
 </div>
 </div>
 <div class="section" id="to-consol">
-<h3>To Consol<a class="headerlink" href="#to-consol" title="Permalink to this heading">¶</a></h3>
+<h3>To Consol<a class="headerlink" href="#to-consol" title="Permalink to this headline">¶</a></h3>
 <p>If environment variable <code class="docutils literal notranslate"><span class="pre">VVAS_CORE_LOG_FILE_PATH</span></code> is set to “CONSOLE” then vvas-core logs will be routed to console.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Example</span><span class="p">:</span> <span class="n">export</span> <span class="n">VVAS_CORE_LOG_FILE_PATH</span><span class="o">=</span><span class="n">CONSOLE</span>
 </pre></div>
@@ -158,7 +156,7 @@ if file path is invalid or unable to create file in the provided path due to per
 </div>
 </div>
 <div class="section" id="setting-vvas-core-log-level">
-<h2>Setting VVAS_CORE Log Level<a class="headerlink" href="#setting-vvas-core-log-level" title="Permalink to this heading">¶</a></h2>
+<h2>Setting VVAS_CORE Log Level<a class="headerlink" href="#setting-vvas-core-log-level" title="Permalink to this headline">¶</a></h2>
 <p>To set vvas_core log level for GStreamer based applications, GST_EXPORT should be set accordingly. Mapping between GStreamer log level and vvas-core library log level is as mentioned below.</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>

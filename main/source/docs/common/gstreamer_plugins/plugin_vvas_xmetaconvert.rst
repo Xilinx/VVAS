@@ -154,6 +154,9 @@ Table 9: vvas_xmetaconvert Parameters
 |                      |  0 => all levels     |                                                                 |
 |                      |  N => specific level |                                                                 |
 +----------------------+----------------------+-----------------------------------------------------------------+
+| radius               |  Integer             |Represents Radius of circle, also used for point. Default value  |
+|                      |                      |is 3                                                             |
++----------------------+----------------------+-----------------------------------------------------------------+
 
 Example Pipelines
 ---------------------

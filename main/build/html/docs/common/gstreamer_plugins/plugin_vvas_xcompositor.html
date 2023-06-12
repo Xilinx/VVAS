@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -141,13 +139,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xcompositor">
-<span id="id1"></span><h1>vvas_xcompositor<a class="headerlink" href="#vvas-xcompositor" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xcompositor<a class="headerlink" href="#vvas-xcompositor" title="Permalink to this headline">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> is a hardware accelerated N input, 1 output Gstreamer plugin that combines two or more video frames into a single frame.
 It can accept the below mentioned video formats. For each of the requested sink pads it will compare the incoming geometry and framerate to define the output parameters. Indeed, output video frames will have the geometry of the biggest incoming video stream and the framerate of the fastest incoming one.</p>
 <p>In case input and output formats are different, then the color space conversion will be hardware accelerated by <code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code>.
 For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/compositor">vvas_xcompositor source code</a></p>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>This plug-in accepts buffers with the following color format standards:</p>
 <ul class="simple">
 <li><p>RGBx</p></li>
@@ -178,7 +176,7 @@ For implementation details, refer to <a class="reference external" href="https:/
 <p>As a reference, multi-scaler configuration for <code class="docutils literal notranslate"><span class="pre">smart</span> <span class="pre">model</span> <span class="pre">select</span></code> example design can be found in <a class="reference external" href="https://github.com/Xilinx/VVAS/blob/master/vvas-examples/Embedded/smart_model_select/image_processing_config.h">image-processing configuration</a></p>
 </div>
 <div class="section" id="individual-parameters-for-each-input-stream-can-be-configured-on-the-gstcompositorpad">
-<h2>Individual parameters for each input stream can be configured on the GstCompositorPad:<a class="headerlink" href="#individual-parameters-for-each-input-stream-can-be-configured-on-the-gstcompositorpad" title="Permalink to this heading">¶</a></h2>
+<h2>Individual parameters for each input stream can be configured on the GstCompositorPad:<a class="headerlink" href="#individual-parameters-for-each-input-stream-can-be-configured-on-the-gstcompositorpad" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>“xpos”: The x-co-ordinate position of the top-left corner of the current frame in output buffer.</p></li>
 <li><p>“ypos”: The y-co-ordinate position of the top-left corner of the current frame in output buffer.</p></li>
@@ -191,7 +189,7 @@ For implementation details, refer to <a class="reference external" href="https:/
 </div>
 </div>
 <div class="section" id="plugin-properties">
-<h2>Plugin properties<a class="headerlink" href="#plugin-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Plugin properties<a class="headerlink" href="#plugin-properties" title="Permalink to this headline">¶</a></h2>
 <p>Table 14: <code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
@@ -330,7 +328,7 @@ devices</p></td>
 </table>
 </div>
 <div class="section" id="vvas-xcompositor-pad-properties">
-<h2>vvas_xcompositor pad properties<a class="headerlink" href="#vvas-xcompositor-pad-properties" title="Permalink to this heading">¶</a></h2>
+<h2>vvas_xcompositor pad properties<a class="headerlink" href="#vvas-xcompositor-pad-properties" title="Permalink to this headline">¶</a></h2>
 <p>Table 15: <code class="docutils literal notranslate"><span class="pre">vvas_xcompositor</span></code> Pad Properties</p>
 <table class="docutils align-default">
 <colgroup>

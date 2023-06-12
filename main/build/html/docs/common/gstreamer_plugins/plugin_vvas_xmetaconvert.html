@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -141,15 +139,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xmetaconvert">
-<span id="id1"></span><h1>vvas_xmetaconvert<a class="headerlink" href="#vvas-xmetaconvert" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xmetaconvert<a class="headerlink" href="#vvas-xmetaconvert" title="Permalink to this headline">¶</a></h1>
 <p>GStreamer vvas_xmetaconvert plug-in produces overlay metadata(GstVvasOverlayMeta) structure needed by <a class="reference internal" href="plugin_vvas_xoverlay.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> plug-in from VVAS ML inference metadata (i.e.GstInferenceMeta) which is attached input buffer. Static configuration parameters like font type, font size and etc need to be provided in JSON format via <strong>config-location</strong> property of this plugin.
 For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaconvert">vvas_xmetaconvert source code</a></p>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>This plug-in is format agnostic and can accept any input format as it operates only on metadata attached to input buffer and same will be pushed out of source pad after attaching overlay metadata.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h2>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xmetaconvert plug-in.</p>
 <p>Table 3: vvas_xmetaconvert Plug-in Properties</p>
 <table class="docutils align-default">
@@ -180,7 +178,7 @@ will be used to convert inference metadata to overlay metadata</p></td>
 </table>
 </div>
 <div class="section" id="json-file-format-to-be-provided-config-location-property">
-<h2>JSON File format to be provided <strong>config-location</strong> property<a class="headerlink" href="#json-file-format-to-be-provided-config-location-property" title="Permalink to this heading">¶</a></h2>
+<h2>JSON File format to be provided <strong>config-location</strong> property<a class="headerlink" href="#json-file-format-to-be-provided-config-location-property" title="Permalink to this headline">¶</a></h2>
 <p>This section describes the JSON file format and configuration parameters for the vvas_xmetaconvert plug-in.</p>
 <p>The following example is of a JSON file to pass to the vvas_xmetaconvert using <strong>config-location</strong> property.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -333,11 +331,16 @@ For face detect, keep the “classes” array empty.</p>
 N =&gt; specific level</p></td>
 <td><p>Display bounding box of one particular level or all levels</p></td>
 </tr>
+<tr class="row-odd"><td><p>radius</p></td>
+<td><p>Integer</p></td>
+<td><p>Represents Radius of circle, also used for point. Default value
+is 3</p></td>
+</tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
 <p>The following example demonstrates use of vvas_xmetaconvert with <a class="reference internal" href="plugin_vvas_xoverlay.html#vvas-xoverlay"><span class="std std-ref">vvas_xoverlay</span></a> plug-in for drawing bounding boxes.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&quot;&lt;PATH&gt;/001.bgr&quot; blocksize=150528 numbuffers=1
 ! videoparse width=224 height=224 framerate=30/1 format=16

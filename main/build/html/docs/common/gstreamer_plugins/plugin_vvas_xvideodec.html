@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -111,19 +109,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xvideodec">
-<span id="id1"></span><h1>vvas_xvideodec<a class="headerlink" href="#vvas-xvideodec" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xvideodec<a class="headerlink" href="#vvas-xvideodec" title="Permalink to this headline">¶</a></h1>
 <p>In Versal family of devices, there is an IP, <code class="docutils literal notranslate"><span class="pre">VDU</span></code>, for hardware accelerated video decoding. This IP supports decoding of H264/HEVC formats. Please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a> for more information on the AMD/Xilinx VDU block.</p>
 <p><code class="docutils literal notranslate"><span class="pre">vvas_xvideodec</span></code> plugin controls the <code class="docutils literal notranslate"><span class="pre">VDU</span></code> IP for Video Decoding jobs. This plug-in is used only in PCIe/DC platform. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/videodec">vvas_xvideodec source code</a></p>
 <div class="figure align-default">
 <img alt="../../../_images/video_decoder.png" src="../../../_images/video_decoder.png" />
 </div>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>This plugin supports H264 and HEVC encoded streams of various profile, level values as input. For complete list of supported profiles and levels, please refer to <a class="reference external" href="https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/vdu/v1_0/pg414-vdu.pdf">VDU PG414</a>
 The native output of this plugin is NV12 format. For any other desired output format, it should be software-converted and will affect performance.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h2>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xvideodec plug-in.</p>
 <p>Table 1: vvas_xvideodec Plug-in Properties</p>
 <table class="docutils align-default">
@@ -255,7 +253,7 @@ xclbin.</p></td>
 </tbody>
 </table>
 <div class="section" id="example-pipelines">
-<h3>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h3>
+<h3>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h3>
 <p>The following pipeline takes MP4 file with H264 codec as an input and provides raw decoded output in NV12 format. Please refer above table for other parameters and values.</p>
 <p><cite>dev-idx</cite> represents the zero based index of the device on which this decoder to be launched. Please note that ‘dev-idx’ parameter range can vary from 0 to N-1 where N can be obtained with below command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">N</span><span class="o">=</span>xbutil  examine <span class="p">|</span> grep xilinx_v70 <span class="p">|</span> wc -l

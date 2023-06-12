@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -139,10 +137,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-buffer-pool-and-allocator">
-<h1>VVAS Buffer pool and Allocator<a class="headerlink" href="#vvas-buffer-pool-and-allocator" title="Permalink to this heading">¶</a></h1>
+<h1>VVAS Buffer pool and Allocator<a class="headerlink" href="#vvas-buffer-pool-and-allocator" title="Permalink to this headline">¶</a></h1>
 <p>Buffer pool and buffer allocator are core elements of GStreamer framework. VVAS is based on Xilinx Run Time (XRT) framework to manage multi device solutions. For physically contiguous memory requirements, VVAS user XRT buffer allocator. To abstract the XRT related complexities, VVAS has developped GstVvasBufferPool and GstVvasAllocator plug-ins which are derived form the GStreamer base classes.</p>
 <div class="section" id="gstvvasbufferpool">
-<h2>GstVvasBufferPool<a class="headerlink" href="#gstvvasbufferpool" title="Permalink to this heading">¶</a></h2>
+<h2>GstVvasBufferPool<a class="headerlink" href="#gstvvasbufferpool" title="Permalink to this headline">¶</a></h2>
 <p>The GStreamer VVAS buffer pool holds the pool of video frames allocated using the GStreamer allocator object. It is derived from the GStreamer base video buffer pool object (GstVideoBufferPool).</p>
 <p>The VVAS buffer pool:</p>
 <ul class="simple">
@@ -179,10 +177,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </div>
 </div>
 <div class="section" id="gstvvasallocator">
-<h2>GstVvasAllocator<a class="headerlink" href="#gstvvasallocator" title="Permalink to this heading">¶</a></h2>
+<h2>GstVvasAllocator<a class="headerlink" href="#gstvvasallocator" title="Permalink to this headline">¶</a></h2>
 <p>The GStreamer VVAS allocator object is derived from an open source GstAllocator object designed for allocating memory using XRT APIs. The VVAS allocator is the backbone to the VVAS framework achieving zero-copy (wherever possible).</p>
 <div class="section" id="allocator-apis">
-<h3>Allocator APIs<a class="headerlink" href="#allocator-apis" title="Permalink to this heading">¶</a></h3>
+<h3>Allocator APIs<a class="headerlink" href="#allocator-apis" title="Permalink to this headline">¶</a></h3>
 <p>GStreamer plug-in developers can use the following APIs to interact with the VVAS allocator. To allocate memory using XRT, the GStreamer plug-ins and buffer pools require the GstAllocator object provided by the following API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GstAllocator</span><span class="o">*</span> <span class="n">gst_vvas_allocator_new</span> <span class="p">(</span><span class="n">guint</span> <span class="n">dev_idx</span><span class="p">,</span> <span class="n">gboolean</span> <span class="n">need_dma</span><span class="p">)</span>
 
