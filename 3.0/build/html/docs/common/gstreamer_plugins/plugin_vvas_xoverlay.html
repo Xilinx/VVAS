@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -141,7 +139,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xoverlay">
-<span id="id1"></span><h1>vvas_xoverlay<a class="headerlink" href="#vvas-xoverlay" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xoverlay<a class="headerlink" href="#vvas-xoverlay" title="Permalink to this headline">¶</a></h1>
 <p>Overlay plug-in is used for drawing bounding boxes, text, lines, arrows, circles, and polygons on frames. Using display-clock property user can display clock on any part of the frame.  This plug-in internally uses <code class="docutils literal notranslate"><span class="pre">vvas_xoverlay</span></code> library for drawing different shapes, text and clock</p>
 <p>For drawing objects like bounding box, lines, arrows etc., the information about these objects must be provided through overlay metadata structure attached to the buffer. For more information about this overlay meta data structure, refer to <a class="reference internal" href="../meta_data/vvas_overlay_metadata.html#vvas-overlay-metadata"><span class="std std-ref">VVAS Overlay Metadata</span></a>.</p>
 <p>For converting metadata generated from upstream plug-in like infer, opticalflow, segmentation etc., to gstvvasoverlaymeta an intermediate plug-in, <a class="reference internal" href="plugin_vvas_xmetaconvert.html#vvas-xmetaconvert"><span class="std std-ref">vvas_xmetaconvert</span></a> is to be used before <code class="docutils literal notranslate"><span class="pre">vvas_xoverlay</span></code> plug-in.</p>
@@ -150,7 +148,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <a class="reference internal image-reference" href="../../../_images/vvas_overlay_blockdiagram.png"><img alt="../../../_images/vvas_overlay_blockdiagram.png" src="../../../_images/vvas_overlay_blockdiagram.png" style="width: 792.8000000000001px; height: 320.0px;" /></a>
 </div>
 <div class="section" id="supported-features">
-<h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this heading">¶</a></h2>
+<h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 13%" />
@@ -184,105 +182,99 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </table>
 </div>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>Supported input buffer formats are RGB/BGR, NV12 and Grayscale. Required metadata in gstvvasoverlaymeta type for drawing.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h2>
 <p>The following table lists the GStreamer plug-in properties supported by the vvas_xoverlay plug-in.</p>
 <p>Table 7: vvas_xoverlay Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 22%" />
-<col style="width: 0%" />
-<col style="width: 14%" />
-<col style="width: 0%" />
+<col style="width: 21%" />
+<col style="width: 15%" />
 <col style="width: 16%" />
-<col style="width: 0%" />
 <col style="width: 24%" />
-<col style="width: 1%" />
-<col style="width: 22%" />
+<col style="width: 23%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Property Name</strong></p></th>
-<th class="head" colspan="2"><p><strong>Type</strong></p></th>
-<th class="head" colspan="2"><p><strong>Range</strong></p></th>
-<th class="head" colspan="2"><p><strong>Default</strong></p></th>
-<th class="head" colspan="2"><p><strong>Description</strong></p></th>
+<th class="head"><p><strong>Type</strong></p></th>
+<th class="head"><p><strong>Range</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>xclbin-location</p></td>
-<td colspan="2"><p>String</p></td>
-<td colspan="2"><p>NA</p></td>
-<td colspan="2"><p>./binary_container_1
+<td><p>String</p></td>
+<td><p>NA</p></td>
+<td><p>./binary_container_1
 .xclbin</p></td>
-<td colspan="2"><p>location of xcllbin</p></td>
+<td><p>location of xcllbin</p></td>
 </tr>
 <tr class="row-odd"><td><p>dev-idx</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>0 to 31</p></td>
-<td colspan="2"><p>0</p></td>
-<td colspan="2"><p>device index</p></td>
+<td><p>Integer</p></td>
+<td><p>0 to 31</p></td>
+<td><p>0</p></td>
+<td><p>device index</p></td>
 </tr>
-<tr class="row-even"><td colspan="9"><dl>
-<dt>in-mem-bank        | Unsigned int |  0 - 65535    |           0           | VVAS input memory</dt><dd><div class="line-block">
-<div class="line">|               |                       | bank to allocate</div>
-<div class="line">|               |                       | memory</div>
-</div>
-</dd>
-</dl>
-</td>
+<tr class="row-even"><td><p>in-mem-bank</p></td>
+<td><p>Unsigned int</p></td>
+<td><p>0 - 65535</p></td>
+<td><p>0</p></td>
+<td><p>VVAS input memory
+bank to allocate
+memory</p></td>
 </tr>
-<tr class="row-odd"><td colspan="9"><dl>
-<dt>display-clock      |   Boolean    |    0 or 1     |           0           | flag for indicating</dt><dd><div class="line-block">
-<div class="line">|               |                       | displaying clock</div>
-</div>
-</dd>
-</dl>
-</td>
+<tr class="row-odd"><td><p>display-clock</p></td>
+<td><p>Boolean</p></td>
+<td><p>0 or 1</p></td>
+<td><p>0</p></td>
+<td><p>flag for indicating
+displaying clock</p></td>
 </tr>
 <tr class="row-even"><td><p>clock-fontname</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>0 or 7</p></td>
-<td colspan="2"><p>0</p></td>
-<td colspan="2"><p>font number for clock
+<td><p>Integer</p></td>
+<td><p>0 or 7</p></td>
+<td><p>0</p></td>
+<td><p>font number for clock
 based on opencv</p></td>
 </tr>
 <tr class="row-odd"><td><p>clock-fontscale</p></td>
-<td colspan="2"><p>float</p></td>
-<td colspan="2"><p>0.1 to 1.0</p></td>
-<td colspan="2"><p>0.5</p></td>
-<td colspan="2"><p>font scale of
+<td><p>float</p></td>
+<td><p>0.1 to 1.0</p></td>
+<td><p>0.5</p></td>
+<td><p>font scale of
 display clock</p></td>
 </tr>
 <tr class="row-even"><td><p>clock-fontcolor</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>0 to
+<td><p>Integer</p></td>
+<td><p>0 to
 4,294,967,295</p></td>
-<td colspan="2"><p>0xff00</p></td>
-<td colspan="2"><p>RGB color of display
+<td><p>0xff00</p></td>
+<td><p>RGB color of display
 clock as 0xRGB</p></td>
 </tr>
 <tr class="row-odd"><td><p>clock-xoffset</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>0 to
+<td><p>Integer</p></td>
+<td><p>0 to
 frame width</p></td>
-<td colspan="2"><p>100</p></td>
-<td colspan="2"><p>x starting position</p></td>
+<td><p>100</p></td>
+<td><p>x starting position</p></td>
 </tr>
 <tr class="row-even"><td><p>clock-yoffset</p></td>
-<td colspan="2"><p>Integer</p></td>
-<td colspan="2"><p>0 to
+<td><p>Integer</p></td>
+<td><p>0 to
 frame height</p></td>
-<td colspan="2"><p>50</p></td>
-<td colspan="2"><p>y starting position</p></td>
+<td><p>50</p></td>
+<td><p>y starting position</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
 <p>The following example demonstrates use of <code class="docutils literal notranslate"><span class="pre">vvas_xoverlay</span></code> plug-in with <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> and <code class="docutils literal notranslate"><span class="pre">vvas_xmetaconvert</span></code> plug-ins for drawing bounding boxes. <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in produces inference result and stores in VVAS_GstInference data structure. This metadata is parsed and translated into a different metadata structure that understood by <code class="docutils literal notranslate"><span class="pre">vvas_xmetaconvert</span></code> plug-in to draw the bounding box. This translation of meta data is done by <code class="docutils literal notranslate"><span class="pre">vvas_xmetaconvert</span></code> plug-in.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=&quot;&lt;PATH&gt;/001.bgr&quot; blocksize=150528 numbuffers=1
 ! videoparse width=224 height=224 framerate=30/1 format=16

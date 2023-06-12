@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -124,7 +122,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-gstreamer-plug-ins-for-embedded-platforms">
-<h1>VVAS GStreamer Plug-ins for Embedded Platforms<a class="headerlink" href="#vvas-gstreamer-plug-ins-for-embedded-platforms" title="Permalink to this heading">¶</a></h1>
+<h1>VVAS GStreamer Plug-ins for Embedded Platforms<a class="headerlink" href="#vvas-gstreamer-plug-ins-for-embedded-platforms" title="Permalink to this headline">¶</a></h1>
 <p>The following section describes GStreamer plugins for Embedded platforms. The plug-ins source code is available in the vvas-gst-plugins repository/folder of the VVAS sources tree. The following table lists the GStreamer plug-ins.</p>
 <p>Table 1: GStreamer Plug-ins</p>
 <table class="docutils align-default">
@@ -155,12 +153,12 @@ interest metadata.</p></td>
 </tbody>
 </table>
 <div class="section" id="omx-encoder-decoder-plug-in">
-<span id="omx-encoder-decoder"></span><h2>OMX Encoder/Decoder Plug-in<a class="headerlink" href="#omx-encoder-decoder-plug-in" title="Permalink to this heading">¶</a></h2>
+<span id="omx-encoder-decoder"></span><h2>OMX Encoder/Decoder Plug-in<a class="headerlink" href="#omx-encoder-decoder-plug-in" title="Permalink to this headline">¶</a></h2>
 <p>“omxh264decoder/omxh265decoder” are GStreamer Plugins for hardware accelerated H264/H265 Video decoding using VCU IP. Similarly, “omxh264encoder/omxh265encoder” are GStreamer Plugins for hardware accelerated H264/H265 Video encoding using VCU IP.
 For more details about these plugins, refer to the <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/vcu/v1_2/pg252-vcu.pdf">VCU PG252</a>  Chapter 23: Encoder and Decoder Software Features.</p>
 </div>
 <div class="section" id="region-of-interest-plug-in">
-<span id="roi-plugin"></span><h2>Region of Interest Plug-in<a class="headerlink" href="#region-of-interest-plug-in" title="Permalink to this heading">¶</a></h2>
+<span id="roi-plugin"></span><h2>Region of Interest Plug-in<a class="headerlink" href="#region-of-interest-plug-in" title="Permalink to this headline">¶</a></h2>
 <p>The region of interest (ROI) GStreamer vvas_xroigen plug-in generates GstVideoRegionOfInterestMeta metadata information, which is expected by GStreamer OMX encoder plug-ins to encode raw frames with the desired quality parameters (QP) values/ level for specified ROIs. The vvas_xroigen plug-in prepares the GstVideoRegionOfInterestMeta metadata by parsing an VVAS supported list of metadata objects (GstInferenceMeta).</p>
 <p>For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/roigen">vvas_xroigen source code</a>.</p>
 <div class="admonition tip">
@@ -169,11 +167,11 @@ For more details about these plugins, refer to the <a class="reference external"
 </div>
 <p>GStreamer ROI metadata information is attached with each outgoing buffer based on the following plug-in properties.</p>
 <div class="section" id="input-and-output">
-<h3>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h3>
+<h3>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h3>
 <p>Accepts buffers with any of the GStreamer supported video formats on input and output GstPads.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h3>
+<h3>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h3>
 <p>The following table lists the GObject properties exposed by vvas_xroigen plug-in.</p>
 <p>Table 2: vvas_xroigen Plug-in Properties</p>
 <table class="docutils align-default">
@@ -345,7 +343,7 @@ delta)</p>
 </tbody>
 </table>
 <div class="section" id="example-pipelines">
-<h4>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h4>
+<h4>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h4>
 <p>The following pipeline takes input video in an MP4 container from the filesrc plug-in. The <code class="docutils literal notranslate"><span class="pre">qtdemux</span></code> extracts the <code class="docutils literal notranslate"><span class="pre">H.264</span></code> elementary stream from the MP4 container and pass it to the <code class="docutils literal notranslate"><span class="pre">omxh264dec</span></code> plug-in for decoding. The output of the decoder goes to the <code class="docutils literal notranslate"><span class="pre">vvas_xmultisrc</span></code> plug-in for resizing to a resolution of 640 x 360 and color-space conversion to <code class="docutils literal notranslate"><span class="pre">BGR</span></code> format. If your design has other kernels, like <code class="docutils literal notranslate"><span class="pre">multiscaler</span></code>, for re-size and colorspace conversion, then you may use it along with <code class="docutils literal notranslate"><span class="pre">vvas_xabrscaler</span></code> plug-in. The output from vvas_xmultisrc goes to the vvas_xfilter plug-in for object detection using the densebox model. The inference operation generates the metadata and bounding box, for each detected object. The vvas_xroigen plug-in creates the ROI metadata from the incoming bounding box information and passes this metadata to omxh264enc for ROI based encoding. This is an example pipeline to demonstrate ROI feature. This pipeline uses omxh264enc hence your design must have <code class="docutils literal notranslate"><span class="pre">VCU</span></code> encoder.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v filesrc location=&lt;filename&gt;.mp4 \
 ! qtdemux \

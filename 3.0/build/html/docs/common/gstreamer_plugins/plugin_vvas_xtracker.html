@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -140,7 +138,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xtracker">
-<span id="id1"></span><h1>vvas_xtracker<a class="headerlink" href="#vvas-xtracker" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xtracker<a class="headerlink" href="#vvas-xtracker" title="Permalink to this headline">¶</a></h1>
 <p>The tracker plug-in tracks detected objects in a sequence of video frames. Because tracking is easier than detection, tracking algorithms can use fewer computational resources
 than running an object detector on every frame and hence finds many applications.</p>
 <p>Each tracker element in the frame is given a unique ID and is initialized with the coordinates of the object detected by ML block.
@@ -165,11 +163,11 @@ Metaaffixer scales and updates the Inference metadata to original video resoluti
 <p>Downstream plugins read the bounding box information of the objects from inference metadata attached to the GstBuffer and does further processing.</p>
 <p>The <a class="reference internal" href="plugin_vvas_xskipframe.html#vvas-xskipframe"><span class="std std-ref">vvas_xskipframe</span></a>, <a class="reference internal" href="plugin_vvas_xreorderframe.html#vvas-xreorderframe"><span class="std std-ref">vvas_xreorderframe</span></a> and <a class="reference internal" href="#vvas-xtracker"><span class="std std-ref">vvas_xtracker</span></a> are multi-stream aware and supports buffers of multiple streams on their sink and source GstPads.</p>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>Accepts buffers with NV12 color formats on sink and source pads.</p>
 </div>
 <div class="section" id="control-parameters-and-plugin-properties">
-<h2>Control Parameters and Plugin Properties<a class="headerlink" href="#control-parameters-and-plugin-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plugin Properties<a class="headerlink" href="#control-parameters-and-plugin-properties" title="Permalink to this headline">¶</a></h2>
 <p>The following table lists the GStreamer plugin properties supported by the vvas_xtracker plugin.</p>
 <p>Table 8: vvas_xtracker plugin properties</p>
 <table class="docutils align-default">
@@ -419,7 +417,7 @@ downstream plugins</p>
 </table>
 </div>
 <div class="section" id="example-pipeline">
-<h2>Example Pipeline<a class="headerlink" href="#example-pipeline" title="Permalink to this heading">¶</a></h2>
+<h2>Example Pipeline<a class="headerlink" href="#example-pipeline" title="Permalink to this headline">¶</a></h2>
 <p>The following is an example pipeline to demonstrate usage of vvas_xtracker plugin with inference performed every 6th frame.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=cars_1.264 ! \
 h264parse ! queue ! \

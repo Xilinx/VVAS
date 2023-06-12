@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -141,17 +139,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xmetaaffixer">
-<span id="id1"></span><h1>vvas_xmetaaffixer<a class="headerlink" href="#vvas-xmetaaffixer" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xmetaaffixer<a class="headerlink" href="#vvas-xmetaaffixer" title="Permalink to this headline">¶</a></h1>
 <p>The metaaffixer plug-in, <code class="docutils literal notranslate"><span class="pre">vvas_xmetaaffixer</span></code>, is used to scale the incoming metadata information for the different resolutions. A machine learning (ML) operation can be performed on a different frame resolution and color format than the original frame, but the metadata might be associated with the full resolution, original frame. The vvas_metaaffixer has two types of pads, master pads and slave pads. Input pads are pads on request; the number of input pads can be created based on the number of input sources. There is one mandatory master input pad (sink pad) that receives the original/reference metadata. Other input pads are referred to as slave pads. Metadata received on the master sink pad is scaled in relation to the resolution of each of the slave sink pads. The scaled metadata is attached to the buffer going out of the output (source) slave pads. There can be up to 16 slave pads created as required. For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/metaaffixer">vvas_xmetaaffixer source code</a></p>
 <div class="figure align-default">
 <img alt="../../../_images/metaaffixer_pipeline.png" src="../../../_images/metaaffixer_pipeline.png" />
 </div>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>This plug-in is format agnostic and can accept any input format. It operates only on the metadata. The vvas_xmetaaffixer plug-in supports the GstInferenceMeta data structure. For details about this structure, refer to the <a class="reference internal" href="../meta_data/vvas_meta_data_structures.html"><span class="doc">VVAS Inference Metadata</span></a> section.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h2>
 <p>Table 2: vvas_xmetaaffixer Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
@@ -205,7 +203,7 @@ buffers available).</p></td>
 </table>
 </div>
 <div class="section" id="pad-naming-syntax">
-<h2>Pad naming syntax<a class="headerlink" href="#pad-naming-syntax" title="Permalink to this heading">¶</a></h2>
+<h2>Pad naming syntax<a class="headerlink" href="#pad-naming-syntax" title="Permalink to this headline">¶</a></h2>
 <p>The pad naming syntax is listed, and the following image shows the syntax:</p>
 <ul class="simple">
 <li><p>MetaAffixer master input pad should be named sink_master.</p></li>
@@ -218,7 +216,7 @@ buffers available).</p></td>
 </div>
 </div>
 <div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
 <p>This section covers the example pipelines using the metaaffixer plug-in.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc num-buffers=1 \
 ! video/x-raw, width=1920, height=1080, format=NV12 \

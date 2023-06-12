@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -124,9 +122,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vitis-video-analytics-sdk-release-v3-0">
-<h1>Vitis Video Analytics SDK Release V3.0<a class="headerlink" href="#vitis-video-analytics-sdk-release-v3-0" title="Permalink to this heading">¶</a></h1>
+<h1>Vitis Video Analytics SDK Release V3.0<a class="headerlink" href="#vitis-video-analytics-sdk-release-v3-0" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="release-summary">
-<h2>Release Summary<a class="headerlink" href="#release-summary" title="Permalink to this heading">¶</a></h2>
+<h2>Release Summary<a class="headerlink" href="#release-summary" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Based on 2022.2 Tools</p></li>
 <li><p>Based on Vitis AI 3.0 for Machine Learning</p></li>
@@ -148,7 +146,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 </div>
 <div class="section" id="what-is-new-in-this-release">
-<h2>What is new in this release?<a class="headerlink" href="#what-is-new-in-this-release" title="Permalink to this heading">¶</a></h2>
+<h2>What is new in this release?<a class="headerlink" href="#what-is-new-in-this-release" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><dl class="simple">
 <dt>Added support for below mentioned models</dt><dd><ul>
@@ -166,7 +164,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 </div>
 <div class="section" id="other-changes-compared-to-previous-release">
-<h2>Other changes compared to previous release<a class="headerlink" href="#other-changes-compared-to-previous-release" title="Permalink to this heading">¶</a></h2>
+<h2>Other changes compared to previous release<a class="headerlink" href="#other-changes-compared-to-previous-release" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> accel-sw-lib has been discontinued and removed from this release. <code class="docutils literal notranslate"><span class="pre">vvas_xmetaconvert</span></code> and <code class="docutils literal notranslate"><span class="pre">vvas_xoverlay</span></code>  plug-ins can be used to implement the features supported by <code class="docutils literal notranslate"><span class="pre">vvas_xboundingbox</span></code> and many more new features.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">vvas_xdpuinfer</span></code> accel-sw-lib has been discontinued and removed from this release. <code class="docutils literal notranslate"><span class="pre">vvas_xinfer</span></code> plug-in shall be used for the inference requirements.</p></li>
@@ -182,7 +180,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 </div>
 <div class="section" id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading">¶</a></h2>
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Supports different input sources like Camera, RTP/RTSP streaming, file source etc.</p></li>
 <li><p>Hardware accelerated H264/H265 Video Encoding/Decoding.</p></li>
@@ -194,7 +192,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 </div>
 <div class="section" id="known-limitations">
-<h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this heading">¶</a></h2>
+<h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Image_processing kernel require minimum cropping width and height to be 16. In case the cropping width or height is less than 16, then cropping is not performed.</p></li>
 <li><p>Due to the above limitation, during cascaded ML inferencing, in case the first stage ML inference generates objects with region of interest having width and/height less than 16, then the object is not cropped and the ML inference for that object in next stages will not be correct.</p></li>
@@ -204,9 +202,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>For platform/example specific known limitations, refer to the example/application design.</p>
 </div>
 <div class="section" id="known-issues">
-<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this heading">¶</a></h2>
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="embedded-platforms">
-<h3>Embedded Platforms<a class="headerlink" href="#embedded-platforms" title="Permalink to this heading">¶</a></h3>
+<h3>Embedded Platforms<a class="headerlink" href="#embedded-platforms" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>On zcu104 boards, Cascaded pipelines OR several ML instances running simultaneously OR few models need more processing power when running in performance mode are sending board into bad state and needs reboot to recover from it. The default value of IOUT_OC_FAULT_LIMIT on PMIC chip irps5401 is too low and that is causing the temperature fault limit getting crossed. Workaround is to increase this limit. But there is risk of board getting damaged if running for long time.</p></li>
 </ul>

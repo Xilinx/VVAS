@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -141,7 +139,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xoptflow">
-<span id="id1"></span><h1>vvas_xoptflow<a class="headerlink" href="#vvas-xoptflow" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xoptflow<a class="headerlink" href="#vvas-xoptflow" title="Permalink to this headline">¶</a></h1>
 <p>Optical flow is one of the key functions used in many image processing and computer vision applications like object tracking, motion based segmentation, depth estimation, stitching and video frame rate conversion etc. Optical flow is estimated using previous and current frame pixel information.</p>
 <p>For optical flow estimation this plug-in uses hardware accelerator of xfopencv non-pyramid optical flow. This non-pyramid optical flow function takes current and previous frame as input and generates two floating point buffers of x and y direction displacements. Optical flow plug-in attaches these displacement buffers as <strong>gstvvasofmeta</strong>.
 For implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/optflow">vvas_xoptflow source code</a></p>
@@ -149,16 +147,16 @@ For implementation details, refer to <a class="reference external" href="https:/
 <a class="reference internal image-reference" href="../../../_images/vvas_optflow_blockdiagram.png"><img alt="../../../_images/vvas_optflow_blockdiagram.png" src="../../../_images/vvas_optflow_blockdiagram.png" style="width: 486.40000000000003px; height: 342.40000000000003px;" /></a>
 </div>
 <div class="section" id="prerequisite">
-<h2>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this heading">¶</a></h2>
+<h2>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this headline">¶</a></h2>
 <p>This plug-in uses <strong>dense_non_pyr_of_accel</strong> kernel. Make sure your xclbin has this kernel.</p>
 </div>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>Accepts buffer of NV12 format and generates two metadata buffers of type float and each size equal to the size of frame.
 For details about the meta data structure, refer to <a class="reference internal" href="../meta_data/vvas_optflow_metadata.html#vvas-optflow-metadata"><span class="std std-ref">VVAS Opticalflow Metadata</span></a></p>
 </div>
 <div class="section" id="plug-in-properties">
-<h2>Plug-in Properties<a class="headerlink" href="#plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Plug-in Properties<a class="headerlink" href="#plug-in-properties" title="Permalink to this headline">¶</a></h2>
 <p>Table 6: vvas_xoptflow Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
@@ -195,7 +193,7 @@ xclbin</p></td>
 </table>
 </div>
 <div class="section" id="example-pipelines">
-<h2>example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h2>example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
 <p>The following example demonstrates use of vvas_xoptflow plug-in.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 filesrc location=$1 ! \
 h264parse ! \

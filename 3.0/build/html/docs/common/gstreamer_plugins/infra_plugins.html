@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -123,7 +121,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="infrastructure-plug-ins-and-acceleration-software-libraries">
-<span id="infra-plugins-label"></span><h1>Infrastructure Plug-ins and Acceleration Software Libraries<a class="headerlink" href="#infrastructure-plug-ins-and-acceleration-software-libraries" title="Permalink to this heading">¶</a></h1>
+<span id="infra-plugins-label"></span><h1>Infrastructure Plug-ins and Acceleration Software Libraries<a class="headerlink" href="#infrastructure-plug-ins-and-acceleration-software-libraries" title="Permalink to this headline">¶</a></h1>
 <p>Infrastructure plug-ins are generic plug-ins that interact with the acceleration kernel through a set of APIs exposed by an acceleration software library corresponding to that kernel. Infrastructure plug-ins abstract the core/common functionality of the GStreamer framework (for example: caps negotiation and buffer management).</p>
 <p>Acceleration software libraries control the acceleration kernel, like register programming, or any other core logic required to implement the functions. Acceleration software libraries expose a simplified interface that is called by the GStreamer infrastructure plug-ins to interact with the acceleration kernel.These libraries are used with one of the infrastructure plug-ins to use the functionality a GStreamer-based application. Example pipelines with GStreamer infrastructure plug-ins and acceleration software libraries are covered later in this section.</p>
 <p>GStreamer infrastructure plug-ins are available in the <code class="docutils literal notranslate"><span class="pre">vvas-gst-plugins</span></code> folder in the vvas source code tree. The following section describes each infrastructure plug-in.</p>

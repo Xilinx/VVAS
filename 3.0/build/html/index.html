@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -112,7 +110,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vitis-video-analytics-sdk-overview">
-<h1>Vitis Video Analytics SDK Overview<a class="headerlink" href="#vitis-video-analytics-sdk-overview" title="Permalink to this heading">¶</a></h1>
+<h1>Vitis Video Analytics SDK Overview<a class="headerlink" href="#vitis-video-analytics-sdk-overview" title="Permalink to this headline">¶</a></h1>
 <p>The Vitis Video Analytics SDK <strong>(VVAS)</strong> is a framework to build AI and transcoding solutions on AMD platforms. It takes input data - from USB/CSI camera, video from file or streams over RTSP, and uses Vitis AI to generate insights from pixels for various use cases. VVAS SDK can be the foundation layer for several video analytic solutions like understanding traffic and pedestrians in smart city, health and safety monitoring in hospitals, self-checkout, and analytics in retail, detecting component defects at a manufacturing facility and others. VVAS can also be used to build Adaptive Bitrate Transcoding solutions that may require re-encoding the incoming video at different bitrates, resolution and encoding format.</p>
 <p>The core SDK consists of highly optimized VVAS Core C-APIs as well as GStreamer plug-ins that use various accelerators such as Video Encoder, Decoder, Image_processing kernel (for resize and color space conversion), Deep learning Processing Unit (DPU) for Machine Learning etc. By performing all the compute heavy operations in dedicated accelerators, VVAS can help in building highest performance pipelines for video analytics, transcoding and several other application areas.</p>
 <p>For the developer community, VVAS also provides a framework in the form of generic Infrastructure GStreamer plug-ins and a simplified interface to develop their own acceleration library to control a custom hardware accelerator. Using this framework, user can easily integrate their custom accelerators/kernels into Gstreamer framework. VVAS builds on top of Xilinx Run Time (XRT) and Vitis AI and abstracts these complex interfaces, making it easy for developers to build video analytics and transcoding pipelines without having to learn the complexities of XRT, Vitis AI.</p>
@@ -122,7 +120,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p class="caption"><span class="caption-text">VVAS Block Diagram</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </div>
 <div class="section" id="vvas-graph-architecture">
-<h2>VVAS Graph Architecture<a class="headerlink" href="#vvas-graph-architecture" title="Permalink to this heading">¶</a></h2>
+<h2>VVAS Graph Architecture<a class="headerlink" href="#vvas-graph-architecture" title="Permalink to this headline">¶</a></h2>
 <p>VVAS is an optimized graph architecture built using the open source GStreamer framework. The graph below shows a typical video analytic application starting from input video to outputting insights. All the individual blocks are various plugins that are used. At the bottom are the different hardware engines that are utilized throughout the application. Optimum memory management with zero-memory copy between plugins and the use of various accelerators ensure the highest performance.</p>
 <div class="figure align-default">
 <a class="reference internal image-reference" href="_images/VVA_Graph.png"><img alt="_images/VVA_Graph.png" src="_images/VVA_Graph.png" style="width: 1100px;" /></a>
@@ -145,36 +143,36 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="why-vvas">
-<h3>Why VVAS?<a class="headerlink" href="#why-vvas" title="Permalink to this heading">¶</a></h3>
+<h3>Why VVAS?<a class="headerlink" href="#why-vvas" title="Permalink to this headline">¶</a></h3>
 <p>Application developers can build seamless streaming pipelines for AI-based video and image analytics, complex Adaptive Bitrate Transcoding pipelines and several other solutions using VVAS without having any understanding about FPGA or other development environment complexities. VVAS ships with several hardware accelerators for various functionalities, highly optimized GStreamer plugins meeting most of the requirements of the Video Analytics and transcoding solutions.
 For advanced developers, VVAS provides an easy-to-use framework to integrate their own hardware accelerators/kernels in to Gstreamer framework-based applications.
 VVAS provide AI model support for popular object detection and classification models such as SSD, YOLO etc.
 All these infrastructure gives the flexibility for rapid prototyping to full production level solutions by significantly reducing time to market for the solutions on AMD platforms.</p>
 </div>
 <div class="section" id="vvas-core-components">
-<h3>VVAS Core Components<a class="headerlink" href="#vvas-core-components" title="Permalink to this heading">¶</a></h3>
+<h3>VVAS Core Components<a class="headerlink" href="#vvas-core-components" title="Permalink to this headline">¶</a></h3>
 <p>This section gives more deeper insight into VVAS. VVAS comprises following core components.</p>
 <div class="figure align-default">
 <a class="reference internal image-reference" href="_images/vvas_core_comp.png"><img alt="_images/vvas_core_comp.png" src="_images/vvas_core_comp.png" style="width: 400px;" /></a>
 </div>
 <div class="section" id="custom-gstreamer-plug-ins">
-<h4>Custom GStreamer Plug-ins<a class="headerlink" href="#custom-gstreamer-plug-ins" title="Permalink to this heading">¶</a></h4>
+<h4>Custom GStreamer Plug-ins<a class="headerlink" href="#custom-gstreamer-plug-ins" title="Permalink to this headline">¶</a></h4>
 <p>These are highly optimized GStreamer plug-ins developed to provide very specific functionality using optimized Kernels and IPs on AMD Platform. Refer to <a class="reference internal" href="docs/common/gstreamer_plugins/custom_plugins.html#custom-plugins-label"><span class="std std-ref">VVAS Custom Plug-ins</span></a> for more details about how to use these plug-ins.</p>
 </div>
 <div class="section" id="infrastructure-gstreamer-plug-ins">
-<h4>Infrastructure GStreamer Plug-ins<a class="headerlink" href="#infrastructure-gstreamer-plug-ins" title="Permalink to this heading">¶</a></h4>
+<h4>Infrastructure GStreamer Plug-ins<a class="headerlink" href="#infrastructure-gstreamer-plug-ins" title="Permalink to this headline">¶</a></h4>
 <p>These are generic infrastructure GStreamer plug-ins being developed to help users to directly use these plug-ins to integrate their Kernels into GStreamer framework. User need not have in-depth understanding of the GStreamer framework. Refer to <a class="reference internal" href="docs/common/gstreamer_plugins/infra_plugins.html#infra-plugins-label"><span class="std std-ref">VVAS Infrastructure Plug-ins</span></a> for more details about how to use these plug-ins. These plug-ins are part of “vvas-gst-plugins” folder in the VVAS sources tree.</p>
 </div>
 <div class="section" id="acceleration-s-w-libs">
-<h4>Acceleration S/W Libs<a class="headerlink" href="#acceleration-s-w-libs" title="Permalink to this heading">¶</a></h4>
+<h4>Acceleration S/W Libs<a class="headerlink" href="#acceleration-s-w-libs" title="Permalink to this headline">¶</a></h4>
 <p>These are optimized Acceleration s/w libs developed to manage the state machine of the acceleration Kernels/IPs and expose the interface so that these Acceleration s/w libs can be hooked into VVAS Generic Infrastructure Plug-ins. These can be used as reference to develop a new Acceleration s/w lib based on VVAS framework. Details about the vvas acceleration s/w libs and how can these be used with infrastructure plugins are explained in <a class="reference internal" href="docs/common/gstreamer_plugins/infra_plugins.html#infra-plugins-label"><span class="std std-ref">VVAS Infrastructure Plug-ins and Acceleration s/w Libraries</span></a> section.</p>
 </div>
 <div class="section" id="acceleration-h-w-kernels-ips">
-<h4>Acceleration H/W (Kernels/IPs)<a class="headerlink" href="#acceleration-h-w-kernels-ips" title="Permalink to this heading">¶</a></h4>
+<h4>Acceleration H/W (Kernels/IPs)<a class="headerlink" href="#acceleration-h-w-kernels-ips" title="Permalink to this headline">¶</a></h4>
 <p>These are highly optimized Kernels being developed by AMD. Details of these are captured in this section. Refer to VVAS Acceleration H/W <a class="reference internal" href="docs/common/Acceleration-Hardware.html"><span class="doc">VVAS Acceleration H/W</span></a> for more details.</p>
 </div>
 <div class="section" id="reference-platforms-and-applications">
-<h4>Reference Platforms and Applications<a class="headerlink" href="#reference-platforms-and-applications" title="Permalink to this heading">¶</a></h4>
+<h4>Reference Platforms and Applications<a class="headerlink" href="#reference-platforms-and-applications" title="Permalink to this headline">¶</a></h4>
 <p>There are different requirements of different applications. VVAS provides several reference platforms catering to different applications/solutions needs. Embedded platforms example designs and sample application details can be found in <a class="reference internal" href="docs/Embedded/platforms_and_applications.html"><span class="doc">Platforms And Applications</span></a> section. Similarly Platforms and application details for PCIe/Data center are covered in <a class="reference internal" href="docs/DC/platforms_and_applications.html"><span class="doc">PCIe/Data Center Platforms and Applications</span></a></p>
 </div>
 </div>

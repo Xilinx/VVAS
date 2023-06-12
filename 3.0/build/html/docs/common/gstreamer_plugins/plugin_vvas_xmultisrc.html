@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -130,14 +128,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xmultisrc">
-<h1>vvas_xmultisrc<a class="headerlink" href="#vvas-xmultisrc" title="Permalink to this heading">¶</a></h1>
+<h1>vvas_xmultisrc<a class="headerlink" href="#vvas-xmultisrc" title="Permalink to this headline">¶</a></h1>
 <p>The GStreamer <code class="docutils literal notranslate"><span class="pre">vvas_xmultisrc</span></code> plug-in can have one input pad and multiple-output pads.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">vvas_xmultisrc</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/sys/multisrc">vvas_xmultisrc source code</a></p>
 <div class="figure align-default">
 <img alt="../../../_images/vvas_xmultisrc.png" src="../../../_images/vvas_xmultisrc.png" />
 </div>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>Input and output accept buffers with the following color formats on input GstPad and output GstPad.</p>
 <ul class="simple">
 <li><p>GRAY8</p></li>
@@ -155,7 +153,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>The formats listed are the AMD IP supported color formats. To add other color formats, update the vvas_kernel.h and vvas_xmultisrc plug-ins pad template. Also ensure that the kernel support the formats that you are configuring.</p>
 </div>
 <div class="section" id="control-parameters-and-plug-in-properties">
-<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plug-in Properties<a class="headerlink" href="#control-parameters-and-plug-in-properties" title="Permalink to this headline">¶</a></h2>
 <p>Table 23: Plug-in Properties</p>
 <table class="docutils align-default">
 <colgroup>
@@ -193,10 +191,10 @@ refer to <a class="reference internal" href="json_file_schema.html"><span class=
 </table>
 </div>
 <div class="section" id="json-format-for-vvas-xmultisrc">
-<h2>JSON format for vvas_xmultisrc<a class="headerlink" href="#json-format-for-vvas-xmultisrc" title="Permalink to this heading">¶</a></h2>
+<h2>JSON format for vvas_xmultisrc<a class="headerlink" href="#json-format-for-vvas-xmultisrc" title="Permalink to this headline">¶</a></h2>
 <p>This section covers the format of JSON file/string to be passed to the vvas_xmultisrc plug-in.</p>
 <div class="section" id="example-json-file">
-<h3>Example JSON File<a class="headerlink" href="#example-json-file" title="Permalink to this heading">¶</a></h3>
+<h3>Example JSON File<a class="headerlink" href="#example-json-file" title="Permalink to this headline">¶</a></h3>
 <p>The following example file describes how to specify a kernel that is being controlled by the instance of the vvas_xmultisrc plug-in. Modify this json file as per your kernels and acceleration software library. The next section describes each field in this example file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="s2">&quot;xclbin-location&quot;</span><span class="p">:</span><span class="s2">&quot;/usr/lib/binary_1.xclbin&quot;</span><span class="p">,</span>
@@ -289,15 +287,15 @@ acceleration software library.</p></td>
 </table>
 </div>
 <div class="section" id="source-pad-naming-syntax">
-<h3>Source Pad Naming Syntax<a class="headerlink" href="#source-pad-naming-syntax" title="Permalink to this heading">¶</a></h3>
+<h3>Source Pad Naming Syntax<a class="headerlink" href="#source-pad-naming-syntax" title="Permalink to this headline">¶</a></h3>
 <p>For single output pad naming is optional. For multiple pads, the source pads names shall be as mentioned below, assuming the name of the plug-in as <cite>sc</cite>.</p>
 <p>sc.src_0, sc.src_1 …..sc.src_n</p>
 </div>
 </div>
 <div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="single-output-pad">
-<h3>Single Output Pad<a class="headerlink" href="#single-output-pad" title="Permalink to this heading">¶</a></h3>
+<h3>Single Output Pad<a class="headerlink" href="#single-output-pad" title="Permalink to this headline">¶</a></h3>
 <p>The following example demonstrates the vvas_xmultisrc plug-in configured for one input and one output. A test video pattern is generated by the videotestrc plug-in and passed to the vvas_xmultisrc plug-in. Depending on the kernel being used, vvas_xmultisrc uses kernel.json to configure the kernel for processing the input frame before passing it to the fakesink.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 videotestsrc
 ! &quot;video/x-raw, width=1280, height=720, format=BGR&quot;

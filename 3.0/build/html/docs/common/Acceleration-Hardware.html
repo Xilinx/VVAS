@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -127,10 +125,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="acceleration-kernels">
-<h1>Acceleration Kernels<a class="headerlink" href="#acceleration-kernels" title="Permalink to this heading">¶</a></h1>
+<h1>Acceleration Kernels<a class="headerlink" href="#acceleration-kernels" title="Permalink to this headline">¶</a></h1>
 <p>This section covers details about how to build the HLS/RTL acceleration kernels. The kernels are HLS code that can be built using Vitis HLS and the compiled kernels are provided as <code class="docutils literal notranslate"><span class="pre">.xo</span></code> files. These compiled kernels then can be used with any Vitis platform.</p>
 <div class="section" id="building-kernels">
-<h2>Building Kernels<a class="headerlink" href="#building-kernels" title="Permalink to this heading">¶</a></h2>
+<h2>Building Kernels<a class="headerlink" href="#building-kernels" title="Permalink to this headline">¶</a></h2>
 <p>Follow the steps mentioned below to build the kernel. These are mostly applicable for building any HLS kernel.</p>
 <ol class="arabic simple">
 <li><p>Setup the Vitis HLS 2022.1 software. Refer to <a class="reference external" href="https://www.xilinx.com/html_docs/xilinx2022.1/vitis_doc/gnq1597858079367.html">Vitis Software Development Platform 2022.1</a>.</p></li>
@@ -140,10 +138,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ol>
 </div>
 <div class="section" id="image-processing-kernel">
-<span id="id1"></span><h2>Image Processing Kernel<a class="headerlink" href="#image-processing-kernel" title="Permalink to this heading">¶</a></h2>
+<span id="id1"></span><h2>Image Processing Kernel<a class="headerlink" href="#image-processing-kernel" title="Permalink to this headline">¶</a></h2>
 <p>Image-processing Kernel is capable of hardware accelerated resizing, color space conversion and cropping of region of interest in a frame. VVAS releases full HLS source code of the Image-processing 2.0 IP/Kernel.</p>
 <div class="section" id="kernel-configuration">
-<h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this heading">¶</a></h3>
+<h3>Kernel Configuration<a class="headerlink" href="#kernel-configuration" title="Permalink to this headline">¶</a></h3>
 <p>Image-processing IP is highly configurable and supports several features. All applications may not need all the features. Keeping all the features enabled results in lots of FPGA resources being consumed. Hence it is recommended to enable only those features that are required for your applications. The image-processing kernel configuration can be edited by changing the <cite>&lt;VVAS_SOURCES&gt;/vvas-accel-hw/image_processing/image_processing_config.h</cite> file. The parameters in the following table can be changed as required.</p>
 <p>Table 14: Image-Processing Kernel Configuration</p>
 <table class="docutils align-default">
@@ -298,7 +296,7 @@ format support</p></td>
 </table>
 </div>
 <div class="section" id="steps-to-build-kernel">
-<h3>Steps to Build Kernel<a class="headerlink" href="#steps-to-build-kernel" title="Permalink to this heading">¶</a></h3>
+<h3>Steps to Build Kernel<a class="headerlink" href="#steps-to-build-kernel" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li><p>Source the Vitis HLS 2022.2 software.</p></li>
 <li><p>Edit the makefile to point the PLATFORM_FILE, <cite>(.xpfm)</cite> file, to any Vitis 2022.2 platform (tested using the ZCU104 base platform).</p></li>

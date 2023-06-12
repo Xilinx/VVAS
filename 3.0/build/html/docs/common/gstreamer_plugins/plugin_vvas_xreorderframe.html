@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -138,13 +136,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xreorderframe">
-<span id="id1"></span><h1>vvas_xreorderframe<a class="headerlink" href="#vvas-xreorderframe" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xreorderframe<a class="headerlink" href="#vvas-xreorderframe" title="Permalink to this headline">¶</a></h1>
 <p>vvas_xreorderframe plugin is used in video analytics pipelines for inference in conjunction with <a class="reference internal" href="plugin_vvas_xskipframe.html#vvas-xskipframe"><span class="std std-ref">vvas_xskipframe</span></a> plugin to control inference rate.
 This element contains two sink pads and one source pad. One sink pad connects with <a class="reference internal" href="plugin_vvas_xskipframe.html#vvas-xskipframe"><span class="std std-ref">vvas_xskipframe</span></a> element and another sink pad connects with <a class="reference internal" href="plugin_vvas_xinfer.html#vvas-xinfer"><span class="std std-ref">vvas_xinfer</span></a> element.
 It can receive the frames from both vvas_xinfer and vvas_xskipframe plugins in random order and it rearranges the frames in correct order of presentation before pushing frames downstream.
 vvas_xreorderframe is multi-stream aware and uses the GstVvasSrcIDMeta metadata attached to GstBuffer to read the stream id and frame id and arranges the frames of different sources in right order.</p>
 <div class="section" id="input-and-output">
-<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h2>
 <p>vvas_xreorderframe plugin is format agnostic and can accept any format on input and output pads.</p>
 </div>
 </div>

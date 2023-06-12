@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -139,7 +137,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="vvas-xdefunnel">
-<span id="id1"></span><h1>vvas_xdefunnel<a class="headerlink" href="#vvas-xdefunnel" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>vvas_xdefunnel<a class="headerlink" href="#vvas-xdefunnel" title="Permalink to this headline">¶</a></h1>
 <p>vvas_xdefunnel gstreamer plug-in de-serializes data coming from <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> plug-in.
 This plug-in creates and destroys source pads based on the events from the <code class="docutils literal notranslate"><span class="pre">vvas_xfunnel</span></code> plug-in.
 For <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> implementation details, refer to <a class="reference external" href="https://github.com/Xilinx/VVAS/tree/master/vvas-gst-plugins/gst/defunnel">vvas_xdefunnel source code</a></p>
@@ -151,7 +149,7 @@ For <code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel<
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">vvas_xdefunnel</span></code> supports all caps.</p>
 <div class="section" id="control-parameters-and-plug-in-signals">
-<h2>Control Parameters and Plug-in Signals<a class="headerlink" href="#control-parameters-and-plug-in-signals" title="Permalink to this heading">¶</a></h2>
+<h2>Control Parameters and Plug-in Signals<a class="headerlink" href="#control-parameters-and-plug-in-signals" title="Permalink to this headline">¶</a></h2>
 <p>The following table lists the GStreamer plug-in signals supported by the vvas_xdefunnel plug-in.</p>
 <p>Table 11: vvas_xdefunnel Plug-in signals</p>
 <table class="docutils align-default">
@@ -211,7 +209,7 @@ buffer is being pushed to</p></td>
 </table>
 </div>
 <div class="section" id="example-pipelines">
-<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this heading">¶</a></h2>
+<h2>Example Pipelines<a class="headerlink" href="#example-pipelines" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gst-launch-1.0 -v \
 videotestsrc num-buffers=50 pattern=0  ! video/x-raw,format=NV12,width=640,height=480 ! funnel.sink_0 \
 videotestsrc num-buffers=80 pattern=19 ! video/x-raw,format=NV12,width=640,height=480 ! funnel.sink_1 \

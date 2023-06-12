@@ -29,9 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -111,7 +109,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div itemprop="articleBody">
              
   <div class="section" id="developing-an-application-using-vvas-core-apis">
-<h1>Developing an application using VVAS Core APIs<a class="headerlink" href="#developing-an-application-using-vvas-core-apis" title="Permalink to this heading">¶</a></h1>
+<h1>Developing an application using VVAS Core APIs<a class="headerlink" href="#developing-an-application-using-vvas-core-apis" title="Permalink to this headline">¶</a></h1>
 <p>This document explains steps for using the VVAS Core APIs. This document can be used as a user guide to develop any application using VVAS Core APIs. An application to do 1st level of inferencing is considered as an example to explain this.</p>
 <p>Below is the block diagram.</p>
 <div class="figure align-default">
@@ -170,7 +168,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </ul>
 <p>Before starting this application let’s have a quick overview of APIs for all above VVAS Core modules.</p>
 <div class="section" id="parser-apis">
-<h2>Parser APIs<a class="headerlink" href="#parser-apis" title="Permalink to this heading">¶</a></h2>
+<h2>Parser APIs<a class="headerlink" href="#parser-apis" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Creating Parser instance</p></li>
 </ul>
@@ -192,7 +190,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>For complete details of all the Parser APIs please refer to the &lt;link to vvas-core parser APIs&gt;</p>
 </div>
 <div class="section" id="decoder-apis">
-<h2>Decoder APIs<a class="headerlink" href="#decoder-apis" title="Permalink to this heading">¶</a></h2>
+<h2>Decoder APIs<a class="headerlink" href="#decoder-apis" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Create Decoder instance</p></li>
 </ul>
@@ -226,7 +224,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>For complete details of all the Decoder APIs please refer to the &lt;link to vvas-core decoder APIs&gt;</p>
 </div>
 <div class="section" id="scaler-apis">
-<h2>Scaler APIs<a class="headerlink" href="#scaler-apis" title="Permalink to this heading">¶</a></h2>
+<h2>Scaler APIs<a class="headerlink" href="#scaler-apis" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Create Scaler instance</p></li>
 </ul>
@@ -260,7 +258,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>For complete details of all the Scaler APIs please refer to the &lt;link to vvas-core scaler APIs&gt;</p>
 </div>
 <div class="section" id="dpu-apis">
-<h2>DPU APIs<a class="headerlink" href="#dpu-apis" title="Permalink to this heading">¶</a></h2>
+<h2>DPU APIs<a class="headerlink" href="#dpu-apis" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Create DPU instance</p></li>
 </ul>
@@ -288,7 +286,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>For complete details of all the DPU APIs please refer to the &lt;link to vvas-core DPU APIs&gt;</p>
 </div>
 <div class="section" id="metaconvert-apis">
-<h2>MetaConvert APIs<a class="headerlink" href="#metaconvert-apis" title="Permalink to this heading">¶</a></h2>
+<h2>MetaConvert APIs<a class="headerlink" href="#metaconvert-apis" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Create MetaConvert instance</p></li>
 </ul>
@@ -310,7 +308,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>For complete details of all the MetaConvert APIs please refer to the &lt;link to vvas-core MetaConvert APIs&gt;</p>
 </div>
 <div class="section" id="overlay-apis">
-<h2>Overlay APIs<a class="headerlink" href="#overlay-apis" title="Permalink to this heading">¶</a></h2>
+<h2>Overlay APIs<a class="headerlink" href="#overlay-apis" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Draw Infer data onto the Video</p></li>
 </ul>
@@ -330,7 +328,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>The very first step to use VVAS Core APIs of different modules is to create the VVAS Context.</p>
 </div>
 <div class="section" id="creating-vvas-context">
-<h2>Creating VVAS Context<a class="headerlink" href="#creating-vvas-context" title="Permalink to this heading">¶</a></h2>
+<h2>Creating VVAS Context<a class="headerlink" href="#creating-vvas-context" title="Permalink to this headline">¶</a></h2>
 <p>VVAS Context is needed by almost every VVAS Core module, VVAS Context can be created using below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasContext</span><span class="o">*</span> <span class="n">vvas_context_create</span> <span class="p">(</span><span class="n">int32_t</span> <span class="n">dev_idx</span><span class="p">,</span> <span class="n">char</span> <span class="o">*</span> <span class="n">xclbin_loc</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">vret</span><span class="p">)</span>
 </pre></div>
@@ -339,7 +337,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>It is recommended to create VVAS context for each component separately if each module will be running in different thread, for creating VVAS context for Parser, MetaConvert and Overlay XCL bin is not needed, hence XCL bin can passed as NULL and dev_idx as -1.</p>
 </div>
 <div class="section" id="creating-vvas-memory">
-<h2>Creating VVAS Memory<a class="headerlink" href="#creating-vvas-memory" title="Permalink to this heading">¶</a></h2>
+<h2>Creating VVAS Memory<a class="headerlink" href="#creating-vvas-memory" title="Permalink to this headline">¶</a></h2>
 <p>VVAS Memory is used to store elementary streams and can be created using below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasMemory</span><span class="o">*</span> <span class="n">vvas_memory_alloc</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasAllocationType</span> <span class="n">mem_type</span><span class="p">,</span> <span class="n">VvasAllocationFlags</span> <span class="n">mem_flags</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="n">mbank_idx</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
 </pre></div>
@@ -359,7 +357,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </div>
 </div>
 <div class="section" id="creating-vvas-video-frame">
-<h2>Creating VVAS Video Frame<a class="headerlink" href="#creating-vvas-video-frame" title="Permalink to this heading">¶</a></h2>
+<h2>Creating VVAS Video Frame<a class="headerlink" href="#creating-vvas-video-frame" title="Permalink to this headline">¶</a></h2>
 <p>VvasVideoFrame is used to store raw video data and can be created using below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasVideoFrame</span><span class="o">*</span> <span class="n">vvas_video_frame_alloc</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasAllocationType</span> <span class="n">alloc_type</span><span class="p">,</span> <span class="n">VvasAllocationFlags</span> <span class="n">alloc_flags</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="n">mbank_idx</span><span class="p">,</span> <span class="n">VvasVideoInfo</span> <span class="o">*</span><span class="n">vinfo</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
 </pre></div>
@@ -379,7 +377,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <p>VvasAllocationType and VvasAllocationFlags for VVAS Core’s Decoder and Scaler buffers must be VVAS_ALLOC_TYPE_CMA and VVAS_ALLOC_FLAG_NONE respectively.</p>
 </div>
 <div class="section" id="parsing-h-264-h-265-streams">
-<h2>Parsing H.264/H.265 streams<a class="headerlink" href="#parsing-h-264-h-265-streams" title="Permalink to this heading">¶</a></h2>
+<h2>Parsing H.264/H.265 streams<a class="headerlink" href="#parsing-h-264-h-265-streams" title="Permalink to this headline">¶</a></h2>
 <p>Once VVAS context is created, create the Parser context using below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasParser</span><span class="o">*</span> <span class="n">vvas_parser_create</span> <span class="p">(</span><span class="n">VvasContext</span><span class="o">*</span> <span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasCodecType</span> <span class="n">codec_type</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">):</span>
 </pre></div>
@@ -395,7 +393,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 On VVAS_RET_SUCCESS from the API would get the parsed access unit frame in outbuf. This outbuf can be now fed to the decoder. This outbuf is allocated inside parser module, hence must be freed by the user after its use.</p>
 </div>
 <div class="section" id="decoding-h-264-h-265-streams">
-<h2>Decoding H.264/H.265 streams<a class="headerlink" href="#decoding-h-264-h-265-streams" title="Permalink to this heading">¶</a></h2>
+<h2>Decoding H.264/H.265 streams<a class="headerlink" href="#decoding-h-264-h-265-streams" title="Permalink to this headline">¶</a></h2>
 <p>Once VVAS context is created, decoder instance can be created using the below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasDecoder</span><span class="o">*</span> <span class="n">vvas_decoder_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="o">*</span><span class="n">dec_name</span><span class="p">,</span> <span class="n">VvasCodecType</span> <span class="n">dec_type</span><span class="p">,</span> <span class="n">uint8_t</span> <span class="n">hw_instance_id</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
 </pre></div>
@@ -488,7 +486,7 @@ Ocfg is the output configuration which decoder will return.</p>
 </ul>
 </div>
 <div class="section" id="scaling-cropping-pre-processing-decoded-data-using-scaler">
-<h2>Scaling/Cropping/Pre-Processing Decoded data Using Scaler<a class="headerlink" href="#scaling-cropping-pre-processing-decoded-data-using-scaler" title="Permalink to this heading">¶</a></h2>
+<h2>Scaling/Cropping/Pre-Processing Decoded data Using Scaler<a class="headerlink" href="#scaling-cropping-pre-processing-decoded-data-using-scaler" title="Permalink to this headline">¶</a></h2>
 <p>As VVVAS context is created scaler instance can be created using below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasScaler</span> <span class="o">*</span> <span class="n">vvas_scaler_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span> <span class="n">kernel_name</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
 </pre></div>
@@ -538,7 +536,7 @@ Dst_rect.frame = output_frame;</p>
 </div>
 </div>
 <div class="section" id="doing-inferencing">
-<h2>Doing inferencing<a class="headerlink" href="#doing-inferencing" title="Permalink to this heading">¶</a></h2>
+<h2>Doing inferencing<a class="headerlink" href="#doing-inferencing" title="Permalink to this headline">¶</a></h2>
 <p>For doing inferencing create the DPU instance using below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasDpuInfer</span> <span class="o">*</span> <span class="n">vvas_dpuinfer_create</span> <span class="p">(</span><span class="n">VvasDpuInferConf</span> <span class="o">*</span> <span class="n">dpu_conf</span><span class="p">,</span> <span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">)</span>
 </pre></div>
@@ -565,7 +563,7 @@ User can avoid these software-based operation by using Hardware accelerated VVAS
 </div>
 </div>
 <div class="section" id="drawing-inference-information-on-video-frame">
-<h2>Drawing Inference Information on Video Frame<a class="headerlink" href="#drawing-inference-information-on-video-frame" title="Permalink to this heading">¶</a></h2>
+<h2>Drawing Inference Information on Video Frame<a class="headerlink" href="#drawing-inference-information-on-video-frame" title="Permalink to this headline">¶</a></h2>
 <p>For drawing bounding box/classification data onto the video frame VVAS Core’s Overlay module can be used, but this Overlay module doesn’t accept data generated using VVAS Core’s DPU module directly. User need to convert Inference data generated using DPU to the format which Overlay module accepts using VVAS Core’s MetaConvert module.</p>
 <p>MetaConvert module’s instance can be created using below API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VvasMetaConvert</span> <span class="o">*</span><span class="n">vvas_metaconvert_create</span> <span class="p">(</span><span class="n">VvasContext</span> <span class="o">*</span><span class="n">vvas_ctx</span><span class="p">,</span> <span class="n">VvasMetaConvertConfig</span> <span class="o">*</span><span class="n">cfg</span><span class="p">,</span><span class="n">VvasLogLevel</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">VvasReturnType</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span>
@@ -590,12 +588,12 @@ User can avoid these software-based operation by using Hardware accelerated VVAS
 </div>
 </div>
 <div class="section" id="sink">
-<h2>Sink<a class="headerlink" href="#sink" title="Permalink to this heading">¶</a></h2>
+<h2>Sink<a class="headerlink" href="#sink" title="Permalink to this headline">¶</a></h2>
 <p>Now as inference data is rendered over original decoded data, consume this buffer; either dump it into file or display it or do whatever you want to do with it.
 Once this buffer is consumed, re-fed it to the decoder for reusing it.</p>
 </div>
 <div class="section" id="compiling-vvas-core-application">
-<h2>Compiling VVAS Core Application<a class="headerlink" href="#compiling-vvas-core-application" title="Permalink to this heading">¶</a></h2>
+<h2>Compiling VVAS Core Application<a class="headerlink" href="#compiling-vvas-core-application" title="Permalink to this headline">¶</a></h2>
 <p>VVAS Core installs its libraries and header files into /opt/xilinx/vvas/ directory.
 It also installs the pkg-cfg files for user to easily get the compiler flags and libraries to link VVAS core libraries.</p>
 <dl>
